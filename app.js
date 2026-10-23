@@ -68,24 +68,43 @@ const planner = {
   profileView:'selected', routePois:[], poiStatus:'Not loaded', poiRun:0, lastBest:null
 };
 
-const DEFAULT_WALK_MINUTES = 60, MIN_WALK_MINUTES = 10, SLIDER_BASE_MAX = 60;  // max walking time: default, minimum, base slider end
+const DEFAULT_WALK_MINUTES = 100, MIN_WALK_MINUTES = 10, SLIDER_BASE_MAX = 150;  // max walking time: default, minimum, base slider end
+const WALK_QUICK_MINUTES = [60, 100, 120, 150], WALK_QUICK_KM = [2, 5, 8, 10], KM_PER_MILE = 1.609344;
 const state = {
   map: null, mapReady: false, mapLayersReady:false,
   start:'bryant', end:'rock', customStart:null, customEnd:null, gps:null, gpsWatch:null,
-  pick:null, dimension:'Streets', budget:DEFAULT_WALK_MINUTES,
+  pick:null, dimension:'Streets', budget:DEFAULT_WALK_MINUTES, maxKm:null, distUnit:'km', outingMin:null,
   datasets:{streets:null, trees:null, lpc:null}, dataComplete:{streets:false,trees:false,lpc:false},
   dataErrors:{}, loading:{}, routes:[], activeRoute:null, selectedStreet:null,
   display:{roads:true,trees:false,lpc:false,routes:true,pois:true}, routingBusy:false, weather:null,
   treeStatsReady:false, thresholds:[0,0], intentTags:[], streetsById:new Map(), streetExpected:null, streetRetrying:false, overlayCoverage:{trees:null,lpc:null}, overlayRequestId:0
 };
 
-/* Max walking time: default 60 min, at least 10, no upper cap. The slider spans 10–60 and extends to the current
-   value when it is higher, so slider, custom input and header always show the same number. */
+/* Max walking time: default 100 min, at least 10, no upper cap. The slider spans 10–150 and extends to the current
+   value when it is higher, so slider, chips, custom input and header always show the same number.
+   Max walking distance: not set by default (no hidden limit); optional total outing duration = walking + visits. */
 function validWalkMinutes(v){const n=typeof v==='string'?v.trim():v;if(n===''||n===null)return null;const x=Number(n);return Number.isInteger(x)&&x>=MIN_WALK_MINUTES?x:null;}
 function syncBudgetUI(){
   const max=Math.max(SLIDER_BASE_MAX,state.budget),r=$('timeRange');
   r.max=max;r.value=state.budget;$('timeRangeMax').textContent=`${max} MIN`;$('timeValue').textContent=`${state.budget} MIN`;
   if(document.activeElement!==$('customTime'))$('customTime').value=state.budget;  // never overwrite what the user is typing
+  document.querySelectorAll('[data-walk-min]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.walkMin===state.budget)));
+  const custom=!WALK_QUICK_MINUTES.includes(state.budget);document.querySelector('[data-walk-min="custom"]')?.setAttribute('aria-pressed',String(custom));
+  syncDistanceUI();
+}
+/** Distance limit in km (null = not set); shown in the chosen unit. */
+function setDistanceLimit(km){
+  if(km===null||km===''||km===undefined){state.maxKm=null;syncDistanceUI();return true;}
+  const x=Number(km);if(!Number.isFinite(x)||x<=0||x>100)return false;state.maxKm=Math.round(x*100)/100;syncDistanceUI();return true;
+}
+function syncDistanceUI(){
+  const u=state.distUnit,v=state.maxKm==null?null:u==='mi'?state.maxKm/KM_PER_MILE:state.maxKm;
+  const out=$('distValue');if(!out)return;
+  out.textContent=v==null?'NOT SET':`${(Math.round(v*10)/10)} ${u.toUpperCase()}`;
+  document.querySelectorAll('[data-walk-km]').forEach(b=>{const k=b.dataset.walkKm;b.setAttribute('aria-pressed',String(k==='none'?state.maxKm==null:k!=='custom'&&state.maxKm!=null&&Math.abs(+k-state.maxKm)<.01));
+    if(k!=='none'&&k!=='custom')b.textContent=u==='mi'?`${(+k/KM_PER_MILE).toFixed(1)} mi`:`${k} km`;});
+  if(document.activeElement!==$('customDist'))$('customDist').value=v==null?'':Math.round(v*10)/10;
+  document.querySelectorAll('[data-dist-unit]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.distUnit===u)));
 }
 /** Sets the hard limit if valid; returns false (state unchanged) otherwise. */
 function setBudget(v){const x=validWalkMinutes(v);if(x===null)return false;state.budget=x;syncBudgetUI();return true;}
@@ -220,8 +239,10 @@ async function interpretIntent(q){
     }catch(err){console.warn('LLM parsing unavailable:',err);toast('AI parsing unavailable. Using clearly marked limited local preview.');}
   }
   if(!data)data=localInterpret(input);
+  // Tourist / multi-stop intent: the LLM's structured `journey`, or the labelled local parser when no LLM is configured.
+  if(mode!=='llm'&&typeof localJourney==='function'){await warmNameIndex().catch(()=>{});data.journey=localJourney(input);}
   if(typeof data?.clarification==='string'&&data.clarification.trim())return {changes:[],clarification:data.clarification.trim()};
-  return {changes:applyInterpretation(data,mode),clarification:null};
+  return {changes:applyInterpretation(data,mode),clarification:null,journey:data.journey||null};
 }
 async function checkInterpreter(){
   if(location.protocol==='file:'){$('interpretMode').textContent='LOCAL PREVIEW · Start server.py with an API key for genuine LLM understanding';return}
@@ -355,6 +376,7 @@ function syncMapData(){
   for(const [id,data] of [['nyc-roads',state.datasets.streets],['nyc-trees',state.datasets.trees],['nyc-landmarks',state.datasets.lpc],['candidate-routes',currentRoutesGeojson()],['route-edges',routeEdgesGeojson()],['selected-route',activeRouteGeojson()],['points',pointGeojson()],['route-pois',poiGeojson()]]){
     const s=map.getSource(id);if(s)s.setData(data||emptyFC());
   }
+  if(typeof updateJourneyMap==='function')updateJourneyMap();
   // An over-limit preview is dashed; a feasible selection is solid lime.
   const active=state.routes.find(x=>x.id===state.activeRoute);
   if(map.getLayer('route-selected'))map.setPaintProperty('route-selected','line-dasharray',active&&!active.feasible?[1.4,1.1]:[1,0]);
@@ -402,13 +424,13 @@ function setupMap(){
       m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#6fd2d8','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
       m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
       m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':7,'circle-stroke-color':'#fff','circle-stroke-width':3}});
-      setupRouteEdgeLayer();setupUrbanMap();
+      setupRouteEdgeLayer();setupUrbanMap();if(typeof setupJourneyMap==='function')setupJourneyMap();
       state.mapLayersReady=true; setupExperienceMap(); syncMapData();updateMapStyles();
       m.on('click','road-highlight',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit',...urbanMapLayerIds()]}).length)return;const feat=e.features?.[0];if(!feat)return;const fid=feat.properties?.FID;const real=state.streetsById.get(String(fid));state.selectedStreet=real||feat;updateSegmentDetails();});
       m.on('click','route-alts',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;  // a click on the selected route's segment opens its evidence instead
       const name=e.features?.[0]?.properties?.id;if(name)selectRoute(name)});
       m.on('click','poi-points',(e)=>{if(state.pick)return;const f=e.features?.[0];if(f?.properties?.name)showPOIPopup(f,e.lngLat)});
-      m.on('click',(e)=>{if(!state.pick)return;const kind=state.pick;const p={name:`Map point ${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}`,lat:e.lngLat.lat,lon:e.lngLat.lng};state[kind==='start'?'customStart':'customEnd']=p;state[kind]='custom';$(kind==='start'?'startSelect':'endSelect').value='custom';$(kind==='start'?'searchStart':'searchEnd').value=p.name;state.pick=null;$('pickNotice').classList.add('hidden');m.getCanvas().style.cursor='';resetRoutes();syncMapData();toast(`${kind==='start'?'Start':'Destination'} set from the map.`)});
+      m.on('click',async(e)=>{if(!state.pick)return;const kind=state.pick;const p={id:`map:${e.lngLat.lat.toFixed(5)},${e.lngLat.lng.toFixed(5)}`,name:`Map point ${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}`,lat:e.lngLat.lat,lon:e.lngLat.lng,source:'Selected on map'};state[kind==='start'?'customStart':'customEnd']=p;state[kind]='custom';$(kind==='start'?'startSelect':'endSelect').value='custom';$(kind==='start'?'searchStart':'searchEnd').value=p.name;state.pick=null;$('pickNotice').classList.add('hidden');m.getCanvas().style.cursor='';resetRoutes();syncMapData();if(typeof placeInputs!=='undefined')placeInputs[kind]?.set(p);if(typeof reverseGeocode==='function'){const r=await reverseGeocode(p.lat,p.lon);if(r){p.address=r.address;p.borough=r.borough;p.name=`Near ${r.address}`;placeInputs[kind]?.set(p);$(kind==='start'?'searchStart':'searchEnd').value=p.name;}}toast(`${kind==='start'?'Start':'Destination'} set from the map.`)});
       for(const layer of ['road-highlight','route-alts']){m.on('mouseenter',layer,()=>{m.getCanvas().style.cursor=state.pick?'crosshair':'pointer'});m.on('mouseleave',layer,()=>{m.getCanvas().style.cursor=state.pick?'crosshair':''})}
       m.on('moveend',()=>{scheduleOverlayRefresh();$('mapCoords').textContent=`${m.getCenter().lat.toFixed(3)}° N · ${Math.abs(m.getCenter().lng).toFixed(3)}° W`});
     });
@@ -417,7 +439,7 @@ function setupMap(){
   }catch(err){ $('mapFallback').querySelector('h2').textContent='Map initialization failed';$('mapFallback').querySelector('p').textContent=err.message;}
 }
 
-function resetRoutes(keepRun=false){if(!keepRun)planner.runId++; planner.routeResponse=null;state.routes=[];state.activeRoute=null;planner.routePois=[];planner.poiStatus='Not loaded';renderPOIs();updateWhyRoute();renderRouteEdges();if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();$('rankingStatus').textContent='Journey changed. Plan again to update route geometry.';renderRouteCards();updateProfile();syncMapData();}
+function resetRoutes(keepRun=false){if(!keepRun)planner.runId++; planner.routeResponse=null;if(typeof journey!=='undefined'){journey.plan=null;renderCityWalk();}state.routes=[];state.activeRoute=null;planner.routePois=[];planner.poiStatus='Not loaded';renderPOIs();updateWhyRoute();renderRouteEdges();if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();$('rankingStatus').textContent='Journey changed. Plan again to update route geometry.';renderRouteCards();updateProfile();syncMapData();}
 function routeBounds(routes,extraMeters=100){
   const all=routes.flatMap(r=>r.coords);
   if(!all.length)return null;
@@ -460,16 +482,27 @@ async function fetchCompleteEvidence(kind,bbox,maxRecords){
 async function handlePlan(text,isFollowUp=false){
   if(state.routingBusy||planner.parsing)return;
   const q=(text||'').trim();if(!q){toast('Describe the walk you want.');return}
-  for(const kind of ['start','end']){const typed=$(kind==='start'?'searchStart':'searchEnd').value.trim(),chosen=getPlace(kind);if(typed!==chosen?.name){toast(`Search and choose a ${kind==='start'?'starting point':'destination'} result first, or use a preset.`);return}}
+  for(const kind of ['start','end']){if(kind==='end'&&typeof journey!=='undefined'&&journey.endMode!=='fixed')continue;const typed=$(kind==='start'?'searchStart':'searchEnd').value.trim(),chosen=getPlace(kind);if(typed!==chosen?.name){toast(`Search and choose a ${kind==='start'?'starting point':'destination'} result first, or use a preset.`);return}}
   planner.parsing=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;
   appendChat('user',q);
   try{const result=await interpretIntent(q);if(result.clarification){appendChat('assistant',result.clarification);return;}
     if(planner.weatherIntent==='ask'&&state.routes.length){if(weatherContext.status!=='ok')await loadWeather();appendChat('assistant',weatherAnswer());return;}
+    if(typeof applyJourney==='function'&&result.journey){
+      const jc=await applyJourney(result.journey);
+      if(jc.length)appendChat('assistant',`${planner.interpretation==='llm'?'AI':'Limited local'} journey interpretation: ${jc.join(' · ')}.`);
+      // "find" requests (nearby / along the walk) list real places without changing the plan
+      const finds=journey.services.filter(s=>!s.addAsStop&&result.journey.services.includes(s.type));
+      for(const s of finds){const r=await findServices(s.type,s.scope);showFoundPlaces(`${SERVICE_LABEL[s.type]} ${s.scope==='near_hotel'?'near your hotel':s.scope==='along_route'?'along your walk':'near the start'}`,r.places,{note:r.note});
+        appendChat('assistant',r.places.length?`${r.places.length} ${SERVICE_LABEL[s.type].toLowerCase()} option(s): ${r.places.slice(0,3).map(p=>p.name+(p.detour?` (+${p.detour.detour_min} min)`:'')).join(', ')}. Add one as a stop from the list. ${r.note}`:`No ${SERVICE_LABEL[s.type].toLowerCase()} found. ${r.note}`);
+        journey.services=journey.services.filter(x=>x!==s);}
+      if(finds.length&&!journeyIntentPresent({...result.journey,services:[]})&&state.routes.length)return;
+    }
     const changes=result.changes;if(changes.length)appendChat('assistant',`${planner.interpretation==='llm'?'AI interpretation':'Limited local interpretation'}: ${changes.join(' · ')}. Checking feasible pedestrian paths…`);
     else appendChat('assistant',`No explicit preference change recognized${planner.interpretation==='local'?' by limited local preview':''}. I’ll check route options using current settings.`);
   }catch(err){toast('Unable to interpret preferences: '+err.message)}
   finally{planner.parsing=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false}
-  await generateRoutes(q,isFollowUp);
+  if(typeof journeyMode==='function'&&journeyMode())await planJourney(isFollowUp);
+  else await generateRoutes(q,isFollowUp);
 }
 
 function poiDimension(tags){if(tags.tourism==='museum'||tags.tourism==='gallery'||tags.amenity==='theatre')return'Culture';if(tags.leisure==='park'||tags.leisure==='garden')return'Nature';if(tags.historic||tags.tourism==='attraction')return'Architecture';if(tags.amenity==='cafe'||tags.amenity==='restaurant')return'Food & Retail';if(tags.tourism==='viewpoint')return'Scenic & Visual';return null}
@@ -558,42 +591,26 @@ function renderMethodology(){
   return `<p><strong>Two layers, one score definition.</strong> Experience scores are measured on NYC LION street segments (Explore Urban Data). Routing uses the OpenStreetMap pedestrian graph; each OSM edge takes the scores of the LION segments it matches (by distance, direction, street name and level), or is measured directly with the same indicator code when no reliable match exists (crossings, park paths, bridges).</p><p><strong>Scores</strong> are 0–100 percentile ranks among Manhattan street segments, not calibrated measurements. Missing data is N/A, never zero. Each dimension's sub-indicators, units, methods and sources are listed in the Street Segment Inspector in Explore Urban Data.</p><p><strong>Route score</strong> per dimension = Σ(length × score) / Σ(scored length) over the route's OSM edges, with coverage = scored length ÷ route length. <strong>Ranking</strong> = weighted experience (your preferences; low-coverage dimensions pulled toward neutral 50) − 0.4 × detour %. Routes over the time or detour limit are not recommended.</p><h3>12 dimensions</h3><ol>${DIMENSIONS.map(d=>`<li><strong>${esc(d.name)}</strong> — ${esc(d.desc)}</li>`).join('')}</ol>`;
 }
 function closeModal(){modalOverlay.classList.add('hidden')}
-async function geocodePlace(kind,query){
-  if(!query.trim())return;
-  const root=$(kind==='start'?'startResults':'endResults');root.classList.remove('hidden');root.innerHTML='<div class="place-option">Searching Manhattan locations…</div>';
-  try{
-    const u=`https://photon.komoot.io/api/?${new URLSearchParams({q:query,limit:'8',lon:'-73.98',lat:'40.76',lang:'en'})}`;
-    const d=await timedJson(u,10000);
-    const matches=(d.features||[]).filter(f=>Array.isArray(f.geometry?.coordinates)&&latLonInsideManhattanEnvelope({lon:f.geometry.coordinates[0],lat:f.geometry.coordinates[1]})).slice(0,5);
-    root.innerHTML=matches.length?matches.map((f,i)=>{
-      const p=f.properties||{};return `<button class="place-option" type="button" data-place="${i}">${esc([p.name,p.housenumber,p.street,p.city].filter(Boolean).join(', ')||query)}</button>`;
-    }).join(''):'<div class="place-option">No matching Manhattan location. Try another address or pick the map.</div>';
-    root.querySelectorAll('[data-place]').forEach(el=>el.addEventListener('click',()=>{
-      const f=matches[+el.dataset.place],p=f.properties||{};
-      const place={name:[p.name,p.street,p.city].filter(Boolean).join(', ')||query,lon:f.geometry.coordinates[0],lat:f.geometry.coordinates[1]};
-      state[kind==='start'?'customStart':'customEnd']=place;state[kind]='custom';
-      $(kind==='start'?'startSelect':'endSelect').value='custom';$(kind==='start'?'searchStart':'searchEnd').value=place.name;
-      root.classList.add('hidden');resetRoutes();syncMapData();
-      if(state.mapReady)state.map.flyTo({center:[place.lon,place.lat],zoom:15,duration:450});
-    }));
-  }catch(err){root.innerHTML='<div class="place-option">Geocoder unavailable. Use a popular location or pick on map.</div>'}
-}
 function setupControls(){
   renderPreferenceSummary();updateLegend();checkInterpreter();renderPOIs();updateWhyRoute();
   $('searchStart').value='Bryant Park';$('searchEnd').value='Rockefeller Center';
   for(const kind of ['start','end']){
     $(kind==='start'?'startSelect':'endSelect').addEventListener('change',e=>{
-      state[kind]=e.target.value;const p=getPlace(kind);$(kind==='start'?'searchStart':'searchEnd').value=p?.name||'';resetRoutes();syncMapData();
-    });
-    const search=$(kind==='start'?'searchStart':'searchEnd');
-    search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();geocodePlace(kind,search.value)}});
-    search.addEventListener('blur',()=>{if(search.value.trim() && ![getPlace(kind)?.name].includes(search.value.trim())){ /* free text must be explicitly geocoded before routing */ }});
-    search.addEventListener('input',()=>{
-      const root=$(kind==='start'?'startResults':'endResults');root.classList.remove('hidden');root.innerHTML='<button type="button" class="place-option search-trigger">↗ Search this location</button>';
-      root.querySelector('button').addEventListener('click',()=>geocodePlace(kind,search.value));
+      state[kind]=e.target.value;const p=getPlace(kind);$(kind==='start'?'searchStart':'searchEnd').value=p?.name||'';if(typeof placeInputs!=='undefined')placeInputs[kind]?.set(p);if(kind==='end'&&typeof setEndMode==='function'){journey.userSetDestination=true;setEndMode('fixed');}resetRoutes();syncMapData();
     });
   }
   $('timeRange').addEventListener('input',e=>{setBudget(Number(e.target.value));updateRoutesUI()});
+  document.querySelectorAll('[data-walk-min]').forEach(b=>b.addEventListener('click',()=>{
+    if(b.dataset.walkMin==='custom'){$('customTime').focus();$('customTime').select();return;}
+    setBudget(Number(b.dataset.walkMin));renderPreferenceSummary();updateRoutesUI();}));
+  document.querySelectorAll('[data-walk-km]').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.walkKm;if(k==='custom'){$('customDist').focus();return;}
+    setDistanceLimit(k==='none'?null:Number(k));renderPreferenceSummary();updateRoutesUI();}));
+  document.querySelectorAll('[data-dist-unit]').forEach(b=>b.addEventListener('click',()=>{state.distUnit=b.dataset.distUnit;syncDistanceUI();}));
+  $('customDist').addEventListener('change',e=>{const raw=e.target.value.trim();const km=raw===''?null:Number(raw)*(state.distUnit==='mi'?KM_PER_MILE:1);
+    if(!setDistanceLimit(km)){toast('Enter a distance above 0.');syncDistanceUI();}renderPreferenceSummary();updateRoutesUI();});
+  $('outingMin').addEventListener('change',e=>{const raw=e.target.value.trim(),x=Number(raw);
+    state.outingMin=raw===''?null:Number.isInteger(x)&&x>=10?x:state.outingMin;e.target.value=state.outingMin??'';renderPreferenceSummary();});
   // Custom maximum: free typing (empty allowed while editing); validated on blur / Enter; invalid input restores the last valid value.
   const commitCustomTime=()=>{const raw=$('customTime').value;if(String(state.budget)===raw.trim())return;
     if(setBudget(raw)){renderPreferenceSummary();updateRoutesUI();}

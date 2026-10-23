@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20" />
+  <link rel="stylesheet" href="./styles.css?v=21" />
 </head>
 <body>
 <div class="site-shell">
@@ -28,20 +28,34 @@
         <div class="field-group journey-fields">
           <div class="field-top"><label for="searchStart">FROM</label><button id="gpsStart" class="mini-text-button" title="Requires permission">◎ Use GPS</button></div>
           <div class="search-place"><span class="place-dot start"></span><input id="searchStart" aria-label="Search starting point or address" placeholder="Search address or landmark" autocomplete="off"><button id="pickStart" class="pick-pin" title="Pick start from map" aria-label="Pick start on map">⌖</button></div>
-          <div id="startResults" class="place-results hidden" role="listbox"></div>
-          <select id="startSelect" class="preset-select" aria-label="Or select a popular start"><option value="bryant">Bryant Park · selected</option><option value="times">Times Square</option><option value="rock">Rockefeller Center</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option><option value="gps">My current location</option></select>
+          <select id="startSelect" class="preset-select" aria-label="Or quick-pick a popular start"><option value="bryant">Bryant Park · selected</option><option value="times">Times Square</option><option value="rock">Rockefeller Center</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option><option value="gps">My current location</option></select>
           <div class="field-top"><label for="searchEnd">TO</label><span>⌖ PICK ON MAP</span></div>
+          <div class="end-modes" role="group" aria-label="Where the walk ends"><button type="button" data-end-mode="fixed" aria-pressed="true">Destination</button><button type="button" data-end-mode="open" aria-pressed="false">Discover for me</button><button type="button" data-end-mode="round" aria-pressed="false">Back to start</button><button type="button" data-end-mode="hotel" aria-pressed="false">Back to hotel</button></div>
+          <div id="endFixedBox">
           <div class="search-place"><span class="place-dot end"></span><input id="searchEnd" aria-label="Search destination or address" placeholder="Search address or landmark" autocomplete="off"><button id="pickEnd" class="pick-pin" title="Pick destination on map" aria-label="Pick destination on map">⌖</button></div>
-          <div id="endResults" class="place-results hidden" role="listbox"></div>
-          <select id="endSelect" class="preset-select" aria-label="Or select a popular destination"><option value="rock">Rockefeller Center · selected</option><option value="carnegie">Carnegie Hall</option><option value="times">Times Square</option><option value="bryant">Bryant Park</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option></select>
+          <select id="endSelect" class="preset-select" aria-label="Or quick-pick a popular destination"><option value="rock">Rockefeller Center · selected</option><option value="carnegie">Carnegie Hall</option><option value="times">Times Square</option><option value="bryant">Bryant Park</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option></select>
+          </div>
+          <details class="hotel-box" id="hotelBox"><summary>🏨 My hotel · <span id="hotelName">not set</span></summary>
+            <div class="search-place"><span class="place-dot hotel"></span><input id="hotelSearch" aria-label="Search your hotel" autocomplete="off"></div>
+            <div class="hotel-actions"><button type="button" class="mini-outline" id="hotelAsStart">Start here</button><button type="button" class="mini-outline" id="hotelReturn">Return here</button><button type="button" class="mini-outline" id="hotelNearby">Explore nearby</button></div>
+            <label class="constraint-check"><input type="checkbox" id="rememberHotel"> Remember on this device <small>stored only in this browser</small></label>
+            <p class="custom-help">Hotel search shows real places from map data. No live room availability, prices or booking.</p>
+          </details>
         </div>
 
         <div class="line-divider"></div>
         <div class="section-row"><div class="section-overline">02 / TELL STREETWISE WHAT YOU WANT</div><span class="subtag">NATURAL LANGUAGE</span></div>
         <p class="field-description">Describe the experience. You don't need to select any data layers.</p>
+        <div class="voice-row"><button type="button" class="mic-btn" data-mic="intentText" aria-pressed="false" aria-label="Speak your request">🎙</button><select id="voiceLang" aria-label="Voice language"><option value="en-US">EN</option><option value="zh-CN">中文</option></select><span id="voiceStatus" class="voice-status">Voice or text — you can edit the transcript.</span></div>
         <textarea id="intentText" class="intent-box" rows="3" spellcheck="false" placeholder="I’d like a greener, quieter walk with interesting architecture.">I'd like a greener, quieter walk with interesting architecture.</textarea>
         <button id="generateRoutes" class="primary-cta"><span id="ctaLabel">✦ Plan My Walk</span><span class="cta-arrow">↗</span></button>
         <div id="interpretMode" class="interpret-mode" aria-live="polite">Checking AI interpretation service…</div>
+        <section class="journey-section" aria-label="Journey stops">
+          <div class="section-row"><div class="section-overline">JOURNEY STOPS</div><span class="small-count" id="journeyCount"></span></div>
+          <div id="journeyStops" class="journey-stops"></div>
+          <div class="search-place"><span class="place-dot stop"></span><input id="addStopSearch" aria-label="Add a stop" autocomplete="off"></div>
+          <button type="button" class="mini-text-button" id="journeyReset">Clear journey</button>
+        </section>
 
         <div class="line-divider"></div>
         <div class="section-row"><div class="section-overline">03 / YOUR WALKING PREFERENCES</div><span id="preferenceSource" class="small-count">NOT INTERPRETED</span></div>
@@ -56,10 +70,15 @@
         </div>
 
         <div class="line-divider"></div>
-        <div class="section-row"><label for="timeRange" class="section-overline">04 / WALKING CONSTRAINTS</label><span id="timeValue" class="range-value">60 MIN</span></div>
+        <div class="section-row"><label for="timeRange" class="section-overline">04 / WALKING CONSTRAINTS</label><span id="timeValue" class="range-value">100 MIN</span></div>
         <div class="field-description">MAX WALKING TIME · A HARD LIMIT</div>
-        <input id="timeRange" type="range" min="10" max="60" value="60" step="1" aria-label="Maximum walking time" />
-        <div class="range-labels"><span>10 MIN</span><span id="timeRangeMax">60 MIN</span></div><label class="custom-limit">Custom maximum (minutes) <input type="number" id="customTime" min="10" step="1" value="60" inputmode="numeric" aria-label="Custom maximum walking time in whole minutes, at least 10" aria-describedby="customTimeHelp"></label><p id="customTimeHelp" class="custom-help">Default 60 min. Type any whole number of minutes (10 or more); the slider extends to match.</p><label class="custom-limit">Maximum detour over shortest candidate (%) <input type="number" id="maxDetourPct" min="0" max="100" step="5" value="25" aria-label="Maximum detour percentage"></label>
+        <div class="budget-chips" role="group" aria-label="Quick walking time"><button type="button" data-walk-min="60">60</button><button type="button" data-walk-min="100" aria-pressed="true">100</button><button type="button" data-walk-min="120">120</button><button type="button" data-walk-min="150">150</button><button type="button" data-walk-min="custom">Custom</button></div>
+        <input id="timeRange" type="range" min="10" max="150" value="100" step="1" aria-label="Maximum walking time" />
+        <div class="range-labels"><span>10 MIN</span><span id="timeRangeMax">150 MIN</span></div><label class="custom-limit">Custom maximum (minutes) <input type="number" id="customTime" min="10" step="1" value="100" inputmode="numeric" aria-label="Custom maximum walking time in whole minutes, at least 10" aria-describedby="customTimeHelp"></label><p id="customTimeHelp" class="custom-help">Default 100 min. Type any whole number of minutes (10 or more); the slider extends to match.</p>
+        <div class="section-row budget-row"><span class="field-description">MAX WALKING DISTANCE · HARD LIMIT</span><span id="distValue" class="range-value">NOT SET</span></div>
+        <div class="budget-chips" role="group" aria-label="Walking distance limit"><button type="button" data-walk-km="none" aria-pressed="true">Not set</button><button type="button" data-walk-km="2">2 km</button><button type="button" data-walk-km="5">5 km</button><button type="button" data-walk-km="8">8 km</button><button type="button" data-walk-km="10">10 km</button><button type="button" data-walk-km="custom">Custom</button><span class="unit-toggle"><button type="button" data-dist-unit="km" aria-pressed="true">km</button><button type="button" data-dist-unit="mi">mi</button></span></div>
+        <label class="custom-limit">Custom distance <input type="number" id="customDist" min="0.1" step="0.1" inputmode="decimal" aria-label="Custom maximum walking distance"></label>
+        <label class="custom-limit">Total outing (walking + visits, optional, minutes) <input type="number" id="outingMin" min="10" step="5" inputmode="numeric" placeholder="not set" aria-label="Total outing duration in minutes"></label><label class="custom-limit">Maximum detour over shortest candidate (%) <input type="number" id="maxDetourPct" min="0" max="100" step="5" value="25" aria-label="Maximum detour percentage"></label>
         <label class="constraint-check"><input id="avoidDetours" type="checkbox" checked> Avoid excessive detours <small>≤ 25% longer than baseline</small></label>
         <label class="constraint-check"><input id="stepFree" type="checkbox"> Step-free access <small>verified pedestrian-access data required</small></label>
         <label class="constraint-check"><input id="avoidStairs" type="checkbox"> Avoid stairs <small>excludes OpenStreetMap steps from routing</small></label>
@@ -70,7 +89,7 @@
           <div class="section-row"><div class="section-overline">05 / REFINE YOUR WALK</div><span class="small-count">CONVERSATION</span></div>
           <p class="field-description">Ask for changes. New route results and the map are recomputed when possible.</p>
           <div id="chatHistory" class="chat-history" role="log" aria-live="polite"></div>
-          <form id="chatForm" class="chat-form"><textarea id="chatInput" rows="2" placeholder="Make it quieter, even if it takes five more minutes…" aria-label="Follow-up route instructions"></textarea><button id="chatSend" type="submit" aria-label="Send instruction">↗</button></form>
+          <form id="chatForm" class="chat-form"><button type="button" class="mic-btn" data-mic="chatInput" aria-pressed="false" aria-label="Speak a follow-up">🎙</button><textarea id="chatInput" rows="2" placeholder="Make it quieter, even if it takes five more minutes…" aria-label="Follow-up route instructions"></textarea><button id="chatSend" type="submit" aria-label="Send instruction">↗</button></form>
           <div class="chat-hint">Enter to send · Shift + Enter for a new line</div>
         </section>
 
@@ -125,6 +144,7 @@
         <div class="right-head"><div><div class="section-overline">ROUTE INTELLIGENCE</div><h2>Your route <span>explained.</span></h2></div><span class="results-symbol">↗</span></div>
         <div class="context-row"><div class="context-card"><span class="context-label">LIVE WEATHER</span><strong id="weatherMain">—</strong><span id="weatherMeta">Awaiting forecast</span></div><div class="context-card"><span class="context-label">GPS STATUS</span><strong id="gpsMain">OFF</strong><span id="gpsMeta">Location unavailable</span></div></div>
         <p class="context-updated" id="contextUpdated">Weather observation time: unavailable</p>
+        <section id="cityWalk" class="city-walk hidden" aria-live="polite"></section>
         <div class="subtle-divider"></div>
         <div class="section-row"><div class="section-overline">AI RECOMMENDED ROUTES</div><span class="small-count" id="routeCount">0 LOADED</span></div>
         <p class="soft-copy">Real routes from the STREETWISE engine on the OpenStreetMap pedestrian graph, ranked by your preferences on the same 12 experience scores as Explore.</p>
@@ -167,16 +187,21 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="modalOverlay" class="modal-overlay hidden"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button id="closeModal" class="modal-close" title="Close">✕</button><div class="section-overline">PROJECT NOTES / TRANSPARENCY</div><h2 id="modalTitle">What is real, and what's next.</h2><div id="modalContent"></div></div></div>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="./experience-core.js?v=20"></script>
-<script src="./api-config.js?v=20"></script>
-<script src="./weather.js?v=20"></script>
-<script src="./app.js?v=20"></script>
-<script src="./route-client.js?v=20"></script>
-<script src="./weather-ui.js?v=20"></script>
-<script src="./urban-geo.js?v=20"></script>
-<script src="./urban-style.js?v=20"></script>
-<script src="./urban-layers.js?v=20"></script>
-<script src="./explore-map.js?v=20"></script>
-<script src="./center-map.js?v=20"></script>
+<script src="./experience-core.js?v=21"></script>
+<script src="./api-config.js?v=21"></script>
+<script src="./weather.js?v=21"></script>
+<script src="./places.js?v=21"></script>
+<script src="./opening-hours.js?v=21"></script>
+<script src="./app.js?v=21"></script>
+<script src="./route-client.js?v=21"></script>
+<script src="./weather-ui.js?v=21"></script>
+<script src="./journey.js?v=21"></script>
+<script src="./journey-ui.js?v=21"></script>
+<script src="./voice.js?v=21"></script>
+<script src="./urban-geo.js?v=21"></script>
+<script src="./urban-style.js?v=21"></script>
+<script src="./urban-layers.js?v=21"></script>
+<script src="./explore-map.js?v=21"></script>
+<script src="./center-map.js?v=21"></script>
 </body>
 </html>

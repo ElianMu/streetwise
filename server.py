@@ -16,6 +16,8 @@ from urllib import request, error
 from urllib.parse import unquote, urlsplit, parse_qs
 from routing.engine import get_planner, reset_planner, RoutingError, DIMENSIONS as ROUTE_DIMENSIONS, MIN_WALK_MINUTES
 from routing.weather import validate_snapshot as validate_weather
+from routing.itinerary import Planner as ItineraryPlanner, validate_request as validate_itinerary
+from routing import menu as menu_check
 
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
@@ -40,6 +42,18 @@ Return one JSON object ONLY with keys:
 "max_detour_percent": optional integer from 0 to 100 if explicitly specified (extra distance over the shortest candidate route distance), otherwise null.
 "constraints": object containing ONLY changed boolean entries from 'avoidDetours', 'stepFree', 'avoidStairs'. Keep unmentioned prior constraints.
 "weather": "ask" if the user asks whether the walk or route is comfortable in the current weather (answered from data, no re-routing); "cooler" if they want a cooler, shadier or less sun-exposed walk because of heat; "consider" if they ask to take today's weather into account; otherwise null. Weather is a separate context, not a dimension: "shade" may also raise Nature, but never invent temperatures, shade, rain cover or wind shelter. The current forecast is given in the state as "weather" (null when unavailable).
+"journey": null, or an object for tourist / multi-stop requests, every unknown field null (never guess):
+  {{"interests": subset of ["famous","museums","historic","parks","shopping","culture"],
+   "named_stops": [{{"name": place name as the user said it, in English if it is a well-known NYC place, "required": true|false, "order": integer position if the user fixed the order, else null}}],
+   "food": [{{"category": "cafes"|"restaurants"|"bakeries"|"bars", "item": specific dish or drink in English (e.g. "cappuccino") or null, "cuisine": OSM cuisine value (e.g. "italian") or null, "required": true|false}}],
+   "services": subset of ["pharmacies","groceries","health","banks","restrooms","luggage"],
+   "service_scope": "near_hotel"|"along_route"|"near_start"|null,
+   "hotel": {{"name": as said, "is_mine": true if the user says they stay there, false if they are looking for hotels}} or null,
+   "origin": "gps"|"hotel"|a place name|null, "destination": a place name|null,
+   "end_mode": "fixed"|"round"|"hotel"|"open"|null,
+   "walking_minutes": walking-time limit or null, "outing_minutes": total time incl. visits ("I have two hours" = 120) or null,
+   "distance_km": walking-distance limit in km or null, "more": {{"category": count to add}} for "add another museum", "remove": [names] }}
+  Never output coordinates, addresses, menus, prices or opening hours: places are looked up by STREETWISE tools.
 "clarification": null unless user intent is materially ambiguous or contradictory (for example asks for both a strict 10-minute cap and a 30-minute minimum, or asks for inaccessible route when step-free is required). If ambiguous, write one short question here, do not infer changes.
 Preserve current state by omitting every unmentioned dimension/constraint. Time and accessibility are hard constraints, not dimension scores. Do not claim quiet or step-free conditions are validated.
 """
@@ -47,7 +61,7 @@ Preserve current state by omitting every unmentioned dimension/constraint. Time 
 def validate_interpretation(doc):
     if not isinstance(doc, dict):
         raise ValueError('LLM must return a JSON object')
-    allowed = {'weights', 'directions', 'time_minutes', 'time_delta_minutes', 'max_detour_percent', 'constraints', 'clarification', 'weather'}
+    allowed = {'weights', 'directions', 'time_minutes', 'time_delta_minutes', 'max_detour_percent', 'constraints', 'clarification', 'weather', 'journey'}
     if set(doc) - allowed:
         raise ValueError('Unrecognized output keys')
     weights = doc.get('weights', {})
@@ -74,12 +88,43 @@ def validate_interpretation(doc):
         raise ValueError('Invalid detour percent')
     if doc.get('weather') not in (None, 'ask', 'cooler', 'consider'):
         raise ValueError('Invalid weather intent')
+    journey = validate_journey(doc.get('journey'))
     clarification = doc.get('clarification')
     if clarification is not None and (not isinstance(clarification, str) or len(clarification) > 300):
         raise ValueError('Invalid clarification')
     return {'weights':weights, 'directions':{k:dirs.get(k, 'high') for k in weights},
             'time_minutes':absolute,'time_delta_minutes':delta,'max_detour_percent':detour,
-            'constraints':constraints,'clarification':clarification,'weather':doc.get('weather')}
+            'constraints':constraints,'clarification':clarification,'weather':doc.get('weather'),'journey':journey}
+
+JOURNEY_ENUMS = {'interests': {'famous', 'museums', 'historic', 'parks', 'shopping', 'culture'},
+                 'services': {'pharmacies', 'groceries', 'health', 'banks', 'restrooms', 'luggage'}}
+
+def validate_journey(j):
+    """Structured tourist intent from the LLM: names and categories only, never coordinates or menus."""
+    if j is None:
+        return None
+    if not isinstance(j, dict) or set(j) - {'interests', 'named_stops', 'food', 'services', 'service_scope', 'hotel', 'origin', 'destination',
+                                              'end_mode', 'walking_minutes', 'outing_minutes', 'distance_km', 'more', 'remove'}:
+        raise ValueError('Invalid journey object')
+    s = lambda v, n=160: v[:n] if isinstance(v, str) and v.strip() else None
+    num = lambda v, lo, hi: v if type(v) in (int, float) and lo <= v <= hi else None
+    out = {'interests': [x for x in (j.get('interests') or []) if x in JOURNEY_ENUMS['interests']],
+           'services': [x for x in (j.get('services') or []) if x in JOURNEY_ENUMS['services']],
+           'named_stops': [{'name': s(x.get('name')), 'required': x.get('required') is not False, 'order': x.get('order') if type(x.get('order')) is int else None}
+                           for x in (j.get('named_stops') or [])[:8] if isinstance(x, dict) and s(x.get('name'))],
+           'food': [{'category': x.get('category') if x.get('category') in ('cafes', 'restaurants', 'bakeries', 'bars') else 'restaurants',
+                     'item': s(x.get('item'), 60), 'cuisine': s(x.get('cuisine'), 40), 'required': x.get('required') is not False}
+                    for x in (j.get('food') or [])[:4] if isinstance(x, dict)],
+           'service_scope': j.get('service_scope') if j.get('service_scope') in ('near_hotel', 'along_route', 'near_start') else None,
+           'hotel': {'name': s(j['hotel'].get('name')), 'is_mine': j['hotel'].get('is_mine') is True} if isinstance(j.get('hotel'), dict) and s(j['hotel'].get('name')) else None,
+           'origin': s(j.get('origin')), 'destination': s(j.get('destination')),
+           'end_mode': j.get('end_mode') if j.get('end_mode') in ('fixed', 'round', 'hotel', 'open') else None,
+           'walking_minutes': num(j.get('walking_minutes'), MIN_WALK_MINUTES, 1440), 'outing_minutes': num(j.get('outing_minutes'), 10, 1440),
+           'distance_km': num(j.get('distance_km'), .1, 100),
+           'more': {k: int(v) for k, v in (j.get('more') or {}).items() if k in JOURNEY_ENUMS['interests'] | {'cafes', 'restaurants'} and type(v) is int and 0 < v <= 5}
+                   if isinstance(j.get('more'), dict) else {},
+           'remove': [s(x) for x in (j.get('remove') or [])[:5] if s(x)]}
+    return out
 
 def read_json(handler, limit):
     n = int(handler.headers.get('Content-Length', 0))
@@ -114,6 +159,11 @@ def validate_route_request(doc):
         if type(m) not in (int, float) or not math.isfinite(m) or m < MIN_WALK_MINUTES:
             raise ValueError(f'constraints.max_minutes must be a number of minutes ≥ {MIN_WALK_MINUTES}')
         out['max_minutes'] = float(m)
+    km = c.get('max_km')
+    if km is not None:
+        if type(km) not in (int, float) or not math.isfinite(km) or km <= 0:
+            raise ValueError('constraints.max_km must be a positive number of kilometres')
+        out['max_km'] = float(km)
     d = c.get('max_detour_pct')
     if d is not None:
         if type(d) not in (int, float) or not 0 <= d <= 100:
@@ -214,7 +264,9 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/api/status':
-            self.send_json(200, {'llm': bool(KEY), 'model': MODEL if KEY else None})
+            self.send_json(200, {'llm': bool(KEY), 'model': MODEL if KEY else None,
+                                 'features': {'itinerary': True, 'menu_verify': 'official website only (no menu API connected)',
+                                              'routing_coverage': 'Manhattan OSM pedestrian graph'}})
             return
         if self.path == '/api/routing/status':
             try:
@@ -264,6 +316,28 @@ class Handler(SimpleHTTPRequestHandler):
         return True
 
     def do_POST(self):
+        if self.path == '/api/itinerary':
+            try:
+                doc = read_json(self, 120000)
+                self.send_json(200, ItineraryPlanner(get_planner()).plan(validate_itinerary(doc)))
+            except (ValueError, TypeError, json.JSONDecodeError) as e:
+                self.send_json(422 if isinstance(e, RoutingError) else 400, {'error': str(e)})
+            except RuntimeError as e:
+                self.send_json(503, {'error': str(e)})
+            return
+        if self.path == '/api/detours':
+            try:
+                from routing.itinerary import detours
+                self.send_json(200, detours(get_planner(), read_json(self, 30000)))
+            except (ValueError, TypeError, json.JSONDecodeError) as e:
+                self.send_json(422 if isinstance(e, RoutingError) else 400, {'error': str(e)})
+            return
+        if self.path == '/api/menu/verify':
+            try:
+                self.send_json(200, menu_check.verify(read_json(self, 4000)))
+            except (ValueError, TypeError, json.JSONDecodeError) as e:
+                self.send_json(400, {'error': str(e)})
+            return
         if self.path in ('/api/routes', '/api/navigation/progress'):
             try:
                 doc = read_json(self, 20000)

@@ -55,6 +55,27 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 - **动态图例**（可折叠，手机上默认收起）：只显示当前地图上真正可见的符号，并说明聚合、概括化和当前主题。
 - 点击：路线路段优先（Street Segment Evidence），其次是最上层的数据要素（Urban Feature Inspector）；聚合环点击后放大展开。
 
+## AI Discover My Walk / 城市漫步发现与多站点路线
+
+游客不需要知道目的地，只要说出想看什么、想吃什么、住在哪里、有多少时间、能走多远。
+
+| 功能 | 状态 | 说明 |
+|---|---|---|
+| 全纽约地点搜索（起点、终点、酒店、添加站点共用） | Implemented | `places.js`：Photon（OpenStreetMap POI）+ NYC GeoSearch（NYC Planning 官方地址/场所，五大区），输入 2 个字符起查询，300 ms 防抖，可取消请求，旧请求不会覆盖新结果，键盘/鼠标/触摸，加载/无结果/错误状态，显示 GPS 直线距离（标明为直线），选中后绑定来源 ID 和坐标；手动改名即清除坐标。Mapbox Search Box（/suggest + /retrieve）已接好，仅在配置公开 token 后启用（Blocked：未配置）。 |
+| 道路交叉口搜索 | Partial | 两个免费服务对 “5 Av & 42 St” 这类交叉口支持有限；可用地图点选（附反向地理编码）。 |
+| 地点发现（景点、博物馆、历史建筑、公园、购物、餐饮、酒店、药店、超市、医院、ATM/银行、公共卫生间、行李寄存） | Implemented（仅 Manhattan） | `data/places/`（`scripts/build_place_index.py`）：OpenStreetMap Overpass 快照 + NYC LPC 地标 + NYC 公共卫生间开放数据，只收录离步行路网 150 m 内的地点（共 13,300+ 条），每条有来源 ID、名称、类别、地址、坐标、网站、营业时间、来源和数据时间。“著名程度”使用 Wikidata 条目的维基百科语言版本数（帝国大厦 125），而不是名称相似度。行李寄存在 OSM 中只有 1 条，这是数据缺口。 |
+| 自然语言理解 | Partial | 配置 LLM Key 后，`/api/interpret` 输出结构化 `journey`（兴趣、指定地点、餐饮/菜品、服务、酒店、起终点、步行时间、总时长、距离），未知字段为 null，模型不得输出坐标、菜单或价格。线上 Render 当前**没有配置 LLM Key**，因此使用明确标注的“Limited local interpretation”中英文解析器（规范中的多轮语句均已测试）。 |
+| 多轮对话状态 | Implemented | 每轮合并而不清空：起点、酒店、站点、餐饮、终点方式、时间和距离都会保留；“再加一个博物馆”、“延长到 180 分钟”只改对应项。 |
+| 多站点路线规划 | Implemented | `/api/itinerary`（`routing/itinerary.py`）：地点吸附到 OSM 步行路网 → 真实路网距离矩阵（每个地点一次 Dijkstra） → 必经点 ≤ 7 个时精确枚举顺序与候选，否则最便宜插入 + 2-opt（**标注为启发式，不保证最优**） → 可选站点按“价值/新增分钟”贪心插入，且不超出预算 → 每段用体验加权代价路由并拼接成一条连续路线。必经点不会被静默删除，超出预算时返回“不可行”和原因。支持往返、回酒店、指定终点、开放终点和用户指定顺序。 |
+| 步行与停留时间 | Implemented | 默认最大步行时间 100 分钟（快捷 60/100/120/150/自定义）；最大步行距离默认不设（2/5/8/10 km/自定义，km/mi 切换）；可选总时长 = 步行 + 停留。停留时间为估计值，明确标注且可修改。“我有两个小时”= 总时长 120 分钟。 |
+| 餐厅与菜单核验 | Partial | 先找真实店铺（OSM 菜系/drink 标签只作为线索），再用 `/api/menu/verify` 读取该店官方网站（优先 `website:menu`），遵守 robots.txt，单次用户操作最多读 3 页。三种状态：Verified on Menu（菜单页上找到，附价格和来源链接）/ Unverified / Not Found in Available Sources。没有接入有授权的菜单 API；菜单上有不代表当天有货。 |
+| 酒店 | Implemented | 酒店属于同一个地点搜索；“My Hotel”可作为起点、终点或搜索中心；名称有歧义时列出真实候选让用户确认；只有勾选“Remember on this device”才保存在本浏览器。只是搜索，没有实时房态、价格或预订。 |
+| 生活服务 | Implemented | “附近找”只列出地点，不改路线；“沿途找”按真实路网绕路时间排序（`/api/detours`）；“先去存行李”作为必经站点。营业状态来自 OSM 营业时间，不推断一定开放。 |
+| 语音输入 | Partial | 浏览器 Web Speech API（中文/English），转写结果进入同一输入框，可编辑后发送，与文字使用同一套解析和规划。没有服务器端语音服务；不支持的浏览器会禁用麦克风并提示。真实麦克风识别未在自动化测试中验证。 |
+| 路由覆盖范围 | Manhattan only | 地点搜索覆盖五大区，但步行路网只有 Manhattan。其他行政区的地点会标注 “search only”，规划时明确报错，不生成虚假路线；不把渡轮、地铁当作步行连接。 |
+
+营业时间：`opening-hours.js` 只在 OSM 写法能被确定解析时判断“到达时是否营业”，否则显示“未知”。
+
 ## Weather-aware routing / 天气感知路线
 
 天气是**独立的动态上下文**，不是第 13 个维度，也不改变 12 维静态评分。
@@ -76,9 +97,10 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 - `explore-map.js`: Explore Urban Data (13 maps, segment inspector). `app.js`, `center-map.js`: existing shell, preferences, map, Street evidence panel.
 - `scripts/streetwise_indicators.py`: shared indicator definitions and measurement. `build_manhattan_streets.py`: LION scores. `build_pedestrian_network.py`: OSM graph. `match_lion_osm.py`: matching + edge scores.
 - `data/manhattan-streets.json`, `data/pedestrian/`: built data. `data/cache/`: raw downloads (safe to delete).
+- `places.js`: NYC-wide place search (Photon + NYC GeoSearch + optional Mapbox) and the shared autocomplete. `journey.js`: AI Discover My Walk state, agent tools, local journey parser, itinerary planning client. `journey-ui.js`: journey panel, My Hotel, map waypoints, Your City Walk. `voice.js`: Web Speech input. `opening-hours.js`: OSM hours check. `routing/itinerary.py`: multi-stop planner + detours. `routing/menu.py`: official-website menu verification. `scripts/build_place_index.py` → `data/places/`.
 - `weather.js`: shared weather context (Open-Meteo + NWS, walk window, routing snapshot). `weather-ui.js`: Navigate weather status, Route Intelligence weather section, weather chat answers. `routing/weather.py`: weather assessment, coefficients, tree-cover exposure.
 - `urban-style.js`: cartographic design tokens (colours, zoom tiers, point/line/building/environment styles). `urban-layers.js`: dataset catalog panel, composition into grouped map layers, themes, dynamic legend, static tile loading, map layers, Urban Feature Inspector, Street Segment Evidence, Route Urban Data. `urban-geo.js`: shared geometry (projection, corridor, nearest, coverage). `api-config.js`: API base + `streetwiseJson`. `routing/layers.py`: reference implementation for tests. `scripts/build_urban_layers.py`: datasets → catalog + tiles.
-- `tests/`: `test_routing_engine.py` (network, matching, scores, ranking, navigation, HTTP), `test_urban_layers.py` (catalog, geographic accuracy, route queries, static serving, walking-time limits), `urban-style.test.cjs` (design-system rules), `test_weather_routing.py` (weather states, heat cost in A*, constraints, reproducibility), `weather.test.cjs` (forecast window, NY time, snapshot), `urban-geo.test.cjs` (browser geometry = brute-force reference), `test_street_data.py`, `test_server.py`, `dom.test.cjs`, JS spatial tests, Playwright scripts.
+- `tests/`: `test_routing_engine.py` (network, matching, scores, ranking, navigation, HTTP), `test_urban_layers.py` (catalog, geographic accuracy, route queries, static serving, walking-time limits), `urban-style.test.cjs` (design-system rules), `test_weather_routing.py` (weather states, heat cost in A*, constraints, reproducibility), `weather.test.cjs` (forecast window, NY time, snapshot), `test_itinerary.py` (multi-stop planner, matrix = A*, constraints, order, coverage, detours, menu statuses), `places.test.cjs` (place search on recorded provider responses; `LIVE=1` for live), `opening-hours.test.cjs`, `urban-geo.test.cjs` (browser geometry = brute-force reference), `test_street_data.py`, `test_server.py`, `dom.test.cjs`, JS spatial tests, Playwright scripts.
 
 ## Automated checks / 自动测试
 
@@ -88,6 +110,8 @@ node tests/real-route.test.cjs
 node tests/urban-geo.test.cjs
 node tests/urban-style.test.cjs
 node tests/weather.test.cjs
+node tests/places.test.cjs          # LIVE=1 node tests/places.test.cjs calls the real providers
+node tests/opening-hours.test.cjs
 python3 -m unittest discover -s tests -p 'test_*.py'   # includes the routing engine end-to-end tests
 # Install jsdom separately for DOM integration tests:
 npm install --prefix /tmp/streetwise-test jsdom

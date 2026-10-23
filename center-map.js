@@ -17,7 +17,7 @@ const dimensionDefinitions=[
 const fc=features=>({type:'FeatureCollection',features});
 function experienceFeatures(){return mapExperience.sections;}
 function selectedEvidenceKey(){return state.dimension==='Nature'?'nature':state.dimension==='Architecture'?'architecture':null;}
-function queueMapReplan(){clearTimeout(mapExperience.queue);mapExperience.queue=setTimeout(()=>{if(state.routingBusy){queueMapReplan();return;}generateRoutes(null,true);},650);}
+function queueMapReplan(){clearTimeout(mapExperience.queue);mapExperience.queue=setTimeout(()=>{if(state.routingBusy){queueMapReplan();return;}if(typeof journeyMode==='function'&&journeyMode()&&journey.plan)planJourney(true);else generateRoutes(null,true);},650);}
 function chooseIntentLayer(){const preferred=['Nature','Architecture'].filter(n=>planner.origins[n]!=='default').sort((a,b)=>planner.weights[b]-planner.weights[a]);if(preferred.length){state.dimension=preferred[0];$('experienceDimension').value=state.dimension;updateLegend();}}
 function boxFeature(b,label){return {type:'Feature',properties:{label},geometry:{type:'Polygon',coordinates:[[[b[0],b[1]],[b[2],b[1]],[b[2],b[3]],[b[0],b[3]],[b[0],b[1]]]]}};}
 function setupExperienceMap(){
@@ -123,4 +123,4 @@ function setupExperienceControls(){
  renderExperienceLegend();
 }
 function loadSelectedRaw(){const kind=selectedEvidenceKey()==='nature'?'trees':selectedEvidenceKey()==='architecture'?'lpc':null;if(kind&&!state.datasets[kind])loadViewportEvidence(kind);}
-setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupWeatherUI();setupMap();loadData('streets');loadWeather();
+setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupWeatherUI();setupJourneyUI();setupVoice();setupMap();loadData('streets');loadWeather();
