@@ -241,3 +241,27 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .route-urban-item:hover{border-color:#d8f365}.route-urban-item small{display:block;color:#7f9993;font-size:9px}.route-urban-item strong{color:#eef6ea;font-weight:600;text-align:right}
 .route-urban-foot{display:block;margin-top:6px;color:#7f9993;font-size:9.5px;line-height:1.4}
 @media(max-width:740px){.map-workspace .urban-inspector{top:auto;bottom:76px;left:10px;right:10px;width:auto;max-height:50%}}
+
+/* Urban cartography v1.2: legend, themes, hierarchical controls, status kinds. Map colours live in urban-style.js. */
+.map-workspace .map-legend{display:none}.map-workspace .experience-controls[open]~.map-legend{display:block}
+.urban-themes{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.urban-themes label{display:flex;flex-direction:column;gap:3px;font-size:9.5px;color:#9fb4ae}
+.urban-themes select{background:#172c2d;color:#e6eee5;border:1px solid #3d5048;border-radius:6px;padding:4px 5px;font-size:10px}
+.urban-cat summary input{accent-color:#d8f365;margin:0}.urban-cat summary>span:nth-of-type(2){flex:1}
+.urban-live{display:flex;flex-direction:column;gap:1px;margin:3px 0 0 19px;font-size:9.5px}
+.urban-status.loaded{color:#cfe0d6}.urban-status.empty{color:#9fb4ae}.urban-status.loading{color:#d8f365}.urban-status.error{color:#f08f7f}.urban-status.waiting{color:#7f9993}
+.urban-repr{color:#7f9993;font-size:9px}
+.ud-legend{position:absolute;z-index:4;right:16px;bottom:40px;width:236px;max-height:calc(100% - 210px);overflow:auto;padding:8px 10px;border:1px solid #2c4344;border-radius:10px;background:#0d1d20e8;backdrop-filter:blur(8px);font-size:10px;color:#c8d6cf;scrollbar-width:thin}
+.ud-legend-head{width:100%;text-align:left;border:0;background:transparent;color:#9fb4ae;font-size:9px;letter-spacing:1.3px;font-weight:800;padding:0 0 4px;text-transform:uppercase}
+.ud-legend.collapsed .lg-body{display:none}.ud-legend.collapsed{width:auto}
+.lg-row{display:flex;align-items:center;gap:7px;padding:2px 0}.lg-row small{color:#7f9993}
+.lg-block{padding:4px 0}.lg-block>span{display:block;margin-bottom:3px}.lg-block small{color:#7f9993;font-size:9px}
+.lg-ramp{display:block;height:7px;border-radius:3px;margin-bottom:2px}
+.lg-classes{display:grid;grid-template-columns:1fr 1fr;gap:2px 6px;font-size:9px;color:#a9bdb4}.lg-classes span{display:flex;align-items:center;gap:4px}
+.lg-sw{flex:none;display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--c);border:1px solid #0b1418}
+.lg-sw.tiny{width:4px;height:4px;margin:0 3px}.lg-sw.fill{border-radius:2px;background:color-mix(in srgb,var(--c) 45%,transparent);border-color:var(--c)}
+.lg-sw.line,.lg-sw.route,.lg-sw.alt,.lg-sw.dash{height:3px;width:16px;border-radius:2px;border:0}.lg-sw.route{height:4px;box-shadow:0 0 0 2px #06110f}.lg-sw.alt{background:repeating-linear-gradient(90deg,var(--c) 0 4px,transparent 4px 7px)}
+.lg-sw.dash{background:repeating-linear-gradient(90deg,var(--c) 0 5px,transparent 5px 8px)}
+.lg-note{margin:5px 0 0;color:#7f9993;font-size:9px;line-height:1.45}
+.map-workspace .selected-route-summary{z-index:5}
+@media(max-width:740px){.ud-legend{right:10px;bottom:120px;width:200px;max-height:35%}}
+.lg-chips{display:flex;flex-wrap:wrap;gap:3px 9px;font-size:9.5px;color:#a9bdb4}.lg-chips span{display:inline-flex;align-items:center;gap:4px}.lg-chips .lg-sw{width:7px;height:7px}

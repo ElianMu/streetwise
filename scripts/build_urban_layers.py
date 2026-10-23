@@ -450,7 +450,7 @@ def build_catalog(upd, rng, manifests, counts, network_version, noise_from, cras
                          'layer_type': {'Point': 'circle', 'LineString': 'line', 'Polygon': 'fill'}[geom], 'source': source, 'source_url': url,
                          'last_updated': updated, 'time_range': time_note, 'attributes': attrs, 'used_in_scoring': bool(scoring),
                          'scoring': [{'dimension': d, 'sub_indicators': subs} for d, subs in scoring], 'historical': kw.get('historical', False),
-                         'note': kw.get('note'), 'style': kw.get('style'), 'min_zoom_view': 13 if counts[tileset] > 20000 else 11, 'default_visible': False,
+                         'note': kw.get('note'), 'style': kw.get('style'), 'min_zoom_view': 13 if counts[tileset] > 20000 else 11, 'default_visible': True,
                          'feature_count': counts[tileset]})
     return {'built_at': si.NOW.isoformat(timespec='seconds'), 'tile_size_m': TILE_M, 'projection': {'lat0': LAT0, 'mx': MX, 'my': MY},
             'categories': [{'id': k, 'name': n} for k, n in CATEGORIES], 'datasets': datasets + U,

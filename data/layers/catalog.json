@@ -1,5 +1,5 @@
 {
- "built_at": "2026-10-23T14:58:34+00:00",
+ "built_at": "2026-10-23T16:22:59+00:00",
  "tile_size_m": 1000.0,
  "projection": {
   "lat0": 40.78,
@@ -76,7 +76,7 @@
    "note": "Road centrelines — the geometry street scores are measured on. Not the walkable network.",
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 13303
   },
   {
@@ -108,7 +108,7 @@
    "note": "Edges of the routing graph that routes are computed on.",
    "style": null,
    "min_zoom_view": 13,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 26604
   },
   {
@@ -140,7 +140,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 8019
   },
   {
@@ -171,7 +171,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 16675
   },
   {
@@ -209,7 +209,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 5461
   },
   {
@@ -244,7 +244,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 13,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 23668
   },
   {
@@ -278,7 +278,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 5040
   },
   {
@@ -307,7 +307,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 3945
   },
   {
@@ -339,7 +339,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 36
   },
   {
@@ -374,7 +374,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 7898
   },
   {
@@ -405,7 +405,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 7280
   },
   {
@@ -436,7 +436,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 909
   },
   {
@@ -473,7 +473,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 237
   },
   {
@@ -514,7 +514,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 13,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 99873
   },
   {
@@ -553,7 +553,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 396
   },
   {
@@ -587,7 +587,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 396
   },
   {
@@ -622,7 +622,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 396
   },
   {
@@ -655,7 +655,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 163
   },
   {
@@ -689,7 +689,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 13,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 45178
   },
   {
@@ -744,7 +744,7 @@
     ]
    },
    "min_zoom_view": 13,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 45178
   },
   {
@@ -799,7 +799,7 @@
     ]
    },
    "min_zoom_view": 13,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 45178
   },
   {
@@ -834,7 +834,7 @@
     "by_category": "landuse_name"
    },
    "min_zoom_view": 13,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 42106
   },
   {
@@ -867,7 +867,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 366
   },
   {
@@ -911,7 +911,7 @@
    "note": "Landmark tax lots (polygons).",
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 995
   },
   {
@@ -943,7 +943,7 @@
    "note": "District boundaries; reprojected from NY State Plane (EPSG:2263).",
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 70
   },
   {
@@ -985,7 +985,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 86
   },
   {
@@ -1027,7 +1027,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 252
   },
   {
@@ -1069,7 +1069,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 242
   },
   {
@@ -1111,7 +1111,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 33
   },
   {
@@ -1154,7 +1154,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 64
   },
   {
@@ -1191,7 +1191,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 431
   },
   {
@@ -1227,7 +1227,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 495
   },
   {
@@ -1270,7 +1270,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 5113
   },
   {
@@ -1313,7 +1313,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 1390
   },
   {
@@ -1356,7 +1356,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 887
   },
   {
@@ -1399,7 +1399,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 282
   },
   {
@@ -1442,7 +1442,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 1064
   },
   {
@@ -1485,7 +1485,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 6072
   },
   {
@@ -1519,7 +1519,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 30
   },
   {
@@ -1553,7 +1553,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 45
   },
   {
@@ -1588,7 +1588,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 1851
   },
   {
@@ -1629,7 +1629,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 13,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 45618
   },
   {
@@ -1671,7 +1671,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 4204
   },
   {
@@ -1705,7 +1705,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 3668
   },
   {
@@ -1754,7 +1754,7 @@
     ]
    },
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 17118
   },
   {
@@ -1794,7 +1794,7 @@
    "note": "Reports by residents, not sound-level measurements.",
    "style": null,
    "min_zoom_view": 13,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 177477
   },
   {
@@ -1831,7 +1831,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 1414
   },
   {
@@ -1865,7 +1865,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 153
   },
   {
@@ -1907,7 +1907,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 868
   },
   {
@@ -1941,7 +1941,7 @@
    "note": "Elevator entrances only; elevator outages are not shown.",
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 868
   },
   {
@@ -1973,7 +1973,7 @@
    "note": "OSM-mapped stops, not the MTA GTFS feed.",
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 1682
   },
   {
@@ -2003,7 +2003,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 696
   },
   {
@@ -2032,7 +2032,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 23
   },
   {
@@ -2063,7 +2063,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 326
   },
   {
@@ -2093,7 +2093,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 300
   },
   {
@@ -2123,7 +2123,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 526
   },
   {
@@ -2159,7 +2159,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 1231
   },
   {
@@ -2194,7 +2194,7 @@
    "note": "Mapped viewpoints only; no view-shed analysis.",
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 96
   },
   {
@@ -2226,7 +2226,7 @@
    "note": null,
    "style": null,
    "min_zoom_view": 11,
-   "default_visible": false,
+   "default_visible": true,
    "feature_count": 472
   },
   {

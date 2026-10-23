@@ -105,7 +105,7 @@ async function analyzeArea(pilot=false){
  finally{mapExperience.busy=false;$('analyzeView').disabled=false;}
 }
 function setupExperienceControls(){
- if(window.innerWidth<=740){document.querySelector('.map-legend').classList.add('hidden');$('toggleLegend').setAttribute('aria-pressed','false');}
+ if(window.innerWidth<=740){$('udLegend').classList.add('collapsed');$('toggleLegend').setAttribute('aria-pressed','false');}
  state.dimension='Nature';$('experienceDimension').innerHTML=ExperienceCore.names.map((n,i)=>`<option value="${esc(n)}">${String(i+1).padStart(2,'0')} ${esc(n)}</option>`).join('');$('experienceDimension').value='Nature';
  for(const [id,mode] of [['modeNavigate','navigate'],['modeExplore','explore']])$(id).addEventListener('click',()=>{mapExperience.mode=mode;$('modeNavigate').setAttribute('aria-pressed',String(mode==='navigate'));$('modeExplore').setAttribute('aria-pressed',String(mode==='explore'));updateMapStyles();setExploreMode(mode==='explore');});
  $('experienceDimension').addEventListener('change',e=>{state.dimension=e.target.value;updateMapStyles();updateLegend();if(mapExperience.view==='raw')loadSelectedRaw();});
@@ -114,7 +114,7 @@ function setupExperienceControls(){
  $('layerCoverage').addEventListener('change',e=>{mapExperience.coverage=e.target.checked;updateMapStyles();});
  $('analyzeView').addEventListener('click',()=>analyzeArea(false));
  $('exportExperience').addEventListener('click',()=>downloadGeoJSON('Streetwise_experience_sections.geojson',fc(experienceFeatures())));
- $('toggleLegend').addEventListener('click',()=>{const hidden=document.querySelector('.map-legend').classList.toggle('hidden');$('toggleLegend').setAttribute('aria-pressed',String(!hidden));});
+ $('toggleLegend').addEventListener('click',()=>{const hidden=$('udLegend').classList.toggle('hidden');$('toggleLegend').setAttribute('aria-pressed',String(!hidden));});
  renderExperienceLegend();
 }
 function loadSelectedRaw(){const kind=selectedEvidenceKey()==='nature'?'trees':selectedEvidenceKey()==='architecture'?'lpc':null;if(kind&&!state.datasets[kind])loadViewportEvidence(kind);}
