@@ -15,6 +15,7 @@ import time
 from urllib import request, error
 from urllib.parse import unquote, urlsplit, parse_qs
 from routing.engine import get_planner, reset_planner, RoutingError, DIMENSIONS as ROUTE_DIMENSIONS, MIN_WALK_MINUTES
+from routing.weather import validate_snapshot as validate_weather
 
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
@@ -38,6 +39,7 @@ Return one JSON object ONLY with keys:
 "time_delta_minutes": signed integer modification to existing walking cap, if user explicitly says 'five more minutes'; otherwise null. Never return both time_minutes and time_delta_minutes non-null.
 "max_detour_percent": optional integer from 0 to 100 if explicitly specified (extra distance over the shortest candidate route distance), otherwise null.
 "constraints": object containing ONLY changed boolean entries from 'avoidDetours', 'stepFree', 'avoidStairs'. Keep unmentioned prior constraints.
+"weather": "ask" if the user asks whether the walk or route is comfortable in the current weather (answered from data, no re-routing); "cooler" if they want a cooler, shadier or less sun-exposed walk because of heat; "consider" if they ask to take today's weather into account; otherwise null. Weather is a separate context, not a dimension: "shade" may also raise Nature, but never invent temperatures, shade, rain cover or wind shelter. The current forecast is given in the state as "weather" (null when unavailable).
 "clarification": null unless user intent is materially ambiguous or contradictory (for example asks for both a strict 10-minute cap and a 30-minute minimum, or asks for inaccessible route when step-free is required). If ambiguous, write one short question here, do not infer changes.
 Preserve current state by omitting every unmentioned dimension/constraint. Time and accessibility are hard constraints, not dimension scores. Do not claim quiet or step-free conditions are validated.
 """
@@ -45,7 +47,7 @@ Preserve current state by omitting every unmentioned dimension/constraint. Time 
 def validate_interpretation(doc):
     if not isinstance(doc, dict):
         raise ValueError('LLM must return a JSON object')
-    allowed = {'weights', 'directions', 'time_minutes', 'time_delta_minutes', 'max_detour_percent', 'constraints', 'clarification'}
+    allowed = {'weights', 'directions', 'time_minutes', 'time_delta_minutes', 'max_detour_percent', 'constraints', 'clarification', 'weather'}
     if set(doc) - allowed:
         raise ValueError('Unrecognized output keys')
     weights = doc.get('weights', {})
@@ -70,12 +72,14 @@ def validate_interpretation(doc):
         raise ValueError('Conflicting time outputs')
     if detour is not None and (type(detour) is not int or not 0 <= detour <= 100):
         raise ValueError('Invalid detour percent')
+    if doc.get('weather') not in (None, 'ask', 'cooler', 'consider'):
+        raise ValueError('Invalid weather intent')
     clarification = doc.get('clarification')
     if clarification is not None and (not isinstance(clarification, str) or len(clarification) > 300):
         raise ValueError('Invalid clarification')
     return {'weights':weights, 'directions':{k:dirs.get(k, 'high') for k in weights},
             'time_minutes':absolute,'time_delta_minutes':delta,'max_detour_percent':detour,
-            'constraints':constraints,'clarification':clarification}
+            'constraints':constraints,'clarification':clarification,'weather':doc.get('weather')}
 
 def read_json(handler, limit):
     n = int(handler.headers.get('Content-Length', 0))
@@ -115,7 +119,8 @@ def validate_route_request(doc):
         if type(d) not in (int, float) or not 0 <= d <= 100:
             raise ValueError('constraints.max_detour_pct must be 0..100')
         out['max_detour_pct'] = float(d)
-    return validate_point(doc.get('origin'), 'origin'), validate_point(doc.get('destination'), 'destination'), {'weights': weights, 'directions': dirs}, out
+    return (validate_point(doc.get('origin'), 'origin'), validate_point(doc.get('destination'), 'destination'), {'weights': weights, 'directions': dirs}, out,
+            validate_weather(doc.get('weather')))
 
 
 _segments = None
@@ -302,7 +307,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not isinstance(message, str) or not message.strip() or len(message) > 2000:
                 self.send_json(400, {'error': 'Invalid message'})
                 return
-            context = {k: doc.get(k) for k in ('weights', 'budget', 'constraints')}
+            context = {k: doc.get(k) for k in ('weights', 'budget', 'constraints', 'weather')}
             payload = {
                 'model': MODEL,
                 'temperature': 0,

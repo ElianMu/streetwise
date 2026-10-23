@@ -55,6 +55,19 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 - **动态图例**（可折叠，手机上默认收起）：只显示当前地图上真正可见的符号，并说明聚合、概括化和当前主题。
 - 点击：路线路段优先（Street Segment Evidence），其次是最上层的数据要素（Urban Feature Inspector）；聚合环点击后放大展开。
 
+## Weather-aware routing / 天气感知路线
+
+天气是**独立的动态上下文**，不是第 13 个维度，也不改变 12 维静态评分。
+
+- **数据**（`weather.js`，全站只请求一次，15 分钟刷新，地图移动不会触发请求）：Open-Meteo 预报 API（无需 Key；`current` 为 15 分钟模型状态，`hourly` 为预报，不是站点实测）+ 美国国家气象局 NWS 当前警报。获取温度、体感温度、湿度、降水、降水概率、风速风向、天气类型、时间戳；显示来源、更新时间和过期状态（45 分钟后标为 stale；引擎拒绝 180 分钟以上的数据）。请求失败或离线时状态为 unavailable，路线照常计算。
+- **步行时段**：按“现在出发 + 最大步行时间”覆盖的预报小时取最不利值（最高体感温度、最大降水概率、最大风速、是否白天）。
+- **路线成本**（`routing/weather.py` + `routing/engine.py`）：`边成本 = 原有成本 + 系数 × 热度 × 暴露度`，仅在以下条件同时满足时启用：体感温度 ≥ 27 °C（NWS “Caution”，32 °C 时达到满值）、步行时段在白天、有空间证据。暴露度 = 1 − 树木覆盖代理值（行道树密度，150 棵/km 为满值，约曼哈顿第 90 百分位；或与公园相邻的比例）。**这是树木覆盖代理变量，不是实测遮阴。**无证据的边取全网中位数（中性，不当作最差）。原有候选路线完全不变，另加一条 “Cooler Route (tree-cover proxy)” 候选；排序再减去 `20 × 热度 × 暴露长度占比`。用户明确要求更凉快或更遮阴时，权重 ×2。所有系数都在 `CONFIG` 中，并附理由；响应会回传 `config_version`。
+- **雨、风**：没有有顶步道、脚手架、积水或街道风环境数据，因此**只做提醒，不改变路线**，也不声称某条路更干或更避风。
+- **四种状态分开显示**：Weather Data Available / Weather Context Applied / Weather Routing Active / Weather Routing Unavailable。响应中的 `weather_routing` 记录天气是否进入计算、原因，以及对推荐的实际影响（与不考虑天气时的推荐相比：是否改变、多花几分钟、暴露减少多少）。Route Intelligence 和对话只复述这条记录。
+- **AI Journey**：识别 “cooler / too hot / shade / 凉快 / 阴凉” 等（热度项 ×2，不改其他偏好）、“consider today's weather”（使用天气）、“Is my route comfortable in this weather?”（根据数据回答，不重新规划）。LLM 模式下，预报作为上下文传入，输出新增 `weather` 字段。
+- **界面**：Navigate 地图左上角是紧凑的天气标签，展开后显示当前天气、步行时段预报、NWS 警报、天气路线状态、开关、刷新，以及天气变化后的 “Recalculate” 按钮；点击地图即收起，Explore 中隐藏。右侧新增 “Weather & your walk”：天气状况 / 对步行的影响 / 天气路线说明。
+- **重新规划**：只有天气等级发生变化时才提示重新计算，例如热度档位、白天黑夜、雨或风提醒；数值小幅波动不会提示，也不会自动切换路线。
+
 ## Files / 文件
 
 - `routing/engine.py`: pedestrian routing engine — graph loading, snapping, A*, candidate routes, route scores, personalized ranking, navigation progress.
@@ -63,8 +76,9 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 - `explore-map.js`: Explore Urban Data (13 maps, segment inspector). `app.js`, `center-map.js`: existing shell, preferences, map, Street evidence panel.
 - `scripts/streetwise_indicators.py`: shared indicator definitions and measurement. `build_manhattan_streets.py`: LION scores. `build_pedestrian_network.py`: OSM graph. `match_lion_osm.py`: matching + edge scores.
 - `data/manhattan-streets.json`, `data/pedestrian/`: built data. `data/cache/`: raw downloads (safe to delete).
+- `weather.js`: shared weather context (Open-Meteo + NWS, walk window, routing snapshot). `weather-ui.js`: Navigate weather status, Route Intelligence weather section, weather chat answers. `routing/weather.py`: weather assessment, coefficients, tree-cover exposure.
 - `urban-style.js`: cartographic design tokens (colours, zoom tiers, point/line/building/environment styles). `urban-layers.js`: dataset catalog panel, composition into grouped map layers, themes, dynamic legend, static tile loading, map layers, Urban Feature Inspector, Street Segment Evidence, Route Urban Data. `urban-geo.js`: shared geometry (projection, corridor, nearest, coverage). `api-config.js`: API base + `streetwiseJson`. `routing/layers.py`: reference implementation for tests. `scripts/build_urban_layers.py`: datasets → catalog + tiles.
-- `tests/`: `test_routing_engine.py` (network, matching, scores, ranking, navigation, HTTP), `test_urban_layers.py` (catalog, geographic accuracy, route queries, static serving, walking-time limits), `urban-style.test.cjs` (design-system rules), `urban-geo.test.cjs` (browser geometry = brute-force reference), `test_street_data.py`, `test_server.py`, `dom.test.cjs`, JS spatial tests, Playwright scripts.
+- `tests/`: `test_routing_engine.py` (network, matching, scores, ranking, navigation, HTTP), `test_urban_layers.py` (catalog, geographic accuracy, route queries, static serving, walking-time limits), `urban-style.test.cjs` (design-system rules), `test_weather_routing.py` (weather states, heat cost in A*, constraints, reproducibility), `weather.test.cjs` (forecast window, NY time, snapshot), `urban-geo.test.cjs` (browser geometry = brute-force reference), `test_street_data.py`, `test_server.py`, `dom.test.cjs`, JS spatial tests, Playwright scripts.
 
 ## Automated checks / 自动测试
 
@@ -73,6 +87,7 @@ node tests/spatial.test.cjs
 node tests/real-route.test.cjs
 node tests/urban-geo.test.cjs
 node tests/urban-style.test.cjs
+node tests/weather.test.cjs
 python3 -m unittest discover -s tests -p 'test_*.py'   # includes the routing engine end-to-end tests
 # Install jsdom separately for DOM integration tests:
 npm install --prefix /tmp/streetwise-test jsdom

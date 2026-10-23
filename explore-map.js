@@ -127,7 +127,7 @@ function setExploreMode(on){
  document.querySelectorAll('.maplibregl-popup').forEach(p=>p.remove());
  if(typeof closeUrbanInspector==='function')closeUrbanInspector();
  $('explorePanel').classList.toggle('hidden',!on);
- for(const sel of ['.experience-controls','.map-layer-switch'])document.querySelector(sel).classList.toggle('hidden',on);
+ for(const sel of ['.experience-controls','.map-layer-switch','.wx-panel'])document.querySelector(sel).classList.toggle('hidden',on);
  document.querySelector('.map-legend').classList.toggle('explore-hidden',on);
  $('selectedRouteSummary').classList.toggle('hidden',on);
  if(!on)$('exploreTooltip').classList.add('hidden');

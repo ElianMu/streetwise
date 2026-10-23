@@ -140,16 +140,24 @@ function renderPreferenceSummary(){
   renderDimensions();
 }
 // Clearly labelled LIMITED offline preview; an actual LLM is used only through server.py when configured.
+/** Weather intent: 'ask' (a question about comfort, answered without re-routing), 'cooler' (heat term weighted up),
+    'consider' (use today's weather, nothing else changes), or null. */
+function localWeatherIntent(q){
+  if(/\b(is|will|would)\b[^?]*\b(comfortable|ok|okay|fine|bearable|pleasant)\b[^?]*\bweather\b|这(个)?天气.*(舒服|合适|舒适)|天气.*(舒服|舒适)吗/i.test(q))return 'ask';
+  if(/cool(er)?\b|too hot|really hot|so hot|\bheat\b|hot (day|today|weather)|shad(e|ed|y|ier)|less sun|out of the sun|凉快|凉爽|太热|很热|好热|阴凉|遮阴|晒/i.test(q))return 'cooler';
+  if(/weather|天气/i.test(q))return 'consider';
+  return null;
+}
 function localInterpret(q){
   q=q.replace(/\b(one|two|three|four|five|six|seven|eight|nine|ten|fifteen|twenty|thirty|forty|fifty|sixty)\b/gi,word=>({one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,fifteen:15,twenty:20,thirty:30,forty:40,fifty:50,sixty:60}[word.toLowerCase()]));
   const map=[
     ['Architecture',/architect|historic|heritage|landmark|building|建筑|历史|地标/i],
-    ['Nature',/green|tree|park|shade|nature|greener|绿|树|自然|公园|阴凉/i],
-    ['Culture',/culture|museum|art|gallery|艺术|文化|博物馆/i],
+    ['Nature',/green|\btrees?\b|\bparks?\b|shade|nature|greener|绿|树|自然|公园|阴凉/i],
+    ['Culture',/culture|museum|\barts?\b|gallery|艺术|文化|博物馆/i],
     ['Quiet & Relax',/quiet|peaceful|calm|relax|less noisy|安静|清静|少噪音/i],
     ['Spatial Comfort',/comfort|spacious|uncrowded|宽敞|舒适/i],
     ['Urban Vibrancy',/lively|vibrant|busy|energetic|热闹|活力/i],
-    ['Food & Retail',/food|coffee|restaurant|shop|eat|餐厅|咖啡|美食|购物/i],
+    ['Food & Retail',/food|coffee|restaurant|shop|\beat\b|餐厅|咖啡|美食|购物/i],
     ['Scenic & Visual',/scenic|beautiful view|viewpoint|photogenic|风景|景观|拍照/i],
     ['Walkability',/walkable|easy to walk|pedestrian.friend|好走|步行友好/i],
     ['Access & Safety',/safe|well.lit|safety|安全|照明/i],
@@ -164,7 +172,7 @@ function localInterpret(q){
     if(name==='Quiet & Relax' && /less noisy|少噪音/i.test(q))directions[name]='high';
   }
   if(/less crowded|fewer crowds|avoid crowds|less busy|少拥挤|少人群/i.test(q)){weights['Urban Vibrancy']=90;directions['Urban Vibrancy']='low'}
-  const result={weights,directions,time_minutes:null,time_delta_minutes:null,constraints:{}};
+  const result={weights,directions,time_minutes:null,time_delta_minutes:null,constraints:{},weather:localWeatherIntent(q)};
   const explicit=q.match(/(?:within|under|maximum|max|no more than|at most|less than|最多|不超过|限制|以内|控制在)\s*(\d{1,3})\s*(?:minutes?|mins?|分钟)/i)||q.match(/(\d{1,3})\s*(?:minutes?|mins?|分钟)\s*(?:max|or less|以内|之内)/i);
   if(explicit)result.time_minutes=+explicit[1];
   const more=q.match(/(?:another|additional|extra|up to|多|增加|再|延长)\s*(\d{1,2})\s*(?:minutes?|mins?|分钟)/i)||q.match(/(\d{1,2})\s*(?:minutes?|mins?|分钟)\s*(?:more|extra|longer|也行|也可以)/i)||q.match(/(\d{1,2})\s*(?:more|extra|additional)\s*(?:minutes?|mins?)/i);
@@ -192,6 +200,12 @@ function applyInterpretation(result,source){
     if(typeof result.constraints?.[c]==='boolean'){planner.constraints[c]=result.constraints[c];changes.push(`${c}: ${planner.constraints[c]?'yes':'no'}`)}
   }
   if(Number.isFinite(result.max_detour_percent)){planner.maxDetourPct=Math.max(0,Math.min(100,Math.round(result.max_detour_percent)));changes.push(`max detour ${planner.maxDetourPct}%`)}
+  if(['cooler','consider'].includes(result.weather)){
+    weatherContext.mode='auto';
+    if(result.weather==='cooler'){weatherContext.priority='high';changes.push('weather: cooler walk (heat term ×2 when it is hot)');}
+    else changes.push('weather: use today’s forecast');
+  }
+  planner.weatherIntent=result.weather||null;
   renderPreferenceSummary();
   return changes;
 }
@@ -200,7 +214,7 @@ async function interpretIntent(q){
   let data,mode='local';
   if(planner.llmConnected){
     try{
-      const r=await streetwiseFetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(22000)});
+      const r=await streetwiseFetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,weather:weatherWindow(state.budget),history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(22000)});
       if(!r.ok)throw new Error(`LLM service ${r.status}`);
       data=await r.json();mode='llm';
     }catch(err){console.warn('LLM parsing unavailable:',err);toast('AI parsing unavailable. Using clearly marked limited local preview.');}
@@ -447,6 +461,7 @@ async function handlePlan(text,isFollowUp=false){
   planner.parsing=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;
   appendChat('user',q);
   try{const result=await interpretIntent(q);if(result.clarification){appendChat('assistant',result.clarification);return;}
+    if(planner.weatherIntent==='ask'&&state.routes.length){if(weatherContext.status!=='ok')await loadWeather();appendChat('assistant',weatherAnswer());return;}
     const changes=result.changes;if(changes.length)appendChat('assistant',`${planner.interpretation==='llm'?'AI interpretation':'Limited local interpretation'}: ${changes.join(' · ')}. Checking feasible pedestrian paths…`);
     else appendChat('assistant',`No explicit preference change recognized${planner.interpretation==='local'?' by limited local preview':''}. I’ll check route options using current settings.`);
   }catch(err){toast('Unable to interpret preferences: '+err.message)}
@@ -497,22 +512,11 @@ function updateSegmentDetails(){
   root.innerHTML=html;
 }
 
-async function loadWeather(){
-  if(state.weatherRequestAt&&Date.now()-state.weatherRequestAt<60000)return;state.weatherRequestAt=Date.now();
-  const here=state.gps && latLonInsideManhattanEnvelope(state.gps)?state.gps:{lat:40.783,lon:-73.969};
-  try{
-    const url=`${API.weather}?${new URLSearchParams({latitude:String(here.lat),longitude:String(here.lon),current:'temperature_2m,precipitation,wind_speed_10m,weather_code',timezone:'America/New_York'})}`;
-    const d=await timedJson(url,10000);if(!d.current)throw new Error('No current model output');
-    state.weather=d.current;
-    const c=d.current,w=weatherName(c.weather_code);
-    $('contextUpdated').textContent=`Forecast valid: ${esc(c.time||'not supplied')} · Open-Meteo (model context)`;
-    $('weatherMain').textContent=`${Math.round(c.temperature_2m)}°C`;
-    $('weatherMeta').textContent=`${w} · ${Math.round(c.wind_speed_10m)} km/h wind`;
-    $('topWeather').innerHTML=`<span class="tiny-sun">${weatherIcon(c.weather_code)}</span> ${Math.round(c.temperature_2m)}°C · ${esc(w)}`;
-  }catch(err){$('contextUpdated').textContent='Weather observation time unavailable';$('weatherMain').textContent='UNAVAILABLE';$('weatherMeta').textContent='Weather API not reachable';$('topWeather').textContent='Weather unavailable';}
+/** Weather lives in weather.js (one shared context); this keeps the old entry point and passes the GPS position. */
+function loadWeather(force=false){
+  const here=state.gps&&latLonInsideManhattanEnvelope(state.gps)?{lat:state.gps.lat,lon:state.gps.lon}:null;
+  return refreshWeather(force,here);
 }
-function weatherName(c){if(c===0)return'Clear';if(c<=3)return'Cloudy';if(c===45||c===48)return'Fog';if(c>=51&&c<=67)return'Rain';if(c>=71&&c<=77)return'Snow';if(c>=80&&c<=82)return'Showers';if(c>=95)return'Storm';return'Variable'}
-function weatherIcon(c){if(c===0)return'☀';if(c<=3)return'☁';if(c>=71&&c<=77)return'❄';if(c>=51)return'☂';return'☁'}
 function requestGPS(useAsStart=false,follow=false){
   if(!navigator.geolocation){$('gpsMain').textContent='UNAVAILABLE';toast('Geolocation is unavailable in this browser.');return}
   if(!window.isSecureContext && !['localhost','127.0.0.1'].includes(location.hostname)){$('gpsMain').textContent='HTTPS REQUIRED';toast('GPS requires HTTPS or localhost.');return}

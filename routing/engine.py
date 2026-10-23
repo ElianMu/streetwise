@@ -8,6 +8,11 @@ its geometry, distance and scores are all derived from that one list.
 import gzip, heapq, json, math, os, threading, time, uuid
 from collections import OrderedDict
 
+try:
+    from . import weather as wx
+except ImportError:  # run as a top-level module (tests import routing.engine; server.py imports routing.engine)
+    import weather as wx
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GRAPH = os.path.join(ROOT, 'data', 'pedestrian', 'manhattan-walk-graph.json.gz')
 SCORES = os.path.join(ROOT, 'data', 'pedestrian', 'edge-scores.json.gz')
@@ -67,9 +72,18 @@ class PedestrianNetwork:
                             cell.append(i)
         self._step_free = None
         streets = os.path.join(ROOT, 'data', 'manhattan-streets.json')
-        self.segment_names = {f['properties']['id']: (f['properties']['name'], f['properties'].get('source_segment_id'))
-                              for f in json.load(open(streets, encoding='utf-8'))['features']} if os.path.exists(streets) else {}
+        feats = json.load(open(streets, encoding='utf-8'))['features'] if os.path.exists(streets) else []
+        self.segment_names = {f['properties']['id']: (f['properties']['name'], f['properties'].get('source_segment_id')) for f in feats}
+        # Raw Nature sub-indicators per LION segment: the spatial evidence for the weather heat term (routing/weather.py).
+        self.segment_raw = {f['properties']['id']: {k: f['properties'].get(k) for k in ('tree_km', 'park_pct')} for f in feats}
+        self._exposure = None
         self.load_seconds = round(time.time() - t0, 1)
+
+    def heat_exposure(self):
+        """(per-geometry exposure 0..1, has-evidence flags, neutral median) — computed once, on the first hot-weather request."""
+        if self._exposure is None:
+            self._exposure = wx.exposure_table(self.gscores, self.segment_raw)
+        return self._exposure
 
     def step_free_nodes(self):
         """Nodes of the largest network reachable without any steps (computed once). Snapping for 'avoid stairs'
@@ -241,6 +255,7 @@ class PedestrianNetwork:
         best = {O: 0.0}
         pred = {}
         heap = []
+        tie = iter(range(1 << 62))  # equal (f, g) must never fall through to comparing node ids (ints vs 'O'/'D')
         # Same-edge trip: walk directly between the two snapped points.
         if origin['edge'] in (dest['edge'], self.twin(dest['edge'])):
             i = dest['edge']
@@ -248,15 +263,15 @@ class PedestrianNetwork:
             step = (i, a, b) if a <= b else (self.twin(i), self.edges[i][5] - a, self.edges[i][5] - b) if self.twin(i) is not None else None
             if step and step_cost(step) is not None:
                 best[D] = step_cost(step); pred[D] = (O, step)
-                heapq.heappush(heap, (best[D], best[D], D))
+                heapq.heappush(heap, (best[D], best[D], next(tie), D))
         for node, step in leaving(origin):
             c = step_cost(step)
             if c is not None and c < best.get(node, math.inf):
                 best[node] = c; pred[node] = (O, step)
-                heapq.heappush(heap, (c + h(node), c, node))
+                heapq.heappush(heap, (c + h(node), c, next(tie), node))
         done = set()
         while heap:
-            f, g, node = heapq.heappop(heap)
+            f, g, _, node = heapq.heappop(heap)
             if node in done or g > best.get(node, math.inf):
                 continue
             if node == D:
@@ -266,7 +281,7 @@ class PedestrianNetwork:
                 c = step_cost(ends[node])
                 if c is not None and g + c < best.get(D, math.inf):
                     best[D] = g + c; pred[D] = (node, ends[node])
-                    heapq.heappush(heap, (best[D], best[D], D))
+                    heapq.heappush(heap, (best[D], best[D], next(tie), D))
             for i in self.adj.get(node, ()):
                 v = self.edges[i][1]
                 if v in done or self.nodes[v][3] != 0:
@@ -277,7 +292,7 @@ class PedestrianNetwork:
                 ng = g + c * self.edges[i][5]
                 if ng < best.get(v, math.inf):
                     best[v] = ng; pred[v] = (node, (i, 0.0, self.edges[i][5]))
-                    heapq.heappush(heap, (ng + h(v), ng, v))
+                    heapq.heappush(heap, (ng + h(v), ng, next(tie), v))
         if D not in pred:
             return None
         steps, node = [], D
@@ -320,7 +335,7 @@ class RoutePlanner:
             num += w * c * (fit - .5)
         return .5 + (num / den if den else 0.0)
 
-    def plan(self, origin, destination, preferences=None, constraints=None):
+    def plan(self, origin, destination, preferences=None, constraints=None, weather=None):
         t0 = time.time()
         net = self.net
         constraints = constraints or {}
@@ -330,6 +345,12 @@ class RoutePlanner:
         o = net.snap(origin['lon'], origin['lat'], 'Origin', no_steps)
         d = net.snap(destination['lon'], destination['lat'], 'Destination', no_steps)
         weights, expressed = preference_weights(preferences)
+        # Weather: a dynamic context, separate from the 12 static scores. It adds a cost only when assess() finds a factor
+        # with spatial evidence (daytime heat → tree-cover proxy); otherwise every search below is exactly the static one.
+        wctx = wx.assess(wx.validate_snapshot(weather), evidence_available=bool(net.segment_raw) or any(g.get('raw') for g in net.gscores))
+        heat = wctx['routing']['level'] * wctx['routing']['multiplier'] if wctx['routing']['active'] else 0.0
+        exposure = net.heat_exposure()[0] if heat else None
+        heat_coef = wx.CONFIG['heat']['edge_coefficient'] * heat
 
         def allowed(i):
             return not (avoid_stairs and net.edges[i][7]['_steps'])
@@ -353,6 +374,10 @@ class RoutePlanner:
                 util_cache[gi] = self.edge_utility(gi, weights)
             return util_cache[gi]
 
+        def weather_cost(i):
+            c = experience_cost(0.8)(i)
+            return None if c is None else c + heat_coef * exposure[net.edges[i][3]]
+
         specs = [('shortest', 'Shortest Walk', length_cost)]
         specs += [('experience', 'Best Experience Match', experience_cost(2.0)), ('experience_balanced', 'Balanced Experience Route', experience_cost(0.8))]
         candidates = []
@@ -375,6 +400,11 @@ class RoutePlanner:
             candidates.append(('alternative', 'Alternative Experience Route', steps))
             for i, *_ in steps:
                 used[net.edges[i][3]] = used.get(net.edges[i][3], 1.0) * 1.8
+        # The static candidates above are unchanged by weather; a hot day adds one more search with the heat term.
+        if heat:
+            steps = net.search(o, d, weather_cost)
+            if steps is not None:
+                candidates.append(('weather_heat', 'Cooler Route (tree-cover proxy)', steps))
 
         routes = []
         for objective, name, steps in candidates:
@@ -398,11 +428,15 @@ class RoutePlanner:
             r['constraints'] = {'feasible': not violations, 'violations': violations, 'avoid_stairs': avoid_stairs,
                                 'contains_steps': any(e['pedestrian_access']['steps'] for e in r['edges'])}
             self.personalize(r, weights, expressed)
+            self.weather_fields(r, wctx, heat)
+        static_key = lambda r: (not r['constraints']['feasible'], -r['personalized_score']['utility'] - r['personalized_score'].get('weather_adjustment', 0), r['distance_m'])
+        baseline = min((r for r in routes if r['objective'] != 'weather_heat'), key=static_key, default=None)
         ranked = sorted(routes, key=lambda r: (not r['constraints']['feasible'], -r['personalized_score']['utility'], r['distance_m']))
         for n, r in enumerate(ranked, 1):
             r['rank'] = n
             r['recommended'] = n == 1 and r['constraints']['feasible']
             r['ranking_explanation'] = explain(r, ranked, weights, expressed)
+        wctx['routing']['effect'] = weather_effect(ranked, baseline, heat)
         with self.lock:
             for r in ranked:
                 self.routes[r['route_id']] = r
@@ -414,7 +448,7 @@ class RoutePlanner:
             'preferences_used': {k: {'weight': w, 'direction': dr} for k, (w, dr) in weights.items()}, 'preferences_expressed': expressed,
             'constraints_used': {'max_minutes': max_minutes, 'max_detour_pct': max_detour, 'avoid_detours': constraints.get('avoid_detours', True), 'avoid_stairs': avoid_stairs},
             'feasible_count': sum(r['constraints']['feasible'] for r in ranked),
-            'routes': ranked, 'compute_seconds': round(time.time() - t0, 2),
+            'routes': ranked, 'compute_seconds': round(time.time() - t0, 2), 'weather_routing': wctx,
             'notes': ['Walking time uses a fixed 4.8 km/h planning pace; no live pedestrian or traffic data.',
                       'Scores are relative ranks within Manhattan (0–100), not calibrated experience scores. N/A dimensions are excluded, never counted as zero.'],
         }
@@ -476,6 +510,24 @@ class RoutePlanner:
                                    'travel_cost_penalty': round(penalty, 1), 'components': parts, 'preferences_expressed': expressed,
                                    'formula': 'Σ w·(50 + coverage·(fit − 50)) / Σ w − 0.4 × detour %'}
 
+    def weather_fields(self, r, wctx, heat):
+        """Route heat exposure on the tree-cover proxy (always reported when weather data exists) and, only while heat routing
+        is active, its ranking adjustment folded into the personalized utility."""
+        if not wctx['data_available']:
+            return
+        exp, has, _ = self.net.heat_exposure()
+        total = sum(e['traversed_length_m'] for e in r['edges']) or 1.0
+        share = sum(exp[e['geometry_index']] * e['traversed_length_m'] for e in r['edges']) / total
+        cov = sum(e['traversed_length_m'] for e in r['edges'] if has[e['geometry_index']]) / total
+        r['weather'] = {'heat_exposure_share': round(share, 3), 'tree_cover_proxy_share': round(1 - share, 3), 'evidence_coverage': round(cov, 3),
+                        'evidence': wx.EVIDENCE['heat']}
+        if heat:
+            ps = r['personalized_score']
+            adj = round(wx.CONFIG['heat']['rank_points'] * heat * share, 1)
+            ps['weather_adjustment'] = adj
+            ps['utility'] = round(ps['utility'] - adj, 1)
+            ps['formula'] += f" − {wx.CONFIG['heat']['rank_points']:g} × heat level × heat-exposed share (weather)"
+
     # --- navigation readiness ------------------------------------------------------------------------------
     def progress(self, route_id, lon, lat, accuracy_m=None):
         """Where a reported position sits on a planned route. Pure geometry: no live tracking is claimed."""
@@ -509,6 +561,17 @@ class RoutePlanner:
                 'remaining_m': round(remaining, 1), 'remaining_min': round(remaining / WALK_SPEED_M_PER_MIN, 1),
                 'current_edge_id': current, 'off_route': off, 'reroute_recommended': off,
                 'accuracy_considered': acc_ok, 'reroute_hint': 'POST /api/routes with origin = current position' if off else None}
+
+
+def weather_effect(ranked, baseline, heat):
+    """How weather changed the recommendation, against the recommendation the static ranking alone would make."""
+    best = next((r for r in ranked if r['recommended']), None)
+    if not heat or not best or not baseline:
+        return None
+    changed = best['route_id'] != baseline['route_id']
+    return {'baseline_route_id': baseline['route_id'], 'recommended_route_id': best['route_id'], 'changed': changed,
+            'extra_minutes': round(best['estimated_duration_min'] - baseline['estimated_duration_min'], 1) if changed else 0.0,
+            'exposure_reduction': round(baseline['weather']['heat_exposure_share'] - best['weather']['heat_exposure_share'], 3) if changed else 0.0}
 
 
 def overlap(a, b):

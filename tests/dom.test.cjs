@@ -4,7 +4,7 @@ const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.
 const dom=new JSDOM(html,{runScripts:'outside-only',url:'http://localhost:8080'}),w=dom.window;
 w.fetch=async()=>{throw new Error('Network intentionally blocked in DOM test')};w.HTMLElement.prototype.scrollIntoView=function(){};w.AbortSignal.timeout=()=>new w.AbortController().signal;
 const vm=require('vm'),context=dom.getInternalVMContext();
-for(const file of ['experience-core.js','api-config.js','app.js','route-client.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
+for(const file of ['experience-core.js','api-config.js','weather.js','app.js','route-client.js','weather-ui.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
 const run=s=>vm.runInContext(s,context);
 (async()=>{
  assert.equal(w.document.querySelectorAll('#experienceDimension option').length,12);
@@ -55,6 +55,10 @@ const run=s=>vm.runInContext(s,context);
  const req=calls.find(c=>c.url.endsWith('/api/routes')).body;
  assert.deepEqual(req.preferences.weights,{Nature:90});assert.equal(req.constraints.max_minutes,72);assert(w.document.querySelector('#routeCards').textContent.includes('max 72 min walking'));assert.equal(req.constraints.max_detour_pct,25);assert.equal(req.origin.lat,40.7536);
  assert.equal(run('state.routes.length'),fixture.routes.length);
+ // Weather offline: the request carries weather:null, routing still works, and nothing claims weather was used.
+ assert.equal(req.weather,null);assert.equal(run('weatherContext.status'),'error');
+ assert(w.document.querySelector('#topWeather').textContent.includes('unavailable'));
+ assert(w.document.querySelector('#wxRoute').textContent.includes('without usable weather data'));
  const best=fixture.routes.find(r=>r.recommended);assert.equal(run('state.activeRoute'),best.route_id);
  assert.equal(w.document.querySelectorAll('#routeCards .route-card').length,fixture.routes.length);
  assert(w.document.querySelector('#routeCards').textContent.includes(best.route_name));
@@ -152,5 +156,21 @@ const run=s=>vm.runInContext(s,context);
  Object.defineProperty(w.navigator,'geolocation',{value:{getCurrentPosition:(good,bad)=>bad({code:3,message:'timeout'})},configurable:true});run('requestGPS()');assert.equal(w.document.querySelector('#gpsMain').textContent,'TIMED OUT');
  // Slider change must request fresh geometry, rather than merely recoloring.
  run("planner.constraints.stepFree=false;planner.adjust=true;renderDimensions();globalThis.replans=0;");const slider=w.document.querySelector('[data-weight="Nature"]');slider.value='80';slider.dispatchEvent(new w.Event('input'));slider.dispatchEvent(new w.Event('change'));await new Promise(r=>setTimeout(r,750));assert.equal(w.replans,1);
- console.log('DOM PASS: walking-time default/sync/validation/API, urban data catalog (10 dataset categories, statuses, search), along-route counts = brute-force reference, route switch keeps layers, route urban data summary, feature inspector, segment evidence (matched/unmatched), static JSON errors, mode, 13 explore views, segment inspector (single + overall, N/A), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
+ // Weather intents in the local preview parser; "weather" no longer reads as "eat" (Food & Retail).
+ assert.equal(run("localWeatherIntent('It\\'s really hot today. Find me a cooler walking route.')"),'cooler');
+ assert.equal(run("localWeatherIntent('Is my current route comfortable in this weather?')"),'ask');
+ assert.equal(run("localWeatherIntent('I want a greener walk, but consider today\\'s weather.')"),'consider');
+ assert.equal(run("localWeatherIntent('Keep my destination, but find a more shaded route.')"),'cooler');
+ assert.equal(run("localWeatherIntent('Make it quieter')"),null);
+ assert.deepEqual(Object.keys(run("localInterpret('consider today\\'s weather on this street')").weights),[]);
+ // A real engine response for a hot afternoon (tests/fixtures/route-response-hot.json): the UI reports exactly the engine record.
+ const hot=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/route-response-hot.json')));const eff=hot.weather_routing.routing.effect;
+ w.HOT=hot;run('applyRouteResponse(HOT);renderRouteCards();updateWhyRoute()');
+ const wxText=w.document.querySelector('#wxRoute').textContent;assert.equal(w.document.querySelector('#wxRouteStatus').textContent,'ROUTING ACTIVE');
+ assert(eff.changed&&wxText.includes('Weather changed the recommendation')&&wxText.includes('Street-tree / park cover proxy')&&wxText.includes(`${Math.round(eff.exposure_reduction*100)} points less heat-exposed`));
+ assert(w.document.querySelector('#routeCards').textContent.includes('heat-exposed (tree proxy)'));
+ assert(run('weatherRouteSentence(HOT)').includes('not measured shade'));
+ const fixtureMild=JSON.parse(JSON.stringify(hot));fixtureMild.weather_routing.routing={status:'not_active',active:false,reason:'Below the heat-caution band.'};w.MILD=fixtureMild;run('applyRouteResponse(MILD);updateWhyRoute()');
+ assert(w.document.querySelector('#wxRoute').textContent.includes('weather-based route optimization is not active for this route'));
+ console.log('DOM PASS: weather offline → weather:null + honest status, weather intents, engine weather record shown as computed, walking-time default/sync/validation/API, urban data catalog (10 dataset categories, statuses, search), along-route counts = brute-force reference, route switch keeps layers, route urban data summary, feature inspector, segment evidence (matched/unmatched), static JSON errors, mode, 13 explore views, segment inspector (single + overall, N/A), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});
