@@ -3,14 +3,6 @@
    Reads the static catalog and 1 km tiles in data/layers (built by scripts/build_urban_layers.py), so it works on
    GitHub Pages without the API. Records are filtered along the selected route's real geometry (or to the current
    view) in the browser with urban-geo.js. Display corridors only change what is drawn, never any score. */
-const UD_PALETTE=['#8fdc86','#4caf6a','#f6ac6e','#c39bff','#ff8fc8','#7fd6ff','#ff9f5a','#f2d36b','#4fb4ff','#ff4f6a','#b9e28c','#e7d27a','#9fb3ba','#ffc861','#7bc8d6','#d6e6e1','#c4776b','#a98bff'];
-const UD_COLORS={street_trees:'#8fdc86',parks:'#4caf6a',natural_areas:'#2f8f55',waterfront_parks:'#3aa6a0',community_gardens:'#a8d65a',landmarks:'#f6ac6e',historic_districts:'#e0b16a',
- museums:'#c39bff',galleries:'#d7a6ff',theaters:'#ab7cff',cinemas:'#9b8cff',libraries:'#8fa2ff',public_art:'#ff8fc8',monuments:'#ffb3d9',restaurants:'#ff9f5a',cafes:'#e5b380',bars:'#ff7a59',
- bakeries:'#f0c98a',grocery:'#f2d36b',retail:'#e7c34a',markets:'#d9a23a',entertainment:'#ff6fa5',recreation:'#7fd6a6',activity_places:'#ffc861',pedestrian_crashes:'#ff4f6a',cyclist_crashes:'#ff8a4f',
- speed_limits:'#e8d24a',noise_complaints:'#ff7a6b',expressways:'#c4776b',subway_stations:'#4fb4ff',subway_entrances:'#7fc8ff',accessible_entrances:'#57e0ff',bus_stops:'#62a8ff',bike_share:'#4f7bff',
- ferry_terminals:'#7fe0d0',lion_centerline:'#8aa3a8',osm_sidewalks:'#7bc8d6',osm_crosswalks:'#ffffff',osm_paths:'#b9e28c',sidewalk_surface:'#9fb3ba',pedestrian_ramps:'#d6e6e1',intersections:'#c7d3d6',
- traffic_signals:'#ffd75a',pedestrian_plazas:'#d6b4ff',bike_routes:'#5fd4ff',benches:'#e7d27a',drinking_fountains:'#5fc8ff',public_restrooms:'#9ee0ff',building_footprints:'#8f9aa3',
- land_use:'#c9a86a',pops:'#d6b4ff',hospitals_clinics:'#ff6b6b',pharmacies:'#6bd6a0',schools:'#f2c46b',linknyc:'#b0c4ff',viewpoints:'#7fd6ff',pedestrian_bridges:'#ffffff'};
 const ROUTE_SUMMARY=[
  {key:'trees',label:'Trees',ds:['street_trees']},{key:'parks',label:'Parks',ds:['parks']},{key:'landmarks',label:'Historic landmarks',ds:['landmarks']},
  {key:'districts',label:'Historic districts',ds:['historic_districts']},{key:'food',label:'Restaurants & cafés',ds:['restaurants','cafes']},
@@ -23,15 +15,17 @@ const SEGMENT_EVIDENCE=[
  {label:'Pedestrian injury crashes',ds:['pedestrian_crashes'],kind:'count',r:30,dim:'access_safety'},{label:'Nearest subway entrance',ds:['subway_entrances'],kind:'nearest',r:800,dim:'transit_connectivity'},
  {label:'Bus stops',ds:['bus_stops'],kind:'count',r:100},{label:'Building footprints',ds:['building_footprints'],kind:'count',r:30}];
 const KIND_LABEL={count:'Raw feature count',density:'Spatial density',nearest:'Nearest distance',coverage:'Area coverage'};
-const urbanData={catalog:null,loading:null,byId:new Map(),tiles:new Map(),active:new Map(),drawn:new Map(),scope:'route',corridor:100,search:'',openCats:new Set(),settings:false,viewTimer:0,summarySeq:0,lastEdge:null};
+const urbanData={catalog:null,loading:null,byId:new Map(),tiles:new Map(),active:new Map(),drawn:new Map(),buildingTheme:'height',envTheme:'noise',scope:'route',corridor:100,search:'',openCats:new Set(),settings:false,viewTimer:0,summarySeq:0,lastEdge:null};
 const UD_BEFORE='route-alts';
-const udColor=id=>UD_COLORS[id]||UD_PALETTE[[...id].reduce((s,c)=>s+c.charCodeAt(0),0)%UD_PALETTE.length];
 
 // --- catalog & tiles ---------------------------------------------------------------------------------------
+/** First visit: every connected dataset with default_visible is switched on, once. */
+function applyUrbanDefaults(c){if(urbanData.defaultsApplied)return;urbanData.defaultsApplied=true;
+ for(const d of c.datasets)if(d.status==='CONNECTED'&&d.default_visible!==false)toggleUrbanDataset(d.id,true,true);renderActiveCount();renderUrbanLegend();}
 async function ensureUrbanCatalog(){
  if(urbanData.catalog)return urbanData.catalog;
  urbanData.loading=urbanData.loading||streetwiseJson('./data/layers/catalog.json',{signal:AbortSignal.timeout(20000)});
- try{const c=await urbanData.loading;UrbanGeo.setProjection(c.projection);urbanData.catalog=c;c.datasets.forEach(d=>urbanData.byId.set(d.id,d));}
+ try{const c=await urbanData.loading;UrbanGeo.setProjection(c.projection);urbanData.catalog=c;c.datasets.forEach(d=>urbanData.byId.set(d.id,d));applyUrbanDefaults(c);}
  catch(e){urbanData.loading=null;throw e;}
  return urbanData.catalog;
 }
@@ -54,13 +48,48 @@ async function datasetAlong(d,coords,distance){
  return UrbanGeo.alongLine(feats,coords,distance);
 }
 
+// --- composition: which render group draws each dataset -------------------------------------------------
+const UD_CATEGORY_IDS=['streets','nature','buildings','heritage','activities','safety','environment','transit','services','waterfront'];
+const BUILDING_SET=['building_footprints','building_heights','building_age','land_use'];
+const BUILDING_THEMES=[['neutral','Neutral buildings',null],['height','Building height','building_heights'],['age','Building year built','building_age'],['landuse','Land use (PLUTO)','land_use']];
+const ENV_THEMES=[['noise','311 noise complaint density','noise_complaints'],['none','No environmental surface',null],['air_quality','Air quality',null],['urban_heat','Urban heat',null],['flood_risk','Flood risk',null]];
+function udGroup(d){
+ const s=UrbanStyle.SPECIAL[d.id];if(s)return s;
+ if(d.geometry==='LineString')return 'lines';
+ if(d.geometry==='Polygon')return 'surface';
+ return 'pts-'+d.categories[0];
+}
+/** Colour of a dataset: its primary category's family, shaded by its position within that category. */
+function udColor(id){
+ const d=urbanData.byId.get(id);if(!d)return '#8a979c';
+ if(UrbanStyle.LINES[id])return UrbanStyle.LINES[id].color;
+ const cat=d.categories[0],peers=urbanData.catalog.datasets.filter(x=>x.status==='CONNECTED'&&x.categories[0]===cat&&udGroup(x)===udGroup(d));
+ return UrbanStyle.shade(UrbanStyle.T.cat[cat],peers.indexOf(d),peers.length);
+}
+/** How an enabled dataset is actually drawn right now (stated in the panel and legend, never hidden silently). */
+function udRepresentation(id){
+ const z=state.mapReady?state.map.getZoom():12,T=UrbanStyle.T,g=udGroup(urbanData.byId.get(id));
+ if(BUILDING_SET.includes(id)){const theme=BUILDING_THEMES.find(t=>t[0]===urbanData.buildingTheme);
+  if(id==='building_footprints')return `Building footprints · fill = ${theme[1]}`;
+  return theme[2]===id?'Controls the building fill (active theme)':`Enabled · building theme is ${theme[1]}; open the inspector or switch theme`;}
+ if(id==='noise_complaints')return urbanData.envTheme==='noise'?(z<16.5?'Density surface (environment theme)':'Individual complaints at detail zoom'):'Enabled · not the environment theme; shown as points from z16.5';
+ if(id==='natural_areas'||id==='waterfront_parks')return 'Dashed outline over the park fill';
+ if(id==='activity_places')return 'Draws places not already shown by a more specific dataset (no double dots)';
+ if(id==='street_trees')return z<12?'Shown from z12 as a fine texture':'Fine green texture';
+ if(g.startsWith('pts-'))return z<T.cluster.maxZoom?`Grouped with ${urbanCatName(urbanData.byId.get(id).categories[0])} into clusters below z${T.cluster.maxZoom}`:'Individual records';
+ const L=UrbanStyle.LINES[id];if(L?.minzoom&&z<L.minzoom)return `Generalised: shown from z${L.minzoom}`;
+ if(id==='sidewalk_surface'&&z<T.zoom.street)return `Generalised: shown from z${T.zoom.street}`;
+ return 'Drawn';
+}
+const urbanCatName=c=>urbanData.catalog?.categories.find(x=>x.id===c)?.name||c;
+
 // --- panel ---------------------------------------------------------------------------------------------------
 async function openUrbanPanel(){
  const root=$('urbanCats');
  try{await ensureUrbanCatalog();renderUrbanPanel();}
  catch(e){root.innerHTML=`<p class="urban-note">Urban data catalog could not be loaded: ${esc(e.message)}</p>`;}
 }
-const STATUS_LABEL={CONNECTED:'Connected',AVAILABLE_NOT_CONNECTED:'Available · not connected',MISSING:'Missing',UNAVAILABLE:'Unavailable'};
+const STATUS_LABEL={CONNECTED:'Connected',AVAILABLE_NOT_CONNECTED:'Not connected · available',MISSING:'Not connected · no dataset',UNAVAILABLE:'Unavailable'};
 function renderUrbanPanel(){
  const cat=urbanData.catalog;if(!cat)return;
  const q=urbanData.search.trim().toLowerCase();
@@ -69,106 +98,228 @@ function renderUrbanPanel(){
  const hit=d=>!q||[d.name,d.source,...(d.categories||[]).map(c=>cat.categories.find(x=>x.id===c)?.name)].some(t=>re.test(String(t||'')));
  $('urbanCats').innerHTML=cat.categories.map(c=>{
   const items=cat.datasets.filter(d=>d.categories.includes(c.id)&&hit(d)).sort((a,b)=>(a.status!=='CONNECTED')-(b.status!=='CONNECTED')||a.name.localeCompare(b.name));
-  if(!items.length)return '';const on=items.filter(d=>urbanData.active.has(d.id)).length,conn=items.filter(d=>d.status==='CONNECTED').length;
-  return `<details class="urban-cat" data-cat="${c.id}" ${q||urbanData.openCats.has(c.id)?'open':''}><summary><span>${esc(c.name)}</span><small>${conn} connected${on?` · ${on} on`:''}</small></summary>${items.map(urbanDatasetRow).join('')}</details>`;
+  if(!items.length)return '';const conn=items.filter(d=>d.status==='CONNECTED'),on=conn.filter(d=>urbanData.active.has(d.id)).length;
+  const state_=!on?'none':on===conn.length?'all':'some';
+  return `<details class="urban-cat" data-cat="${c.id}" ${q||urbanData.openCats.has(c.id)?'open':''}><summary><input type="checkbox" data-ud-cat="${c.id}" data-state="${state_}" ${state_==='all'?'checked':''} ${conn.length?'':'disabled'} aria-label="Show all ${esc(c.name)}"><span class="urban-swatch" style="--c:${UrbanStyle.T.cat[c.id]}"></span><span>${esc(c.name)}</span><small>${on}/${conn.length} on</small></summary>${items.map(urbanDatasetRow).join('')}</details>`;
  }).join('')||'<p class="urban-note">No dataset matches this search.</p>';
+ $('urbanCats').querySelectorAll('[data-ud-cat]').forEach(c=>{c.indeterminate=c.dataset.state==='some';
+  c.addEventListener('click',e=>e.stopPropagation());c.addEventListener('change',()=>setUrbanCategory(c.dataset.udCat,c.checked));});
  $('urbanCats').querySelectorAll('.urban-cat').forEach(d=>d.addEventListener('toggle',()=>{d.open?urbanData.openCats.add(d.dataset.cat):urbanData.openCats.delete(d.dataset.cat);}));
  $('urbanCats').querySelectorAll('[data-ud-toggle]').forEach(c=>c.addEventListener('change',()=>toggleUrbanDataset(c.dataset.udToggle,c.checked)));
  $('urbanCats').querySelectorAll('[data-ud-info]').forEach(b=>b.addEventListener('click',()=>{const box=b.closest('.urban-ds').querySelector('.urban-meta');box.classList.toggle('hidden');b.setAttribute('aria-expanded',String(!box.classList.contains('hidden')));}));
- renderActiveLayers();
+ $('urbanCats').querySelectorAll('[data-ud-opacity]').forEach(r=>r.addEventListener('input',()=>setUrbanOpacity(r.dataset.udOpacity,r.value/100)));
+ renderActiveCount();
 }
 function urbanDatasetRow(d){
  if(d.status!=='CONNECTED')return `<div class="urban-ds off"><div class="urban-row"><input type="checkbox" disabled aria-label="${esc(d.name)} — ${esc(STATUS_LABEL[d.status])}"><span class="urban-swatch none"></span><span class="urban-name">${esc(d.name)}</span><span class="urban-badge off">${esc(STATUS_LABEL[d.status])}</span></div><p class="urban-reason">${esc(d.reason)}${d.source?` · ${d.source_url?`<a href="${esc(d.source_url)}" target="_blank" rel="noopener noreferrer">${esc(d.source)}</a>`:esc(d.source)}`:''}</p></div>`;
- const on=urbanData.active.has(d.id),dims=d.scoring.map(s=>dimLabel(ExperienceCore.names[ExperienceCore.keys.indexOf(s.dimension)])).join(', ');
- return `<div class="urban-ds"><div class="urban-row"><input type="checkbox" data-ud-toggle="${d.id}" ${on?'checked':''} aria-label="Show ${esc(d.name)}"><span class="urban-swatch ${d.geometry.toLowerCase()}" style="--c:${udColor(d.id)}"></span><span class="urban-name">${esc(d.name)}</span><span class="urban-badge ${d.used_in_scoring?'scoring':'context'}" title="${d.used_in_scoring?`Feeds the ${esc(dims)} score`:'Not part of any score'}">${d.used_in_scoring?'Used in scoring':'Context only'}</span><button type="button" class="urban-info" data-ud-info aria-expanded="false" title="Dataset details">i</button></div>
+ const a=urbanData.active.get(d.id),dims=d.scoring.map(s=>dimLabel(ExperienceCore.names[ExperienceCore.keys.indexOf(s.dimension)])).join(', ');
+ return `<div class="urban-ds"><div class="urban-row"><input type="checkbox" data-ud-toggle="${d.id}" ${a?'checked':''} aria-label="Show ${esc(d.name)}"><span class="urban-swatch ${d.geometry.toLowerCase()}" style="--c:${udColor(d.id)}"></span><span class="urban-name">${esc(d.name)}</span><span class="urban-badge ${d.used_in_scoring?'scoring':'context'}" title="${d.used_in_scoring?`Feeds the ${esc(dims)} score`:'Not part of any score'}">${d.used_in_scoring?'Scoring':'Context'}</span><button type="button" class="urban-info" data-ud-info aria-expanded="false" title="Dataset details">i</button></div>
+  ${a?`<div class="urban-live"><span class="urban-status ${a.kind||''}" data-ud-status="${d.id}">${esc(a.status||'')}</span><span class="urban-repr" data-ud-repr="${d.id}">${esc(udRepresentation(d.id))}</span>${urbanData.settings?`<label class="urban-opacity">Opacity <input type="range" min="15" max="100" value="${Math.round(a.opacity*100)}" data-ud-opacity="${d.id}"></label>`:''}</div>`:''}
   <dl class="urban-meta hidden"><dt>Source</dt><dd><a href="${esc(d.source_url)}" target="_blank" rel="noopener noreferrer">${esc(d.source)}</a></dd><dt>Geometry</dt><dd>${esc(d.geometry)} · ${Number(d.feature_count).toLocaleString()} Manhattan records</dd><dt>Time</dt><dd>${esc(d.time_range||'—')}</dd><dt>Last updated</dt><dd>${esc(d.last_updated||'unknown')}</dd>
   <dt>Scoring</dt><dd>${d.used_in_scoring?esc(d.scoring.map(s=>`${dimLabel(ExperienceCore.names[ExperienceCore.keys.indexOf(s.dimension)])} (${s.sub_indicators.join(', ')})`).join('; ')):'Context only — not part of any score'}</dd>${d.note?`<dt>Note</dt><dd>${esc(d.note)}</dd>`:''}<dt>Fields</dt><dd>${esc(d.attributes.join(', '))}</dd></dl></div>`;
 }
-function renderActiveLayers(){
- $('urbanActiveCount').textContent=urbanData.active.size?`${urbanData.active.size} on`:'';
- $('urbanActiveTitle').textContent=`ACTIVE LAYERS: ${urbanData.active.size}`;
- $('urbanActive').innerHTML=[...urbanData.active.entries()].map(([id,a])=>{const d=urbanData.byId.get(id);
-  return `<div class="urban-active-row"><span class="urban-swatch ${d.geometry.toLowerCase()}" style="--c:${udColor(id)}"></span><span class="urban-name">${esc(d.name)}${d.style?.by?` <small>${esc(urbanLegend(d))}</small>`:''}</span><span class="urban-status" data-ud-status="${id}">${esc(a.status||'')}</span><button type="button" class="urban-remove" data-ud-remove="${id}" aria-label="Turn off ${esc(d.name)}">×</button>
-   ${urbanData.settings?`<label class="urban-opacity">Opacity <input type="range" min="15" max="100" value="${Math.round(a.opacity*100)}" data-ud-opacity="${id}"></label>`:''}</div>`;}).join('')||'<p class="urban-note">No layers on. Tick datasets above.</p>';
- $('urbanActive').querySelectorAll('[data-ud-remove]').forEach(b=>b.addEventListener('click',()=>toggleUrbanDataset(b.dataset.udRemove,false)));
- $('urbanActive').querySelectorAll('[data-ud-opacity]').forEach(r=>r.addEventListener('input',()=>setUrbanOpacity(r.dataset.udOpacity,r.value/100)));
+function renderActiveCount(){
+ const n=urbanData.active.size,total=urbanData.catalog?urbanData.catalog.datasets.filter(d=>d.status==='CONNECTED').length:0;
+ $('urbanActiveCount').textContent=n?`${n}/${total} on`:'';$('urbanActiveTitle').textContent=`ACTIVE DATASETS: ${n} of ${total}`;
 }
-function urbanLegend(d){return d.style.stops.map(([v])=>v).join(' → ')+(d.style.unit?` ${d.style.unit}`:'');}
-function setUrbanStatus(id,text){const a=urbanData.active.get(id);if(!a)return;a.status=text;const el=document.querySelector(`[data-ud-status="${id}"]`);if(el)el.textContent=text;}
+// Status kinds: loaded · empty (no nearby features) · loading · error · waiting. Errors are never shown as 0.
+function setUrbanStatus(id,text,kind){const a=urbanData.active.get(id);if(!a)return;a.status=text;a.kind=kind;const el=document.querySelector(`[data-ud-status="${id}"]`);if(el){el.textContent=text;el.className='urban-status '+kind;}}
+function refreshRepresentations(){document.querySelectorAll('[data-ud-repr]').forEach(el=>{el.textContent=udRepresentation(el.dataset.udRepr);});}
 
-// --- map layers ----------------------------------------------------------------------------------------------
-const udSource=id=>'ud-'+id;
-function urbanStyleIds(id){const d=urbanData.byId.get(id),s=udSource(id);return d.geometry==='Point'?[s+'-cluster',s+'-pt']:d.geometry==='LineString'?[s+'-line']:[s+'-fill',s+'-outline'];}
-function urbanMapLayerIds(){return [...urbanData.active.keys()].flatMap(urbanStyleIds);}
-function udPaintColor(d){
- const c=udColor(d.id),st=d.style;
- if(st?.by)return ['case',['has',st.by],['interpolate',['linear'],['to-number',['get',st.by],0],...st.stops.flat()],c];
- if(st?.by_category){const cats=['One & two family','Multi-family walk-up','Multi-family elevator','Mixed residential & commercial','Commercial & office','Industrial & manufacturing','Transportation & utility','Public facilities & institutions','Open space & outdoor recreation','Parking','Vacant land'];
-  return ['match',['get',st.by_category],...cats.flatMap((n,i)=>[n,UD_PALETTE[i]]),'#888888'];}
- return c;
-}
-function addUrbanMapLayer(id){
- const m=state.map,d=urbanData.byId.get(id),s=udSource(id),op=urbanData.active.get(id).opacity,color=udPaintColor(d);
- if(m.getSource(s))return;
- if(d.geometry==='Point'){
-  // Clusters at low zoom keep dense points from covering the route; they split into single records as you zoom in.
-  m.addSource(s,{type:'geojson',data:emptyFC(),cluster:!d.style,clusterRadius:34,clusterMaxZoom:15});
-  m.addLayer({id:s+'-cluster',type:'circle',source:s,filter:['has','point_count'],paint:{'circle-color':udColor(id),'circle-opacity':op*.4,'circle-stroke-color':udColor(id),'circle-stroke-width':1.2,'circle-radius':['interpolate',['linear'],['get','point_count'],2,8,50,13,500,20]}},UD_BEFORE);
-  m.addLayer({id:s+'-pt',type:'circle',source:s,filter:['!',['has','point_count']],paint:{'circle-color':color,'circle-opacity':op,'circle-radius':['interpolate',['linear'],['zoom'],12,2.4,16,5.5],'circle-stroke-color':'#0b1a1d','circle-stroke-width':.8}},UD_BEFORE);
- }else if(d.geometry==='LineString'){
-  m.addSource(s,{type:'geojson',data:emptyFC()});
-  m.addLayer({id:s+'-line',type:'line',source:s,layout:{'line-cap':'round'},paint:{'line-color':color,'line-opacity':op,'line-width':['interpolate',['linear'],['zoom'],12,1,16,3.2]}},UD_BEFORE);
- }else{
-  m.addSource(s,{type:'geojson',data:emptyFC()});
-  m.addLayer({id:s+'-fill',type:'fill',source:s,paint:{'fill-color':color,'fill-opacity':op*.3}},UD_BEFORE);
-  m.addLayer({id:s+'-outline',type:'line',source:s,paint:{'line-color':color,'line-opacity':op,'line-width':1.1}},UD_BEFORE);
+// --- map: render groups in fixed tiers below the routes --------------------------------------------------
+// Tier anchors keep the order base map → polygons → lines → environment → trees → POIs → labels → routes → highlight.
+const UD_TIERS=['ud-z-polys','ud-z-lines','ud-z-env','ud-z-trees','ud-z-points','ud-z-labels'];
+function urbanMapLayerIds(){return state.mapLayersReady?state.map.getStyle().layers.map(l=>l.id).filter(id=>id.startsWith('udg-')):[];}
+function addGroupLayers(){
+ const m=state.map,T=UrbanStyle.T,op=(base)=>['*',base,['coalesce',['get','_op'],1]];
+ const src=(id,opts={})=>m.addSource(id,{type:'geojson',data:emptyFC(),...opts});
+ const layer=(def,tier)=>m.addLayer(def,tier);
+ // Buildings: one fill whose colour follows the building theme; hairline outlines from street zoom.
+ src('udg-buildings');
+ layer({id:'udg-buildings-fill',type:'fill',source:'udg-buildings',minzoom:T.zoom.neighbourhood-.5,paint:{'fill-color':T.building.neutral,'fill-opacity':op(T.building.fillOpacity)}},'ud-z-polys');
+ layer({id:'udg-buildings-line',type:'line',source:'udg-buildings',minzoom:T.zoom.street,paint:{'line-color':T.building.outline,'line-width':['interpolate',['linear'],['zoom'],15,.3,18,.8],'line-opacity':.55}},'ud-z-polys');
+ // Green: parks and gardens as soft fills with fine edges; classification subsets as dashed outlines.
+ src('udg-green');
+ layer({id:'udg-green-fill',type:'fill',source:'udg-green',filter:['in',['get','ds'],['literal',['parks','community_gardens']]],paint:{'fill-color':T.cat.nature,'fill-opacity':op(.22)}},'ud-z-polys');
+ layer({id:'udg-green-line',type:'line',source:'udg-green',filter:['in',['get','ds'],['literal',['parks','community_gardens']]],paint:{'line-color':T.cat.nature,'line-width':['interpolate',['linear'],['zoom'],12,.4,17,1.1],'line-opacity':op(.6)}},'ud-z-polys');
+ layer({id:'udg-green-sub',type:'line',source:'udg-green',filter:['in',['get','ds'],['literal',['natural_areas','waterfront_parks']]],paint:{'line-color':['get','_c'],'line-width':1.2,'line-dasharray':[2,1.5],'line-opacity':op(.8)}},'ud-z-polys');
+ // Surfaces: sidewalks and plazas as quiet ground textures.
+ src('udg-surface');
+ layer({id:'udg-surface-fill',type:'fill',source:'udg-surface',paint:{'fill-color':['get','_c'],'fill-opacity':['*',['case',['==',['get','ds'],'sidewalk_surface'],.09,.2],['coalesce',['get','_op'],1]]}},'ud-z-polys');
+ layer({id:'udg-surface-line',type:'line',source:'udg-surface',filter:['!=',['get','ds'],'sidewalk_surface'],paint:{'line-color':['get','_c'],'line-width':.8,'line-opacity':op(.6)}},'ud-z-polys');
+ m.setLayerZoomRange('udg-surface-fill',T.zoom.neighbourhood,24);
+ // Heritage: districts as light dashed boundaries with an italic name; landmark lots as thin violet outlines.
+ src('udg-districts');
+ layer({id:'udg-districts-fill',type:'fill',source:'udg-districts',paint:{'fill-color':T.cat.heritage,'fill-opacity':op(.05)}},'ud-z-polys');
+ layer({id:'udg-districts-line',type:'line',source:'udg-districts',paint:{'line-color':T.cat.heritage,'line-width':['interpolate',['linear'],['zoom'],12,.6,17,1.4],'line-dasharray':[3,2],'line-opacity':op(.7)}},'ud-z-polys');
+ layer({id:'udg-districts-label',type:'symbol',source:'udg-districts',minzoom:14,layout:{'text-field':['get','area_name'],'text-font':['Montserrat Regular Italic','Open Sans Italic'],'text-size':10,'text-max-width':10,'text-optional':true},paint:{'text-color':T.cat.heritage,'text-halo-color':T.halo,'text-halo-width':1.2,'text-opacity':.85}},'ud-z-labels');
+ src('udg-landmarks');
+ layer({id:'udg-landmarks-fill',type:'fill',source:'udg-landmarks',paint:{'fill-color':T.cat.heritage,'fill-opacity':op(.14)}},'ud-z-polys');
+ layer({id:'udg-landmarks-line',type:'line',source:'udg-landmarks',paint:{'line-color':T.cat.heritage,'line-width':['interpolate',['linear'],['zoom'],13,.5,17,1.3],'line-opacity':op(.85)}},'ud-z-polys');
+ // Lines: one layer per line dataset with its token style (thin, low contrast, never yellow).
+ src('udg-lines');
+ for(const [id,L] of Object.entries(UrbanStyle.LINES)){
+  const paint={'line-color':L.color,'line-width':['interpolate',['linear'],['zoom'],...L.width],'line-opacity':op(L.opacity)};if(L.dash)paint['line-dasharray']=L.dash;
+  layer({id:'udg-line-'+id,type:'line',source:'udg-lines',filter:['==',['get','ds'],id],minzoom:L.minzoom||0,layout:{'line-cap':'round','line-join':'round'},paint},'ud-z-lines');
  }
- for(const lid of urbanStyleIds(id)){
-  m.on('click',lid,e=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;const f=e.features?.[0];if(!f)return;
-   if(f.properties.point_count){m.getSource(s).getClusterExpansionZoom(f.properties.cluster_id).then(z=>m.easeTo({center:f.geometry.coordinates,zoom:z})).catch(()=>{});return;}
-   showUrbanFeature(id,f);});
-  m.on('mouseenter',lid,()=>{if(!state.pick)m.getCanvas().style.cursor='pointer';});m.on('mouseleave',lid,()=>{if(!state.pick)m.getCanvas().style.cursor='';});
+ // Environment: one continuous theme as a density surface; individual complaints only at detail zoom.
+ src('udg-noise');
+ const E=T.env.noise;
+ layer({id:'udg-noise-heat',type:'heatmap',source:'udg-noise',maxzoom:17,paint:{'heatmap-weight':1,'heatmap-intensity':['interpolate',['linear'],['zoom'],...E.intensity],'heatmap-radius':['interpolate',['linear'],['zoom'],...E.radius],
+  'heatmap-color':['interpolate',['linear'],['heatmap-density'],...E.ramp.flat()],'heatmap-opacity':['interpolate',['linear'],['zoom'],15.5,E.opacity,17,0]}},'ud-z-env');
+ layer({id:'udg-noise-pt',type:'circle',source:'udg-noise',minzoom:16.5,paint:{'circle-color':T.cat.environment,'circle-radius':['interpolate',['linear'],['zoom'],16.5,1.2,19,3],'circle-opacity':op(.5)}},'ud-z-env');
+ // Trees: a fine green texture rather than markers.
+ src('udg-trees');
+ layer({id:'udg-trees-pt',type:'circle',source:'udg-trees',minzoom:12,paint:{'circle-color':T.cat.nature,'circle-radius':T.tree.radius,'circle-opacity':op(T.tree.opacity),'circle-blur':.15}},'ud-z-trees');
+ // POIs: one clustered source per data category, so a cluster always means "records of this category".
+ for(const c of UD_CATEGORY_IDS){
+  const s='udg-pts-'+c,color=T.cat[c],wt=T.weight[c]||{size:1,opacity:1},sized=T.point.stops.map(([z,r])=>[z,r*wt.size]);
+  src(s,{cluster:true,clusterRadius:T.cluster.pixelRadius,clusterMaxZoom:T.cluster.maxZoom-1});
+  layer({id:s+'-cluster',type:'circle',source:s,filter:['has','point_count'],paint:{'circle-color':color,'circle-opacity':T.cluster.fill,'circle-stroke-color':color,'circle-stroke-width':1,'circle-stroke-opacity':T.cluster.stroke,'circle-radius':T.cluster.radius}},'ud-z-points');
+  layer({id:s+'-count',type:'symbol',source:s,filter:['has','point_count'],layout:{'text-field':['get','point_count_abbreviated'],'text-font':T.label.font,'text-size':9,'text-allow-overlap':false},paint:{'text-color':color,'text-halo-color':T.halo,'text-halo-width':1}},'ud-z-labels');
+  // Zoom must be the outermost expression in MapLibre, so the accessible-entrance ring is a case inside each zoom stop.
+  const acc=['==',['get','ds'],'accessible_entrances'],byZoom=(stops,ring)=>['interpolate',['linear'],['zoom'],...stops.flatMap(([z,v],i)=>[z,['case',acc,ring[i],v]])];
+  layer({id:s+'-pt',type:'circle',source:s,filter:['!',['has','point_count']],paint:{'circle-color':['case',acc,'rgba(0,0,0,0)',['get','_c']],'circle-radius':byZoom(sized,T.point.ring),
+   'circle-opacity':['*',wt.opacity,['coalesce',['get','_op'],1],['case',['has','distance_to_route_m'],['interpolate',['linear'],['get','distance_to_route_m'],0,1,500,.55],1]],
+   'circle-stroke-color':['case',acc,['get','_c'],T.stroke],'circle-stroke-width':byZoom(T.point.strokeStops,[1.4,1.4,1.4,1.4]),'circle-stroke-opacity':['coalesce',['get','_op'],1]}},'ud-z-points');
+  layer({id:s+'-label',type:'symbol',source:s,minzoom:T.label.minZoom,filter:['all',['!',['has','point_count']],['has','name']],layout:{'text-field':['get','name'],'text-font':T.label.font,'text-size':T.label.size,'text-offset':[0,.9],'text-anchor':'top','text-optional':true,'text-max-width':9,'symbol-sort-key':['coalesce',['get','distance_to_route_m'],999]},
+   paint:{'text-color':color,'text-halo-color':T.halo,'text-halo-width':1.2,'text-opacity':.9}},'ud-z-labels');
  }
 }
-function removeUrbanMapLayer(id){const m=state.map,s=udSource(id);if(!state.mapLayersReady)return;for(const lid of urbanStyleIds(id))if(m.getLayer(lid))m.removeLayer(lid);if(m.getSource(s))m.removeSource(s);}
-function setUrbanOpacity(id,op){
- const a=urbanData.active.get(id);if(!a)return;a.opacity=op;if(!state.mapLayersReady)return;const m=state.map,s=udSource(id);
- const set=(l,p,v)=>{if(m.getLayer(l))m.setPaintProperty(l,p,v);};
- set(s+'-pt','circle-opacity',op);set(s+'-cluster','circle-opacity',op*.4);set(s+'-line','line-opacity',op);set(s+'-fill','fill-opacity',op*.3);set(s+'-outline','line-opacity',op);
+function setupUrbanMap(){
+ const m=state.map;
+ m.addSource('ud-anchor',{type:'geojson',data:emptyFC()});
+ for(const id of UD_TIERS)m.addLayer({id,type:'circle',source:'ud-anchor',layout:{visibility:'none'}},UD_BEFORE);
+ addGroupLayers();
+ m.addSource('ud-highlight',{type:'geojson',data:emptyFC()});
+ m.addLayer({id:'ud-highlight-fill',type:'fill',source:'ud-highlight',filter:['==',['geometry-type'],'Polygon'],paint:{'fill-color':'#ffffff','fill-opacity':.14}});
+ m.addLayer({id:'ud-highlight-line',type:'line',source:'ud-highlight',paint:{'line-color':'#ffffff','line-width':3}});
+ m.addLayer({id:'ud-highlight-pt',type:'circle',source:'ud-highlight',filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':9,'circle-color':'rgba(0,0,0,0)','circle-stroke-color':'#ffffff','circle-stroke-width':2}});
+ // One handler for every urban layer, resolved at event time: the topmost feature wins (points over lines over fills),
+ // and the selected route's segment evidence wins over all data.
+ const hitLayers=()=>urbanMapLayerIds().filter(id=>!id.endsWith('-count')&&!id.endsWith('-label')&&!id.startsWith('udg-noise-heat')&&m.getLayoutProperty(id,'visibility')!=='none');
+ const topHit=pt=>{const layers=hitLayers();return layers.length?m.queryRenderedFeatures(pt,{layers}).find(f=>f.properties.ds||f.properties.point_count):null;};
+ m.on('click',e=>{if(state.pick||(typeof exploreMap!=='undefined'&&exploreMap.active)||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;const f=topHit(e.point);if(!f)return;
+  if(f.properties.point_count){m.getSource(f.source).getClusterExpansionZoom(f.properties.cluster_id).then(z=>m.easeTo({center:f.geometry.coordinates,zoom:z})).catch(()=>{});return;}
+  showUrbanFeature(f.properties.ds,f);});
+ let hovering=false;
+ m.on('mousemove',e=>{if(state.pick||(typeof exploreMap!=='undefined'&&exploreMap.active))return;const on=!!topHit(e.point);if(on!==hovering){hovering=on;m.getCanvas().style.cursor=on?'pointer':'';}});
+ m.on('moveend',urbanViewMoved);
+ m.on('zoomend',()=>{refreshRepresentations();renderUrbanLegend();});
+ applyBuildingTheme();applyEnvTheme();scheduleUrbanCompose();
 }
-function toggleUrbanDataset(id,on){
- if(!on)urbanData.drawn.delete(id);
+let udComposeFrame=0;
+// Batched to one compose per frame (a timer where there is no frame loop, e.g. tests).
+const udRaf=typeof requestAnimationFrame==='function'?[requestAnimationFrame,cancelAnimationFrame]:[f=>setTimeout(f,16),clearTimeout];
+function scheduleUrbanCompose(){udRaf[1](udComposeFrame);udComposeFrame=udRaf[0](composeUrbanGroups);}
+/** Build each render group's data from the enabled datasets' records (each tagged with its dataset, colour, opacity). */
+function composeUrbanGroups(){
+ if(!state.mapLayersReady||!urbanData.catalog){renderUrbanLegend();return;}
+ const groups={};
+ const tag=(id,f)=>({...f,properties:{...f.properties,ds:id,_c:udColor(id),_op:urbanData.active.get(id).opacity}});
+ const seenBuildings=new Set(),lots=new Map();
+ for(const f of urbanData.drawn.get('land_use')?.values()||[])lots.set(String(f.properties.feature_id),f.properties.landuse_name);
+ // General datasets (e.g. all activity places) go last and only add records no specific dataset already draws.
+ const GENERAL=new Set(['activity_places']),placed=new Set();
+ const order=[...urbanData.active.keys()].sort((a,b)=>GENERAL.has(a)-GENERAL.has(b));
+ for(const id of order){
+  const d=urbanData.byId.get(id),feats=urbanData.drawn.get(id);if(!feats)continue;
+  const g=udGroup(d);
+  if(g==='buildings'){
+   if(id==='land_use')continue;  // tax-lot points feed the land-use building theme; they are not drawn as dots
+   for(const f of feats.values()){const fid=f.properties.feature_id;if(seenBuildings.has(fid))continue;seenBuildings.add(fid);
+    const t=tag(urbanData.buildingTheme==='height'&&urbanData.active.has('building_heights')?'building_heights':urbanData.buildingTheme==='age'&&urbanData.active.has('building_age')?'building_age':'building_footprints',f);
+    const lu=lots.get(String(f.properties.base_bbl).split('.')[0]);if(lu)t.properties.landuse_name=lu;
+    (groups.buildings=groups.buildings||[]).push(t);}
+   continue;
+  }
+  const list=groups[g]=groups[g]||[];
+  for(const f of feats.values()){const key=g.startsWith('pts-')&&id!=='accessible_entrances'?f.properties.feature_id:null;
+   if(key&&GENERAL.has(id)&&placed.has(key))continue;if(key)placed.add(key);list.push(tag(id,f));}
+ }
+ const all=['buildings','green','surface','districts','landmarks','lines','noise','trees',...UD_CATEGORY_IDS.map(c=>'pts-'+c)];
+ for(const g of all)state.map.getSource('udg-'+g)?.setData({type:'FeatureCollection',features:groups[g]||[]});
+ renderUrbanLegend();
+}
+function applyBuildingTheme(){
+ if(!state.mapLayersReady)return;const B=UrbanStyle.T.building,t=urbanData.buildingTheme;
+ const color=t==='height'?UrbanStyle.rampExpr(B.height.prop,B.height.stops):t==='age'?['case',['has',B.age.prop],UrbanStyle.rampExpr(B.age.prop,B.age.stops),B.neutral]:t==='landuse'?UrbanStyle.categoricalExpr(B.landuse.prop,B.landuse.classes,B.landuse.other):B.neutral;
+ state.map.setPaintProperty('udg-buildings-fill','fill-color',color);
+ if(t==='landuse'&&!urbanData.active.has('land_use'))toast('Land use theme needs the Land use (tax lots) dataset; it has been switched on.');
+ if(t==='landuse'&&!urbanData.active.has('land_use'))toggleUrbanDataset('land_use',true);
+ refreshRepresentations();scheduleUrbanCompose();
+}
+function applyEnvTheme(){
+ if(!state.mapLayersReady)return;const on=urbanData.envTheme==='noise';
+ setMapLayerVisible('udg-noise-heat',on&&mapExperience.mode!=='explore');
+ refreshRepresentations();renderUrbanLegend();
+}
+function setUrbanOpacity(id,op){const a=urbanData.active.get(id);if(!a)return;a.opacity=op;scheduleUrbanCompose();}
+function toggleUrbanDataset(id,on,quiet){
  const d=urbanData.byId.get(id);if(!d||d.status!=='CONNECTED')return;
- if(on){if(!urbanData.active.has(id)){urbanData.active.set(id,{opacity:.85,status:'Loading…',seq:0});if(state.mapLayersReady)addUrbanMapLayer(id);}loadUrbanDataset(id);}
- else{urbanData.active.delete(id);removeUrbanMapLayer(id);}
- renderUrbanPanel();
+ if(on){if(!urbanData.active.has(id)){urbanData.active.set(id,{opacity:1,status:'Waiting',kind:'waiting',seq:0});}loadUrbanDataset(id);}
+ else{urbanData.active.delete(id);urbanData.drawn.delete(id);scheduleUrbanCompose();}
+ if(!quiet)renderUrbanPanel();
 }
-function clearUrbanLayers(){for(const id of [...urbanData.active.keys()])removeUrbanMapLayer(id);urbanData.active.clear();clearUrbanHighlight();renderUrbanPanel();}
+function setUrbanCategory(cat,on){for(const d of urbanData.catalog.datasets)if(d.status==='CONNECTED'&&d.categories.includes(cat))toggleUrbanDataset(d.id,on,true);renderUrbanPanel();}
+function setAllUrban(on){for(const d of urbanData.catalog.datasets)if(d.status==='CONNECTED')toggleUrbanDataset(d.id,on,true);if(!on)clearUrbanHighlight();renderUrbanPanel();}
+function clearUrbanLayers(){setAllUrban(false);}
 async function loadUrbanDataset(id){
  const a=urbanData.active.get(id),d=urbanData.byId.get(id);if(!a)return;const seq=++a.seq;
- const done=(fc,text)=>{if(seq!==a.seq||!urbanData.active.has(id))return;urbanData.drawn.set(id,new Map(fc.features.map(f=>[String(f.properties.feature_id),f])));if(state.mapLayersReady)state.map.getSource(udSource(id))?.setData(fc);setUrbanStatus(id,text);};
+ const done=(fc,text,kind)=>{if(seq!==a.seq||!urbanData.active.has(id))return;urbanData.drawn.set(id,new Map(fc.features.map(f=>[String(f.properties.feature_id),f])));setUrbanStatus(id,text,kind);scheduleUrbanCompose();};
  try{
   if(urbanData.scope==='route'){
    const coords=routeCoords();
-   if(!coords){done(emptyFC(),'Select a route, or switch to Current Map View');return}
-   setUrbanStatus(id,'Loading…');
+   if(!coords){done(emptyFC(),'Waiting for a route','waiting');return}
+   setUrbanStatus(id,'Loading…','loading');
    const hits=await datasetAlong(d,coords,urbanData.corridor);
-   done({type:'FeatureCollection',features:hits.map(h=>({...h.feature,properties:{...h.feature.properties,distance_to_route_m:Math.round(h.distance*10)/10}}))},`${hits.length.toLocaleString()} within ${urbanData.corridor} m`);
+   done({type:'FeatureCollection',features:hits.map(h=>({...h.feature,properties:{...h.feature.properties,distance_to_route_m:Math.round(h.distance*10)/10}}))},
+    hits.length?`Loaded · ${hits.length.toLocaleString()} within ${urbanData.corridor} m`:`No nearby features within ${urbanData.corridor} m`,hits.length?'loaded':'empty');
   }else{
-   if(!state.mapReady){done(emptyFC(),'Map not ready');return}
+   if(!state.mapReady){done(emptyFC(),'Map not ready','waiting');return}
    const b=state.map.getBounds(),box=UrbanGeo.lonLatBox(b.getWest(),b.getSouth(),b.getEast(),b.getNorth()),n=tileRecordCount(d.tileset,box);
-   if(state.map.getZoom()<d.min_zoom_view&&n>5000){done(emptyFC(),`Zoom in to load (${n.toLocaleString()} records nearby)`);return}
-   setUrbanStatus(id,'Loading…');
+   if(state.map.getZoom()<d.min_zoom_view&&n>5000){done(emptyFC(),`Zoom in to load (${n.toLocaleString()} records nearby)`,'waiting');return}
+   setUrbanStatus(id,'Loading…','loading');
    const feats=(await tileFeatures(d.tileset,box)).filter(f=>UrbanGeo.matchesFilter(f,d.filter)),seen=new Set(),inView=[];
    for(const f of feats){if(seen.has(f.properties.feature_id))continue;seen.add(f.properties.feature_id);const bb=UrbanGeo.bboxOf(UrbanGeo.project(f.geometry));if(bb[0]<=box[2]&&bb[2]>=box[0]&&bb[1]<=box[3]&&bb[3]>=box[1])inView.push(f);}
-   done({type:'FeatureCollection',features:inView},`${inView.length.toLocaleString()} in view`);
+   done({type:'FeatureCollection',features:inView},inView.length?`Loaded · ${inView.length.toLocaleString()} in view`:'No features in view',inView.length?'loaded':'empty');
   }
- }catch(e){done(emptyFC(),'Load failed: '+e.message);}
+ }catch(e){if(seq===a.seq){urbanData.drawn.delete(id);setUrbanStatus(id,'Error: '+e.message,'error');scheduleUrbanCompose();}}
 }
 function refreshUrbanLayers(){for(const id of urbanData.active.keys())loadUrbanDataset(id);}
 /** Route changed (planned, switched or cleared): keep the user's layers, re-filter them, update the summary. */
 function urbanLayersRouteChanged(){if(urbanData.scope==='route')refreshUrbanLayers();renderRouteUrbanData();closeUrbanInspector();}
 function urbanViewMoved(){if(urbanData.scope!=='view'||!urbanData.active.size)return;clearTimeout(urbanData.viewTimer);urbanData.viewTimer=setTimeout(refreshUrbanLayers,400);}
+
+// --- legend: only what is visible now -------------------------------------------------------------------
+function renderUrbanLegend(){
+ const box=$('udLegend');if(!box||!urbanData.catalog)return;
+ const T=UrbanStyle.T,z=state.mapReady?state.map.getZoom():12,rows=[];
+ const sw=(c,kind='point')=>`<i class="lg-sw ${kind}" style="--c:${c}"></i>`;
+ if(state.routes.length){rows.push(`<div class="lg-row">${sw(T.route.selected,'route')}<span>Selected route</span></div>`);if(state.display.routes&&state.routes.length>1)rows.push(`<div class="lg-row">${sw(T.route.alt,'alt')}<span>Alternative routes</span></div>`);}
+ const has=id=>urbanData.active.has(id)&&(urbanData.drawn.get(id)?.size||0)>0;
+ if(['building_footprints','building_heights','building_age'].some(has)&&z>=T.zoom.neighbourhood-.5){
+  const t=urbanData.buildingTheme,B=T.building;
+  if(t==='height'||t==='age'){const R=B[t];rows.push(`<div class="lg-block"><span>Buildings · ${t==='height'?'roof height':'year built'}</span><i class="lg-ramp" style="background:linear-gradient(90deg,${R.stops.map(s=>s[1]).join(',')})"></i><small>${R.stops[0][0]} – ${R.stops.at(-1)[0]}${R.unit==='ft'?' ft':''}</small></div>`);}
+  else if(t==='landuse')rows.push(`<div class="lg-block"><span>Buildings · land use (PLUTO lot)</span><div class="lg-classes">${B.landuse.classes.slice(0,11).map(([n,c])=>`<span>${sw(c,'fill')}${esc(n)}</span>`).join('')}</div></div>`);
+  else rows.push(`<div class="lg-row">${sw(B.neutral,'fill')}<span>Buildings</span></div>`);
+ }
+ if(has('parks')||has('community_gardens'))rows.push(`<div class="lg-row">${sw(T.cat.nature,'fill')}<span>Parks & gardens</span></div>`);
+ if(has('street_trees')&&z>=12)rows.push(`<div class="lg-row">${sw(T.cat.nature,'tiny')}<span>Street trees</span></div>`);
+ if(has('historic_districts'))rows.push(`<div class="lg-row">${sw(T.cat.heritage,'dash')}<span>Historic districts</span></div>`);
+ if(has('landmarks'))rows.push(`<div class="lg-row">${sw(T.cat.heritage,'fill')}<span>Landmark lots</span></div>`);
+ if(has('noise_complaints')&&urbanData.envTheme==='noise'&&z<17)rows.push(`<div class="lg-block"><span>${esc(T.env.noise.label)}</span><i class="lg-ramp" style="background:linear-gradient(90deg,${T.env.noise.ramp.slice(1).map(s=>s[1]).join(',')})"></i><small>low → high · ${esc(T.env.noise.unit)}; reports, not sound levels</small></div>`);
+ const lineIds=Object.keys(UrbanStyle.LINES).filter(id=>has(id)&&z>=(UrbanStyle.LINES[id].minzoom||0));
+ if(lineIds.length)rows.push(`<div class="lg-row" title="${esc(lineIds.map(id=>urbanData.byId.get(id).name).join(', '))}">${sw(T.cat.streets,'line')}<span>Street, path & transport lines <small>${lineIds.length} datasets</small></span></div>`);
+ const chips=UD_CATEGORY_IDS.map(c=>[c,[...urbanData.active.keys()].filter(id=>udGroup(urbanData.byId.get(id))==='pts-'+c&&has(id))]).filter(([,ids])=>ids.length);
+ if(chips.length)rows.push(`<div class="lg-block"><span>Places & facilities</span><div class="lg-chips">${chips.map(([c,ids])=>`<span title="${esc(ids.map(id=>urbanData.byId.get(id).name).join(', '))}">${sw(T.cat[c])}${esc(urbanCatName(c).split(/ & |,/)[0])}</span>`).join('')}</div></div>`);
+ const notes=[];
+ if(z<T.cluster.maxZoom)notes.push(`Rings with a number are clusters: that many records of one category. They split into individual records from z${T.cluster.maxZoom}.`);
+ if(z<T.zoom.street)notes.push(`Sidewalks, crosswalks and building edges are generalised away until z${T.zoom.street}.`);
+ if(urbanData.scope==='route'&&state.routes.length)notes.push(`Records within ${urbanData.corridor} m of the selected route; farther records are drawn lighter.`);
+ if(!state.routes.length&&urbanData.scope==='route')notes.push('Plan a route to draw the enabled datasets along it, or switch to Current map view.');
+ box.querySelector('.lg-body').innerHTML=rows.join('')+(notes.length?`<p class="lg-note">${notes.map(esc).join(' ')}</p>`:'');
+}
 
 // --- docked inspector ------------------------------------------------------------------------------------------
 function openUrbanInspector(title,html){const box=$('urbanInspector');box.innerHTML=`<div class="inspector-head"><div><div class="explore-eyebrow">${esc(title)}</div></div><button type="button" class="explore-collapse" id="urbanInspectorClose" aria-label="Close inspector">✕</button></div>${html}`;box.classList.remove('hidden');$('urbanInspectorClose').addEventListener('click',closeUrbanInspector);return box;}
@@ -262,22 +413,22 @@ function showDatasetsOnRoute(ids){
 }
 
 // --- setup -----------------------------------------------------------------------------------------------------
-function setupUrbanMap(){
- const m=state.map;
- m.addSource('ud-highlight',{type:'geojson',data:emptyFC()});
- m.addLayer({id:'ud-highlight-fill',type:'fill',source:'ud-highlight',filter:['==',['geometry-type'],'Polygon'],paint:{'fill-color':'#ffffff','fill-opacity':.18}});
- m.addLayer({id:'ud-highlight-line',type:'line',source:'ud-highlight',paint:{'line-color':'#ffffff','line-width':3.5}});
- m.addLayer({id:'ud-highlight-pt',type:'circle',source:'ud-highlight',filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':9,'circle-color':'rgba(0,0,0,0)','circle-stroke-color':'#ffffff','circle-stroke-width':2.5}});
- for(const id of urbanData.active.keys())addUrbanMapLayer(id);
- m.on('moveend',urbanViewMoved);
-}
 function setupUrbanControls(){
  const panel=$('urbanLayers');
  panel.addEventListener('toggle',()=>{if(panel.open)openUrbanPanel();});
- document.querySelectorAll('[name="urbanScope"]').forEach(r=>r.addEventListener('change',()=>{urbanData.scope=r.value;refreshUrbanLayers();}));
+ document.querySelectorAll('[name="urbanScope"]').forEach(r=>r.addEventListener('change',()=>{urbanData.scope=r.value;refreshUrbanLayers();renderUrbanLegend();}));
  $('urbanCorridor').addEventListener('change',e=>{urbanData.corridor=Number(e.target.value);refreshUrbanLayers();renderRouteUrbanData();});
  $('urbanSearch').addEventListener('input',e=>{urbanData.search=e.target.value;renderUrbanPanel();});
- $('urbanClear').addEventListener('click',clearUrbanLayers);
- $('urbanSettings').addEventListener('click',()=>{urbanData.settings=!urbanData.settings;$('urbanSettings').setAttribute('aria-pressed',String(urbanData.settings));renderActiveLayers();});
+ $('urbanAllOn').addEventListener('click',()=>setAllUrban(true));
+ $('urbanAllOff').addEventListener('click',()=>setAllUrban(false));
+ $('urbanSettings').addEventListener('click',()=>{urbanData.settings=!urbanData.settings;$('urbanSettings').setAttribute('aria-pressed',String(urbanData.settings));renderUrbanPanel();});
+ $('buildingTheme').innerHTML=BUILDING_THEMES.map(([v,n])=>`<option value="${v}">${esc(n)}</option>`).join('');$('buildingTheme').value=urbanData.buildingTheme;
+ $('buildingTheme').addEventListener('change',e=>{urbanData.buildingTheme=e.target.value;applyBuildingTheme();});
+ $('envTheme').innerHTML=ENV_THEMES.map(([v,n,ds])=>`<option value="${v}" ${v==='none'||ds?'':'disabled'}>${esc(n)}${v==='none'||ds?'':' — not connected'}</option>`).join('');$('envTheme').value=urbanData.envTheme;
+ $('envTheme').addEventListener('change',e=>{urbanData.envTheme=e.target.value;applyEnvTheme();});
+ $('udLegendToggle').addEventListener('click',()=>{const open=$('udLegend').classList.toggle('collapsed')===false;$('udLegendToggle').setAttribute('aria-expanded',String(open));});
  document.addEventListener('keydown',e=>{if(e.key==='Escape')closeUrbanInspector();});
+ // First visit: every connected dataset is enabled; the drawer stays closed and categories collapsed.
+ // Applied by whichever catalog load succeeds first, so a failed first fetch does not leave everything off.
+ ensureUrbanCatalog().catch(e=>{$('urbanActiveCount').textContent='catalog error';console.warn('Urban data catalog:',e);});
 }

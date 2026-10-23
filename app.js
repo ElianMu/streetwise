@@ -377,12 +377,13 @@ function setupMap(){
       m.addLayer({id:'landmark-fill',type:'fill',source:'nyc-landmarks',paint:{'fill-color':'#e89a5d','fill-opacity':.17}});
       m.addLayer({id:'landmark-outline',type:'line',source:'nyc-landmarks',paint:{'line-color':'#ffae70','line-width':1.5,'line-opacity':.88}});
       m.addLayer({id:'tree-points',type:'circle',source:'nyc-trees',paint:{'circle-color':'#a6e19a','circle-radius':['interpolate',['linear'],['zoom'],11,1.5,14,3,16,5],'circle-opacity':.82,'circle-stroke-color':'#0a2524','circle-stroke-width':.6}});
-      m.addLayer({id:'route-alts',type:'line',source:'candidate-routes',paint:{'line-color':'#b4c6b0','line-width':3,'line-opacity':.65,'line-dasharray':[2.2,1.4]},layout:{'line-cap':'round','line-join':'round'}});
-      m.addLayer({id:'route-shadow',type:'line',source:'selected-route',paint:{'line-color':'#07191b','line-width':10,'line-opacity':.8},layout:{'line-cap':'round','line-join':'round'}});
-      m.addLayer({id:'route-selected',type:'line',source:'selected-route',paint:{'line-color':'#d8f365','line-width':5.6,'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
+      // Route hierarchy: quiet dashed alternatives; the selected route is the only lime on the map, with a dark halo that separates it from data below.
+      m.addLayer({id:'route-alts',type:'line',source:'candidate-routes',paint:{'line-color':'#8a9e9c','line-width':['interpolate',['linear'],['zoom'],12,1.6,16,3],'line-opacity':.55,'line-dasharray':[2,1.6]},layout:{'line-cap':'round','line-join':'round'}});
+      m.addLayer({id:'route-shadow',type:'line',source:'selected-route',paint:{'line-color':'#06110f','line-width':['interpolate',['linear'],['zoom'],12,6,16,11,19,16],'line-opacity':.82,'line-blur':1},layout:{'line-cap':'round','line-join':'round'}});
+      m.addLayer({id:'route-selected',type:'line',source:'selected-route',paint:{'line-color':'#d8f365','line-width':['interpolate',['linear'],['zoom'],12,2.6,16,5,19,8],'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
       m.addLayer({id:'poi-points',type:'circle',source:'route-pois',paint:{'circle-color':'#b7a3e1','circle-radius':5,'circle-stroke-color':'#132529','circle-stroke-width':2}});
-      m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#65d7db','circle-radius':8,'circle-stroke-color':'#e9fff4','circle-stroke-width':2.5}});
-      m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#ffae73','circle-radius':8,'circle-stroke-color':'#fff6e6','circle-stroke-width':2.5}});
+      m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#6fd2d8','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
+      m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
       m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':7,'circle-stroke-color':'#fff','circle-stroke-width':3}});
       setupRouteEdgeLayer();setupUrbanMap();
       state.mapLayersReady=true; setupExperienceMap(); syncMapData();updateMapStyles();
@@ -394,7 +395,7 @@ function setupMap(){
       for(const layer of ['road-highlight','route-alts']){m.on('mouseenter',layer,()=>{m.getCanvas().style.cursor=state.pick?'crosshair':'pointer'});m.on('mouseleave',layer,()=>{m.getCanvas().style.cursor=state.pick?'crosshair':''})}
       m.on('moveend',()=>{scheduleOverlayRefresh();$('mapCoords').textContent=`${m.getCenter().lat.toFixed(3)}° N · ${Math.abs(m.getCenter().lng).toFixed(3)}° W`});
     });
-    m.on('error',(event)=>{if(!state.mapReady && event?.error)console.warn('MapLibre loading issue:',event.error.message)});
+    m.on('error',(event)=>{if(event?.error)console.warn(state.mapReady?'MapLibre style/data error:':'MapLibre loading issue:',event.error.message)});
     setTimeout(()=>{if(!state.mapReady){$('mapFallback').querySelector('h2').textContent='Map tiles not reachable';$('mapFallback').querySelector('p').textContent='The web prototype is ready, but external basemap tiles require a network connection. The GIS layers can be explored when online.'}},16000);
   }catch(err){ $('mapFallback').querySelector('h2').textContent='Map initialization failed';$('mapFallback').querySelector('p').textContent=err.message;}
 }

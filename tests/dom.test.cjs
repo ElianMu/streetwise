@@ -4,7 +4,7 @@ const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.
 const dom=new JSDOM(html,{runScripts:'outside-only',url:'http://localhost:8080'}),w=dom.window;
 w.fetch=async()=>{throw new Error('Network intentionally blocked in DOM test')};w.HTMLElement.prototype.scrollIntoView=function(){};w.AbortSignal.timeout=()=>new w.AbortController().signal;
 const vm=require('vm'),context=dom.getInternalVMContext();
-for(const file of ['experience-core.js','api-config.js','app.js','route-client.js','urban-geo.js','urban-layers.js','explore-map.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
+for(const file of ['experience-core.js','api-config.js','app.js','route-client.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
 const run=s=>vm.runInContext(s,context);
 (async()=>{
  assert.equal(w.document.querySelectorAll('#experienceDimension option').length,12);
@@ -84,8 +84,15 @@ const run=s=>vm.runInContext(s,context);
  // Urban Data Layers: dataset catalog (not dimensions), statuses, search.
  const panel=w.document.querySelector('#urbanLayers');assert(!panel.open,'panel starts collapsed');panel.open=true;await run('openUrbanPanel()');
  assert.equal(w.document.querySelectorAll('#urbanCats .urban-cat').length,10);
- const catText=w.document.querySelector('#urbanCats').textContent;assert(catText.includes('Streets & Pedestrian Infrastructure')&&catText.includes('Available · not connected')&&catText.includes('Missing'));const heads=[...w.document.querySelectorAll('#urbanCats .urban-cat > summary span')].map(x=>x.textContent);assert(!heads.some(h=>run('DIMENSIONS').some(d=>h===d.name)),'categories are datasets, not experience dimensions');
+ const catText=w.document.querySelector('#urbanCats').textContent;assert(catText.includes('Streets & Pedestrian Infrastructure')&&catText.includes('Not connected · available')&&catText.includes('Not connected · no dataset'));const heads=[...w.document.querySelectorAll('#urbanCats .urban-cat > summary span')].map(x=>x.textContent);assert(!heads.some(h=>run('DIMENSIONS').some(d=>h===d.name)),'categories are datasets, not experience dimensions');
  assert(w.document.querySelector('[data-ud-toggle="air_quality"]')===null,'unconnected datasets cannot be switched on');
+ // First visit: every connected dataset is on; All off / All on drive every dataset; categories show partial state.
+ const connected=catalog.datasets.filter(d=>d.status==='CONNECTED').length;
+ for(let i=0;i<40&&run('urbanData.active.size')<connected;i++)await new Promise(r=>setTimeout(r,50));
+ assert.equal(run('urbanData.active.size'),connected,'all connected datasets on by default');assert.equal(w.document.querySelector('#urbanActiveTitle').textContent,`ACTIVE DATASETS: ${connected} of ${connected}`);
+ w.document.querySelector('#urbanAllOff').click();assert.equal(run('urbanData.active.size'),0);
+ w.document.querySelector('#urbanAllOn').click();assert.equal(run('urbanData.active.size'),connected);
+ w.document.querySelector('#urbanAllOff').click();
  w.document.querySelector('#urbanSearch').value='tree';w.document.querySelector('#urbanSearch').dispatchEvent(new w.Event('input'));
  assert(w.document.querySelector('[data-ud-toggle="street_trees"]')&&!w.document.querySelector('[data-ud-toggle="restaurants"]'));
  w.document.querySelector('#urbanSearch').value='';w.document.querySelector('#urbanSearch').dispatchEvent(new w.Event('input'));
@@ -95,10 +102,16 @@ const run=s=>vm.runInContext(s,context);
  for(const id of ['street_trees','landmarks','historic_districts']){run(`toggleUrbanDataset('${id}',true)`);}
  await new Promise(r=>setTimeout(r,300));
  const status=id=>w.document.querySelector(`[data-ud-status="${id}"]`).textContent;
- assert.equal(status('street_trees'),`${Object.keys(ref.datasets.street_trees).length} within 100 m`);assert.equal(status('landmarks'),`${Object.keys(ref.datasets.landmarks).length} within 100 m`);
- assert.equal(w.document.querySelector('#urbanActiveTitle').textContent,'ACTIVE LAYERS: 3');
+ assert.equal(status('street_trees'),`Loaded · ${Object.keys(ref.datasets.street_trees).length} within 100 m`);assert.equal(status('landmarks'),`Loaded · ${Object.keys(ref.datasets.landmarks).length} within 100 m`);
+ assert.equal(w.document.querySelector('#urbanActiveTitle').textContent,`ACTIVE DATASETS: 3 of ${connected}`);
+ const natureCat=w.document.querySelector('[data-ud-cat="nature"]');assert(natureCat.indeterminate&&natureCat.dataset.state==='some','category with some datasets on is indeterminate');
+ // Dynamic legend: only symbols that are on the map; one building theme at a time.
+ const legend=()=>w.document.querySelector('#udLegend .lg-body').textContent;assert(legend().includes('Street trees')&&!legend().includes('Places & facilities'));
+ // Thematic selectors: four building themes (one fill at a time); environment themes without data are listed but disabled.
+ assert.deepEqual([...w.document.querySelectorAll('#buildingTheme option')].map(o=>o.value),['neutral','height','age','landuse']);
+ const env=[...w.document.querySelectorAll('#envTheme option')];assert(env.find(o=>o.value==='noise')&&!env.find(o=>o.value==='noise').disabled);assert(env.filter(o=>o.disabled).length>=3&&env.filter(o=>o.disabled).every(o=>o.textContent.includes('not connected')));
  run(`selectRoute(${JSON.stringify(ref.alt_route_id)})`);await new Promise(r=>setTimeout(r,300));
- assert.equal(run('urbanData.active.size'),3,'layers kept after switching routes');assert.equal(status('landmarks'),`${Object.keys(ref.alt.landmarks).length} within 100 m`);
+ assert.equal(run('urbanData.active.size'),3,'layers kept after switching routes');assert.equal(status('landmarks'),`Loaded · ${Object.keys(ref.alt.landmarks).length} within 100 m`);
  run(`selectRoute(${JSON.stringify(best.route_id)})`);await new Promise(r=>setTimeout(r,300));
  // Route Urban Data summary = the same spatial query as the map.
  await run('renderRouteUrbanData()');
@@ -112,7 +125,7 @@ const run=s=>vm.runInContext(s,context);
  const crash=allTiles('pedestrian_crashes').find(f=>f.properties.feature_id in ref.datasets.pedestrian_crashes&&!f.properties.off_street_name);
  const fh=run(`urbanFeatureHtml(urbanData.byId.get('pedestrian_crashes'),${JSON.stringify({...crash.properties,distance_to_route_m:12})})`);
  assert(fh.includes(crash.properties.feature_id)&&fh.includes(crash.properties.crash_date)&&fh.includes('Not Available')&&fh.includes('Historical record')&&fh.includes('h9gi-nx95')&&fh.includes('12 m from the route'));assert(!fh.includes('undefined'));
- w.document.querySelector('#urbanClear').click();assert.equal(run('urbanData.active.size'),0);assert.equal(w.document.querySelector('#urbanActiveTitle').textContent,'ACTIVE LAYERS: 0');
+ w.document.querySelector('#urbanAllOff').click();assert.equal(run('urbanData.active.size'),0);assert.equal(w.document.querySelector('#urbanActiveTitle').textContent,`ACTIVE DATASETS: 0 of ${connected}`);
  assert(!calls.some(c=>c.url.includes('/api/layers')),'urban data comes from static files, never the old /api/layers');
  // A missing static file is reported plainly, not as a JSON parse error.
  await assert.rejects(run("streetwiseJson('./data/layers/tiles/nope/0_0.json')"),/HTML page/);

@@ -36,11 +36,24 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 
 ## Navigate: Urban Data Layers / 路线周边城市数据
 
-- 地图左下角 **Urban Data Layers**（默认收起）按**真实数据集**分为 10 类（街道与步行设施、自然、建筑、历史文化、餐饮商业、交通安全、环境、公共交通、公共服务、滨水与公共空间），不是按 12 个体验维度。54 个已接入数据集可独立开关、搜索、调透明度；未接入的标为 Available · not connected / Missing，并说明原因。
+- 地图左下角 **Urban Data Layers**（默认收起）按**真实数据集**分为 10 类（街道与步行设施、自然、建筑、历史文化、餐饮商业、交通安全、环境、公共交通、公共服务、滨水与公共空间），不是按 12 个体验维度。首次打开时所有已接入数据集（59 个）**默认全部开启**；提供 All on / All off、类别开关（部分开启时为半选状态）、单个数据集开关、搜索、透明度和计数。未接入的标为 Not connected · available / Not connected · no dataset，并说明原因。
+- 每个数据集的状态互相区分：Loaded · N within 100 m / No nearby features / Loading / Error / Waiting for a route / Zoom in to load；失败不会显示为 0。
 - 范围：**Along selected route**（所选路线两侧 50/100/200/500 m，仅影响显示，不改变评分）或 **Current map view**。切换路线时保留已开启的图层并重新筛选。
 - 点击数据要素打开 Urban Feature Inspector（真实字段、缺失为 Not Available、来源、时间范围、更新日期、与路线的距离；事故/投诉标注为历史记录）。点击路线路段打开 Street Segment Evidence（OSM Edge ID、LION 路段或 Unmatched、附近数据的数量/密度/最近距离/覆盖率，以及现有评分指标）。右侧 **Route Urban Data** 汇总路线周边的真实要素数量，点击即在地图上显示。
 - 图层是静态文件（`data/layers/catalog.json` + 1 km 瓦片），GitHub Pages 可直接读取，不占用后端内存。重建：`python3 scripts/build_urban_layers.py`（需要 OSMnx/pyproj，约 3 分钟）。
 - 步行时间：默认 60 分钟，滑块 10–60，自定义更大值时滑块自动扩展；该值原样作为路线引擎的硬约束。
+
+## Cartographic design system / 地图设计系统
+
+全部数据同时开启时地图仍保持统一、清晰。规则写在 `urban-style.js`（设计 token），由 `urban-layers.js` 使用：
+
+- **唯一强调色**：所选路线是地图上唯一的青柠色（`#d8f365`，带深色描边光晕），位于所有数据之上；备选路线为低对比灰色虚线；起点/终点为精确的小圆点。`tests/urban-style.test.cjs` 检查没有任何数据颜色接近路线色。
+- **语义色系**（为深色底图调校、低饱和）：街道 蓝灰 · 建筑 深中性灰 · 公园/树木 柔和绿 · 历史文化 淡紫 · 餐饮商业 琥珀 · 公共设施 青绿 · 交通 冷蓝 · 安全 珊瑚 · 环境 连续色带。同类数据集在同一色相内微调明度（`shade()`）。
+- **按几何与层级组合，而不是每个数据集一套图层**：建筑、绿地、铺装、历史街区、地标、线、噪声、树木以及每个类别一个点图层（约 63 个固定图层，原先约 240 个）。图层按层级锚点排序：面 → 线 → 环境 → 树 → 点 → 标签 → 路线。同一建筑在多个建筑数据集中只画一次；通用的 Activity places 不再重复画出已由具体数据集画出的地点。
+- **建筑主题**（一次一个填充主题）：Neutral / Height / Age / Land use（PLUTO 地块）。**环境主题**（一次一个连续表面）：311 噪声投诉密度，带单位/年份/来源；空气质量、热岛、洪水风险列出但标为 not connected。
+- **四个缩放层级**：City（<13，点按类别聚合为带数字的环）· Neighborhood（13–15）· Street（15–17，人行道/斑马线/建筑轮廓出现，聚合拆开）· Detail（≥17，名称标签）。街道设施类点（坡道、信号等）视觉权重更低；离路线越远的记录越淡。
+- **动态图例**（可折叠，手机上默认收起）：只显示当前地图上真正可见的符号，并说明聚合、概括化和当前主题。
+- 点击：路线路段优先（Street Segment Evidence），其次是最上层的数据要素（Urban Feature Inspector）；聚合环点击后放大展开。
 
 ## Files / 文件
 
@@ -50,18 +63,20 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 - `explore-map.js`: Explore Urban Data (13 maps, segment inspector). `app.js`, `center-map.js`: existing shell, preferences, map, Street evidence panel.
 - `scripts/streetwise_indicators.py`: shared indicator definitions and measurement. `build_manhattan_streets.py`: LION scores. `build_pedestrian_network.py`: OSM graph. `match_lion_osm.py`: matching + edge scores.
 - `data/manhattan-streets.json`, `data/pedestrian/`: built data. `data/cache/`: raw downloads (safe to delete).
-- `urban-layers.js`: dataset catalog panel, static tile loading, map layers, Urban Feature Inspector, Street Segment Evidence, Route Urban Data. `urban-geo.js`: shared geometry (projection, corridor, nearest, coverage). `api-config.js`: API base + `streetwiseJson`. `routing/layers.py`: reference implementation for tests. `scripts/build_urban_layers.py`: datasets → catalog + tiles.
-- `tests/`: `test_routing_engine.py` (network, matching, scores, ranking, navigation, HTTP), `test_urban_layers.py` (catalog, geographic accuracy, route queries, static serving, walking-time limits), `urban-geo.test.cjs` (browser geometry = brute-force reference), `test_street_data.py`, `test_server.py`, `dom.test.cjs`, JS spatial tests, Playwright scripts.
+- `urban-style.js`: cartographic design tokens (colours, zoom tiers, point/line/building/environment styles). `urban-layers.js`: dataset catalog panel, composition into grouped map layers, themes, dynamic legend, static tile loading, map layers, Urban Feature Inspector, Street Segment Evidence, Route Urban Data. `urban-geo.js`: shared geometry (projection, corridor, nearest, coverage). `api-config.js`: API base + `streetwiseJson`. `routing/layers.py`: reference implementation for tests. `scripts/build_urban_layers.py`: datasets → catalog + tiles.
+- `tests/`: `test_routing_engine.py` (network, matching, scores, ranking, navigation, HTTP), `test_urban_layers.py` (catalog, geographic accuracy, route queries, static serving, walking-time limits), `urban-style.test.cjs` (design-system rules), `urban-geo.test.cjs` (browser geometry = brute-force reference), `test_street_data.py`, `test_server.py`, `dom.test.cjs`, JS spatial tests, Playwright scripts.
 
 ## Automated checks / 自动测试
 
 ```bash
 node tests/spatial.test.cjs
 node tests/real-route.test.cjs
+node tests/urban-geo.test.cjs
+node tests/urban-style.test.cjs
 python3 -m unittest discover -s tests -p 'test_*.py'   # includes the routing engine end-to-end tests
 # Install jsdom separately for DOM integration tests:
 npm install --prefix /tmp/streetwise-test jsdom
 JSDOM_PATH=/tmp/streetwise-test/node_modules/jsdom node tests/dom.test.cjs
 ```
 
-Browser scripts require Playwright and a supported Chromium installation. `CHROME_PATH` may specify its executable. Browser/WebGL, touch layout and real hardware GPS acceptance **were not completed in this environment** because browser startup was blocked. DOM tests do not prove rendered map interactions.
+Browser scripts require Playwright and a supported Chromium installation. `CHROME_PATH` may specify its executable. The cartographic redesign was checked visually in a real browser (MapLibre/WebGL, 1440×900 and 375×812): route/street/city/detail zoom, height, age and land-use building themes, Current map view in dense Midtown, clicks on data points and route segments, Explore round trip. Real hardware GPS and touch gestures on a physical phone were not tested. DOM tests do not prove rendered map interactions.

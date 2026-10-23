@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=11" />
+  <link rel="stylesheet" href="./styles.css?v=14" />
 </head>
 <body>
 <div class="site-shell">
@@ -101,15 +101,16 @@
         <div class="urban-body">
           <p class="urban-lede">Explore real NYC data along your route</p>
           <input id="urbanSearch" class="urban-search" type="search" placeholder="Search urban datasets…" aria-label="Search urban datasets">
-          <div class="urban-head">DISPLAY SCOPE</div>
+          <div class="urban-head"><span id="urbanActiveTitle">ACTIVE DATASETS</span><span><button type="button" id="urbanAllOn" class="urban-clear">All on</button> <button type="button" id="urbanAllOff" class="urban-clear">All off</button> <button type="button" id="urbanSettings" class="urban-clear" aria-pressed="false">Opacity</button></span></div>
           <div class="urban-scope" role="radiogroup" aria-label="Display scope"><label><input type="radio" name="urbanScope" value="route" checked> Along selected route</label><label><input type="radio" name="urbanScope" value="view"> Current map view</label></div>
-          <label class="urban-distance">Route corridor <select id="urbanCorridor" aria-label="Route display corridor"><option value="50">50 m</option><option value="100" selected>100 m</option><option value="200">200 m</option><option value="500">500 m</option></select><small>map display only — never changes scores</small></label>
+          <label class="urban-distance">Route corridor <select id="urbanCorridor" aria-label="Route display corridor"><option value="50">50 m</option><option value="100" selected>100 m</option><option value="200">200 m</option><option value="500">500 m</option></select><small>display only — never changes scores</small></label>
+          <div class="urban-themes"><label>Building theme <select id="buildingTheme" aria-label="Building fill theme"></select></label><label>Environment theme <select id="envTheme" aria-label="Environmental surface theme"></select></label></div>
           <div id="urbanCats" class="urban-dims"><p class="urban-note">Open to load the dataset catalog.</p></div>
-          <div class="urban-section"><div class="urban-head"><span id="urbanActiveTitle">ACTIVE LAYERS: 0</span><span><button type="button" id="urbanClear" class="urban-clear">Clear all</button> <button type="button" id="urbanSettings" class="urban-clear" aria-pressed="false">Layer settings</button></span></div><div id="urbanActive"></div></div>
           <div class="urban-section"><div class="urban-head">NAVIGATION OVERLAYS</div>
             <div class="layer-chips"><label class="switch-chip"><input type="checkbox" id="layerRoutes" checked><span class="chip-square routes"></span> Alternative routes</label><label class="switch-chip"><input type="checkbox" id="layerPOIs" checked><span class="chip-square poi-chip"></span> Route POIs</label><label class="switch-chip"><input type="checkbox" id="layerRoads" checked><span class="chip-square roads"></span> Street base (LION)</label><button id="retryStreets" class="switch-chip" title="Retry incomplete Manhattan data loading">↻ Streets</button></div>
             <p class="urban-note">The selected route and start / destination always stay on top. Your location appears only after you allow GPS.</p></div>
         </div></details>
+      <section id="udLegend" class="ud-legend" aria-label="Map legend"><button type="button" id="udLegendToggle" class="ud-legend-head" aria-expanded="true">Legend</button><div class="lg-body"></div></section>
       <aside id="urbanInspector" class="explore-inspector urban-inspector hidden" aria-label="Urban feature inspector" aria-live="polite"></aside>
       <div class="map-actions"><button id="mapLocate" title="Locate me" aria-label="Locate me">◎</button><button id="toggleLegend" title="Toggle legend" aria-label="Toggle legend" aria-pressed="true">≡</button><button id="mapReset" title="Reset map view" aria-label="Reset map view">⤢</button></div>
       <div id="pickNotice" class="pick-notice hidden">Click anywhere on the map to set a point. <button id="cancelPick">CANCEL</button></div>
@@ -162,13 +163,14 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="modalOverlay" class="modal-overlay hidden"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button id="closeModal" class="modal-close" title="Close">✕</button><div class="section-overline">PROJECT NOTES / TRANSPARENCY</div><h2 id="modalTitle">What is real, and what's next.</h2><div id="modalContent"></div></div></div>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="./experience-core.js?v=11"></script>
-<script src="./api-config.js?v=11"></script>
-<script src="./app.js?v=11"></script>
-<script src="./route-client.js?v=11"></script>
-<script src="./urban-geo.js?v=11"></script>
-<script src="./urban-layers.js?v=11"></script>
-<script src="./explore-map.js?v=11"></script>
-<script src="./center-map.js?v=11"></script>
+<script src="./experience-core.js?v=14"></script>
+<script src="./api-config.js?v=14"></script>
+<script src="./app.js?v=14"></script>
+<script src="./route-client.js?v=14"></script>
+<script src="./urban-geo.js?v=14"></script>
+<script src="./urban-style.js?v=14"></script>
+<script src="./urban-layers.js?v=14"></script>
+<script src="./explore-map.js?v=14"></script>
+<script src="./center-map.js?v=14"></script>
 </body>
 </html>

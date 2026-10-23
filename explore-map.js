@@ -33,15 +33,16 @@ async function loadExploreStreets(){
  return exploreMap.data;
 }
 function setupExploreMap(){
- const m=state.map,width=['interpolate',['exponential',1.5],['zoom'],10.5,.55,12,1.1,14,2.4,16,5,18,10];
+ // MapLibre only accepts ['zoom'] as the input of a top-level interpolate, so scaled widths are separate ramps.
+ const m=state.map,W=[[10.5,.55],[12,1.1],[14,2.4],[16,5],[18,10]],ramp=f=>['interpolate',['exponential',1.5],['zoom'],...W.flatMap(([z,v])=>[z,f(v)])],width=ramp(v=>v);
  // Basemap labels and icons are hidden in Explore so nothing sits on top of the streets.
  exploreMap.labels=m.getStyle().layers.filter(l=>l.type==='symbol').map(l=>l.id);
  m.addSource('manhattan-streets',{type:'geojson',data:exploreMap.data||emptyFC(),promoteId:'id'});
  const before='landmark-fill';
- m.addLayer({id:'explore-glow',type:'line',source:'manhattan-streets',layout:{visibility:'none','line-cap':'round'},filter:['>=',['coalesce',['get','d1'],-1],78],paint:{'line-color':'#ffd83a','line-width':['*',3,width],'line-blur':['*',2,width],'line-opacity':.2}},before);
+ m.addLayer({id:'explore-glow',type:'line',source:'manhattan-streets',layout:{visibility:'none','line-cap':'round'},filter:['>=',['coalesce',['get','d1'],-1],78],paint:{'line-color':'#ffd83a','line-width':ramp(v=>3*v),'line-blur':ramp(v=>2*v),'line-opacity':.2}},before);
  m.addLayer({id:'explore-streets',type:'line',source:'manhattan-streets',layout:{visibility:'none','line-cap':'round','line-join':'round','line-sort-key':['coalesce',['get','overall'],-1]},paint:{'line-color':exploreLineColor(),'line-width':width,'line-opacity':exploreMap.opacity}},before);
- m.addLayer({id:'explore-hover',type:'line',source:'manhattan-streets',layout:{visibility:'none','line-cap':'round'},paint:{'line-color':'#ffffff','line-width':['*',1.6,width],'line-opacity':['case',['boolean',['feature-state','hover'],false],.85,0]}},before);
- m.addLayer({id:'explore-selected',type:'line',source:'manhattan-streets',layout:{visibility:'none','line-cap':'round'},filter:['==',['get','id'],''],paint:{'line-color':'#ffffff','line-width':['max',5,['*',2.6,width]],'line-opacity':1}},before);
+ m.addLayer({id:'explore-hover',type:'line',source:'manhattan-streets',layout:{visibility:'none','line-cap':'round'},paint:{'line-color':'#ffffff','line-width':ramp(v=>1.6*v),'line-opacity':['case',['boolean',['feature-state','hover'],false],.85,0]}},before);
+ m.addLayer({id:'explore-selected',type:'line',source:'manhattan-streets',layout:{visibility:'none','line-cap':'round'},filter:['==',['get','id'],''],paint:{'line-color':'#ffffff','line-width':ramp(v=>Math.max(5,2.6*v)),'line-opacity':1}},before);
  // Invisible wide hit target: segments are clickable at whole-island zoom without zooming in first.
  m.addLayer({id:'explore-hit',type:'line',source:'manhattan-streets',layout:{visibility:'none'},paint:{'line-color':'#000','line-width':['interpolate',['linear'],['zoom'],10,9,14,14,17,22],'line-opacity':0}},before);
  m.on('mousemove','explore-hit',e=>{
@@ -141,7 +142,7 @@ function applyExploreVisibility(){
  for(const id of ['explore-glow','explore-streets','explore-hover','explore-selected','explore-hit'])setMapLayerVisible(id,on);
  for(const id of exploreMap.labels)setMapLayerVisible(id,!on);
  for(const id of ['point-starts','point-ends','point-gps'])setMapLayerVisible(id,!on);
- if(!on){for(const id of [...urbanMapLayerIds(),'ud-highlight-fill','ud-highlight-line','ud-highlight-pt'])setMapLayerVisible(id,true);return;}
+ if(!on){for(const id of [...urbanMapLayerIds(),'ud-highlight-fill','ud-highlight-line','ud-highlight-pt'])setMapLayerVisible(id,true);applyEnvTheme();return;}
  // Explore shows only the street map: no journey routes, pins, POIs, raw tree/landmark points or section overlays.
  for(const id of [...urbanMapLayerIds(),'ud-highlight-fill','ud-highlight-line','ud-highlight-pt','road-highlight','road-underlay','route-alts','route-shadow','route-selected','route-edge-selected','route-edge-hit','point-starts','point-ends','point-gps','poi-points','tree-points','landmark-fill','landmark-outline','experience-hit','experience-coverage-line',...ExperienceCore.keys.map(k=>'experience-'+k)])setMapLayerVisible(id,false);
 }
