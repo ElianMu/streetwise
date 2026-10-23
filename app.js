@@ -68,16 +68,27 @@ const planner = {
   profileView:'selected', routePois:[], poiStatus:'Not loaded', poiRun:0, lastBest:null
 };
 
+const DEFAULT_WALK_MINUTES = 60, MIN_WALK_MINUTES = 10, SLIDER_BASE_MAX = 60;  // max walking time: default, minimum, base slider end
 const state = {
   map: null, mapReady: false, mapLayersReady:false,
   start:'bryant', end:'rock', customStart:null, customEnd:null, gps:null, gpsWatch:null,
-  pick:null, dimension:'Streets', budget:30,
+  pick:null, dimension:'Streets', budget:DEFAULT_WALK_MINUTES,
   datasets:{streets:null, trees:null, lpc:null}, dataComplete:{streets:false,trees:false,lpc:false},
   dataErrors:{}, loading:{}, routes:[], activeRoute:null, selectedStreet:null,
   display:{roads:true,trees:false,lpc:false,routes:true,pois:true}, routingBusy:false, weather:null,
   treeStatsReady:false, thresholds:[0,0], intentTags:[], streetsById:new Map(), streetExpected:null, streetRetrying:false, overlayCoverage:{trees:null,lpc:null}, overlayRequestId:0
 };
 
+/* Max walking time: default 60 min, at least 10, no upper cap. The slider spans 10–60 and extends to the current
+   value when it is higher, so slider, custom input and header always show the same number. */
+function validWalkMinutes(v){const n=typeof v==='string'?v.trim():v;if(n===''||n===null)return null;const x=Number(n);return Number.isInteger(x)&&x>=MIN_WALK_MINUTES?x:null;}
+function syncBudgetUI(){
+  const max=Math.max(SLIDER_BASE_MAX,state.budget),r=$('timeRange');
+  r.max=max;r.value=state.budget;$('timeRangeMax').textContent=`${max} MIN`;$('timeValue').textContent=`${state.budget} MIN`;
+  if(document.activeElement!==$('customTime'))$('customTime').value=state.budget;  // never overwrite what the user is typing
+}
+/** Sets the hard limit if valid; returns false (state unchanged) otherwise. */
+function setBudget(v){const x=validWalkMinutes(v);if(x===null)return false;state.budget=x;syncBudgetUI();return true;}
 const formatNum = (v, decimals=1) => Number.isFinite(v)?v.toFixed(decimals):'—';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
 let toastTimer;
@@ -123,8 +134,7 @@ function renderPreferenceSummary(){
   const items=DIMENSIONS.filter(d=>planner.origins[d.name]!=='default').sort((a,b)=>planner.weights[b.name]-planner.weights[a.name]);
   $('preferenceSource').textContent=planner.interpretation==='llm'?'AI INTERPRETED':planner.interpretation==='local'?'LOCAL PREVIEW':'NOT INTERPRETED';
   $('preferenceSummary').innerHTML=items.length?`<div class="pref-heading">✦ UNDERSTOOD YOUR PREFERENCES</div><div class="pref-items">${items.map(d=>`<div class="pref-item"><span>${esc(d.icon)} ${esc(d.name)}</span><strong>${weightLabel(planner.weights[d.name])} · ${planner.weights[d.name]}${planner.directions[d.name]==='low'?' · less':''}</strong></div>`).join('')}</div>`:'<span class="status-empty">✧ No preferences interpreted yet. Unmentioned dimensions = neutral 50.</span>';
-  $('timeRange').value=Math.min(60,Math.max(10,state.budget));$('timeValue').textContent=`${state.budget} MIN`;
-  $('customTime').value=state.budget;$('maxDetourPct').value=planner.maxDetourPct;
+  syncBudgetUI();$('maxDetourPct').value=planner.maxDetourPct;
   ['avoidDetours','stepFree','avoidStairs'].forEach(id=>$(id).checked=planner.constraints[id]);
   $('constraintWarning').classList.toggle('hidden',!planner.constraints.stepFree);
   renderDimensions();
@@ -176,11 +186,8 @@ function applyInterpretation(result,source){
       }
     }
   }
-  if(Number.isFinite(result.time_minutes)){
-    state.budget=Math.min(240,Math.max(1,Math.round(result.time_minutes)));changes.push(`max ${state.budget} min`);
-  }else if(Number.isFinite(result.time_delta_minutes)){
-    state.budget=Math.min(240,Math.max(1,Math.round(state.budget+result.time_delta_minutes)));changes.push(`max ${state.budget} min`);
-  }
+  const asked=Number.isFinite(result.time_minutes)?Math.round(result.time_minutes):Number.isFinite(result.time_delta_minutes)?Math.round(state.budget+result.time_delta_minutes):null;
+  if(asked!==null)changes.push(setBudget(asked)?`max ${state.budget} min`:`time limit ${asked} min ignored (minimum ${MIN_WALK_MINUTES}); kept ${state.budget} min`);
   for(const c of ['avoidDetours','stepFree','avoidStairs']){
     if(typeof result.constraints?.[c]==='boolean'){planner.constraints[c]=result.constraints[c];changes.push(`${c}: ${planner.constraints[c]?'yes':'no'}`)}
   }
@@ -349,10 +356,10 @@ function updateMapStyles(){
   setMapLayerVisible('tree-points',state.display.trees);
   setMapLayerVisible('landmark-fill',state.display.lpc);
   setMapLayerVisible('landmark-outline',state.display.lpc);
-  const showRoutes=mapExperience.mode==='navigate'||state.display.routes;
-  setMapLayerVisible('route-alts',showRoutes);
-  setMapLayerVisible('route-shadow',showRoutes);
-  setMapLayerVisible('route-selected',showRoutes);
+  // The selected route is always visible; the toggle controls alternative routes only.
+  setMapLayerVisible('route-alts',state.display.routes);
+  setMapLayerVisible('route-shadow',true);
+  setMapLayerVisible('route-selected',true);
   setMapLayerVisible('poi-points',state.display.pois);
   updateExperienceStyles();
 }
@@ -377,9 +384,9 @@ function setupMap(){
       m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#65d7db','circle-radius':8,'circle-stroke-color':'#e9fff4','circle-stroke-width':2.5}});
       m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#ffae73','circle-radius':8,'circle-stroke-color':'#fff6e6','circle-stroke-width':2.5}});
       m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':7,'circle-stroke-color':'#fff','circle-stroke-width':3}});
-      setupRouteEdgeLayer();
+      setupRouteEdgeLayer();setupUrbanMap();
       state.mapLayersReady=true; setupExperienceMap(); syncMapData();updateMapStyles();
-      m.on('click','road-highlight',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;const feat=e.features?.[0];if(!feat)return;const fid=feat.properties?.FID;const real=state.streetsById.get(String(fid));state.selectedStreet=real||feat;updateSegmentDetails();});
+      m.on('click','road-highlight',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit',...urbanMapLayerIds()]}).length)return;const feat=e.features?.[0];if(!feat)return;const fid=feat.properties?.FID;const real=state.streetsById.get(String(fid));state.selectedStreet=real||feat;updateSegmentDetails();});
       m.on('click','route-alts',(e)=>{if(state.pick)return;const name=e.features?.[0]?.properties?.id;if(name)selectRoute(name)});
       m.on('click','poi-points',(e)=>{if(state.pick)return;const f=e.features?.[0];if(f?.properties?.name)showPOIPopup(f,e.lngLat)});
       m.on('click',(e)=>{if(!state.pick)return;const kind=state.pick;const p={name:`Map point ${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}`,lat:e.lngLat.lat,lon:e.lngLat.lng};state[kind==='start'?'customStart':'customEnd']=p;state[kind]='custom';$(kind==='start'?'startSelect':'endSelect').value='custom';$(kind==='start'?'searchStart':'searchEnd').value=p.name;state.pick=null;$('pickNotice').classList.add('hidden');m.getCanvas().style.cursor='';resetRoutes();syncMapData();toast(`${kind==='start'?'Start':'Destination'} set from the map.`)});
@@ -577,8 +584,14 @@ function setupControls(){
       root.querySelector('button').addEventListener('click',()=>geocodePlace(kind,search.value));
     });
   }
-  $('timeRange').addEventListener('input',e=>{state.budget=+e.target.value;renderPreferenceSummary();updateRoutesUI()});
-  $('customTime').addEventListener('change',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=1&&v<=240){state.budget=Math.round(v);renderPreferenceSummary();updateRoutesUI()}else{toast('Choose 1–240 minutes.');renderPreferenceSummary()}});
+  $('timeRange').addEventListener('input',e=>{setBudget(Number(e.target.value));updateRoutesUI()});
+  // Custom maximum: free typing (empty allowed while editing); validated on blur / Enter; invalid input restores the last valid value.
+  const commitCustomTime=()=>{const raw=$('customTime').value;if(String(state.budget)===raw.trim())return;
+    if(setBudget(raw)){renderPreferenceSummary();updateRoutesUI();}
+    else{toast(`Enter whole minutes, ${MIN_WALK_MINUTES} or more. Kept ${state.budget} min.`);$('customTime').value=state.budget;}};
+  $('customTime').addEventListener('change',commitCustomTime);
+  $('customTime').addEventListener('blur',commitCustomTime);
+  $('customTime').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitCustomTime();}});
   $('maxDetourPct').addEventListener('change',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=0&&v<=100){planner.maxDetourPct=v;updateRoutesUI()}else{toast('Choose a detour limit from 0 to 100%.');renderPreferenceSummary()}});
   $('generateRoutes').addEventListener('click',()=>handlePlan($('intentText').value,false));
   $('expandDimensions').addEventListener('click',()=>{
@@ -597,7 +610,7 @@ function setupControls(){
     state.pick=kind;$('pickNotice').classList.remove('hidden');state.map.getCanvas().style.cursor='crosshair';
   });
   $('cancelPick').addEventListener('click',()=>{state.pick=null;$('pickNotice').classList.add('hidden');if(state.mapReady)state.map.getCanvas().style.cursor=''});
-  for(const [key,id] of [['roads','layerRoads'],['trees','layerTrees'],['lpc','layerLpc'],['routes','layerRoutes']]){
+  for(const [key,id] of [['roads','layerRoads'],['routes','layerRoutes']]){
     $(id).addEventListener('change',e=>{state.display[key]=e.target.checked;if(e.target.checked&&(key==='trees'||key==='lpc'))loadViewportEvidence(key);updateMapStyles();updateLegend()});
   }
   $('exportKepler').addEventListener('click',()=>openModal('export'));

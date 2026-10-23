@@ -6,14 +6,16 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 import os
 import json
+import math
 import gzip
 import subprocess
 import sys
 import threading
 import time
 from urllib import request, error
-from urllib.parse import unquote
-from routing.engine import get_planner, reset_planner, RoutingError, DIMENSIONS as ROUTE_DIMENSIONS
+from urllib.parse import unquote, urlsplit, parse_qs
+from routing.engine import get_planner, reset_planner, RoutingError, DIMENSIONS as ROUTE_DIMENSIONS, MIN_WALK_MINUTES
+from routing.layers import get_store, reset_store, LayerError
 
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
@@ -33,7 +35,7 @@ SYSTEM = f"""You are STREETWISE's structured walking-preference interpreter. Nev
 Return one JSON object ONLY with keys:
 "weights": object mapping ONLY mentioned dimensions (exactly these 12 names: {json.dumps(DIMENSIONS)}) to independent IMPORTANCE integers 0..100. 0 means ignore, not an inverse objective. A clear request such as 'more greenery', 'less traffic', or 'quieter streets' gives high importance about 85-95.
 "directions": object mapping ONLY the same mentioned dimensions to either 'high' or 'low': desired greater or lesser measured exposure. 'Less crowded' = Urban Vibrancy weight 90 direction low. 'Quieter' = Quiet & Relax weight 90 direction high (quiet is desired high). Do not use low weights to represent a negative preference.
-"time_minutes": absolute walking hard cap from 1 to 240, if explicitly given; otherwise null.
+"time_minutes": absolute walking hard cap in whole minutes (at least 10; no upper limit), if explicitly given; otherwise null.
 "time_delta_minutes": signed integer modification to existing walking cap, if user explicitly says 'five more minutes'; otherwise null. Never return both time_minutes and time_delta_minutes non-null.
 "max_detour_percent": optional integer from 0 to 100 if explicitly specified (extra distance over the shortest candidate route distance), otherwise null.
 "constraints": object containing ONLY changed boolean entries from 'avoidDetours', 'stepFree', 'avoidStairs'. Keep unmentioned prior constraints.
@@ -61,9 +63,9 @@ def validate_interpretation(doc):
     if set(constraints) - {'avoidDetours', 'stepFree', 'avoidStairs'} or any(type(v) is not bool for v in constraints.values()):
         raise ValueError('Invalid hard constraint')
     absolute, delta, detour = (doc.get(x) for x in ('time_minutes', 'time_delta_minutes', 'max_detour_percent'))
-    if absolute is not None and (type(absolute) is not int or not 1 <= absolute <= 240):
+    if absolute is not None and (type(absolute) is not int or absolute < MIN_WALK_MINUTES):
         raise ValueError('Invalid absolute minutes')
-    if delta is not None and (type(delta) is not int or not -240 <= delta <= 240):
+    if delta is not None and (type(delta) is not int or abs(delta) > 1440):
         raise ValueError('Invalid time delta')
     if absolute is not None and delta is not None:
         raise ValueError('Conflicting time outputs')
@@ -103,11 +105,17 @@ def validate_route_request(doc):
         raise ValueError('Weights must be 0..100 and directions "high" or "low"')
     c = doc.get('constraints') or {}
     out = {'avoid_detours': c.get('avoid_detours', True) is not False, 'avoid_stairs': c.get('avoid_stairs') is True}
-    for key, lo, hi in (('max_minutes', 1, 240), ('max_detour_pct', 0, 100)):
-        if c.get(key) is not None:
-            if type(c[key]) not in (int, float) or not lo <= c[key] <= hi:
-                raise ValueError(f'constraints.{key} must be {lo}..{hi}')
-            out[key] = float(c[key])
+    # Max walking time is the user's own hard limit: at least 10 minutes, no hidden upper cap.
+    m = c.get('max_minutes')
+    if m is not None:
+        if type(m) not in (int, float) or not math.isfinite(m) or m < MIN_WALK_MINUTES:
+            raise ValueError(f'constraints.max_minutes must be a number of minutes ≥ {MIN_WALK_MINUTES}')
+        out['max_minutes'] = float(m)
+    d = c.get('max_detour_pct')
+    if d is not None:
+        if type(d) not in (int, float) or not 0 <= d <= 100:
+            raise ValueError('constraints.max_detour_pct must be 0..100')
+        out['max_detour_pct'] = float(d)
     return validate_point(doc.get('origin'), 'origin'), validate_point(doc.get('destination'), 'destination'), {'weights': weights, 'directions': dirs}, out
 
 
@@ -204,6 +212,9 @@ class Handler(SimpleHTTPRequestHandler):
             i = net.by_id.get(unquote(self.path[len('/api/edges/'):]))
             self.send_json(200, net.edge_object(i)) if i is not None else self.send_json(404, {'error': 'Unknown OSM edge ID (expected "u-v-key")'})
             return
+        if self.path.startswith('/api/layers'):
+            self.handle_layers()
+            return
         if self.path.startswith('/api/segments/'):
             seg = street_segment(unquote(self.path[len('/api/segments/'):]))
             self.send_json(200, seg) if seg else self.send_json(404, {'error': 'Unknown analysis segment ID'})
@@ -211,6 +222,39 @@ class Handler(SimpleHTTPRequestHandler):
         if self.send_gzipped():
             return
         return super().do_GET()
+
+    def handle_layers(self):
+        """GET /api/layers (registry) and /api/layers/{id}?bbox=w,s,e,n | ?route_id=…&distance=m."""
+        url = urlsplit(self.path); q = {k: v[0] for k, v in parse_qs(url.query).items()}
+        lid = unquote(url.path[len('/api/layers'):].strip('/'))
+        try:
+            store = get_store()
+            if not lid:
+                self.send_json(200, store.registry); return
+            if 'route_id' in q:
+                with get_planner().lock:
+                    route = get_planner().routes.get(q['route_id'])
+                if not route:
+                    raise RoutingError('Unknown or expired route_id; plan the route again.')
+                dist = float(q['distance']) if q.get('distance') else None
+                self.send_json(200, {**store.along_route(lid, route['geometry']['coordinates'], dist), 'route_id': q['route_id']})
+            elif 'bbox' in q:
+                bbox = [float(x) for x in q['bbox'].split(',')]
+                if len(bbox) != 4:
+                    raise ValueError('bbox must be west,south,east,north')
+                self.send_json(200, store.in_view(lid, bbox))
+            else:
+                raise ValueError('Use ?bbox=west,south,east,north or ?route_id=…')
+        except FileNotFoundError:
+            self.send_json(503, {'error': 'Urban data layers not built; run scripts/build_urban_layers.py'})
+        except LayerError as e:
+            self.send_json(404 if 'Unknown layer' in str(e) or 'unavailable' in str(e) else 400, {'error': str(e)})
+        except RoutingError as e:
+            self.send_json(422, {'error': str(e)})
+        except (ValueError, TypeError) as e:
+            self.send_json(400, {'error': str(e)})
+        except RuntimeError as e:
+            self.send_json(503, {'error': str(e)})
 
     def send_gzipped(self):
         """Serve text assets gzip-compressed (the 12-dimension street file shrinks ~5x)."""
@@ -320,6 +364,10 @@ def refresh_street_data_if_stale():
         _segments = None
         reset_planner()
         print('Street data and edge scores refreshed.')
+        # Map layers are refreshed from the same day's sources; they need OSMnx, and a failure keeps the previous layers.
+        result = subprocess.run([sys.executable, str(ROOT / 'scripts' / 'build_urban_layers.py')], capture_output=True, text=True)
+        reset_store()
+        print('Urban data layers refreshed.' if result.returncode == 0 else 'Urban data layers not refreshed (previous layers kept):\n' + result.stderr[-400:])
     threading.Thread(target=run, daemon=True).start()
 
 if __name__ == '__main__':

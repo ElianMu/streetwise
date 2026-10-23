@@ -204,6 +204,33 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .seg-link{border:1px solid #48715f;background:#1f3832;color:#d8f365;border-radius:5px;padding:2px 5px;font-size:10px;margin:2px 2px 0 0}
 .seg-detail p{margin:6px 0 0;font-size:10px;line-height:1.45;color:#c8d6cf}
 
+/* Navigate v0.9: Urban Data Layers panel, walking-time help, route constraint line. */
+.custom-help{margin:4px 0 0;font-size:9.5px;line-height:1.5;color:#7f9993}
+.route-constraints{margin:8px 0 0;font-size:10px;color:#d8f365;line-height:1.5}
+.map-workspace .urban-layers{max-width:330px}.urban-layers[open]{width:330px;max-height:calc(100% - 120px);overflow:auto;padding:10px;border:1px solid #344b48;border-radius:13px;background:#0f2124f5;box-shadow:0 8px 30px #0006;scrollbar-width:thin;scrollbar-color:#304d51 transparent}
+.urban-layers summary .urban-count{color:#d8f365;margin-left:4px}.urban-section{border-top:1px solid #243b3c;padding-top:8px;margin-top:8px}.urban-section:first-child{border-top:0;margin-top:0;padding-top:0}
+.urban-head{display:flex;justify-content:space-between;align-items:center;font-size:9px;letter-spacing:1.2px;font-weight:800;color:#9fb4ae;margin-bottom:6px}
+.urban-clear{border:1px solid #48715f;background:#1f3832;color:#d8f365;border-radius:6px;padding:3px 7px;font-size:9.5px;letter-spacing:0}
+.urban-note{font-size:9.5px;line-height:1.5;color:#7f9993;margin:6px 0 0}
+.urban-scope{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:10.5px;color:#c8d6cf}.urban-scope input{accent-color:#d8f365}
+.urban-distance,.urban-overlay{display:flex;align-items:center;gap:6px;font-size:10px;color:#9fb4ae}.urban-overlay{margin-top:7px}
+.urban-distance select,.urban-overlay select{background:#172c2d;color:#e6eee5;border:1px solid #3d5048;border-radius:6px;padding:3px 5px;font-size:10px}
+.urban-search{width:100%;margin:8px 0 6px;padding:7px 9px;background:#132529;border:1px solid #314748;border-radius:7px;color:#e6eee5;font-size:11px}
+.urban-dims{display:grid;gap:4px}.urban-dim{border:1px solid #233d3d;border-radius:8px;background:#11262a}
+.urban-dim summary{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;padding:7px 9px;font-size:11px;color:#e6efe8;list-style:none}.urban-dim summary::-webkit-details-marker{display:none}
+.urban-dim summary small{color:#7f9993;font-size:9.5px}.urban-dim[open] summary{border-bottom:1px solid #233d3d}
+.urban-layer{padding:6px 9px;border-top:1px solid #1b3234}.urban-layer:first-of-type{border-top:0}.urban-layer.unavailable{opacity:.6}
+.urban-row{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#d5e0d9}.urban-row input{accent-color:#d8f365;margin:0}.urban-name{flex:1;min-width:0}
+.urban-swatch{width:12px;height:12px;flex:none;border-radius:50%;background:var(--c)}.urban-swatch.linestring{height:3px;border-radius:2px}.urban-swatch.polygon{border-radius:2px;background:color-mix(in srgb,var(--c) 35%,transparent);border:1.5px solid var(--c)}.urban-swatch.none{background:#3a4a4c}
+.urban-badge{font-size:8.5px;font-weight:700;letter-spacing:.4px;padding:2px 5px;border-radius:4px;white-space:nowrap}.urban-badge.scoring{background:#2a3a1f;color:#d8f365}.urban-badge.context{background:#1f3238;color:#9fc7d0}.urban-badge.off{background:#2a2a2a;color:#a0a0a0}
+.urban-info{width:18px;height:18px;flex:none;border:1px solid #3d5048;border-radius:50%;background:transparent;color:#9fb4ae;font-size:10px;line-height:1;padding:0}
+.urban-live{display:flex;flex-direction:column;gap:2px;margin:5px 0 0 19px;font-size:9.5px;color:#9fb4ae}.urban-live label{display:flex;align-items:center;gap:6px}.urban-live input{flex:1;margin:0}.urban-status{color:#c8d6cf}
+.urban-reason{margin:3px 0 0 19px;font-size:9.5px;color:#8a9a9b;line-height:1.4}
+.urban-meta{display:grid;grid-template-columns:86px 1fr;gap:3px 8px;margin:6px 0 2px 19px;font-size:9.5px}.urban-meta dt{color:#7f9993}.urban-meta dd{margin:0;color:#c8d6cf;overflow-wrap:anywhere}.urban-meta a{color:#d8f365}
+.focus-subs{margin-top:6px}.focus-seg{margin-top:6px}.focus-seg strong{font-size:10.5px}.focus-seg small,.focus-subs small{color:#87a29c}.seg-id{color:#d8f365;font-weight:700}
+.all-dims{margin-top:8px}.all-dims summary{cursor:pointer;color:#d8f365;font-size:10px}
+@media(max-width:740px){.urban-layers[open]{width:calc(100vw - 20px);max-height:60vh}}
+
 </style>
 </head>
 <body>
@@ -233,7 +260,7 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
         <div class="line-divider"></div>
         <div class="section-row"><div class="section-overline">02 / TELL STREETWISE WHAT YOU WANT</div><span class="subtag">NATURAL LANGUAGE</span></div>
         <p class="field-description">Describe the experience. You don't need to select any data layers.</p>
-        <textarea id="intentText" class="intent-box" rows="3" spellcheck="false" placeholder="I’d like a greener, quieter walk with interesting architecture, within 30 minutes.">I'd like a greener, quieter walk with interesting architecture, within 30 minutes.</textarea>
+        <textarea id="intentText" class="intent-box" rows="3" spellcheck="false" placeholder="I’d like a greener, quieter walk with interesting architecture.">I'd like a greener, quieter walk with interesting architecture.</textarea>
         <button id="generateRoutes" class="primary-cta"><span id="ctaLabel">✦ Plan My Walk</span><span class="cta-arrow">↗</span></button>
         <div id="interpretMode" class="interpret-mode" aria-live="polite">Checking AI interpretation service…</div>
 
@@ -250,10 +277,10 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
         </div>
 
         <div class="line-divider"></div>
-        <div class="section-row"><label for="timeRange" class="section-overline">04 / WALKING CONSTRAINTS</label><span id="timeValue" class="range-value">30 MIN</span></div>
+        <div class="section-row"><label for="timeRange" class="section-overline">04 / WALKING CONSTRAINTS</label><span id="timeValue" class="range-value">60 MIN</span></div>
         <div class="field-description">MAX WALKING TIME · A HARD LIMIT</div>
-        <input id="timeRange" type="range" min="10" max="60" value="30" step="5" aria-label="Maximum walking time" />
-        <div class="range-labels"><span>10 MIN</span><span>60 MIN</span></div><label class="custom-limit">Custom maximum (minutes) <input type="number" id="customTime" min="1" max="240" step="1" value="30" aria-label="Custom walking time limit (1–240 minutes)"></label><label class="custom-limit">Maximum detour over shortest candidate (%) <input type="number" id="maxDetourPct" min="0" max="100" step="5" value="25" aria-label="Maximum detour percentage"></label>
+        <input id="timeRange" type="range" min="10" max="60" value="60" step="1" aria-label="Maximum walking time" />
+        <div class="range-labels"><span>10 MIN</span><span id="timeRangeMax">60 MIN</span></div><label class="custom-limit">Custom maximum (minutes) <input type="number" id="customTime" min="10" step="1" value="60" inputmode="numeric" aria-label="Custom maximum walking time in whole minutes, at least 10" aria-describedby="customTimeHelp"></label><p id="customTimeHelp" class="custom-help">Default 60 min. Type any whole number of minutes (10 or more); the slider extends to match.</p><label class="custom-limit">Maximum detour over shortest candidate (%) <input type="number" id="maxDetourPct" min="0" max="100" step="5" value="25" aria-label="Maximum detour percentage"></label>
         <label class="constraint-check"><input id="avoidDetours" type="checkbox" checked> Avoid excessive detours <small>≤ 25% longer than baseline</small></label>
         <label class="constraint-check"><input id="stepFree" type="checkbox"> Step-free access <small>verified pedestrian-access data required</small></label>
         <label class="constraint-check"><input id="avoidStairs" type="checkbox"> Avoid stairs <small>excludes OpenStreetMap steps from routing</small></label>
@@ -291,7 +318,21 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
       <div id="exploreTooltip" class="explore-tooltip hidden" role="tooltip"></div>
       <aside id="exploreInspector" class="explore-inspector hidden" aria-label="Street Segment Inspector" aria-live="polite"></aside>
       <div id="selectedRouteSummary" class="selected-route-summary" aria-live="polite">Choose a journey to compare real walking routes.</div>
-      <details class="map-layer-switch" aria-label="Map layer toggles"><summary class="map-layer-head">Layers ▾</summary><div class="layer-chips"><label class="switch-chip"><input type="checkbox" id="layerRoads" checked><span class="chip-square roads"></span> Streets</label><label class="switch-chip"><input type="checkbox" id="layerTrees"><span class="chip-square trees"></span> Trees</label><label class="switch-chip"><input type="checkbox" id="layerLpc"><span class="chip-square lpc"></span> Landmarks</label><label class="switch-chip"><input type="checkbox" id="layerRoutes" checked><span class="chip-square routes"></span> Routes</label><label class="switch-chip"><input type="checkbox" id="layerPOIs" checked><span class="chip-square poi-chip"></span> POIs</label><button id="retryStreets" class="switch-chip" title="Retry incomplete Manhattan data loading">↻ Streets</button></div></details>
+      <details class="map-layer-switch urban-layers" id="urbanLayers"><summary class="map-layer-head">Urban Data Layers <span id="urbanActiveCount" class="urban-count"></span> ▾</summary>
+        <div class="urban-body">
+          <div class="urban-section"><div class="urban-head">NAVIGATION OVERLAYS</div>
+            <div class="layer-chips"><label class="switch-chip"><input type="checkbox" id="layerRoutes" checked><span class="chip-square routes"></span> Alternative routes</label><label class="switch-chip"><input type="checkbox" id="layerPOIs" checked><span class="chip-square poi-chip"></span> Route POIs</label><label class="switch-chip"><input type="checkbox" id="layerRoads" checked><span class="chip-square roads"></span> Street network (LION)</label><button id="retryStreets" class="switch-chip" title="Retry incomplete Manhattan data loading">↻ Streets</button></div>
+            <p class="urban-note">Selected route and start / destination are always shown. Your location appears only after you allow GPS.</p>
+          </div>
+          <div class="urban-section"><div class="urban-head">URBAN DATA <button type="button" id="urbanClear" class="urban-clear">Clear all</button></div>
+            <div class="urban-scope" role="radiogroup" aria-label="Data scope"><label><input type="radio" name="urbanScope" value="route" checked> Along route</label><label><input type="radio" name="urbanScope" value="view"> Current view</label>
+              <label class="urban-distance">Display range <select id="urbanDistance" aria-label="Along-route display range"><option value="auto">Layer default</option><option value="30">30 m</option><option value="60">60 m</option><option value="150">150 m</option><option value="300">300 m</option></select></label></div>
+            <label class="urban-overlay">Experience score overlay <select id="scoreOverlay" aria-label="Experience score overlay"></select></label>
+            <input id="urbanSearch" class="urban-search" type="search" placeholder="Search data layers" aria-label="Search data layers">
+            <div id="urbanDims" class="urban-dims"><p class="urban-note">Open to load the layer registry.</p></div>
+            <p class="urban-note">Display range only filters what is drawn; it never changes experience scores.</p>
+          </div>
+        </div></details>
       <div class="map-actions"><button id="mapLocate" title="Locate me" aria-label="Locate me">◎</button><button id="toggleLegend" title="Toggle legend" aria-label="Toggle legend" aria-pressed="true">≡</button><button id="mapReset" title="Reset map view" aria-label="Reset map view">⤢</button></div>
       <div id="pickNotice" class="pick-notice hidden">Click anywhere on the map to set a point. <button id="cancelPick">CANCEL</button></div>
       <div class="map-legend"><div class="legend-title"><span id="legendDot" class="legend-dot"></span><span id="legendTitle">MANHATTAN STREET NETWORK</span></div><p id="legendSubtitle">Official NYC centerlines (Manhattan borough filter); walkability not confirmed.</p><div id="legend-scale" class="legend-scale hidden"><span><i style="background:#365c64"></i>Lower</span><span><i style="background:#37bfc8"></i>Mid</span><span><i style="background:#d8f365"></i>Higher</span></div></div>
@@ -462,16 +503,27 @@ const planner = {
   profileView:'selected', routePois:[], poiStatus:'Not loaded', poiRun:0, lastBest:null
 };
 
+const DEFAULT_WALK_MINUTES = 60, MIN_WALK_MINUTES = 10, SLIDER_BASE_MAX = 60;  // max walking time: default, minimum, base slider end
 const state = {
   map: null, mapReady: false, mapLayersReady:false,
   start:'bryant', end:'rock', customStart:null, customEnd:null, gps:null, gpsWatch:null,
-  pick:null, dimension:'Streets', budget:30,
+  pick:null, dimension:'Streets', budget:DEFAULT_WALK_MINUTES,
   datasets:{streets:null, trees:null, lpc:null}, dataComplete:{streets:false,trees:false,lpc:false},
   dataErrors:{}, loading:{}, routes:[], activeRoute:null, selectedStreet:null,
   display:{roads:true,trees:false,lpc:false,routes:true,pois:true}, routingBusy:false, weather:null,
   treeStatsReady:false, thresholds:[0,0], intentTags:[], streetsById:new Map(), streetExpected:null, streetRetrying:false, overlayCoverage:{trees:null,lpc:null}, overlayRequestId:0
 };
 
+/* Max walking time: default 60 min, at least 10, no upper cap. The slider spans 10–60 and extends to the current
+   value when it is higher, so slider, custom input and header always show the same number. */
+function validWalkMinutes(v){const n=typeof v==='string'?v.trim():v;if(n===''||n===null)return null;const x=Number(n);return Number.isInteger(x)&&x>=MIN_WALK_MINUTES?x:null;}
+function syncBudgetUI(){
+  const max=Math.max(SLIDER_BASE_MAX,state.budget),r=$('timeRange');
+  r.max=max;r.value=state.budget;$('timeRangeMax').textContent=`${max} MIN`;$('timeValue').textContent=`${state.budget} MIN`;
+  if(document.activeElement!==$('customTime'))$('customTime').value=state.budget;  // never overwrite what the user is typing
+}
+/** Sets the hard limit if valid; returns false (state unchanged) otherwise. */
+function setBudget(v){const x=validWalkMinutes(v);if(x===null)return false;state.budget=x;syncBudgetUI();return true;}
 const formatNum = (v, decimals=1) => Number.isFinite(v)?v.toFixed(decimals):'—';
 const esc = s => String(s ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch]));
 let toastTimer;
@@ -517,8 +569,7 @@ function renderPreferenceSummary(){
   const items=DIMENSIONS.filter(d=>planner.origins[d.name]!=='default').sort((a,b)=>planner.weights[b.name]-planner.weights[a.name]);
   $('preferenceSource').textContent=planner.interpretation==='llm'?'AI INTERPRETED':planner.interpretation==='local'?'LOCAL PREVIEW':'NOT INTERPRETED';
   $('preferenceSummary').innerHTML=items.length?`<div class="pref-heading">✦ UNDERSTOOD YOUR PREFERENCES</div><div class="pref-items">${items.map(d=>`<div class="pref-item"><span>${esc(d.icon)} ${esc(d.name)}</span><strong>${weightLabel(planner.weights[d.name])} · ${planner.weights[d.name]}${planner.directions[d.name]==='low'?' · less':''}</strong></div>`).join('')}</div>`:'<span class="status-empty">✧ No preferences interpreted yet. Unmentioned dimensions = neutral 50.</span>';
-  $('timeRange').value=Math.min(60,Math.max(10,state.budget));$('timeValue').textContent=`${state.budget} MIN`;
-  $('customTime').value=state.budget;$('maxDetourPct').value=planner.maxDetourPct;
+  syncBudgetUI();$('maxDetourPct').value=planner.maxDetourPct;
   ['avoidDetours','stepFree','avoidStairs'].forEach(id=>$(id).checked=planner.constraints[id]);
   $('constraintWarning').classList.toggle('hidden',!planner.constraints.stepFree);
   renderDimensions();
@@ -570,11 +621,8 @@ function applyInterpretation(result,source){
       }
     }
   }
-  if(Number.isFinite(result.time_minutes)){
-    state.budget=Math.min(240,Math.max(1,Math.round(result.time_minutes)));changes.push(`max ${state.budget} min`);
-  }else if(Number.isFinite(result.time_delta_minutes)){
-    state.budget=Math.min(240,Math.max(1,Math.round(state.budget+result.time_delta_minutes)));changes.push(`max ${state.budget} min`);
-  }
+  const asked=Number.isFinite(result.time_minutes)?Math.round(result.time_minutes):Number.isFinite(result.time_delta_minutes)?Math.round(state.budget+result.time_delta_minutes):null;
+  if(asked!==null)changes.push(setBudget(asked)?`max ${state.budget} min`:`time limit ${asked} min ignored (minimum ${MIN_WALK_MINUTES}); kept ${state.budget} min`);
   for(const c of ['avoidDetours','stepFree','avoidStairs']){
     if(typeof result.constraints?.[c]==='boolean'){planner.constraints[c]=result.constraints[c];changes.push(`${c}: ${planner.constraints[c]?'yes':'no'}`)}
   }
@@ -743,10 +791,10 @@ function updateMapStyles(){
   setMapLayerVisible('tree-points',state.display.trees);
   setMapLayerVisible('landmark-fill',state.display.lpc);
   setMapLayerVisible('landmark-outline',state.display.lpc);
-  const showRoutes=mapExperience.mode==='navigate'||state.display.routes;
-  setMapLayerVisible('route-alts',showRoutes);
-  setMapLayerVisible('route-shadow',showRoutes);
-  setMapLayerVisible('route-selected',showRoutes);
+  // The selected route is always visible; the toggle controls alternative routes only.
+  setMapLayerVisible('route-alts',state.display.routes);
+  setMapLayerVisible('route-shadow',true);
+  setMapLayerVisible('route-selected',true);
   setMapLayerVisible('poi-points',state.display.pois);
   updateExperienceStyles();
 }
@@ -771,9 +819,9 @@ function setupMap(){
       m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#65d7db','circle-radius':8,'circle-stroke-color':'#e9fff4','circle-stroke-width':2.5}});
       m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#ffae73','circle-radius':8,'circle-stroke-color':'#fff6e6','circle-stroke-width':2.5}});
       m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':7,'circle-stroke-color':'#fff','circle-stroke-width':3}});
-      setupRouteEdgeLayer();
+      setupRouteEdgeLayer();setupUrbanMap();
       state.mapLayersReady=true; setupExperienceMap(); syncMapData();updateMapStyles();
-      m.on('click','road-highlight',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;const feat=e.features?.[0];if(!feat)return;const fid=feat.properties?.FID;const real=state.streetsById.get(String(fid));state.selectedStreet=real||feat;updateSegmentDetails();});
+      m.on('click','road-highlight',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit',...urbanMapLayerIds()]}).length)return;const feat=e.features?.[0];if(!feat)return;const fid=feat.properties?.FID;const real=state.streetsById.get(String(fid));state.selectedStreet=real||feat;updateSegmentDetails();});
       m.on('click','route-alts',(e)=>{if(state.pick)return;const name=e.features?.[0]?.properties?.id;if(name)selectRoute(name)});
       m.on('click','poi-points',(e)=>{if(state.pick)return;const f=e.features?.[0];if(f?.properties?.name)showPOIPopup(f,e.lngLat)});
       m.on('click',(e)=>{if(!state.pick)return;const kind=state.pick;const p={name:`Map point ${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}`,lat:e.lngLat.lat,lon:e.lngLat.lng};state[kind==='start'?'customStart':'customEnd']=p;state[kind]='custom';$(kind==='start'?'startSelect':'endSelect').value='custom';$(kind==='start'?'searchStart':'searchEnd').value=p.name;state.pick=null;$('pickNotice').classList.add('hidden');m.getCanvas().style.cursor='';resetRoutes();syncMapData();toast(`${kind==='start'?'Start':'Destination'} set from the map.`)});
@@ -971,8 +1019,14 @@ function setupControls(){
       root.querySelector('button').addEventListener('click',()=>geocodePlace(kind,search.value));
     });
   }
-  $('timeRange').addEventListener('input',e=>{state.budget=+e.target.value;renderPreferenceSummary();updateRoutesUI()});
-  $('customTime').addEventListener('change',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=1&&v<=240){state.budget=Math.round(v);renderPreferenceSummary();updateRoutesUI()}else{toast('Choose 1–240 minutes.');renderPreferenceSummary()}});
+  $('timeRange').addEventListener('input',e=>{setBudget(Number(e.target.value));updateRoutesUI()});
+  // Custom maximum: free typing (empty allowed while editing); validated on blur / Enter; invalid input restores the last valid value.
+  const commitCustomTime=()=>{const raw=$('customTime').value;if(String(state.budget)===raw.trim())return;
+    if(setBudget(raw)){renderPreferenceSummary();updateRoutesUI();}
+    else{toast(`Enter whole minutes, ${MIN_WALK_MINUTES} or more. Kept ${state.budget} min.`);$('customTime').value=state.budget;}};
+  $('customTime').addEventListener('change',commitCustomTime);
+  $('customTime').addEventListener('blur',commitCustomTime);
+  $('customTime').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitCustomTime();}});
   $('maxDetourPct').addEventListener('change',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=0&&v<=100){planner.maxDetourPct=v;updateRoutesUI()}else{toast('Choose a detour limit from 0 to 100%.');renderPreferenceSummary()}});
   $('generateRoutes').addEventListener('click',()=>handlePlan($('intentText').value,false));
   $('expandDimensions').addEventListener('click',()=>{
@@ -991,7 +1045,7 @@ function setupControls(){
     state.pick=kind;$('pickNotice').classList.remove('hidden');state.map.getCanvas().style.cursor='crosshair';
   });
   $('cancelPick').addEventListener('click',()=>{state.pick=null;$('pickNotice').classList.add('hidden');if(state.mapReady)state.map.getCanvas().style.cursor=''});
-  for(const [key,id] of [['roads','layerRoads'],['trees','layerTrees'],['lpc','layerLpc'],['routes','layerRoutes']]){
+  for(const [key,id] of [['roads','layerRoads'],['routes','layerRoutes']]){
     $(id).addEventListener('change',e=>{state.display[key]=e.target.checked;if(e.target.checked&&(key==='trees'||key==='lpc'))loadViewportEvidence(key);updateMapStyles();updateLegend()});
   }
   $('exportKepler').addEventListener('click',()=>openModal('export'));
@@ -1051,7 +1105,8 @@ function adaptRoute(r){return {id:r.route_id,label:r.route_name,coords:r.geometr
 function applyRouteResponse(json){
  planner.routeResponse=json;state.routes=json.routes.map(adaptRoute);
  const best=json.routes.find(r=>r.recommended);state.activeRoute=best?.route_id||null;routeNav.selectedEdge=null;
- planner.lastExplanation=best?best.ranking_explanation:`No candidate meets the hard constraints (${[...new Set(json.routes.flatMap(r=>r.constraints.violations))].join('; ')}). Increase the limit or change endpoints.`;
+ if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();
+ planner.lastExplanation=best?best.ranking_explanation:`No Feasible Route: none of the ${json.routes.length} candidate routes meets your limits (${[...new Set(json.routes.flatMap(r=>r.constraints.violations))].join('; ')}). Increase the limit or change endpoints. Over-limit routes are shown for comparison only.`;
 }
 async function generateRoutes(userText=null,isFollowUp=false){
  if(state.routingBusy)return;
@@ -1090,10 +1145,15 @@ function rankRoutes(){if(state.routes.length)queueMapReplan();}
 function updateRoutesUI(){if(state.routes.length)queueMapReplan();else renderRouteCards();}
 function selectRoute(id){
  const r=state.routes.find(x=>x.id===id);if(!r)return;
- state.activeRoute=id;routeNav.selectedEdge=null;renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
+ state.activeRoute=id;routeNav.selectedEdge=null;urbanLayersRouteChanged();renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
  if(state.mapReady){const b=routeBounds([r],160);if(b)state.map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:70,maxZoom:16,duration:500})}
 }
 function scoreText(v){return v==null?'N/A':String(v);}
+/** The hard limits the engine actually applied to the current results (from the response, not the form). */
+function constraintSummary(){
+ const c=planner.routeResponse?.constraints_used;if(!c)return '';
+ return `Hard limits used: max ${c.max_minutes==null?'—':Math.round(c.max_minutes)} min walking · ${c.avoid_detours&&c.max_detour_pct!=null?`max ${c.max_detour_pct}% detour`:'detour limit off'}${c.avoid_stairs?' · avoiding stairs':''} · ${planner.routeResponse.feasible_count} of ${planner.routeResponse.routes.length} routes feasible`;
+}
 function renderRouteCards(){
  const root=$('routeCards'),routes=state.routes;
  $('routeCount').textContent=`${routes.length} OSM ROUTE${routes.length===1?'':'S'}`;
@@ -1102,7 +1162,7 @@ function renderRouteCards(){
   const r=x.raw,selected=x.id===state.activeRoute,feasible=r.constraints.feasible;
   const tag=r.recommended?'BEST MATCH':r.objective==='shortest'?'SHORTEST':'ALTERNATIVE';
   return `<button class="route-card ${selected?'selected':''} ${!feasible?'over-budget':''}" type="button" data-route="${esc(x.id)}" aria-pressed="${selected}"><span class="route-icon">${selected?'✓':r.rank}</span><span class="route-names"><span class="route-category">${tag}${!feasible?' · NOT FEASIBLE':''}</span><strong>${esc(r.route_name)}</strong><small>Personalized ${r.personalized_score.utility} · Overall ${scoreText(r.overall_score)} · ${Math.round(r.data_coverage.mean*100)}% data coverage</small><small class="evidence-line">${r.detour_percentage>0?`+${r.detour_percentage}% vs shortest`:'Shortest distance'} · ${r.ordered_edge_ids.length} OSM edges</small>${!feasible?`<small>${esc(r.constraints.violations.join('; '))}</small>`:''}</span><span class="route-metrics"><strong>${(r.distance_m/1000).toFixed(2)} km</strong><small>${Math.ceil(r.estimated_duration_min)} min</small></span></button>`;
- }).join('')+`<p class="route-footnote">Routes are computed on the OSM pedestrian graph (${esc(planner.routeResponse?.network_version||'')}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${esc(planner.routeResponse?.score_version||'')}), shared with Explore Urban Data.</p>`;
+ }).join('')+`<p class="route-constraints">${esc(constraintSummary())}</p><p class="route-footnote">Routes are computed on the OSM pedestrian graph (${esc(planner.routeResponse?.network_version||'')}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${esc(planner.routeResponse?.score_version||'')}), shared with Explore Urban Data.</p>`;
  root.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',()=>selectRoute(el.dataset.route)));
 }
 function profileRows(r){
@@ -1152,24 +1212,40 @@ function selectRouteEdge(seq,fly=false){
 }
 function showRouteEdgeInspector(e,lngLat){
  const html=routeEdgeInspectorHtml(e);
- if(!state.mapReady||typeof maplibregl==='undefined'){$('segmentDetail').innerHTML=html;bindSegmentLinks($('segmentDetail'));return}
- const popup=new maplibregl.Popup({maxWidth:'320px'}).setLngLat(lngLat).setHTML(html).addTo(state.map);
- bindSegmentLinks(popup.getElement());
+ let root;
+ if(!state.mapReady||typeof maplibregl==='undefined'){$('segmentDetail').innerHTML=html;root=$('segmentDetail');}
+ else root=new maplibregl.Popup({maxWidth:'330px'}).setLngLat(lngLat).setHTML(html).addTo(state.map).getElement();
+ return fillFocusSubIndicators(root,e);
 }
+/** Dimension the user is looking at in the Urban Data Layers panel (or score overlay), if any. */
+function routeFocusDim(){return typeof urbanLayers!=='undefined'&&urbanLayers.focusDim?urbanLayers.focusDim:null;}
 function routeEdgeInspectorHtml(e){
- const rows=DIMENSIONS.map(d=>{const v=e.dimension_scores[d.name];return `<div class="explore-row"><span>${esc(dimLabel(d.name))}</span><i>${v==null?'':`<b style="width:${v}%;background:${typeof exploreColor==='function'?exploreColor(v,EXPLORE_VIEWS[1]):'#d8f365'}"></b>`}</i><em>${scoreText(v)}</em></div>`;}).join('');
- const src=e.score_source==='lion_match'?`Borrowed from ${e.matched_segment_ids.length} matched NYC LION analysis segment(s), overlap-length weighted (${Math.round(e.lion_match_share*100)}% of the edge matched).`
-  :e.score_source==='direct_osm'?'Measured directly on this OSM geometry with the shared indicator definitions (no reliable LION match, e.g. crossing, park path or bridge).':'Not scored (outside the routable network).';
- const segs=e.matched_segment_ids.map(id=>`<button type="button" class="seg-link" data-seg="${esc(id)}">${esc(id)}</button>`).join(' ');
- return `<strong>Route Edge Inspector</strong><dl><dt>OSM Edge ID (u-v-key)</dt><dd>${esc(e.edge_id)}</dd><dt>OSM way ID(s)</dt><dd>${esc(e.osm_way_ids.join(', '))}</dd><dt>Street / type</dt><dd>${esc(e.name||'Unnamed')} · ${esc([].concat(e.highway||[]).join('/'))}${e.pedestrian_access.footway?` · ${esc([].concat(e.pedestrian_access.footway).join('/'))}`:''}</dd><dt>Length on route</dt><dd>${Math.round(e.traversed_length_m)} m of ${Math.round(e.length_m)} m${e.partial?' (partial)':''}</dd><dt>Matched LION segment ID(s)</dt><dd>${segs||'None'}</dd><dt>Score source · match quality</dt><dd>${esc(src)} Quality: ${esc(e.match_quality)}.</dd></dl><div class="explore-rows">${rows}</div><div class="seg-detail"></div><small>Edge overall ${scoreText(e.overall_score)} · ${esc(e.network_version)} · ${esc(e.score_version)}. Scores are relative ranks within Manhattan, not calibrated scores.</small>`;
+ const key=routeFocusDim(),fi=key?ExperienceCore.keys.indexOf(key):-1,focus=fi>=0?DIMENSIONS[fi].name:null;
+ const rows=DIMENSIONS.map(d=>{const v=e.dimension_scores[d.name];return `<div class="explore-row${d.name===focus?' current':''}"><span>${esc(dimLabel(d.name))}</span><i>${v==null?'':`<b style="width:${v}%;background:${typeof exploreColor==='function'?exploreColor(v,EXPLORE_VIEWS[1]):'#d8f365'}"></b>`}</i><em>${scoreText(v)}</em></div>`;}).join('');
+ const lion=e.matched_segments?.length?e.matched_segments.map(m=>`<span class="seg-id">${esc(m.segment_id)}</span> ${esc(m.street_name||'')} · LION physicalid ${esc(m.source_segment_id??'—')}`).join('<br>')
+  :e.score_source==='direct_osm'?'<strong>Unmatched</strong> — no reliable LION segment; scores measured directly on this OSM geometry':'<strong>Unmatched</strong> — not scored (outside the routable network)';
+ const src=e.score_source==='lion_match'?`Borrowed from the matched LION segment(s), overlap-length weighted (${Math.round(e.lion_match_share*100)}% of the edge matched)`:e.score_source==='direct_osm'?'Measured directly on the OSM geometry with the shared indicator definitions':'Not scored';
+ const cov=focus?e.data_coverage[focus]:Object.values(e.data_coverage).reduce((a,b)=>a+b,0)/12;
+ const focusBlock=focus?`<div class="inspector-score"><span>${esc(dimLabel(focus))} · Experience Score</span><strong style="color:${typeof exploreColor==='function'?exploreColor(e.dimension_scores[focus],EXPLORE_VIEWS[1]):'#d8f365'}">${scoreText(e.dimension_scores[focus])}</strong><small>coverage ${Math.round(e.data_coverage[focus]*100)}% of this edge</small></div><div class="focus-subs" data-focus="${key}"><p class="soft-copy">Loading ${esc(dimLabel(focus))} sub-indicators…</p></div>`:'';
+ return `<strong>Route Segment Inspector</strong><dl><dt>OSM Edge ID (u-v-key)</dt><dd>${esc(e.edge_id)}</dd><dt>OSM way ID(s)</dt><dd>${esc(e.osm_way_ids.join(', '))}</dd><dt>Matched LION Segment ID</dt><dd>${lion}</dd><dt>Street name</dt><dd>${esc(e.street_name||'Unnamed')} · ${esc([].concat(e.highway||[]).join('/'))}${e.pedestrian_access.footway?` · ${esc([].concat(e.pedestrian_access.footway).join('/'))}`:''}</dd><dt>Edge length</dt><dd>${Math.round(e.traversed_length_m)} m on route of ${Math.round(e.length_m)} m${e.partial?' (partial)':''}</dd><dt>Score source · quality</dt><dd>${esc(src)} · ${esc(e.match_quality)}</dd><dt>Score coverage</dt><dd>${Math.round(cov*100)}%${focus?` (${esc(dimLabel(focus))})`:' (mean of 12)'}</dd></dl>${focusBlock}<details class="all-dims" ${focus?'':'open'}><summary>All 12 dimension scores</summary><div class="explore-rows">${rows}</div></details><small>Edge overall ${scoreText(e.overall_score)} · ${esc(e.network_version)} · ${esc(e.score_version)}. Scores are relative ranks within Manhattan, not calibrated scores. Source-record IDs (trees, crashes…) are shown separately in the Raw Data Feature inspector.</small>`;
 }
-function bindSegmentLinks(root){
- root.querySelectorAll('[data-seg]').forEach(b=>b.addEventListener('click',async()=>{
-  const box=root.querySelector('.seg-detail');box.textContent='Loading segment…';
-  try{const res=await fetch('/api/segments/'+encodeURIComponent(b.dataset.seg));const s=await res.json();if(!res.ok)throw new Error(s.error);
-   box.innerHTML=`<p><strong>${esc(s.street_name)}</strong> · LION physicalid ${esc(s.source_segment_id)} · ${Math.round(s.length_m)} m · overall ${scoreText(s.overall_score)}. Sources: ${esc([...new Set(Object.values(s.sub_indicators).flat().map(x=>s.data_sources[x.source]))].join('; '))}.</p>`;}
-  catch(err){box.textContent='Segment unavailable: '+err.message;}
- }));
+/** Sub-indicators behind the focused dimension: from the matched LION segment(s), or from the edge's own direct measurement. */
+async function fillFocusSubIndicators(root,e){
+ const box=root.querySelector('.focus-subs');if(!box)return;
+ const key=box.dataset.focus,dim=DIMENSIONS[ExperienceCore.keys.indexOf(key)].name;
+ const fmt=(x,v)=>v==null?'N/A':`${Number(v).toLocaleString(undefined,{maximumFractionDigits:2})} ${x.unit}`;
+ const role=x=>x.role==='context'?'context':x.role==='down'?'in score · lower is better':'in score · higher is better';
+ try{
+  if(e.score_source==='direct_osm'&&e.direct_sub_indicators){
+   const reg=await ensureUrbanRegistry(),inds=reg.indicators[key]||[];
+   box.innerHTML=`<p class="soft-copy">Measured on this edge (records within distance, not snapped):</p>${inds.map(x=>`<div class="data-pair"><span>${esc(x.label)} <small>${esc(role(x))}</small></span><span>${esc(fmt(x,e.direct_sub_indicators[x.key]))}</span></div>`).join('')}<small>Sources: ${esc([...new Set(inds.map(x=>reg.source_labels[x.source]))].join('; '))}</small>`;
+   return;
+  }
+  if(!e.matched_segment_ids.length){box.innerHTML='<p class="soft-copy">No sub-indicators: this edge is unmatched and not scored.</p>';return}
+  const segs=await Promise.all(e.matched_segment_ids.slice(0,3).map(id=>fetch('/api/segments/'+encodeURIComponent(id)).then(r=>r.ok?r.json():Promise.reject(new Error('segment '+id+' unavailable')))));
+  box.innerHTML=segs.map(s=>`<div class="focus-seg"><strong>${esc(s.segment_id)} · ${esc(s.street_name)}</strong> <small>${esc(dimLabel(dim))} ${scoreText(s.dimension_scores[dim])}</small>${s.sub_indicators[dim].map(x=>`<div class="data-pair"><span>${esc(x.label)} <small>${esc(role(x))}</small></span><span>${esc(fmt(x,x.value))}</span></div>`).join('')}</div>`).join('')
+   +`<small>Sources: ${esc([...new Set(segs.flatMap(s=>s.sub_indicators[dim].map(x=>s.data_sources[x.source])))].join('; '))}${e.matched_segment_ids.length>3?` · ${e.matched_segment_ids.length-3} more matched segment(s)`:''}</small>`;
+ }catch(err){box.innerHTML=`<p class="soft-copy">Sub-indicators unavailable: ${esc(err.message)}</p>`;}
 }
 function setupRouteEdgeLayer(){
  const m=state.map;
@@ -1200,6 +1276,176 @@ async function updateRouteProgress(accuracy){
   if(p.reroute_recommended&&state.start==='gps')queueMapReplan();
  }catch(err){routeNav.last=null;}
  finally{routeNav.pending=false;}
+}
+
+</script>
+<script>
+'use strict';
+/* Navigate · Urban Data Layers. Real NYC / OSM records grouped by the 12 experience dimensions, drawn Along Route
+   (records within a display distance of the selected route's real geometry) or for the Current View.
+   Layer metadata comes from data/layers/registry.json via /api/layers; nothing here is simulated.
+   Display distance filters what is drawn only; experience scores are computed elsewhere and never change. */
+const URBAN_COLORS={landmarks:'#f6ac6e',street_trees:'#8fdc86',parks:'#4caf6a',cultural_venues:'#c39bff',public_art:'#ff8fc8',scenic_points:'#7fd6ff',
+ noise_complaints:'#ff7a6b',sidewalk_surface:'#9fb3ba',seating:'#e7d27a',activity_places:'#ffc861',food_drink:'#ff9f5a',retail:'#f2d36b',intersections:'#d6e6e1',
+ osm_sidewalks:'#7bc8d6',osm_crosswalks:'#ffffff',osm_paths:'#b9e28c',pedestrian_crashes:'#ff4f6a',expressways:'#c4776b',subway_entrances:'#4fb4ff'};
+const urbanLayers={registry:null,loading:null,active:new Map(),scope:'route',distance:'auto',overlay:-1,focusDim:null,search:'',viewTimer:0,seq:0};
+const URBAN_BEFORE='nav-score-overlay';
+function urbanDimLabel(key){const i=ExperienceCore.keys.indexOf(key);return i<0?key:`${String(i+1).padStart(2,'0')} ${dimLabel(ExperienceCore.names[i])}`;}
+async function ensureUrbanRegistry(){
+ if(urbanLayers.registry)return urbanLayers.registry;
+ urbanLayers.loading=urbanLayers.loading||(async()=>{const res=await fetch('/api/layers',{signal:AbortSignal.timeout(15000)});const j=await res.json();if(!res.ok)throw new Error(j.error||'HTTP '+res.status);return j;})();
+ try{urbanLayers.registry=await urbanLayers.loading;}catch(e){urbanLayers.loading=null;throw e;}
+ return urbanLayers.registry;
+}
+function urbanLayerList(){return Object.values(urbanLayers.registry?.layers||{});}
+function layersForDim(key){
+ const order={scoring:0,context:1,unavailable:2};
+ return urbanLayerList().map(l=>({l,link:l.dims.find(d=>d.dimension===key)})).filter(x=>x.link)
+  .sort((a,b)=>(order[a.l.status==='available'?a.link.role:'unavailable']-order[b.l.status==='available'?b.link.role:'unavailable'])||a.l.name.localeCompare(b.l.name));
+}
+async function openUrbanPanel(){
+ const root=$('urbanDims');
+ if(location.protocol==='file:'){root.innerHTML='<p class="urban-note">Urban data layers are served by server.py; start it and open http://127.0.0.1:8080.</p>';return}
+ try{await ensureUrbanRegistry();renderUrbanPanel();}
+ catch(e){root.innerHTML=`<p class="urban-note">Urban data layers unavailable: ${esc(e.message)}</p>`;}
+}
+function renderUrbanPanel(){
+ const reg=urbanLayers.registry;if(!reg)return;
+ const q=urbanLayers.search.trim().toLowerCase();
+ const match=(l,key)=>!q||[l.name,l.dataset,l.source,urbanDimLabel(key)].some(t=>String(t||'').toLowerCase().includes(q));
+ $('urbanDims').innerHTML=reg.dimension_order.map(key=>{
+  const rows=layersForDim(key).filter(x=>match(x.l,key));if(!rows.length)return '';
+  const on=rows.filter(x=>urbanLayers.active.has(x.l.id)).length;
+  return `<details class="urban-dim" data-dim="${key}" ${q||urbanLayers.focusDim===key?'open':''}><summary><span>${esc(urbanDimLabel(key))}</span><small>${rows.filter(x=>x.l.status==='available').length} layers${on?` · ${on} on`:''}</small></summary>${rows.map(({l,link})=>urbanLayerRow(l,link,key)).join('')}</details>`;
+ }).join('')||'<p class="urban-note">No layer matches this search.</p>';
+ $('urbanDims').querySelectorAll('.urban-dim').forEach(d=>d.addEventListener('toggle',()=>{if(d.open)urbanLayers.focusDim=d.dataset.dim;}));
+ $('urbanDims').querySelectorAll('[data-layer-toggle]').forEach(c=>c.addEventListener('change',()=>{urbanLayers.focusDim=c.dataset.dim;toggleUrbanLayer(c.dataset.layerToggle,c.checked);}));
+ $('urbanDims').querySelectorAll('[data-layer-opacity]').forEach(r=>r.addEventListener('input',()=>setUrbanOpacity(r.dataset.layerOpacity,r.value/100)));
+ $('urbanDims').querySelectorAll('[data-layer-info]').forEach(b=>b.addEventListener('click',()=>{const box=b.closest('.urban-layer').querySelector('.urban-meta');box.classList.toggle('hidden');b.setAttribute('aria-expanded',String(!box.classList.contains('hidden')));}));
+ $('urbanActiveCount').textContent=urbanLayers.active.size?`${urbanLayers.active.size} on`:'';
+}
+function urbanLayerRow(l,link,key){
+ if(l.status!=='available')return `<div class="urban-layer unavailable"><div class="urban-row"><input type="checkbox" disabled aria-label="${esc(l.name)} unavailable"><span class="urban-swatch none"></span><span class="urban-name">${esc(l.name)}</span><span class="urban-badge off">Unavailable</span></div><p class="urban-reason">${esc(l.reason)}</p></div>`;
+ const a=urbanLayers.active.get(l.id),role=link.role;
+ const subs=link.sub_indicators.map(k=>urbanLayers.registry.indicators[key]?.find(x=>x.key===k)?.label||k);
+ return `<div class="urban-layer"><div class="urban-row"><input type="checkbox" data-layer-toggle="${l.id}" data-dim="${key}" ${a?'checked':''} aria-label="Show ${esc(l.name)}"><span class="urban-swatch ${l.geometry.toLowerCase()}" style="--c:${URBAN_COLORS[l.id]||'#ccc'}"></span><span class="urban-name">${esc(l.name)}</span><span class="urban-badge ${role}">${role==='scoring'?'Scoring':'Context only'}</span><button type="button" class="urban-info" data-layer-info aria-expanded="false" title="Dataset details">i</button></div>
+  ${a?`<div class="urban-live"><label>Opacity <input type="range" min="15" max="100" value="${Math.round(a.opacity*100)}" data-layer-opacity="${l.id}"></label><span class="urban-status">${esc(a.status||'')}</span></div>`:''}
+  <dl class="urban-meta hidden"><dt>Layer ID</dt><dd>${esc(l.id)}</dd><dt>Dataset</dt><dd>${esc(l.dataset)}</dd><dt>Source</dt><dd><a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.source)}</a></dd><dt>Geometry</dt><dd>${esc(l.geometry)} · ${Number(l.feature_count||0).toLocaleString()} Manhattan features</dd>
+  <dt>Dimension link</dt><dd>${l.dims.map(d=>`${esc(urbanDimLabel(d.dimension))}: ${d.role==='scoring'?'scoring':'context only'}`).join('; ')}</dd>${role==='scoring'?`<dt>Sub-indicator</dt><dd>${esc(subs.join(', '))}</dd><dt>Chain</dt><dd>${esc(l.name)} → ${esc(subs[0]||'')} → ${esc(dimLabel(ExperienceCore.names[ExperienceCore.keys.indexOf(key)]))} score → route score</dd>`:'<dt>Scoring</dt><dd>Not part of any score (context only)</dd>'}
+  <dt>Processing</dt><dd>${esc(l.processing)}</dd><dt>Distances</dt><dd>Scoring range ${l.scoring_distance_m==null?'—':l.scoring_distance_m+' m'} · default display ${l.display_distance_m} m</dd><dt>Attributes</dt><dd>${esc(l.attributes.join(', '))}</dd><dt>Updated</dt><dd>${esc(l.updated||'unknown')} (retrieved ${esc(l.retrieved)})</dd></dl></div>`;
+}
+// --- map layers ----------------------------------------------------------------------------------------
+function urbanSourceId(lid){return 'ul-'+lid;}
+function urbanMapLayerIds(){const ids=[];for(const lid of urbanLayers.active.keys())ids.push(...urbanStyleIds(lid));return ids;}
+function urbanStyleIds(lid){const g=urbanLayers.registry.layers[lid].geometry,s=urbanSourceId(lid);return g==='Point'?[s+'-cluster',s+'-pt']:g==='LineString'?[s+'-line']:[s+'-fill',s+'-outline'];}
+function addUrbanMapLayer(lid){
+ const m=state.map,l=urbanLayers.registry.layers[lid],s=urbanSourceId(lid),c=URBAN_COLORS[lid]||'#ccc',op=urbanLayers.active.get(lid).opacity;
+ if(m.getSource(s))return;
+ if(l.geometry==='Point'){
+  // Dense point data is clustered so the route stays readable; clusters split as you zoom in.
+  m.addSource(s,{type:'geojson',data:emptyFC(),cluster:true,clusterRadius:36,clusterMaxZoom:16,promoteId:'feature_id'});
+  m.addLayer({id:s+'-cluster',type:'circle',source:s,filter:['has','point_count'],paint:{'circle-color':c,'circle-opacity':op*.45,'circle-stroke-color':c,'circle-stroke-width':1.2,'circle-radius':['interpolate',['linear'],['get','point_count'],2,8,50,14,500,22]}},URBAN_BEFORE);
+  m.addLayer({id:s+'-pt',type:'circle',source:s,filter:['!',['has','point_count']],paint:{'circle-color':c,'circle-opacity':op,'circle-radius':['interpolate',['linear'],['zoom'],12,2.5,16,5],'circle-stroke-color':'#0b1a1d','circle-stroke-width':.8}},URBAN_BEFORE);
+ }else if(l.geometry==='LineString'){
+  m.addSource(s,{type:'geojson',data:emptyFC(),promoteId:'feature_id'});
+  m.addLayer({id:s+'-line',type:'line',source:s,paint:{'line-color':c,'line-opacity':op,'line-width':['interpolate',['linear'],['zoom'],12,1,16,3]}},URBAN_BEFORE);
+ }else{
+  m.addSource(s,{type:'geojson',data:emptyFC(),promoteId:'feature_id'});
+  m.addLayer({id:s+'-fill',type:'fill',source:s,paint:{'fill-color':c,'fill-opacity':op*.28}},URBAN_BEFORE);
+  m.addLayer({id:s+'-outline',type:'line',source:s,paint:{'line-color':c,'line-opacity':op,'line-width':1.1}},URBAN_BEFORE);
+ }
+ for(const id of urbanStyleIds(lid)){
+  m.on('click',id,e=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;const f=e.features?.[0];if(!f)return;
+   if(f.properties.point_count){m.getSource(s).getClusterExpansionZoom(f.properties.cluster_id).then(z=>m.easeTo({center:f.geometry.coordinates,zoom:z})).catch(()=>{});return;}
+   e.originalEvent.__urbanHandled=true;showUrbanFeature(lid,f,e.lngLat);});
+  m.on('mouseenter',id,()=>{if(!state.pick)m.getCanvas().style.cursor='pointer';});m.on('mouseleave',id,()=>{if(!state.pick)m.getCanvas().style.cursor='';});
+ }
+}
+function removeUrbanMapLayer(lid){const m=state.map,s=urbanSourceId(lid);if(!m)return;for(const id of urbanStyleIds(lid))if(m.getLayer(id))m.removeLayer(id);if(m.getSource(s))m.removeSource(s);}
+function setUrbanOpacity(lid,op){
+ const a=urbanLayers.active.get(lid);if(!a||!state.mapLayersReady)return;a.opacity=op;const s=urbanSourceId(lid),m=state.map;
+ if(m.getLayer(s+'-pt'))m.setPaintProperty(s+'-pt','circle-opacity',op);if(m.getLayer(s+'-cluster'))m.setPaintProperty(s+'-cluster','circle-opacity',op*.45);
+ if(m.getLayer(s+'-line'))m.setPaintProperty(s+'-line','line-opacity',op);if(m.getLayer(s+'-fill'))m.setPaintProperty(s+'-fill','fill-opacity',op*.28);if(m.getLayer(s+'-outline'))m.setPaintProperty(s+'-outline','line-opacity',op);
+}
+function toggleUrbanLayer(lid,on){
+ if(on){urbanLayers.active.set(lid,{opacity:.85,status:'Loading…'});if(state.mapLayersReady)addUrbanMapLayer(lid);loadUrbanLayer(lid);}
+ else{urbanLayers.active.delete(lid);removeUrbanMapLayer(lid);}
+ renderUrbanPanel();
+}
+function clearUrbanLayers(){for(const lid of [...urbanLayers.active.keys()])removeUrbanMapLayer(lid);urbanLayers.active.clear();clearUrbanHighlight();renderUrbanPanel();}
+function urbanDistance(lid){return urbanLayers.distance==='auto'?urbanLayers.registry.layers[lid].display_distance_m:Number(urbanLayers.distance);}
+async function loadUrbanLayer(lid){
+ const a=urbanLayers.active.get(lid);if(!a)return;const seq=a.seq=++urbanLayers.seq;
+ const setStatus=t=>{a.status=t;const el=document.querySelector(`[data-layer-opacity="${lid}"]`)?.closest('.urban-live')?.querySelector('.urban-status');if(el)el.textContent=t;};
+ let url;
+ if(urbanLayers.scope==='route'){
+  const r=state.routes.find(x=>x.id===state.activeRoute);
+  if(!r){setUrbanData(lid,emptyFC());setStatus('Select a route, or switch to Current View.');return}
+  url=`/api/layers/${encodeURIComponent(lid)}?route_id=${encodeURIComponent(r.id)}&distance=${urbanDistance(lid)}`;
+ }else{
+  if(!state.mapReady){setStatus('Map not ready.');return}
+  const b=state.map.getBounds();url=`/api/layers/${encodeURIComponent(lid)}?bbox=${[b.getWest(),b.getSouth(),b.getEast(),b.getNorth()].map(v=>v.toFixed(5)).join(',')}`;
+ }
+ setStatus('Loading…');
+ try{
+  const res=await fetch(url,{signal:AbortSignal.timeout(30000)});const j=await res.json();
+  if(seq!==a.seq||!urbanLayers.active.has(lid))return;
+  if(!res.ok)throw new Error(j.error||'HTTP '+res.status);
+  setUrbanData(lid,{type:'FeatureCollection',features:j.features});
+  setStatus(j.too_many?j.message:j.scope==='along_route'?`${j.count.toLocaleString()} within ${j.display_distance_m} m of the route`:`${j.count.toLocaleString()} in view`);
+ }catch(e){if(seq===a.seq){setUrbanData(lid,emptyFC());setStatus('Unavailable: '+e.message);}}
+}
+function setUrbanData(lid,fc){if(state.mapLayersReady)state.map.getSource(urbanSourceId(lid))?.setData(fc);}
+function refreshUrbanLayers(){for(const lid of urbanLayers.active.keys())loadUrbanLayer(lid);}
+// Called by route-client when the selected route changes, and on map moves for Current View.
+function urbanLayersRouteChanged(){if(urbanLayers.scope==='route')refreshUrbanLayers();}
+function urbanViewMoved(){if(urbanLayers.scope!=='view'||!urbanLayers.active.size)return;clearTimeout(urbanLayers.viewTimer);urbanLayers.viewTimer=setTimeout(refreshUrbanLayers,450);}
+// --- feature inspector ---------------------------------------------------------------------------------
+function urbanFeatureHtml(lid,props){
+ const l=urbanLayers.registry.layers[lid],attrs=l.attributes.filter(k=>props[k]!=null&&props[k]!=='').map(k=>`<dt>${esc(k)}</dt><dd>${/^https?:\/\//.test(String(props[k]))?`<a href="${esc(props[k])}" target="_blank" rel="noopener noreferrer">link</a>`:esc(props[k])}</dd>`).join('');
+ const title=props.name||props.LPC_NAME||props.signname||props.genusspecies||props.stop_name||props.complaint_type||props.street_name||l.name;
+ return `<strong>Raw Data Feature</strong><dl><dt>Feature ID (${esc(l.dataset)})</dt><dd>${esc(props.feature_id)}</dd><dt>Name / type</dt><dd>${esc(title)}</dd>${attrs}${props.distance_to_route_m!=null?`<dt>Distance to route</dt><dd>${props.distance_to_route_m} m</dd>`:''}<dt>Dataset source</dt><dd><a href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${esc(l.source)}</a></dd><dt>Last updated</dt><dd>${esc(l.updated||'unknown')}</dd><dt>Role</dt><dd>${esc(l.dims.map(d=>`${urbanDimLabel(d.dimension)} ${d.role==='scoring'?'(scoring)':'(context only)'}`).join('; '))}</dd></dl><small>This is a source record, not a street segment. Street and route segment scores are in the Route Segment Inspector.</small>`;
+}
+function showUrbanFeature(lid,f,lngLat){
+ setUrbanHighlight(f);
+ const html=urbanFeatureHtml(lid,f.properties);
+ if(state.mapReady&&typeof maplibregl!=='undefined')new maplibregl.Popup({maxWidth:'320px'}).setLngLat(lngLat).setHTML(html).addTo(state.map);else $('segmentDetail').innerHTML=html;
+}
+function setUrbanHighlight(f){if(state.mapLayersReady)state.map.getSource('ul-highlight')?.setData({type:'FeatureCollection',features:[{type:'Feature',properties:{},geometry:f.geometry}]});}
+function clearUrbanHighlight(){if(state.mapLayersReady)state.map.getSource('ul-highlight')?.setData(emptyFC());}
+// --- experience score overlay (LION segments, the Explore scores) ---------------------------------------
+async function setScoreOverlay(index){
+ urbanLayers.overlay=index;
+ if(!state.mapLayersReady)return;
+ const m=state.map;
+ if(index<0){m.setLayoutProperty('nav-score-overlay','visibility','none');return}
+ try{const data=await loadExploreStreets();m.getSource('nav-score-overlay').setData(data);}catch(e){toast('Experience scores unavailable: '+e.message);return}
+ const prop='d'+index;
+ m.setPaintProperty('nav-score-overlay','line-color',['case',['==',['typeof',['get',prop]],'number'],['interpolate',['linear'],['get',prop],0,'#1d5b8e',35,'#2389cc',60,'#3fc7e8',78,'#f0d23e',100,'#ffe04a'],'#5d686c']);
+ if(mapExperience.mode!=='explore')m.setLayoutProperty('nav-score-overlay','visibility','visible');
+ urbanLayers.focusDim=ExperienceCore.keys[index];
+}
+function setupUrbanMap(){
+ const m=state.map;
+ // Rendering order: base map → urban data → score overlay → alternative routes → selected route → points → highlight.
+ m.addSource('nav-score-overlay',{type:'geojson',data:emptyFC()});
+ m.addLayer({id:'nav-score-overlay',type:'line',source:'nav-score-overlay',layout:{visibility:'none','line-cap':'round'},paint:{'line-color':'#5d686c','line-width':['interpolate',['linear'],['zoom'],11,.8,15,2.6],'line-opacity':.7}},'route-alts');
+ m.addSource('ul-highlight',{type:'geojson',data:emptyFC()});
+ m.addLayer({id:'ul-highlight-fill',type:'fill',source:'ul-highlight',filter:['==',['geometry-type'],'Polygon'],paint:{'fill-color':'#ffffff','fill-opacity':.18}});
+ m.addLayer({id:'ul-highlight-line',type:'line',source:'ul-highlight',paint:{'line-color':'#ffffff','line-width':3}});
+ m.addLayer({id:'ul-highlight-pt',type:'circle',source:'ul-highlight',filter:['==',['geometry-type'],'Point'],paint:{'circle-radius':9,'circle-color':'rgba(0,0,0,0)','circle-stroke-color':'#ffffff','circle-stroke-width':2.5}});
+ for(const lid of urbanLayers.active.keys())addUrbanMapLayer(lid);
+ m.on('moveend',urbanViewMoved);
+}
+function setupUrbanControls(){
+ const panel=$('urbanLayers');
+ panel.addEventListener('toggle',()=>{if(panel.open)openUrbanPanel();});
+ document.querySelectorAll('[name="urbanScope"]').forEach(r=>r.addEventListener('change',()=>{urbanLayers.scope=r.value;refreshUrbanLayers();}));
+ $('urbanDistance').addEventListener('change',e=>{urbanLayers.distance=e.target.value;if(urbanLayers.scope==='route')refreshUrbanLayers();});
+ $('urbanSearch').addEventListener('input',e=>{urbanLayers.search=e.target.value;renderUrbanPanel();});
+ $('urbanClear').addEventListener('click',clearUrbanLayers);
+ $('scoreOverlay').innerHTML='<option value="-1">Off</option>'+ExperienceCore.names.map((n,i)=>`<option value="${i}">${String(i+1).padStart(2,'0')} ${esc(dimLabel(n))}</option>`).join('');
+ $('scoreOverlay').addEventListener('change',e=>setScoreOverlay(Number(e.target.value)));
 }
 
 </script>
@@ -1346,9 +1592,9 @@ function applyExploreVisibility(){
  for(const id of ['explore-glow','explore-streets','explore-hover','explore-selected','explore-hit'])setMapLayerVisible(id,on);
  for(const id of exploreMap.labels)setMapLayerVisible(id,!on);
  for(const id of ['point-starts','point-ends','point-gps'])setMapLayerVisible(id,!on);
- if(!on)return;
+ if(!on){for(const id of [...urbanMapLayerIds(),'ul-highlight-fill','ul-highlight-line','ul-highlight-pt'])setMapLayerVisible(id,true);setMapLayerVisible('nav-score-overlay',urbanLayers.overlay>=0);return;}
  // Explore shows only the street map: no journey routes, pins, POIs, raw tree/landmark points or section overlays.
- for(const id of ['road-highlight','road-underlay','route-alts','route-shadow','route-selected','route-edge-selected','route-edge-hit','point-starts','point-ends','point-gps','poi-points','tree-points','landmark-fill','landmark-outline','experience-hit','experience-coverage-line',...ExperienceCore.keys.map(k=>'experience-'+k)])setMapLayerVisible(id,false);
+ for(const id of [...urbanMapLayerIds(),'nav-score-overlay','ul-highlight-fill','ul-highlight-line','ul-highlight-pt','road-highlight','road-underlay','route-alts','route-shadow','route-selected','route-edge-selected','route-edge-hit','point-starts','point-ends','point-gps','poi-points','tree-points','landmark-fill','landmark-outline','experience-hit','experience-coverage-line',...ExperienceCore.keys.map(k=>'experience-'+k)])setMapLayerVisible(id,false);
 }
 function setupExploreControls(){
  renderExploreChips();renderExploreThumbs();selectExploreView(exploreMap.view);
@@ -1470,8 +1716,7 @@ async function analyzeArea(pilot=false){
 function setupExperienceControls(){
  if(window.innerWidth<=740){document.querySelector('.map-legend').classList.add('hidden');$('toggleLegend').setAttribute('aria-pressed','false');}
  state.dimension='Nature';$('experienceDimension').innerHTML=ExperienceCore.names.map((n,i)=>`<option value="${esc(n)}">${String(i+1).padStart(2,'0')} ${esc(n)}</option>`).join('');$('experienceDimension').value='Nature';
- for(const [id,mode] of [['modeNavigate','navigate'],['modeExplore','explore']])$(id).addEventListener('click',()=>{mapExperience.mode=mode;if(mode==='navigate'){state.display.routes=true;$('layerRoutes').checked=true;}$('modeNavigate').setAttribute('aria-pressed',String(mode==='navigate'));$('modeExplore').setAttribute('aria-pressed',String(mode==='explore'));$('layerRoutes').disabled=mode==='navigate';updateMapStyles();setExploreMode(mode==='explore');});
- $('layerRoutes').disabled=true;
+ for(const [id,mode] of [['modeNavigate','navigate'],['modeExplore','explore']])$(id).addEventListener('click',()=>{mapExperience.mode=mode;$('modeNavigate').setAttribute('aria-pressed',String(mode==='navigate'));$('modeExplore').setAttribute('aria-pressed',String(mode==='explore'));updateMapStyles();setExploreMode(mode==='explore');});
  $('experienceDimension').addEventListener('change',e=>{state.dimension=e.target.value;updateMapStyles();updateLegend();if(mapExperience.view==='raw')loadSelectedRaw();});
  $('experienceView').addEventListener('change',e=>{mapExperience.view=e.target.value;if(e.target.value==='raw')loadSelectedRaw();updateMapStyles();updateLegend();});
  $('layerExperience').addEventListener('change',e=>{mapExperience.visible=e.target.checked;updateMapStyles();});
@@ -1482,7 +1727,7 @@ function setupExperienceControls(){
  renderExperienceLegend();
 }
 function loadSelectedRaw(){const kind=selectedEvidenceKey()==='nature'?'trees':selectedEvidenceKey()==='architecture'?'lpc':null;if(kind&&!state.datasets[kind])loadViewportEvidence(kind);}
-setupControls();setupExperienceControls();setupExploreControls();setupMap();loadData('streets');loadWeather();
+setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupMap();loadData('streets');loadWeather();
 
 </script>
 </body>

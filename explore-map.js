@@ -140,9 +140,9 @@ function applyExploreVisibility(){
  for(const id of ['explore-glow','explore-streets','explore-hover','explore-selected','explore-hit'])setMapLayerVisible(id,on);
  for(const id of exploreMap.labels)setMapLayerVisible(id,!on);
  for(const id of ['point-starts','point-ends','point-gps'])setMapLayerVisible(id,!on);
- if(!on)return;
+ if(!on){for(const id of [...urbanMapLayerIds(),'ul-highlight-fill','ul-highlight-line','ul-highlight-pt'])setMapLayerVisible(id,true);setMapLayerVisible('nav-score-overlay',urbanLayers.overlay>=0);return;}
  // Explore shows only the street map: no journey routes, pins, POIs, raw tree/landmark points or section overlays.
- for(const id of ['road-highlight','road-underlay','route-alts','route-shadow','route-selected','route-edge-selected','route-edge-hit','point-starts','point-ends','point-gps','poi-points','tree-points','landmark-fill','landmark-outline','experience-hit','experience-coverage-line',...ExperienceCore.keys.map(k=>'experience-'+k)])setMapLayerVisible(id,false);
+ for(const id of [...urbanMapLayerIds(),'nav-score-overlay','ul-highlight-fill','ul-highlight-line','ul-highlight-pt','road-highlight','road-underlay','route-alts','route-shadow','route-selected','route-edge-selected','route-edge-hit','point-starts','point-ends','point-gps','poi-points','tree-points','landmark-fill','landmark-outline','experience-hit','experience-coverage-line',...ExperienceCore.keys.map(k=>'experience-'+k)])setMapLayerVisible(id,false);
 }
 function setupExploreControls(){
  renderExploreChips();renderExploreThumbs();selectExploreView(exploreMap.view);

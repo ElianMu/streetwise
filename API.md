@@ -15,6 +15,9 @@ All endpoints are served by `server.py` (standard library). Field names below ar
 | GET | `/api/edges/{u-v-key}` | **new** | One Pedestrian Edge Object |
 | GET | `/api/segments/{segment_id}` | **new** | One Street Segment Object |
 | POST | `/api/navigation/progress` | **new** | Position along a planned route (for future GPS navigation) |
+| GET | `/api/layers` | **new** | Urban Data Layer registry (datasets, dimensions, sub-indicators, distances, status) |
+| GET | `/api/layers/{id}?route_id=…&distance=m` | **new** | Real features within `distance` of a planned route (default = layer display distance) |
+| GET | `/api/layers/{id}?bbox=w,s,e,n` | **new** | Real features in the current view (refused with `too_many` above 6,000, never truncated) |
 
 Errors: `400` invalid input, `422` valid input the network cannot satisfy (too far from a path, unreachable,
 unknown route), `503` routing data not built. Every error body is `{"error": "..."}`.
@@ -30,7 +33,7 @@ unknown route), `503` routing data not built. Every error body is `{"error": "..
 }
 ```
 
-`weights` keys must be among the 12 dimension names exactly. Only weights > 0 count; with none, all 12 count equally.
+`max_minutes` is the user's hard limit: any number ≥ 10, no upper cap (`constraints_used` echoes the limits applied, `feasible_count` how many routes meet them). `weights` keys must be among the 12 dimension names exactly. Only weights > 0 count; with none, all 12 count equally.
 Weights describe the user and never change street scores. Response:
 `{network_version, score_version, origin, destination, shortest_distance_m, preferences_used, preferences_expressed, routes: [Route], compute_seconds, notes}`.
 Routes are sorted by rank; at most one has `recommended: true`, and none if no route meets the hard constraints.
@@ -94,3 +97,13 @@ in order, first/last may be `partial`], `distance_m`, `estimated_duration_min` (
 
 All callers were updated in the same change (`app.js`, `center-map.js`, `explore-map.js`, `route-client.js`, tests).
 The single-file demo (`STREETWISE_single_file_demo.html`) has no server, so it can show Explore but cannot route.
+
+## Urban Data Layers
+
+`data/layers/registry.json` (built by `scripts/build_urban_layers.py`) lists every candidate layer with `id`, `name`,
+`dataset`, `source`, `url`, `geometry`, `dims` [{dimension, role: scoring|context, sub_indicators}], `processing`,
+`scoring_distance_m` (range the indicator uses), `display_distance_m` (default Along Route display range only),
+`attributes` (the original fields kept), `updated` (publisher's last update), `retrieved`, `feature_count`, `status`
+(`available` | `unavailable` + `reason`). Chain: raw records → sub-indicator → dimension score → route score.
+Features keep their dataset IDs as `feature_id` (e.g. Forestry `objectid`, NYPD `collision_id`, LPC number, OSM
+`node/123`) — never a street segment ID. Along Route results add `distance_to_route_m`.

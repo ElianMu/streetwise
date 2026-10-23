@@ -13,6 +13,7 @@ GRAPH = os.path.join(ROOT, 'data', 'pedestrian', 'manhattan-walk-graph.json.gz')
 SCORES = os.path.join(ROOT, 'data', 'pedestrian', 'edge-scores.json.gz')
 DIMENSIONS = ['Architecture', 'Nature', 'Culture', 'Quiet & Relax', 'Spatial Comfort', 'Urban Vibrancy', 'Food & Retail',
               'Scenic & Visual', 'Walkability', 'Access & Safety', 'Environment', 'Transit Connectivity']
+MIN_WALK_MINUTES = 10  # smallest accepted max walking time; there is deliberately no upper cap
 WALK_SPEED_M_PER_MIN = 80.0  # 4.8 km/h, a common planning pace; no live pace data is used
 MAX_SNAP_M = 150.0
 LOW_COVERAGE = 0.6
@@ -65,6 +66,9 @@ class PedestrianNetwork:
                         if not cell or cell[-1] != i:
                             cell.append(i)
         self._step_free = None
+        streets = os.path.join(ROOT, 'data', 'manhattan-streets.json')
+        self.segment_names = {f['properties']['id']: (f['properties']['name'], f['properties'].get('source_segment_id'))
+                              for f in json.load(open(streets, encoding='utf-8'))['features']} if os.path.exists(streets) else {}
         self.load_seconds = round(time.time() - t0, 1)
 
     def step_free_nodes(self):
@@ -132,6 +136,9 @@ class PedestrianNetwork:
             'dimension_scores': dict(zip(DIMENSIONS, s['s'])), 'overall_score': s['o'],
             'data_coverage': dict(zip(DIMENSIONS, s['c'])), 'score_source': s['src'], 'match_quality': s['q'],
             'matched_segment_ids': s['m'], 'lion_match_share': s['frac'],
+            'matched_segments': [{'segment_id': m, 'street_name': self.segment_names.get(m, (None, None))[0], 'source_segment_id': self.segment_names.get(m, (None, None))[1]} for m in s['m']],
+            'lion_match': 'matched' if s['m'] else 'unmatched',
+            'street_name': (as_list(tags.get('name')) or [None])[0] or (self.segment_names.get(s['m'][0], (None,))[0] if s['m'] else None),
             'direct_sub_indicators': s.get('raw'), 'network_version': self.network_version, 'score_version': self.score_version,
         }
 
@@ -405,6 +412,8 @@ class RoutePlanner:
             'network_version': net.network_version, 'score_version': net.score_version,
             'origin': o, 'destination': d, 'shortest_distance_m': shortest,
             'preferences_used': {k: {'weight': w, 'direction': dr} for k, (w, dr) in weights.items()}, 'preferences_expressed': expressed,
+            'constraints_used': {'max_minutes': max_minutes, 'max_detour_pct': max_detour, 'avoid_detours': constraints.get('avoid_detours', True), 'avoid_stairs': avoid_stairs},
+            'feasible_count': sum(r['constraints']['feasible'] for r in ranked),
             'routes': ranked, 'compute_seconds': round(time.time() - t0, 2),
             'notes': ['Walking time uses a fixed 4.8 km/h planning pace; no live pedestrian or traffic data.',
                       'Scores are relative ranks within Manhattan (0–100), not calibrated experience scores. N/A dimensions are excluded, never counted as zero.'],

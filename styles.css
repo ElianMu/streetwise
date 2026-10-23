@@ -190,3 +190,30 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .edge-row small{color:#87a29c;font-size:9px;overflow-wrap:anywhere}.edge-row.selected{border-color:#d8f365;background:#22352b}
 .seg-link{border:1px solid #48715f;background:#1f3832;color:#d8f365;border-radius:5px;padding:2px 5px;font-size:10px;margin:2px 2px 0 0}
 .seg-detail p{margin:6px 0 0;font-size:10px;line-height:1.45;color:#c8d6cf}
+
+/* Navigate v0.9: Urban Data Layers panel, walking-time help, route constraint line. */
+.custom-help{margin:4px 0 0;font-size:9.5px;line-height:1.5;color:#7f9993}
+.route-constraints{margin:8px 0 0;font-size:10px;color:#d8f365;line-height:1.5}
+.map-workspace .urban-layers{max-width:330px}.urban-layers[open]{width:330px;max-height:calc(100% - 120px);overflow:auto;padding:10px;border:1px solid #344b48;border-radius:13px;background:#0f2124f5;box-shadow:0 8px 30px #0006;scrollbar-width:thin;scrollbar-color:#304d51 transparent}
+.urban-layers summary .urban-count{color:#d8f365;margin-left:4px}.urban-section{border-top:1px solid #243b3c;padding-top:8px;margin-top:8px}.urban-section:first-child{border-top:0;margin-top:0;padding-top:0}
+.urban-head{display:flex;justify-content:space-between;align-items:center;font-size:9px;letter-spacing:1.2px;font-weight:800;color:#9fb4ae;margin-bottom:6px}
+.urban-clear{border:1px solid #48715f;background:#1f3832;color:#d8f365;border-radius:6px;padding:3px 7px;font-size:9.5px;letter-spacing:0}
+.urban-note{font-size:9.5px;line-height:1.5;color:#7f9993;margin:6px 0 0}
+.urban-scope{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:10.5px;color:#c8d6cf}.urban-scope input{accent-color:#d8f365}
+.urban-distance,.urban-overlay{display:flex;align-items:center;gap:6px;font-size:10px;color:#9fb4ae}.urban-overlay{margin-top:7px}
+.urban-distance select,.urban-overlay select{background:#172c2d;color:#e6eee5;border:1px solid #3d5048;border-radius:6px;padding:3px 5px;font-size:10px}
+.urban-search{width:100%;margin:8px 0 6px;padding:7px 9px;background:#132529;border:1px solid #314748;border-radius:7px;color:#e6eee5;font-size:11px}
+.urban-dims{display:grid;gap:4px}.urban-dim{border:1px solid #233d3d;border-radius:8px;background:#11262a}
+.urban-dim summary{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;padding:7px 9px;font-size:11px;color:#e6efe8;list-style:none}.urban-dim summary::-webkit-details-marker{display:none}
+.urban-dim summary small{color:#7f9993;font-size:9.5px}.urban-dim[open] summary{border-bottom:1px solid #233d3d}
+.urban-layer{padding:6px 9px;border-top:1px solid #1b3234}.urban-layer:first-of-type{border-top:0}.urban-layer.unavailable{opacity:.6}
+.urban-row{display:flex;align-items:center;gap:7px;font-size:10.5px;color:#d5e0d9}.urban-row input{accent-color:#d8f365;margin:0}.urban-name{flex:1;min-width:0}
+.urban-swatch{width:12px;height:12px;flex:none;border-radius:50%;background:var(--c)}.urban-swatch.linestring{height:3px;border-radius:2px}.urban-swatch.polygon{border-radius:2px;background:color-mix(in srgb,var(--c) 35%,transparent);border:1.5px solid var(--c)}.urban-swatch.none{background:#3a4a4c}
+.urban-badge{font-size:8.5px;font-weight:700;letter-spacing:.4px;padding:2px 5px;border-radius:4px;white-space:nowrap}.urban-badge.scoring{background:#2a3a1f;color:#d8f365}.urban-badge.context{background:#1f3238;color:#9fc7d0}.urban-badge.off{background:#2a2a2a;color:#a0a0a0}
+.urban-info{width:18px;height:18px;flex:none;border:1px solid #3d5048;border-radius:50%;background:transparent;color:#9fb4ae;font-size:10px;line-height:1;padding:0}
+.urban-live{display:flex;flex-direction:column;gap:2px;margin:5px 0 0 19px;font-size:9.5px;color:#9fb4ae}.urban-live label{display:flex;align-items:center;gap:6px}.urban-live input{flex:1;margin:0}.urban-status{color:#c8d6cf}
+.urban-reason{margin:3px 0 0 19px;font-size:9.5px;color:#8a9a9b;line-height:1.4}
+.urban-meta{display:grid;grid-template-columns:86px 1fr;gap:3px 8px;margin:6px 0 2px 19px;font-size:9.5px}.urban-meta dt{color:#7f9993}.urban-meta dd{margin:0;color:#c8d6cf;overflow-wrap:anywhere}.urban-meta a{color:#d8f365}
+.focus-subs{margin-top:6px}.focus-seg{margin-top:6px}.focus-seg strong{font-size:10.5px}.focus-seg small,.focus-subs small{color:#87a29c}.seg-id{color:#d8f365;font-weight:700}
+.all-dims{margin-top:8px}.all-dims summary{cursor:pointer;color:#d8f365;font-size:10px}
+@media(max-width:740px){.urban-layers[open]{width:calc(100vw - 20px);max-height:60vh}}

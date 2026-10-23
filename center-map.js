@@ -107,8 +107,7 @@ async function analyzeArea(pilot=false){
 function setupExperienceControls(){
  if(window.innerWidth<=740){document.querySelector('.map-legend').classList.add('hidden');$('toggleLegend').setAttribute('aria-pressed','false');}
  state.dimension='Nature';$('experienceDimension').innerHTML=ExperienceCore.names.map((n,i)=>`<option value="${esc(n)}">${String(i+1).padStart(2,'0')} ${esc(n)}</option>`).join('');$('experienceDimension').value='Nature';
- for(const [id,mode] of [['modeNavigate','navigate'],['modeExplore','explore']])$(id).addEventListener('click',()=>{mapExperience.mode=mode;if(mode==='navigate'){state.display.routes=true;$('layerRoutes').checked=true;}$('modeNavigate').setAttribute('aria-pressed',String(mode==='navigate'));$('modeExplore').setAttribute('aria-pressed',String(mode==='explore'));$('layerRoutes').disabled=mode==='navigate';updateMapStyles();setExploreMode(mode==='explore');});
- $('layerRoutes').disabled=true;
+ for(const [id,mode] of [['modeNavigate','navigate'],['modeExplore','explore']])$(id).addEventListener('click',()=>{mapExperience.mode=mode;$('modeNavigate').setAttribute('aria-pressed',String(mode==='navigate'));$('modeExplore').setAttribute('aria-pressed',String(mode==='explore'));updateMapStyles();setExploreMode(mode==='explore');});
  $('experienceDimension').addEventListener('change',e=>{state.dimension=e.target.value;updateMapStyles();updateLegend();if(mapExperience.view==='raw')loadSelectedRaw();});
  $('experienceView').addEventListener('change',e=>{mapExperience.view=e.target.value;if(e.target.value==='raw')loadSelectedRaw();updateMapStyles();updateLegend();});
  $('layerExperience').addEventListener('change',e=>{mapExperience.visible=e.target.checked;updateMapStyles();});
@@ -119,4 +118,4 @@ function setupExperienceControls(){
  renderExperienceLegend();
 }
 function loadSelectedRaw(){const kind=selectedEvidenceKey()==='nature'?'trees':selectedEvidenceKey()==='architecture'?'lpc':null;if(kind&&!state.datasets[kind])loadViewportEvidence(kind);}
-setupControls();setupExperienceControls();setupExploreControls();setupMap();loadData('streets');loadWeather();
+setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupMap();loadData('streets');loadWeather();

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=8" />
+  <link rel="stylesheet" href="./styles.css?v=9" />
 </head>
 <body>
 <div class="site-shell">
@@ -39,7 +39,7 @@
         <div class="line-divider"></div>
         <div class="section-row"><div class="section-overline">02 / TELL STREETWISE WHAT YOU WANT</div><span class="subtag">NATURAL LANGUAGE</span></div>
         <p class="field-description">Describe the experience. You don't need to select any data layers.</p>
-        <textarea id="intentText" class="intent-box" rows="3" spellcheck="false" placeholder="I’d like a greener, quieter walk with interesting architecture, within 30 minutes.">I'd like a greener, quieter walk with interesting architecture, within 30 minutes.</textarea>
+        <textarea id="intentText" class="intent-box" rows="3" spellcheck="false" placeholder="I’d like a greener, quieter walk with interesting architecture.">I'd like a greener, quieter walk with interesting architecture.</textarea>
         <button id="generateRoutes" class="primary-cta"><span id="ctaLabel">✦ Plan My Walk</span><span class="cta-arrow">↗</span></button>
         <div id="interpretMode" class="interpret-mode" aria-live="polite">Checking AI interpretation service…</div>
 
@@ -56,10 +56,10 @@
         </div>
 
         <div class="line-divider"></div>
-        <div class="section-row"><label for="timeRange" class="section-overline">04 / WALKING CONSTRAINTS</label><span id="timeValue" class="range-value">30 MIN</span></div>
+        <div class="section-row"><label for="timeRange" class="section-overline">04 / WALKING CONSTRAINTS</label><span id="timeValue" class="range-value">60 MIN</span></div>
         <div class="field-description">MAX WALKING TIME · A HARD LIMIT</div>
-        <input id="timeRange" type="range" min="10" max="60" value="30" step="5" aria-label="Maximum walking time" />
-        <div class="range-labels"><span>10 MIN</span><span>60 MIN</span></div><label class="custom-limit">Custom maximum (minutes) <input type="number" id="customTime" min="1" max="240" step="1" value="30" aria-label="Custom walking time limit (1–240 minutes)"></label><label class="custom-limit">Maximum detour over shortest candidate (%) <input type="number" id="maxDetourPct" min="0" max="100" step="5" value="25" aria-label="Maximum detour percentage"></label>
+        <input id="timeRange" type="range" min="10" max="60" value="60" step="1" aria-label="Maximum walking time" />
+        <div class="range-labels"><span>10 MIN</span><span id="timeRangeMax">60 MIN</span></div><label class="custom-limit">Custom maximum (minutes) <input type="number" id="customTime" min="10" step="1" value="60" inputmode="numeric" aria-label="Custom maximum walking time in whole minutes, at least 10" aria-describedby="customTimeHelp"></label><p id="customTimeHelp" class="custom-help">Default 60 min. Type any whole number of minutes (10 or more); the slider extends to match.</p><label class="custom-limit">Maximum detour over shortest candidate (%) <input type="number" id="maxDetourPct" min="0" max="100" step="5" value="25" aria-label="Maximum detour percentage"></label>
         <label class="constraint-check"><input id="avoidDetours" type="checkbox" checked> Avoid excessive detours <small>≤ 25% longer than baseline</small></label>
         <label class="constraint-check"><input id="stepFree" type="checkbox"> Step-free access <small>verified pedestrian-access data required</small></label>
         <label class="constraint-check"><input id="avoidStairs" type="checkbox"> Avoid stairs <small>excludes OpenStreetMap steps from routing</small></label>
@@ -97,7 +97,21 @@
       <div id="exploreTooltip" class="explore-tooltip hidden" role="tooltip"></div>
       <aside id="exploreInspector" class="explore-inspector hidden" aria-label="Street Segment Inspector" aria-live="polite"></aside>
       <div id="selectedRouteSummary" class="selected-route-summary" aria-live="polite">Choose a journey to compare real walking routes.</div>
-      <details class="map-layer-switch" aria-label="Map layer toggles"><summary class="map-layer-head">Layers ▾</summary><div class="layer-chips"><label class="switch-chip"><input type="checkbox" id="layerRoads" checked><span class="chip-square roads"></span> Streets</label><label class="switch-chip"><input type="checkbox" id="layerTrees"><span class="chip-square trees"></span> Trees</label><label class="switch-chip"><input type="checkbox" id="layerLpc"><span class="chip-square lpc"></span> Landmarks</label><label class="switch-chip"><input type="checkbox" id="layerRoutes" checked><span class="chip-square routes"></span> Routes</label><label class="switch-chip"><input type="checkbox" id="layerPOIs" checked><span class="chip-square poi-chip"></span> POIs</label><button id="retryStreets" class="switch-chip" title="Retry incomplete Manhattan data loading">↻ Streets</button></div></details>
+      <details class="map-layer-switch urban-layers" id="urbanLayers"><summary class="map-layer-head">Urban Data Layers <span id="urbanActiveCount" class="urban-count"></span> ▾</summary>
+        <div class="urban-body">
+          <div class="urban-section"><div class="urban-head">NAVIGATION OVERLAYS</div>
+            <div class="layer-chips"><label class="switch-chip"><input type="checkbox" id="layerRoutes" checked><span class="chip-square routes"></span> Alternative routes</label><label class="switch-chip"><input type="checkbox" id="layerPOIs" checked><span class="chip-square poi-chip"></span> Route POIs</label><label class="switch-chip"><input type="checkbox" id="layerRoads" checked><span class="chip-square roads"></span> Street network (LION)</label><button id="retryStreets" class="switch-chip" title="Retry incomplete Manhattan data loading">↻ Streets</button></div>
+            <p class="urban-note">Selected route and start / destination are always shown. Your location appears only after you allow GPS.</p>
+          </div>
+          <div class="urban-section"><div class="urban-head">URBAN DATA <button type="button" id="urbanClear" class="urban-clear">Clear all</button></div>
+            <div class="urban-scope" role="radiogroup" aria-label="Data scope"><label><input type="radio" name="urbanScope" value="route" checked> Along route</label><label><input type="radio" name="urbanScope" value="view"> Current view</label>
+              <label class="urban-distance">Display range <select id="urbanDistance" aria-label="Along-route display range"><option value="auto">Layer default</option><option value="30">30 m</option><option value="60">60 m</option><option value="150">150 m</option><option value="300">300 m</option></select></label></div>
+            <label class="urban-overlay">Experience score overlay <select id="scoreOverlay" aria-label="Experience score overlay"></select></label>
+            <input id="urbanSearch" class="urban-search" type="search" placeholder="Search data layers" aria-label="Search data layers">
+            <div id="urbanDims" class="urban-dims"><p class="urban-note">Open to load the layer registry.</p></div>
+            <p class="urban-note">Display range only filters what is drawn; it never changes experience scores.</p>
+          </div>
+        </div></details>
       <div class="map-actions"><button id="mapLocate" title="Locate me" aria-label="Locate me">◎</button><button id="toggleLegend" title="Toggle legend" aria-label="Toggle legend" aria-pressed="true">≡</button><button id="mapReset" title="Reset map view" aria-label="Reset map view">⤢</button></div>
       <div id="pickNotice" class="pick-notice hidden">Click anywhere on the map to set a point. <button id="cancelPick">CANCEL</button></div>
       <div class="map-legend"><div class="legend-title"><span id="legendDot" class="legend-dot"></span><span id="legendTitle">MANHATTAN STREET NETWORK</span></div><p id="legendSubtitle">Official NYC centerlines (Manhattan borough filter); walkability not confirmed.</p><div id="legend-scale" class="legend-scale hidden"><span><i style="background:#365c64"></i>Lower</span><span><i style="background:#37bfc8"></i>Mid</span><span><i style="background:#d8f365"></i>Higher</span></div></div>
@@ -146,10 +160,11 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="modalOverlay" class="modal-overlay hidden"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button id="closeModal" class="modal-close" title="Close">✕</button><div class="section-overline">PROJECT NOTES / TRANSPARENCY</div><h2 id="modalTitle">What is real, and what's next.</h2><div id="modalContent"></div></div></div>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="./experience-core.js?v=8"></script>
-<script src="./app.js?v=8"></script>
-<script src="./route-client.js?v=8"></script>
-<script src="./explore-map.js?v=8"></script>
-<script src="./center-map.js?v=8"></script>
+<script src="./experience-core.js?v=9"></script>
+<script src="./app.js?v=9"></script>
+<script src="./route-client.js?v=9"></script>
+<script src="./urban-layers.js?v=9"></script>
+<script src="./explore-map.js?v=9"></script>
+<script src="./center-map.js?v=9"></script>
 </body>
 </html>

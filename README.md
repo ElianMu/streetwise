@@ -34,6 +34,12 @@ No Python packages are required to run the server; rebuilding the OSM graph need
 
 The tree census is from 2015, not a live vegetation inventory. LPC and centerline observation years are unspecified in the source snapshot; retrieval time is not substituted for observation year. The 477 interior street sections exclude the 75 m bounding-box margin; this is a Midtown pilot, not complete Manhattan experience coverage. NYC centerlines are not automatically walkable graph edges.
 
+## Navigate: Urban Data Layers & walking time / 图层与步行时间
+
+- 地图左下角 **Urban Data Layers**（默认收起）：上方是导航图层（备选路线、路线 POI、LION 街网；所选路线与起终点始终显示），下方按 12 个体验维度分组的真实城市数据图层。范围可选 **Along route**（所选路线附近，按各图层显示距离）或 **Current view**；显示距离只影响绘制，从不改变评分。每个图层可开关、调透明度、查看数据集来源、参与评分的子指标与更新日期；没有接入数据的候选图层标为 Unavailable。点击数据点打开 Raw Data Feature（数据集原始 ID 与属性）；点击路线路段打开 Route Segment Inspector（OSM Edge ID、LION 路段或 Unmatched、当前维度评分与子指标）。
+- 步行时间默认 60 分钟，滑块 10–60；在 Custom maximum 输入更大的整数（如 72、120）后滑块自动扩展到该值。输入在失焦或回车时校验（≥10 的整数），无效输入恢复上一次有效值。该值原样发送给路线引擎作为硬约束，右侧显示引擎实际使用的限制。
+- 重建图层：`python3 scripts/build_urban_layers.py`（需要 OSMnx；约 3 分钟，图层约 20 MB）。
+
 ## Files / 文件
 
 - `routing/engine.py`: pedestrian routing engine — graph loading, snapping, A*, candidate routes, route scores, personalized ranking, navigation progress.
@@ -42,7 +48,8 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 - `explore-map.js`: Explore Urban Data (13 maps, segment inspector). `app.js`, `center-map.js`: existing shell, preferences, map, Street evidence panel.
 - `scripts/streetwise_indicators.py`: shared indicator definitions and measurement. `build_manhattan_streets.py`: LION scores. `build_pedestrian_network.py`: OSM graph. `match_lion_osm.py`: matching + edge scores.
 - `data/manhattan-streets.json`, `data/pedestrian/`: built data. `data/cache/`: raw downloads (safe to delete).
-- `tests/`: `test_routing_engine.py` (network, matching, scores, ranking, navigation, HTTP), `test_street_data.py`, `test_server.py`, `dom.test.cjs`, JS spatial tests, Playwright scripts.
+- `urban-layers.js`: Navigate Urban Data Layers panel, map layers, Raw Data Feature inspector. `routing/layers.py`: layer queries (bbox / along route). `scripts/build_urban_layers.py`: layer datasets + registry.
+- `tests/`: `test_routing_engine.py` (network, matching, scores, ranking, navigation, HTTP), `test_urban_layers.py` (layers, walking-time limits), `test_street_data.py`, `test_server.py`, `dom.test.cjs`, JS spatial tests, Playwright scripts.
 
 ## Automated checks / 自动测试
 

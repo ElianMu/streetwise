@@ -30,7 +30,8 @@ function adaptRoute(r){return {id:r.route_id,label:r.route_name,coords:r.geometr
 function applyRouteResponse(json){
  planner.routeResponse=json;state.routes=json.routes.map(adaptRoute);
  const best=json.routes.find(r=>r.recommended);state.activeRoute=best?.route_id||null;routeNav.selectedEdge=null;
- planner.lastExplanation=best?best.ranking_explanation:`No candidate meets the hard constraints (${[...new Set(json.routes.flatMap(r=>r.constraints.violations))].join('; ')}). Increase the limit or change endpoints.`;
+ if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();
+ planner.lastExplanation=best?best.ranking_explanation:`No Feasible Route: none of the ${json.routes.length} candidate routes meets your limits (${[...new Set(json.routes.flatMap(r=>r.constraints.violations))].join('; ')}). Increase the limit or change endpoints. Over-limit routes are shown for comparison only.`;
 }
 async function generateRoutes(userText=null,isFollowUp=false){
  if(state.routingBusy)return;
@@ -69,10 +70,15 @@ function rankRoutes(){if(state.routes.length)queueMapReplan();}
 function updateRoutesUI(){if(state.routes.length)queueMapReplan();else renderRouteCards();}
 function selectRoute(id){
  const r=state.routes.find(x=>x.id===id);if(!r)return;
- state.activeRoute=id;routeNav.selectedEdge=null;renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
+ state.activeRoute=id;routeNav.selectedEdge=null;urbanLayersRouteChanged();renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
  if(state.mapReady){const b=routeBounds([r],160);if(b)state.map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:70,maxZoom:16,duration:500})}
 }
 function scoreText(v){return v==null?'N/A':String(v);}
+/** The hard limits the engine actually applied to the current results (from the response, not the form). */
+function constraintSummary(){
+ const c=planner.routeResponse?.constraints_used;if(!c)return '';
+ return `Hard limits used: max ${c.max_minutes==null?'—':Math.round(c.max_minutes)} min walking · ${c.avoid_detours&&c.max_detour_pct!=null?`max ${c.max_detour_pct}% detour`:'detour limit off'}${c.avoid_stairs?' · avoiding stairs':''} · ${planner.routeResponse.feasible_count} of ${planner.routeResponse.routes.length} routes feasible`;
+}
 function renderRouteCards(){
  const root=$('routeCards'),routes=state.routes;
  $('routeCount').textContent=`${routes.length} OSM ROUTE${routes.length===1?'':'S'}`;
@@ -81,7 +87,7 @@ function renderRouteCards(){
   const r=x.raw,selected=x.id===state.activeRoute,feasible=r.constraints.feasible;
   const tag=r.recommended?'BEST MATCH':r.objective==='shortest'?'SHORTEST':'ALTERNATIVE';
   return `<button class="route-card ${selected?'selected':''} ${!feasible?'over-budget':''}" type="button" data-route="${esc(x.id)}" aria-pressed="${selected}"><span class="route-icon">${selected?'✓':r.rank}</span><span class="route-names"><span class="route-category">${tag}${!feasible?' · NOT FEASIBLE':''}</span><strong>${esc(r.route_name)}</strong><small>Personalized ${r.personalized_score.utility} · Overall ${scoreText(r.overall_score)} · ${Math.round(r.data_coverage.mean*100)}% data coverage</small><small class="evidence-line">${r.detour_percentage>0?`+${r.detour_percentage}% vs shortest`:'Shortest distance'} · ${r.ordered_edge_ids.length} OSM edges</small>${!feasible?`<small>${esc(r.constraints.violations.join('; '))}</small>`:''}</span><span class="route-metrics"><strong>${(r.distance_m/1000).toFixed(2)} km</strong><small>${Math.ceil(r.estimated_duration_min)} min</small></span></button>`;
- }).join('')+`<p class="route-footnote">Routes are computed on the OSM pedestrian graph (${esc(planner.routeResponse?.network_version||'')}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${esc(planner.routeResponse?.score_version||'')}), shared with Explore Urban Data.</p>`;
+ }).join('')+`<p class="route-constraints">${esc(constraintSummary())}</p><p class="route-footnote">Routes are computed on the OSM pedestrian graph (${esc(planner.routeResponse?.network_version||'')}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${esc(planner.routeResponse?.score_version||'')}), shared with Explore Urban Data.</p>`;
  root.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',()=>selectRoute(el.dataset.route)));
 }
 function profileRows(r){
@@ -131,24 +137,40 @@ function selectRouteEdge(seq,fly=false){
 }
 function showRouteEdgeInspector(e,lngLat){
  const html=routeEdgeInspectorHtml(e);
- if(!state.mapReady||typeof maplibregl==='undefined'){$('segmentDetail').innerHTML=html;bindSegmentLinks($('segmentDetail'));return}
- const popup=new maplibregl.Popup({maxWidth:'320px'}).setLngLat(lngLat).setHTML(html).addTo(state.map);
- bindSegmentLinks(popup.getElement());
+ let root;
+ if(!state.mapReady||typeof maplibregl==='undefined'){$('segmentDetail').innerHTML=html;root=$('segmentDetail');}
+ else root=new maplibregl.Popup({maxWidth:'330px'}).setLngLat(lngLat).setHTML(html).addTo(state.map).getElement();
+ return fillFocusSubIndicators(root,e);
 }
+/** Dimension the user is looking at in the Urban Data Layers panel (or score overlay), if any. */
+function routeFocusDim(){return typeof urbanLayers!=='undefined'&&urbanLayers.focusDim?urbanLayers.focusDim:null;}
 function routeEdgeInspectorHtml(e){
- const rows=DIMENSIONS.map(d=>{const v=e.dimension_scores[d.name];return `<div class="explore-row"><span>${esc(dimLabel(d.name))}</span><i>${v==null?'':`<b style="width:${v}%;background:${typeof exploreColor==='function'?exploreColor(v,EXPLORE_VIEWS[1]):'#d8f365'}"></b>`}</i><em>${scoreText(v)}</em></div>`;}).join('');
- const src=e.score_source==='lion_match'?`Borrowed from ${e.matched_segment_ids.length} matched NYC LION analysis segment(s), overlap-length weighted (${Math.round(e.lion_match_share*100)}% of the edge matched).`
-  :e.score_source==='direct_osm'?'Measured directly on this OSM geometry with the shared indicator definitions (no reliable LION match, e.g. crossing, park path or bridge).':'Not scored (outside the routable network).';
- const segs=e.matched_segment_ids.map(id=>`<button type="button" class="seg-link" data-seg="${esc(id)}">${esc(id)}</button>`).join(' ');
- return `<strong>Route Edge Inspector</strong><dl><dt>OSM Edge ID (u-v-key)</dt><dd>${esc(e.edge_id)}</dd><dt>OSM way ID(s)</dt><dd>${esc(e.osm_way_ids.join(', '))}</dd><dt>Street / type</dt><dd>${esc(e.name||'Unnamed')} · ${esc([].concat(e.highway||[]).join('/'))}${e.pedestrian_access.footway?` · ${esc([].concat(e.pedestrian_access.footway).join('/'))}`:''}</dd><dt>Length on route</dt><dd>${Math.round(e.traversed_length_m)} m of ${Math.round(e.length_m)} m${e.partial?' (partial)':''}</dd><dt>Matched LION segment ID(s)</dt><dd>${segs||'None'}</dd><dt>Score source · match quality</dt><dd>${esc(src)} Quality: ${esc(e.match_quality)}.</dd></dl><div class="explore-rows">${rows}</div><div class="seg-detail"></div><small>Edge overall ${scoreText(e.overall_score)} · ${esc(e.network_version)} · ${esc(e.score_version)}. Scores are relative ranks within Manhattan, not calibrated scores.</small>`;
+ const key=routeFocusDim(),fi=key?ExperienceCore.keys.indexOf(key):-1,focus=fi>=0?DIMENSIONS[fi].name:null;
+ const rows=DIMENSIONS.map(d=>{const v=e.dimension_scores[d.name];return `<div class="explore-row${d.name===focus?' current':''}"><span>${esc(dimLabel(d.name))}</span><i>${v==null?'':`<b style="width:${v}%;background:${typeof exploreColor==='function'?exploreColor(v,EXPLORE_VIEWS[1]):'#d8f365'}"></b>`}</i><em>${scoreText(v)}</em></div>`;}).join('');
+ const lion=e.matched_segments?.length?e.matched_segments.map(m=>`<span class="seg-id">${esc(m.segment_id)}</span> ${esc(m.street_name||'')} · LION physicalid ${esc(m.source_segment_id??'—')}`).join('<br>')
+  :e.score_source==='direct_osm'?'<strong>Unmatched</strong> — no reliable LION segment; scores measured directly on this OSM geometry':'<strong>Unmatched</strong> — not scored (outside the routable network)';
+ const src=e.score_source==='lion_match'?`Borrowed from the matched LION segment(s), overlap-length weighted (${Math.round(e.lion_match_share*100)}% of the edge matched)`:e.score_source==='direct_osm'?'Measured directly on the OSM geometry with the shared indicator definitions':'Not scored';
+ const cov=focus?e.data_coverage[focus]:Object.values(e.data_coverage).reduce((a,b)=>a+b,0)/12;
+ const focusBlock=focus?`<div class="inspector-score"><span>${esc(dimLabel(focus))} · Experience Score</span><strong style="color:${typeof exploreColor==='function'?exploreColor(e.dimension_scores[focus],EXPLORE_VIEWS[1]):'#d8f365'}">${scoreText(e.dimension_scores[focus])}</strong><small>coverage ${Math.round(e.data_coverage[focus]*100)}% of this edge</small></div><div class="focus-subs" data-focus="${key}"><p class="soft-copy">Loading ${esc(dimLabel(focus))} sub-indicators…</p></div>`:'';
+ return `<strong>Route Segment Inspector</strong><dl><dt>OSM Edge ID (u-v-key)</dt><dd>${esc(e.edge_id)}</dd><dt>OSM way ID(s)</dt><dd>${esc(e.osm_way_ids.join(', '))}</dd><dt>Matched LION Segment ID</dt><dd>${lion}</dd><dt>Street name</dt><dd>${esc(e.street_name||'Unnamed')} · ${esc([].concat(e.highway||[]).join('/'))}${e.pedestrian_access.footway?` · ${esc([].concat(e.pedestrian_access.footway).join('/'))}`:''}</dd><dt>Edge length</dt><dd>${Math.round(e.traversed_length_m)} m on route of ${Math.round(e.length_m)} m${e.partial?' (partial)':''}</dd><dt>Score source · quality</dt><dd>${esc(src)} · ${esc(e.match_quality)}</dd><dt>Score coverage</dt><dd>${Math.round(cov*100)}%${focus?` (${esc(dimLabel(focus))})`:' (mean of 12)'}</dd></dl>${focusBlock}<details class="all-dims" ${focus?'':'open'}><summary>All 12 dimension scores</summary><div class="explore-rows">${rows}</div></details><small>Edge overall ${scoreText(e.overall_score)} · ${esc(e.network_version)} · ${esc(e.score_version)}. Scores are relative ranks within Manhattan, not calibrated scores. Source-record IDs (trees, crashes…) are shown separately in the Raw Data Feature inspector.</small>`;
 }
-function bindSegmentLinks(root){
- root.querySelectorAll('[data-seg]').forEach(b=>b.addEventListener('click',async()=>{
-  const box=root.querySelector('.seg-detail');box.textContent='Loading segment…';
-  try{const res=await fetch('/api/segments/'+encodeURIComponent(b.dataset.seg));const s=await res.json();if(!res.ok)throw new Error(s.error);
-   box.innerHTML=`<p><strong>${esc(s.street_name)}</strong> · LION physicalid ${esc(s.source_segment_id)} · ${Math.round(s.length_m)} m · overall ${scoreText(s.overall_score)}. Sources: ${esc([...new Set(Object.values(s.sub_indicators).flat().map(x=>s.data_sources[x.source]))].join('; '))}.</p>`;}
-  catch(err){box.textContent='Segment unavailable: '+err.message;}
- }));
+/** Sub-indicators behind the focused dimension: from the matched LION segment(s), or from the edge's own direct measurement. */
+async function fillFocusSubIndicators(root,e){
+ const box=root.querySelector('.focus-subs');if(!box)return;
+ const key=box.dataset.focus,dim=DIMENSIONS[ExperienceCore.keys.indexOf(key)].name;
+ const fmt=(x,v)=>v==null?'N/A':`${Number(v).toLocaleString(undefined,{maximumFractionDigits:2})} ${x.unit}`;
+ const role=x=>x.role==='context'?'context':x.role==='down'?'in score · lower is better':'in score · higher is better';
+ try{
+  if(e.score_source==='direct_osm'&&e.direct_sub_indicators){
+   const reg=await ensureUrbanRegistry(),inds=reg.indicators[key]||[];
+   box.innerHTML=`<p class="soft-copy">Measured on this edge (records within distance, not snapped):</p>${inds.map(x=>`<div class="data-pair"><span>${esc(x.label)} <small>${esc(role(x))}</small></span><span>${esc(fmt(x,e.direct_sub_indicators[x.key]))}</span></div>`).join('')}<small>Sources: ${esc([...new Set(inds.map(x=>reg.source_labels[x.source]))].join('; '))}</small>`;
+   return;
+  }
+  if(!e.matched_segment_ids.length){box.innerHTML='<p class="soft-copy">No sub-indicators: this edge is unmatched and not scored.</p>';return}
+  const segs=await Promise.all(e.matched_segment_ids.slice(0,3).map(id=>fetch('/api/segments/'+encodeURIComponent(id)).then(r=>r.ok?r.json():Promise.reject(new Error('segment '+id+' unavailable')))));
+  box.innerHTML=segs.map(s=>`<div class="focus-seg"><strong>${esc(s.segment_id)} · ${esc(s.street_name)}</strong> <small>${esc(dimLabel(dim))} ${scoreText(s.dimension_scores[dim])}</small>${s.sub_indicators[dim].map(x=>`<div class="data-pair"><span>${esc(x.label)} <small>${esc(role(x))}</small></span><span>${esc(fmt(x,x.value))}</span></div>`).join('')}</div>`).join('')
+   +`<small>Sources: ${esc([...new Set(segs.flatMap(s=>s.sub_indicators[dim].map(x=>s.data_sources[x.source])))].join('; '))}${e.matched_segment_ids.length>3?` · ${e.matched_segment_ids.length-3} more matched segment(s)`:''}</small>`;
+ }catch(err){box.innerHTML=`<p class="soft-copy">Sub-indicators unavailable: ${esc(err.message)}</p>`;}
 }
 function setupRouteEdgeLayer(){
  const m=state.map;
