@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"227","station_id":"441","complex_id":"441","stop_name":"110 St-Malcolm X Plaza","daytime_routes":"2 3","line":"Lenox - White Plains Rd","structure":"Subway","ada":"0","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.951822,40.799075]}}]}

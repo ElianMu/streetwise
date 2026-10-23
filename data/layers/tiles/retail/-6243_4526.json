@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/14073984218","addr:housenumber":"521","addr:street":"Main Street","name":"Transit Thrift","opening_hours":"We-Fr 14:00-20:00;Sa 10:00-20:00;Su 12:00-18:00","shop":"clothes","website":"https://www.transitthrift.com/"},"geometry":{"type":"Point","coordinates":[-73.950778,40.761124]}}]}

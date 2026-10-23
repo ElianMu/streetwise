@@ -124,6 +124,7 @@ function setExploreMode(on){
  exploreMap.active=on;
  // Route-edge and street popups belong to the mode that opened them.
  document.querySelectorAll('.maplibregl-popup').forEach(p=>p.remove());
+ if(typeof closeUrbanInspector==='function')closeUrbanInspector();
  $('explorePanel').classList.toggle('hidden',!on);
  for(const sel of ['.experience-controls','.map-layer-switch'])document.querySelector(sel).classList.toggle('hidden',on);
  document.querySelector('.map-legend').classList.toggle('explore-hidden',on);
@@ -140,9 +141,9 @@ function applyExploreVisibility(){
  for(const id of ['explore-glow','explore-streets','explore-hover','explore-selected','explore-hit'])setMapLayerVisible(id,on);
  for(const id of exploreMap.labels)setMapLayerVisible(id,!on);
  for(const id of ['point-starts','point-ends','point-gps'])setMapLayerVisible(id,!on);
- if(!on){for(const id of [...urbanMapLayerIds(),'ul-highlight-fill','ul-highlight-line','ul-highlight-pt'])setMapLayerVisible(id,true);setMapLayerVisible('nav-score-overlay',urbanLayers.overlay>=0);return;}
+ if(!on){for(const id of [...urbanMapLayerIds(),'ud-highlight-fill','ud-highlight-line','ud-highlight-pt'])setMapLayerVisible(id,true);return;}
  // Explore shows only the street map: no journey routes, pins, POIs, raw tree/landmark points or section overlays.
- for(const id of [...urbanMapLayerIds(),'nav-score-overlay','ul-highlight-fill','ul-highlight-line','ul-highlight-pt','road-highlight','road-underlay','route-alts','route-shadow','route-selected','route-edge-selected','route-edge-hit','point-starts','point-ends','point-gps','poi-points','tree-points','landmark-fill','landmark-outline','experience-hit','experience-coverage-line',...ExperienceCore.keys.map(k=>'experience-'+k)])setMapLayerVisible(id,false);
+ for(const id of [...urbanMapLayerIds(),'ud-highlight-fill','ud-highlight-line','ud-highlight-pt','road-highlight','road-underlay','route-alts','route-shadow','route-selected','route-edge-selected','route-edge-hit','point-starts','point-ends','point-gps','poi-points','tree-points','landmark-fill','landmark-outline','experience-hit','experience-coverage-line',...ExperienceCore.keys.map(k=>'experience-'+k)])setMapLayerVisible(id,false);
 }
 function setupExploreControls(){
  renderExploreChips();renderExploreThumbs();selectExploreView(exploreMap.view);

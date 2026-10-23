@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"way/271901800","addr:housenumber":"503","addr:street":"West 145th Street","amenity":"library","name":"Hamilton Grange Library","operator":"New York Public Library","website":"https://www.nypl.org/locations/hamilton-grange"},"geometry":{"type":"Point","coordinates":[-73.947997,40.825712]}}]}

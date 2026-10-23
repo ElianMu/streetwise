@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/3627374568","addr:housenumber":"9","addr:street":"Edward M. Morgan Place","amenity":"cafe","cuisine":"coffee_shop","name":"Semicolon","opening_hours":"Mo-Su 08:00-19:00","website":"https://www.semicoloncafe.com/nyc-uptown"},"geometry":{"type":"Point","coordinates":[-73.945225,40.834593]}}]}

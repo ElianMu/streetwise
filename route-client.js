@@ -135,42 +135,13 @@ function selectRouteEdge(seq,fly=false){
  if(fly&&state.mapReady)state.map.easeTo({center:mid,zoom:Math.max(state.map.getZoom(),16),duration:400});
  showRouteEdgeInspector(e,mid);
 }
-function showRouteEdgeInspector(e,lngLat){
- const html=routeEdgeInspectorHtml(e);
- let root;
- if(!state.mapReady||typeof maplibregl==='undefined'){$('segmentDetail').innerHTML=html;root=$('segmentDetail');}
- else root=new maplibregl.Popup({maxWidth:'330px'}).setLngLat(lngLat).setHTML(html).addTo(state.map).getElement();
- return fillFocusSubIndicators(root,e);
-}
-/** Dimension the user is looking at in the Urban Data Layers panel (or score overlay), if any. */
-function routeFocusDim(){return typeof urbanLayers!=='undefined'&&urbanLayers.focusDim?urbanLayers.focusDim:null;}
+/** Street Segment Evidence for one route edge: stable IDs and scores (engine) + nearby real records (urban-layers.js). */
+function showRouteEdgeInspector(e){return showSegmentEvidence(e,routeEdgeInspectorHtml(e));}
 function routeEdgeInspectorHtml(e){
- const key=routeFocusDim(),fi=key?ExperienceCore.keys.indexOf(key):-1,focus=fi>=0?DIMENSIONS[fi].name:null;
- const rows=DIMENSIONS.map(d=>{const v=e.dimension_scores[d.name];return `<div class="explore-row${d.name===focus?' current':''}"><span>${esc(dimLabel(d.name))}</span><i>${v==null?'':`<b style="width:${v}%;background:${typeof exploreColor==='function'?exploreColor(v,EXPLORE_VIEWS[1]):'#d8f365'}"></b>`}</i><em>${scoreText(v)}</em></div>`;}).join('');
- const lion=e.matched_segments?.length?e.matched_segments.map(m=>`<span class="seg-id">${esc(m.segment_id)}</span> ${esc(m.street_name||'')} · LION physicalid ${esc(m.source_segment_id??'—')}`).join('<br>')
+ const rows=DIMENSIONS.map(d=>{const v=e.dimension_scores[d.name];return `<div class="explore-row"><span>${esc(dimLabel(d.name))}</span><i>${v==null?'':`<b style="width:${v}%;background:${typeof exploreColor==='function'?exploreColor(v,EXPLORE_VIEWS[1]):'#d8f365'}"></b>`}</i><em>${scoreText(v)}</em></div>`;}).join('');
+ const lion=e.matched_segments?.length?e.matched_segments.map(m=>`<span class="seg-id">${esc(m.segment_id)}</span> · LION physicalid ${esc(m.source_segment_id??'—')}`).join('<br>')
   :e.score_source==='direct_osm'?'<strong>Unmatched</strong> — no reliable LION segment; scores measured directly on this OSM geometry':'<strong>Unmatched</strong> — not scored (outside the routable network)';
- const src=e.score_source==='lion_match'?`Borrowed from the matched LION segment(s), overlap-length weighted (${Math.round(e.lion_match_share*100)}% of the edge matched)`:e.score_source==='direct_osm'?'Measured directly on the OSM geometry with the shared indicator definitions':'Not scored';
- const cov=focus?e.data_coverage[focus]:Object.values(e.data_coverage).reduce((a,b)=>a+b,0)/12;
- const focusBlock=focus?`<div class="inspector-score"><span>${esc(dimLabel(focus))} · Experience Score</span><strong style="color:${typeof exploreColor==='function'?exploreColor(e.dimension_scores[focus],EXPLORE_VIEWS[1]):'#d8f365'}">${scoreText(e.dimension_scores[focus])}</strong><small>coverage ${Math.round(e.data_coverage[focus]*100)}% of this edge</small></div><div class="focus-subs" data-focus="${key}"><p class="soft-copy">Loading ${esc(dimLabel(focus))} sub-indicators…</p></div>`:'';
- return `<strong>Route Segment Inspector</strong><dl><dt>OSM Edge ID (u-v-key)</dt><dd>${esc(e.edge_id)}</dd><dt>OSM way ID(s)</dt><dd>${esc(e.osm_way_ids.join(', '))}</dd><dt>Matched LION Segment ID</dt><dd>${lion}</dd><dt>Street name</dt><dd>${esc(e.street_name||'Unnamed')} · ${esc([].concat(e.highway||[]).join('/'))}${e.pedestrian_access.footway?` · ${esc([].concat(e.pedestrian_access.footway).join('/'))}`:''}</dd><dt>Edge length</dt><dd>${Math.round(e.traversed_length_m)} m on route of ${Math.round(e.length_m)} m${e.partial?' (partial)':''}</dd><dt>Score source · quality</dt><dd>${esc(src)} · ${esc(e.match_quality)}</dd><dt>Score coverage</dt><dd>${Math.round(cov*100)}%${focus?` (${esc(dimLabel(focus))})`:' (mean of 12)'}</dd></dl>${focusBlock}<details class="all-dims" ${focus?'':'open'}><summary>All 12 dimension scores</summary><div class="explore-rows">${rows}</div></details><small>Edge overall ${scoreText(e.overall_score)} · ${esc(e.network_version)} · ${esc(e.score_version)}. Scores are relative ranks within Manhattan, not calibrated scores. Source-record IDs (trees, crashes…) are shown separately in the Raw Data Feature inspector.</small>`;
-}
-/** Sub-indicators behind the focused dimension: from the matched LION segment(s), or from the edge's own direct measurement. */
-async function fillFocusSubIndicators(root,e){
- const box=root.querySelector('.focus-subs');if(!box)return;
- const key=box.dataset.focus,dim=DIMENSIONS[ExperienceCore.keys.indexOf(key)].name;
- const fmt=(x,v)=>v==null?'N/A':`${Number(v).toLocaleString(undefined,{maximumFractionDigits:2})} ${x.unit}`;
- const role=x=>x.role==='context'?'context':x.role==='down'?'in score · lower is better':'in score · higher is better';
- try{
-  if(e.score_source==='direct_osm'&&e.direct_sub_indicators){
-   const reg=await ensureUrbanRegistry(),inds=reg.indicators[key]||[];
-   box.innerHTML=`<p class="soft-copy">Measured on this edge (records within distance, not snapped):</p>${inds.map(x=>`<div class="data-pair"><span>${esc(x.label)} <small>${esc(role(x))}</small></span><span>${esc(fmt(x,e.direct_sub_indicators[x.key]))}</span></div>`).join('')}<small>Sources: ${esc([...new Set(inds.map(x=>reg.source_labels[x.source]))].join('; '))}</small>`;
-   return;
-  }
-  if(!e.matched_segment_ids.length){box.innerHTML='<p class="soft-copy">No sub-indicators: this edge is unmatched and not scored.</p>';return}
-  const segs=await Promise.all(e.matched_segment_ids.slice(0,3).map(id=>streetwiseFetch('/api/segments/'+encodeURIComponent(id)).then(r=>r.ok?r.json():Promise.reject(new Error('segment '+id+' unavailable')))));
-  box.innerHTML=segs.map(s=>`<div class="focus-seg"><strong>${esc(s.segment_id)} · ${esc(s.street_name)}</strong> <small>${esc(dimLabel(dim))} ${scoreText(s.dimension_scores[dim])}</small>${s.sub_indicators[dim].map(x=>`<div class="data-pair"><span>${esc(x.label)} <small>${esc(role(x))}</small></span><span>${esc(fmt(x,x.value))}</span></div>`).join('')}</div>`).join('')
-   +`<small>Sources: ${esc([...new Set(segs.flatMap(s=>s.sub_indicators[dim].map(x=>s.data_sources[x.source])))].join('; '))}${e.matched_segment_ids.length>3?` · ${e.matched_segment_ids.length-3} more matched segment(s)`:''}</small>`;
- }catch(err){box.innerHTML=`<p class="soft-copy">Sub-indicators unavailable: ${esc(err.message)}</p>`;}
+ return `<dl class="inspector-ids"><dt>Street</dt><dd>${esc(e.street_name||'Unnamed')} · ${esc([].concat(e.highway||[]).join('/'))}${e.pedestrian_access.footway?` · ${esc([].concat(e.pedestrian_access.footway).join('/'))}`:''}</dd><dt>Segment ID (OSM edge u-v-key)</dt><dd>${esc(e.edge_id)}</dd><dt>Matched LION segment</dt><dd>${lion}</dd><dt>OSM way ID(s)</dt><dd>${esc(e.osm_way_ids.join(', '))}</dd><dt>Segment length</dt><dd>${Math.round(e.length_m)} m${e.partial?` (${Math.round(e.traversed_length_m)} m on this route)`:''}</dd><dt>Route</dt><dd>${esc(state.routes.find(x=>x.id===state.activeRoute)?.label||'')}</dd></dl><details class="all-dims"><summary>12 experience scores of this edge</summary><div class="explore-rows">${rows}</div><small>${esc(e.score_source==='lion_match'?`Borrowed from matched LION segment(s), ${Math.round(e.lion_match_share*100)}% of the edge matched`:e.score_source==='direct_osm'?'Measured directly on the OSM geometry':'Not scored')} · ${esc(e.network_version)} · ${esc(e.score_version)}</small></details>`;
 }
 function setupRouteEdgeLayer(){
  const m=state.map;

@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"120","station_id":"310","complex_id":"310","stop_name":"96 St","daytime_routes":"1 2 3","line":"Broadway - 7Av","structure":"Subway","ada":"1","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.972323,40.793919]}}]}

@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=9" />
+  <link rel="stylesheet" href="./styles.css?v=11" />
 </head>
 <body>
 <div class="site-shell">
@@ -99,19 +99,18 @@
       <div id="selectedRouteSummary" class="selected-route-summary" aria-live="polite">Choose a journey to compare real walking routes.</div>
       <details class="map-layer-switch urban-layers" id="urbanLayers"><summary class="map-layer-head">Urban Data Layers <span id="urbanActiveCount" class="urban-count"></span> ▾</summary>
         <div class="urban-body">
+          <p class="urban-lede">Explore real NYC data along your route</p>
+          <input id="urbanSearch" class="urban-search" type="search" placeholder="Search urban datasets…" aria-label="Search urban datasets">
+          <div class="urban-head">DISPLAY SCOPE</div>
+          <div class="urban-scope" role="radiogroup" aria-label="Display scope"><label><input type="radio" name="urbanScope" value="route" checked> Along selected route</label><label><input type="radio" name="urbanScope" value="view"> Current map view</label></div>
+          <label class="urban-distance">Route corridor <select id="urbanCorridor" aria-label="Route display corridor"><option value="50">50 m</option><option value="100" selected>100 m</option><option value="200">200 m</option><option value="500">500 m</option></select><small>map display only — never changes scores</small></label>
+          <div id="urbanCats" class="urban-dims"><p class="urban-note">Open to load the dataset catalog.</p></div>
+          <div class="urban-section"><div class="urban-head"><span id="urbanActiveTitle">ACTIVE LAYERS: 0</span><span><button type="button" id="urbanClear" class="urban-clear">Clear all</button> <button type="button" id="urbanSettings" class="urban-clear" aria-pressed="false">Layer settings</button></span></div><div id="urbanActive"></div></div>
           <div class="urban-section"><div class="urban-head">NAVIGATION OVERLAYS</div>
-            <div class="layer-chips"><label class="switch-chip"><input type="checkbox" id="layerRoutes" checked><span class="chip-square routes"></span> Alternative routes</label><label class="switch-chip"><input type="checkbox" id="layerPOIs" checked><span class="chip-square poi-chip"></span> Route POIs</label><label class="switch-chip"><input type="checkbox" id="layerRoads" checked><span class="chip-square roads"></span> Street network (LION)</label><button id="retryStreets" class="switch-chip" title="Retry incomplete Manhattan data loading">↻ Streets</button></div>
-            <p class="urban-note">Selected route and start / destination are always shown. Your location appears only after you allow GPS.</p>
-          </div>
-          <div class="urban-section"><div class="urban-head">URBAN DATA <button type="button" id="urbanClear" class="urban-clear">Clear all</button></div>
-            <div class="urban-scope" role="radiogroup" aria-label="Data scope"><label><input type="radio" name="urbanScope" value="route" checked> Along route</label><label><input type="radio" name="urbanScope" value="view"> Current view</label>
-              <label class="urban-distance">Display range <select id="urbanDistance" aria-label="Along-route display range"><option value="auto">Layer default</option><option value="30">30 m</option><option value="60">60 m</option><option value="150">150 m</option><option value="300">300 m</option></select></label></div>
-            <label class="urban-overlay">Experience score overlay <select id="scoreOverlay" aria-label="Experience score overlay"></select></label>
-            <input id="urbanSearch" class="urban-search" type="search" placeholder="Search data layers" aria-label="Search data layers">
-            <div id="urbanDims" class="urban-dims"><p class="urban-note">Open to load the layer registry.</p></div>
-            <p class="urban-note">Display range only filters what is drawn; it never changes experience scores.</p>
-          </div>
+            <div class="layer-chips"><label class="switch-chip"><input type="checkbox" id="layerRoutes" checked><span class="chip-square routes"></span> Alternative routes</label><label class="switch-chip"><input type="checkbox" id="layerPOIs" checked><span class="chip-square poi-chip"></span> Route POIs</label><label class="switch-chip"><input type="checkbox" id="layerRoads" checked><span class="chip-square roads"></span> Street base (LION)</label><button id="retryStreets" class="switch-chip" title="Retry incomplete Manhattan data loading">↻ Streets</button></div>
+            <p class="urban-note">The selected route and start / destination always stay on top. Your location appears only after you allow GPS.</p></div>
         </div></details>
+      <aside id="urbanInspector" class="explore-inspector urban-inspector hidden" aria-label="Urban feature inspector" aria-live="polite"></aside>
       <div class="map-actions"><button id="mapLocate" title="Locate me" aria-label="Locate me">◎</button><button id="toggleLegend" title="Toggle legend" aria-label="Toggle legend" aria-pressed="true">≡</button><button id="mapReset" title="Reset map view" aria-label="Reset map view">⤢</button></div>
       <div id="pickNotice" class="pick-notice hidden">Click anywhere on the map to set a point. <button id="cancelPick">CANCEL</button></div>
       <div class="map-legend"><div class="legend-title"><span id="legendDot" class="legend-dot"></span><span id="legendTitle">MANHATTAN STREET NETWORK</span></div><p id="legendSubtitle">Official NYC centerlines (Manhattan borough filter); walkability not confirmed.</p><div id="legend-scale" class="legend-scale hidden"><span><i style="background:#365c64"></i>Lower</span><span><i style="background:#37bfc8"></i>Mid</span><span><i style="background:#d8f365"></i>Higher</span></div></div>
@@ -131,6 +130,9 @@
         <div class="route-cards" id="routeCards"><div class="empty-route"><strong>No routes generated yet</strong><p>Set your journey to compare real pedestrian paths.</p></div></div>
         <div class="subtle-divider"></div>
         <div class="section-overline">✦ WHY THIS ROUTE?</div><div class="why-box" id="whyRoute">Generate routes to see evidence-grounded reasons.</div>
+        <div class="subtle-divider"></div>
+        <div class="section-row"><div class="section-overline">ROUTE URBAN DATA</div><span id="routeUrbanCorridor" class="small-count"></span></div>
+        <div id="routeUrbanData" class="route-urban"><p class="soft-copy">Select a route to see the real city data around it.</p></div>
         <div class="subtle-divider"></div>
         <div class="section-row"><div class="section-overline">ROUTE EDGES</div><span id="edgeCount" class="small-count">0</span></div>
         <details class="route-edges"><summary>Ordered OSM pedestrian edges</summary><div id="routeEdgeList" class="edge-list"><p class="soft-copy">Select a route to list the OSM pedestrian edges it uses, in order.</p></div></details>
@@ -160,12 +162,13 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="modalOverlay" class="modal-overlay hidden"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button id="closeModal" class="modal-close" title="Close">✕</button><div class="section-overline">PROJECT NOTES / TRANSPARENCY</div><h2 id="modalTitle">What is real, and what's next.</h2><div id="modalContent"></div></div></div>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="./experience-core.js?v=9"></script>
-<script src="./api-config.js?v=10"></script>
-<script src="./app.js?v=10"></script>
-<script src="./route-client.js?v=10"></script>
-<script src="./urban-layers.js?v=9"></script>
-<script src="./explore-map.js?v=9"></script>
-<script src="./center-map.js?v=9"></script>
+<script src="./experience-core.js?v=11"></script>
+<script src="./api-config.js?v=11"></script>
+<script src="./app.js?v=11"></script>
+<script src="./route-client.js?v=11"></script>
+<script src="./urban-geo.js?v=11"></script>
+<script src="./urban-layers.js?v=11"></script>
+<script src="./explore-map.js?v=11"></script>
+<script src="./center-map.js?v=11"></script>
 </body>
 </html>

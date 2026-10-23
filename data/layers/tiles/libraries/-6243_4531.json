@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"way/271290752","addr:housenumber":"203","addr:street":"West 115th Street","amenity":"library","name":"Harry Belafonte Library","operator":"New York Public Library","website":"https://www.nypl.org/locations/115th-street"},"geometry":{"type":"Point","coordinates":[-73.95353,40.802977]}}]}

@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/5163436611","addr:housenumber":"100","addr:street":"West 77th Street","amenity":"marketplace","name":"Grand Bazaar","opening_hours":"Su 10:00-17:00","operator":"Grand Bazaar NYC","website":"https://grandbazaarnyc.org/"},"geometry":{"type":"Point","coordinates":[-73.977035,40.780423]}}]}

@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/11112081658","historic":"memorial"},"geometry":{"type":"Point","coordinates":[-73.946672,40.784658]}},{"type":"Feature","properties":{"feature_id":"node/13087382861","historic":"memorial","name":"Saint Tikhon"},"geometry":{"type":"Point","coordinates":[-73.954087,40.788174]}}]}

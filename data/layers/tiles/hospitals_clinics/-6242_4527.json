@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"way/1265948117","addr:housenumber":"900","addr:street":"Main Street","amenity":"hospital","name":"NYC Health + Hospitals/Coler","operator":"NYC Health + Hospitals","website":"https://www.nychealthandhospitals.org/coler/"},"geometry":{"type":"Point","coordinates":[-73.942405,40.770407]}}]}

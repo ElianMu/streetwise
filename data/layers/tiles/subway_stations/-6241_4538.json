@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"A03","station_id":"144","complex_id":"144","stop_name":"Dyckman St","daytime_routes":"A","line":"8th Av - Fulton St","structure":"Subway","ada":"0","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.927271,40.865491]}}]}

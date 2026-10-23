@@ -1,37 +1,43 @@
-"""Navigate Urban Data Layers: spatial queries over the real layer datasets in data/layers (standard library only).
+"""Reference implementation of the Navigate urban-data queries over the static tiles in data/layers.
 
-Two scopes: Current View (bounding box) and Along Route (features within a display distance of a planned route's
-real geometry). Display distance only filters what is drawn; it never touches experience scores.
+The browser runs the same logic in urban-geo.js; tests use this module to compute expected results independently
+(brute force over the tiles) and to validate the tiles themselves. Standard library only.
 """
-import gzip, json, math, os, threading
+import json, math, os
 
-from routing.engine import xy, ROOT
-
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 LAYERS = os.path.join(ROOT, 'data', 'layers')
-CELL = 250.0  # metres per spatial-index cell
-VIEW_CAP = 6000  # features per Current View response; above this the client is asked to zoom in
-ROUTE_CAP = 12000
-MAX_DISPLAY_M = 1500
 
 
-class LayerError(ValueError):
-    pass
+class Catalog:
+    def __init__(self):
+        self.doc = json.load(open(os.path.join(LAYERS, 'catalog.json'), encoding='utf-8'))
+        p = self.doc['projection']
+        self.mx, self.my, self.size = p['mx'], p['my'], self.doc['tile_size_m']
+        self.datasets = {d['id']: d for d in self.doc['datasets']}
 
+    def xy(self, c):
+        return (c[0] * self.mx, c[1] * self.my)
 
-def _parts(geom):
-    """Metric vertex lists: points -> [[p]], lines -> [line], polygons -> [ring, ...] (outer rings only matter for distance)."""
-    t, c = geom['type'], geom['coordinates']
-    if t == 'Point':
-        return [[xy(*c)]], 'point'
-    if t == 'LineString':
-        return [[xy(*p) for p in c]], 'line'
-    if t == 'MultiLineString':
-        return [[xy(*p) for p in l] for l in c], 'line'
-    if t == 'Polygon':
-        return [[xy(*p) for p in r] for r in c], 'polygon'
-    if t == 'MultiPolygon':
-        return [[xy(*p) for p in r] for poly in c for r in poly], 'polygon'
-    return [], None
+    def tile_keys(self, box):
+        return [f'{tx}_{ty}' for tx in range(math.floor(box[0] / self.size), math.floor(box[2] / self.size) + 1)
+                for ty in range(math.floor(box[1] / self.size), math.floor(box[3] / self.size) + 1)]
+
+    def features(self, tileset, box=None):
+        """All features of a tileset (or of the tiles touching a metric box), de-duplicated by feature_id."""
+        tiles = self.doc['tilesets'][tileset]['tiles']
+        keys = tiles if box is None else [k for k in self.tile_keys(box) if k in tiles]
+        seen, out = set(), []
+        for k in keys:
+            for f in json.load(open(os.path.join(LAYERS, 'tiles', tileset, f'{k}.json'), encoding='utf-8'))['features']:
+                if f['properties']['feature_id'] not in seen:
+                    seen.add(f['properties']['feature_id']); out.append(f)
+        return out
+
+    def dataset_features(self, did, box=None):
+        d = self.datasets[did]
+        flt = d.get('filter') or {}
+        return [f for f in self.features(d['tileset'], box) if all(f['properties'].get(k) in v for k, v in flt.items())]
 
 
 def _pt_seg(p, a, b):
@@ -60,107 +66,25 @@ def _in_ring(p, ring):
     return yes
 
 
-class Layer:
-    def __init__(self, lid, meta):
-        data = json.load(gzip.open(os.path.join(LAYERS, f'{lid}.geojson.gz'), 'rt', encoding='utf-8'))
-        self.meta, self.features = meta, data['features']
-        self.parts, self.kind, self.boxes, self.grid = [], None, [], {}
-        for i, f in enumerate(self.features):
-            parts, kind = _parts(f['geometry'])
-            self.kind = self.kind or kind
-            xs = [p[0] for part in parts for p in part]; ys = [p[1] for part in parts for p in part]
-            box = (min(xs), min(ys), max(xs), max(ys))
-            self.parts.append(parts); self.boxes.append(box)
-            for gx in range(int(box[0] // CELL), int(box[2] // CELL) + 1):
-                for gy in range(int(box[1] // CELL), int(box[3] // CELL) + 1):
-                    self.grid.setdefault((gx, gy), []).append(i)
-
-    def candidates(self, box):
-        seen = set()
-        for gx in range(int(box[0] // CELL), int(box[2] // CELL) + 1):
-            for gy in range(int(box[1] // CELL), int(box[3] // CELL) + 1):
-                for i in self.grid.get((gx, gy), ()):
-                    if i not in seen:
-                        seen.add(i)
-                        b = self.boxes[i]
-                        if b[0] <= box[2] and b[2] >= box[0] and b[1] <= box[3] and b[3] >= box[1]:
-                            yield i
-
-    def distance_to(self, i, route):
-        """Metres between feature i and a metric polyline (0 when a route vertex lies inside a polygon)."""
-        parts, best = self.parts[i], math.inf
-        if self.kind == 'polygon' and parts and any(_in_ring(p, parts[0]) for p in route[::max(1, len(route) // 50)]):
+def distance_to_line(cat, geom, coords):
+    """Metres between a lon/lat geometry and a lon/lat polyline (0 when touching / inside a polygon)."""
+    line = [cat.xy(c) for c in coords]
+    t, c = geom['type'], geom['coordinates']
+    if t in ('Polygon', 'MultiPolygon'):
+        polys = [c] if t == 'Polygon' else c
+        polys = [[[cat.xy(p) for p in r] for r in poly] for poly in polys]
+        if any(_in_ring(p, rings[0]) and not any(_in_ring(p, h) for h in rings[1:]) for p in line for rings in polys):
             return 0.0
-        for part in parts:
-            if len(part) == 1:
-                for a, b in zip(route, route[1:]):
-                    best = min(best, _pt_seg(part[0], a, b))
-            else:
-                for c, d in zip(part, part[1:]):
-                    for a, b in zip(route, route[1:]):
-                        best = min(best, _seg_seg(c, d, a, b))
-                        if best == 0:
-                            return 0.0
-        return best
+        rings = [r for poly in polys for r in poly]
+        return min(_seg_seg(r[i - 1], r[i], line[k - 1], line[k]) for r in rings for i in range(1, len(r)) for k in range(1, len(line)))
+    if t in ('LineString', 'MultiLineString'):
+        lines = [c] if t == 'LineString' else c
+        return min(_seg_seg(cat.xy(l[i - 1]), cat.xy(l[i]), line[k - 1], line[k]) for l in lines for i in range(1, len(l)) for k in range(1, len(line)))
+    pts = [c] if t == 'Point' else c
+    return min(_pt_seg(cat.xy(p), line[k - 1], line[k]) for p in pts for k in range(1, len(line)))
 
 
-class LayerStore:
-    def __init__(self):
-        self.registry = json.load(open(os.path.join(LAYERS, 'registry.json'), encoding='utf-8'))
-        self.loaded, self.lock = {}, threading.Lock()
-
-    def layer(self, lid):
-        meta = self.registry['layers'].get(lid)
-        if not meta:
-            raise LayerError(f'Unknown layer "{lid}"')
-        if meta['status'] != 'available':
-            raise LayerError(f"{meta['name']} is unavailable: {meta['reason']}")
-        with self.lock:
-            if lid not in self.loaded:
-                self.loaded[lid] = Layer(lid, meta)
-            return self.loaded[lid]
-
-    def in_view(self, lid, bbox):
-        w, s, e, n = bbox
-        if not (w < e and s < n):
-            raise LayerError('bbox must be west,south,east,north')
-        L = self.layer(lid)
-        (x0, y0), (x1, y1) = xy(w, s), xy(e, n)
-        ids = list(L.candidates((x0, y0, x1, y1)))
-        base = {'layer_id': lid, 'scope': 'current_view', 'count': len(ids), 'bbox': bbox}
-        if len(ids) > VIEW_CAP:  # never send a silently truncated subset
-            return {**base, 'too_many': True, 'features': [], 'message': f'{len(ids):,} features in view; zoom in to display them.'}
-        return {**base, 'too_many': False, 'features': [L.features[i] for i in ids]}
-
-    def along_route(self, lid, coords, distance=None):
-        L = self.layer(lid)
-        d = float(L.meta['display_distance_m'] if distance is None else distance)
-        if not 0 < d <= MAX_DISPLAY_M:
-            raise LayerError(f'distance must be 1–{MAX_DISPLAY_M} m')
-        route = [xy(*c) for c in coords]
-        xs = [p[0] for p in route]; ys = [p[1] for p in route]
-        out = []
-        for i in L.candidates((min(xs) - d, min(ys) - d, max(xs) + d, max(ys) + d)):
-            dist = L.distance_to(i, route)
-            if dist <= d:
-                f = L.features[i]
-                out.append({**f, 'properties': {**f['properties'], 'distance_to_route_m': round(dist, 1)}})
-        base = {'layer_id': lid, 'scope': 'along_route', 'display_distance_m': d, 'scoring_distance_m': L.meta.get('scoring_distance_m'), 'count': len(out)}
-        if len(out) > ROUTE_CAP:
-            return {**base, 'too_many': True, 'features': [], 'message': f'{len(out):,} features along this route; reduce the display distance.'}
-        return {**base, 'too_many': False, 'features': out}
-
-
-_store = None
-
-
-def reset_store():
-    global _store
-    _store = None
-
-
-def get_store():
-    global _store
-    if _store is None:
-        _store = LayerStore()
-    return _store
+def along_route(cat, did, coords, distance):
+    """{feature_id: distance} for every record of a dataset within `distance` m of the polyline (all tiles scanned)."""
+    return {f['properties']['feature_id']: round(d, 3) for f in cat.dataset_features(did)
+            if (d := distance_to_line(cat, f['geometry'], coords)) <= distance}

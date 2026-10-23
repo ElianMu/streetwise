@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/4297408689","highway":"bus_stop","name":"East 92nd Street & York Avenue","network":"NYC Transit","route_ref":"M86-SBS;M31"},"geometry":{"type":"Point","coordinates":[-73.944727,40.779884]}}]}

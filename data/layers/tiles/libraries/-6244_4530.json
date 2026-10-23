@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/368050633","addr:housenumber":"150","addr:street":"West 100th Street","amenity":"library","name":"Bloomingdale Library","operator":"New York Public Library","website":"https://www.nypl.org/locations/bloomingdale"},"geometry":{"type":"Point","coordinates":[-73.967573,40.795907]}}]}

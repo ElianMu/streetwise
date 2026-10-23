@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"113","station_id":"303","complex_id":"303","stop_name":"157 St","daytime_routes":"1","line":"Broadway - 7Av","structure":"Subway","ada":"0","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.94489,40.834041]}}]}

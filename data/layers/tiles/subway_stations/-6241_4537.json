@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"109","station_id":"299","complex_id":"299","stop_name":"Dyckman St","daytime_routes":"1","line":"Broadway - 7Av","structure":"Elevated","ada":"1","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.925536,40.860531]}}]}

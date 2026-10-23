@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"B06","station_id":"222","complex_id":"222","stop_name":"Roosevelt Island","daytime_routes":"M","line":"63rd St","structure":"Subway","ada":"1","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.95326,40.759145]}}]}

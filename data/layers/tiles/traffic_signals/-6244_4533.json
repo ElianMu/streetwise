@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/42434105","highway":"traffic_signals"},"geometry":{"type":"Point","coordinates":[-73.958903,40.820023]}},{"type":"Feature","properties":{"feature_id":"node/7620631148","highway":"traffic_signals"},"geometry":{"type":"Point","coordinates":[-73.957492,40.82116]}}]}

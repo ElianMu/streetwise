@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"110","station_id":"300","complex_id":"300","stop_name":"191 St","daytime_routes":"1","line":"Broadway - 7Av","structure":"Subway","ada":"0","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.929412,40.855225]}}]}
