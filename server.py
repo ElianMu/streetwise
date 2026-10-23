@@ -180,10 +180,24 @@ class Handler(SimpleHTTPRequestHandler):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     def end_headers(self):
-        # Local development: always revalidate static files so edits show up without a hard refresh.
-        if not self.path.startswith('/api/'):
+        # Allow the STREETWISE GitHub Pages frontend to access the API.
+        if self.path.startswith('/api/'):
+            origin = self.headers.get('Origin', '')
+            if origin == 'https://elianmu.github.io':
+                self.send_header('Access-Control-Allow-Origin', origin)
+                self.send_header('Vary', 'Origin')
+                self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+                self.send_header('Access-Control-Allow-Headers', 'Content-Type')
+        else:
             self.send_header('Cache-Control', 'no-cache')
         super().end_headers()
+
+    def do_OPTIONS(self):
+        if self.path.startswith('/api/'):
+            self.send_response(204)
+            self.end_headers()
+        else:
+            self.send_error(404)
 
     def send_json(self, status, data):
         payload = json.dumps(data, ensure_ascii=False).encode('utf-8')

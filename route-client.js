@@ -47,7 +47,7 @@ async function generateRoutes(userText=null,isFollowUp=false){
  try{
   resetRoutes(true);renderRouteCards();
   if(location.protocol==='file:')throw new Error('The routing engine runs in server.py; start it and open http://127.0.0.1:8080.');
-  const res=await fetch('/api/routes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildRouteRequest(a,b)),signal:AbortSignal.timeout(30000)});
+  const res=await streetwiseFetch('/api/routes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildRouteRequest(a,b)),signal:AbortSignal.timeout(30000)});
   const json=await res.json().catch(()=>({}));
   if(run!==planner.runId)return;
   if(!res.ok)throw new Error(json.error||`Routing engine HTTP ${res.status}`);
@@ -167,7 +167,7 @@ async function fillFocusSubIndicators(root,e){
    return;
   }
   if(!e.matched_segment_ids.length){box.innerHTML='<p class="soft-copy">No sub-indicators: this edge is unmatched and not scored.</p>';return}
-  const segs=await Promise.all(e.matched_segment_ids.slice(0,3).map(id=>fetch('/api/segments/'+encodeURIComponent(id)).then(r=>r.ok?r.json():Promise.reject(new Error('segment '+id+' unavailable')))));
+  const segs=await Promise.all(e.matched_segment_ids.slice(0,3).map(id=>streetwiseFetch('/api/segments/'+encodeURIComponent(id)).then(r=>r.ok?r.json():Promise.reject(new Error('segment '+id+' unavailable')))));
   box.innerHTML=segs.map(s=>`<div class="focus-seg"><strong>${esc(s.segment_id)} · ${esc(s.street_name)}</strong> <small>${esc(dimLabel(dim))} ${scoreText(s.dimension_scores[dim])}</small>${s.sub_indicators[dim].map(x=>`<div class="data-pair"><span>${esc(x.label)} <small>${esc(role(x))}</small></span><span>${esc(fmt(x,x.value))}</span></div>`).join('')}</div>`).join('')
    +`<small>Sources: ${esc([...new Set(segs.flatMap(s=>s.sub_indicators[dim].map(x=>s.data_sources[x.source])))].join('; '))}${e.matched_segment_ids.length>3?` · ${e.matched_segment_ids.length-3} more matched segment(s)`:''}</small>`;
  }catch(err){box.innerHTML=`<p class="soft-copy">Sub-indicators unavailable: ${esc(err.message)}</p>`;}
@@ -193,7 +193,7 @@ async function updateRouteProgress(accuracy){
  if(!x||!state.gps||routeNav.pending||location.protocol==='file:')return;
  routeNav.pending=true;
  try{
-  const res=await fetch('/api/navigation/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({route_id:x.id,lat:state.gps.lat,lon:state.gps.lon,accuracy_m:Number.isFinite(accuracy)?accuracy:null}),signal:AbortSignal.timeout(8000)});
+  const res=await streetwiseFetch('/api/navigation/progress',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({route_id:x.id,lat:state.gps.lat,lon:state.gps.lon,accuracy_m:Number.isFinite(accuracy)?accuracy:null}),signal:AbortSignal.timeout(8000)});
   const p=await res.json();if(!res.ok)throw new Error(p.error);
   routeNav.last=p;
   $('gpsMeta').textContent=p.state==='off_route'?`Off route by ${Math.round(p.distance_from_route_m)} m · ±${Math.round(accuracy||0)} m`:p.state==='arrived'?'Arrived at destination':`On route · ${Math.round(p.remaining_m)} m / ${Math.ceil(p.remaining_min)} min left`;

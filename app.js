@@ -200,7 +200,7 @@ async function interpretIntent(q){
   let data,mode='local';
   if(planner.llmConnected){
     try{
-      const r=await fetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(22000)});
+      const r=await streetwiseFetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(22000)});
       if(!r.ok)throw new Error(`LLM service ${r.status}`);
       data=await r.json();mode='llm';
     }catch(err){console.warn('LLM parsing unavailable:',err);toast('AI parsing unavailable. Using clearly marked limited local preview.');}
@@ -212,7 +212,7 @@ async function interpretIntent(q){
 async function checkInterpreter(){
   if(location.protocol==='file:'){$('interpretMode').textContent='LOCAL PREVIEW · Start server.py with an API key for genuine LLM understanding';return}
   try{
-    const r=await fetch('/api/status',{signal:AbortSignal.timeout(2500)});const d=await r.json();planner.llmConnected=Boolean(r.ok&&d.llm);
+    const r=await streetwiseFetch('/api/status',{signal:AbortSignal.timeout(2500)});const d=await r.json();planner.llmConnected=Boolean(r.ok&&d.llm);
   }catch(_) {planner.llmConnected=false}
   $('interpretMode').textContent=planner.llmConnected?'✦ LLM CONNECTED · Real semantic parsing enabled':'◇ LOCAL PREVIEW · Limited parsing; enable AI backend for full understanding';
 }
@@ -235,7 +235,7 @@ function makeArcGISQuery(endpoint,options={}){
 }
 async function timedJson(url,timeoutMs=14000,opts={}){
   const controller=new AbortController();const t=setTimeout(()=>controller.abort(),timeoutMs);
-  try{const response=await fetch(url,{signal:controller.signal,...opts});if(!response.ok)throw new Error(`HTTP ${response.status}`);const d=await response.json();if(d.error)throw new Error(d.error.message||JSON.stringify(d.error));return d}finally{clearTimeout(t)}
+  try{const response=await streetwiseFetch(url,{signal:controller.signal,...opts});if(!response.ok)throw new Error(`HTTP ${response.status}`);const d=await response.json();if(d.error)throw new Error(d.error.message||JSON.stringify(d.error));return d}finally{clearTimeout(t)}
 }
 async function loadData(kind){
   if(kind==='streets')return loadManhattanStreets();
@@ -460,7 +460,7 @@ async function loadRoutePOIs(run){
   if(!box || box[2]-box[0]>.055||box[3]-box[1]>.055){planner.routePois=[];planner.poiStatus='Route is too wide for this bounded POI lookup';renderPOIs();return}
   try{
     if(location.protocol==='file:')throw new Error('Run server.py for verified POIs');
-    const res=await fetch('/api/pois',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bbox:box}),signal:AbortSignal.timeout(25000)});
+    const res=await streetwiseFetch('/api/pois',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({bbox:box}),signal:AbortSignal.timeout(25000)});
     if(!res.ok)throw new Error(`POI service HTTP ${res.status}`);
     const json=await res.json();if(run!==planner.runId)return;
     planner.routePois=(json.pois||[]).filter(x=>Number.isFinite(x.lon)&&Number.isFinite(x.lat)&&x.name).slice(0,450);
