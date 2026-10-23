@@ -1,0 +1,13 @@
+{
+  "source_records": {
+    "streets": 667,
+    "trees": 3177,
+    "lpc": 186
+  },
+  "sections": 477,
+  "nonnull_nature": 477,
+  "nonnull_architecture": 477,
+  "validated_scores": 0,
+  "calculation_tests": "pass",
+  "limitations": "Computational tests do not validate experience quality or buffer choice."
+}

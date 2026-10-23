@@ -1,0 +1,8 @@
+const fs=require('fs'),assert=require('node:assert/strict'),C=require('../experience-core.js'),path=require('path');
+const pilot=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/pilot.json'))),recorded=JSON.parse(fs.readFileSync(path.join(__dirname,'../data/route-verification.json')));
+function decode(s){let i=0,a=0,b=0,out=[];while(i<s.length){const get=()=>{let n=0,shift=0,v;do{v=s.charCodeAt(i++)-63;n|=(v&31)<<shift;shift+=5;}while(v>=32);return n&1?~(n>>1):n>>1;};a+=get();b+=get();out.push([b/1e6,a/1e6]);}return out;}
+const raw={trees:pilot.datasets.trees.features,lpc:pilot.datasets.lpc.features};
+assert(recorded.results.length>=2,'Need actual independent pedestrian API responses');
+const report=recorded.results.map(x=>{const coords=x.response.trip.legs.flatMap((l,i)=>i?decode(l.shape).slice(1):decode(l.shape));const r={id:x.id,coords};const sections=C.routeSegments(r,raw,pilot.bbox);assert(sections.every(f=>f.properties.nature!==null&&f.properties.architecture!==null));return {id:x.id,km:x.response.trip.summary.length,minutes:x.response.trip.summary.time/60,sections:sections.length,nature:C.aggregate(sections,'nature'),architecture:C.aggregate(sections,'architecture')};});
+assert(report.some(r=>r.nature!==report[0].nature));assert(report.some(r=>r.architecture!==report[0].architecture));
+fs.writeFileSync(path.join(__dirname,'../data/route-validation.json'),JSON.stringify({retrieved_at:recorded.retrieved_at,routes:report,notes:'Real recorded pedestrian responses and real source snapshot. Aggregation verified; experience calibration pending.'},null,2));console.log(report);

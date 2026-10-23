@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#081114" />
+  <meta name="description" content="Streetwise: explore Manhattan street data, weather and real pedestrian routes in an early interactive prototype." />
+  <title>STREETWISE · Manhattan Experience Navigator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css?v=8" />
+</head>
+<body>
+<div class="site-shell">
+  <header class="topbar">
+    <div class="brand-zone"><div class="brand-glyph" aria-label="Streetwise symbol"><span></span><span></span><span></span></div><div class="brand-name">STREETWISE<span class="brand-dot">.</span></div><span class="brand-location">MANHATTAN · NYC</span></div>
+    <div class="top-center"><span class="pulse-dot"></span><span>URBAN EXPERIENCE NAVIGATOR</span><span class="divider-vertical"></span><span class="badge-quiet">AGENT-READY · V0.4</span></div>
+    <div class="top-actions"><span id="topWeather" class="top-weather"><span class="tiny-sun">☁</span> Weather loading…</span><button id="openInfo" class="icon-button" title="About the prototype" aria-label="About"><span>i</span></button><button id="openKepler" class="kepler-btn"><span class="kepler-mark">◈</span> Kepler studio <span>↗</span></button></div>
+  </header>
+
+  <div class="app-layout">
+    <aside class="left-panel" id="leftPanel">
+      <div class="panel-scroll">
+        <div class="section-overline">01 / YOUR JOURNEY</div>
+        <div class="intro-row"><div><h1>Find your <em>kind</em><br>of walk.</h1><p>Not just the shortest way. Your way through the city.</p></div><span class="intro-star">✳</span></div>
+        <div class="field-group journey-fields">
+          <div class="field-top"><label for="searchStart">FROM</label><button id="gpsStart" class="mini-text-button" title="Requires permission">◎ Use GPS</button></div>
+          <div class="search-place"><span class="place-dot start"></span><input id="searchStart" aria-label="Search starting point or address" placeholder="Search address or landmark" autocomplete="off"><button id="pickStart" class="pick-pin" title="Pick start from map" aria-label="Pick start on map">⌖</button></div>
+          <div id="startResults" class="place-results hidden" role="listbox"></div>
+          <select id="startSelect" class="preset-select" aria-label="Or select a popular start"><option value="bryant">Bryant Park · selected</option><option value="times">Times Square</option><option value="rock">Rockefeller Center</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option><option value="gps">My current location</option></select>
+          <div class="field-top"><label for="searchEnd">TO</label><span>⌖ PICK ON MAP</span></div>
+          <div class="search-place"><span class="place-dot end"></span><input id="searchEnd" aria-label="Search destination or address" placeholder="Search address or landmark" autocomplete="off"><button id="pickEnd" class="pick-pin" title="Pick destination on map" aria-label="Pick destination on map">⌖</button></div>
+          <div id="endResults" class="place-results hidden" role="listbox"></div>
+          <select id="endSelect" class="preset-select" aria-label="Or select a popular destination"><option value="rock">Rockefeller Center · selected</option><option value="carnegie">Carnegie Hall</option><option value="times">Times Square</option><option value="bryant">Bryant Park</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option></select>
+        </div>
+
+        <div class="line-divider"></div>
+        <div class="section-row"><div class="section-overline">02 / TELL STREETWISE WHAT YOU WANT</div><span class="subtag">NATURAL LANGUAGE</span></div>
+        <p class="field-description">Describe the experience. You don't need to select any data layers.</p>
+        <textarea id="intentText" class="intent-box" rows="3" spellcheck="false" placeholder="I’d like a greener, quieter walk with interesting architecture, within 30 minutes.">I'd like a greener, quieter walk with interesting architecture, within 30 minutes.</textarea>
+        <button id="generateRoutes" class="primary-cta"><span id="ctaLabel">✦ Plan My Walk</span><span class="cta-arrow">↗</span></button>
+        <div id="interpretMode" class="interpret-mode" aria-live="polite">Checking AI interpretation service…</div>
+
+        <div class="line-divider"></div>
+        <div class="section-row"><div class="section-overline">03 / YOUR WALKING PREFERENCES</div><span id="preferenceSource" class="small-count">NOT INTERPRETED</span></div>
+        <p class="field-description">Streetwise turns your words into priorities; unmentioned dimensions stay neutral.</p>
+        <div id="preferenceSummary" class="preference-summary"><span class="status-empty">✧ Your interpreted priorities appear here after planning.</span></div>
+        <button id="expandDimensions" class="expand-button" aria-expanded="false" aria-controls="dimensionsPanel">View all 12 dimensions <span id="dimensionChevron">⌄</span></button>
+        <div id="dimensionsPanel" class="hidden">
+          <div class="dimension-head"><span>EXPERIENCE DIMENSION</span><span>PREFERENCE</span></div>
+          <div id="dimensionGrid" class="dimension-list"></div>
+          <button id="adjustPreferences" class="mini-outline" aria-pressed="false">✎ Adjust preferences</button>
+          <p class="preference-note">Weights indicate user preference (0–100), not objective city quality. Default 50 = not expressed. Only available comparable raw proxies influence experimental candidate ranking; 12D validated scores are pending.</p>
+        </div>
+
+        <div class="line-divider"></div>
+        <div class="section-row"><label for="timeRange" class="section-overline">04 / WALKING CONSTRAINTS</label><span id="timeValue" class="range-value">30 MIN</span></div>
+        <div class="field-description">MAX WALKING TIME · A HARD LIMIT</div>
+        <input id="timeRange" type="range" min="10" max="60" value="30" step="5" aria-label="Maximum walking time" />
+        <div class="range-labels"><span>10 MIN</span><span>60 MIN</span></div><label class="custom-limit">Custom maximum (minutes) <input type="number" id="customTime" min="1" max="240" step="1" value="30" aria-label="Custom walking time limit (1–240 minutes)"></label><label class="custom-limit">Maximum detour over shortest candidate (%) <input type="number" id="maxDetourPct" min="0" max="100" step="5" value="25" aria-label="Maximum detour percentage"></label>
+        <label class="constraint-check"><input id="avoidDetours" type="checkbox" checked> Avoid excessive detours <small>≤ 25% longer than baseline</small></label>
+        <label class="constraint-check"><input id="stepFree" type="checkbox"> Step-free access <small>verified pedestrian-access data required</small></label>
+        <label class="constraint-check"><input id="avoidStairs" type="checkbox"> Avoid stairs <small>excludes OpenStreetMap steps from routing</small></label>
+        <p id="constraintWarning" class="constraint-warning hidden">⚠ Step-free access needs verified curb-ramp and elevator data, which is not connected. Recommendations are blocked while this constraint is on.</p>
+
+        <section id="conversationSection" class="conversation-section hidden" aria-label="Streetwise conversation">
+          <div class="line-divider"></div>
+          <div class="section-row"><div class="section-overline">05 / REFINE YOUR WALK</div><span class="small-count">CONVERSATION</span></div>
+          <p class="field-description">Ask for changes. New route results and the map are recomputed when possible.</p>
+          <div id="chatHistory" class="chat-history" role="log" aria-live="polite"></div>
+          <form id="chatForm" class="chat-form"><textarea id="chatInput" rows="2" placeholder="Make it quieter, even if it takes five more minutes…" aria-label="Follow-up route instructions"></textarea><button id="chatSend" type="submit" aria-label="Send instruction">↗</button></form>
+          <div class="chat-hint">Enter to send · Shift + Enter for a new line</div>
+        </section>
+
+      </div>
+      <div class="side-bottom"><span class="online-mark"></span><span id="sourceStatus">CONNECTING TO NYC DATA…</span><button id="toggleData" class="source-action">DATA ↗</button></div>
+    </aside>
+
+    <main class="map-workspace" id="mapWorkspace">
+      <div id="map" role="application" aria-label="Interactive map of Manhattan with NYC Street Centerline data"></div>
+      <div id="mapFallback" class="map-fallback" aria-live="polite"><div class="fallback-loader"></div><h2>Connecting to the city</h2><p>Loading the Manhattan basemap and official NYC street-centerline data.</p></div>
+      <div class="map-mode-control" role="group" aria-label="Map mode"><button id="modeNavigate" aria-pressed="true">Navigate</button><button id="modeExplore" aria-pressed="false">Explore Urban Data</button></div>
+      <details class="experience-controls"><summary>Street evidence ▾</summary><label for="experienceDimension">Dimension</label><select id="experienceDimension"></select><label for="experienceView">Display</label><select id="experienceView"><option value="evidence">Street evidence · raw units</option><option value="raw">Original points / polygons</option><option value="score">Validated score · 0–100</option></select><div class="experience-checks"><label><input id="layerExperience" type="checkbox" checked> Experience</label><label><input id="layerCoverage" type="checkbox" checked> Coverage</label></div><button id="analyzeView">Analyze current view</button><button id="exportExperience">Export sections to Kepler.gl</button><p id="experienceStatus" role="status">Scores require calibration. Unknown ≠ zero.</p></details>
+      <section id="explorePanel" class="explore-panel hidden" aria-label="Manhattan street experience map">
+        <div class="explore-head"><div class="explore-heading"><div class="explore-eyebrow">ALL MANHATTAN · STREET SEGMENTS</div><strong id="exploreTitle">Nature</strong></div><button id="exploreThumbsToggle" class="explore-collapse" aria-pressed="false" title="Show all 13 maps side by side" aria-label="Show all 13 small maps">▦</button><button id="exploreCollapse" class="explore-collapse" aria-expanded="true" title="Collapse panel" aria-label="Collapse panel">–</button></div>
+        <div class="explore-ramp"><span id="exploreRampLow">0</span><i></i><span id="exploreRampHigh">100</span><span class="ramp-na"><s></s>N/A</span></div>
+        <div id="exploreBody" class="explore-body">
+          <div id="exploreChips" class="explore-chips" role="radiogroup" aria-label="Map dimension"></div>
+          <div id="exploreGrid" class="explore-grid hidden" aria-label="13 maps side by side"></div>
+          <p id="exploreMetric" class="explore-metric"></p>
+          <label class="explore-opacity">Line opacity <input id="exploreOpacity" type="range" min="20" max="100" value="90" aria-label="Street line opacity"></label>
+          <p id="exploreStatus" class="explore-note" role="status">Loading 12-dimension street data…</p>
+        </div>
+      </section>
+      <div id="exploreTooltip" class="explore-tooltip hidden" role="tooltip"></div>
+      <aside id="exploreInspector" class="explore-inspector hidden" aria-label="Street Segment Inspector" aria-live="polite"></aside>
+      <div id="selectedRouteSummary" class="selected-route-summary" aria-live="polite">Choose a journey to compare real walking routes.</div>
+      <details class="map-layer-switch" aria-label="Map layer toggles"><summary class="map-layer-head">Layers ▾</summary><div class="layer-chips"><label class="switch-chip"><input type="checkbox" id="layerRoads" checked><span class="chip-square roads"></span> Streets</label><label class="switch-chip"><input type="checkbox" id="layerTrees"><span class="chip-square trees"></span> Trees</label><label class="switch-chip"><input type="checkbox" id="layerLpc"><span class="chip-square lpc"></span> Landmarks</label><label class="switch-chip"><input type="checkbox" id="layerRoutes" checked><span class="chip-square routes"></span> Routes</label><label class="switch-chip"><input type="checkbox" id="layerPOIs" checked><span class="chip-square poi-chip"></span> POIs</label><button id="retryStreets" class="switch-chip" title="Retry incomplete Manhattan data loading">↻ Streets</button></div></details>
+      <div class="map-actions"><button id="mapLocate" title="Locate me" aria-label="Locate me">◎</button><button id="toggleLegend" title="Toggle legend" aria-label="Toggle legend" aria-pressed="true">≡</button><button id="mapReset" title="Reset map view" aria-label="Reset map view">⤢</button></div>
+      <div id="pickNotice" class="pick-notice hidden">Click anywhere on the map to set a point. <button id="cancelPick">CANCEL</button></div>
+      <div class="map-legend"><div class="legend-title"><span id="legendDot" class="legend-dot"></span><span id="legendTitle">MANHATTAN STREET NETWORK</span></div><p id="legendSubtitle">Official NYC centerlines (Manhattan borough filter); walkability not confirmed.</p><div id="legend-scale" class="legend-scale hidden"><span><i style="background:#365c64"></i>Lower</span><span><i style="background:#37bfc8"></i>Mid</span><span><i style="background:#d8f365"></i>Higher</span></div></div>
+      <div class="map-footer"><span>© OpenStreetMap · CARTO basemap</span><span class="map-verified">● Manhattan-wide street geometries / Experimental layers</span><span id="mapCoords">40.758° N · 73.984° W</span></div>
+      <div class="mobile-bottom"><button id="mobilePlan" class="mobile-bottom-btn">☷ Plan</button><button id="mobileResults" class="mobile-bottom-btn">◈ Results</button></div>
+    </main>
+
+    <aside class="right-panel" id="rightPanel">
+      <div class="right-scroll">
+        <div class="right-head"><div><div class="section-overline">ROUTE INTELLIGENCE</div><h2>Your route <span>explained.</span></h2></div><span class="results-symbol">↗</span></div>
+        <div class="context-row"><div class="context-card"><span class="context-label">LIVE WEATHER</span><strong id="weatherMain">—</strong><span id="weatherMeta">Awaiting forecast</span></div><div class="context-card"><span class="context-label">GPS STATUS</span><strong id="gpsMain">OFF</strong><span id="gpsMeta">Location unavailable</span></div></div>
+        <p class="context-updated" id="contextUpdated">Weather observation time: unavailable</p>
+        <div class="subtle-divider"></div>
+        <div class="section-row"><div class="section-overline">AI RECOMMENDED ROUTES</div><span class="small-count" id="routeCount">0 LOADED</span></div>
+        <p class="soft-copy">Real routes from the STREETWISE engine on the OpenStreetMap pedestrian graph, ranked by your preferences on the same 12 experience scores as Explore.</p>
+        <div id="rankingStatus" class="ranking-status">No route data yet.</div>
+        <div class="route-cards" id="routeCards"><div class="empty-route"><strong>No routes generated yet</strong><p>Set your journey to compare real pedestrian paths.</p></div></div>
+        <div class="subtle-divider"></div>
+        <div class="section-overline">✦ WHY THIS ROUTE?</div><div class="why-box" id="whyRoute">Generate routes to see evidence-grounded reasons.</div>
+        <div class="subtle-divider"></div>
+        <div class="section-row"><div class="section-overline">ROUTE EDGES</div><span id="edgeCount" class="small-count">0</span></div>
+        <details class="route-edges"><summary>Ordered OSM pedestrian edges</summary><div id="routeEdgeList" class="edge-list"><p class="soft-copy">Select a route to list the OSM pedestrian edges it uses, in order.</p></div></details>
+        <div class="subtle-divider"></div>
+        <div class="section-row"><div class="section-overline">EXPERIENCE PROFILE</div><span id="profileMode" class="small-count">NOT AVAILABLE</span></div>
+        <div class="profile-toggle" role="group" aria-label="Experience profile display"><button id="profileSelected" aria-pressed="true" type="button">Selected route</button><button id="profileCompare" aria-pressed="false" type="button">Compare routes</button></div>
+        <div class="profile-chart" id="profileChart"><div class="chart-empty"><p>Validated dimension scores will appear only when a documented calibration method is available.</p></div></div>
+        <div class="chart-annotation" id="chartNote">Dimension Score ≠ Preference Weight. Missing is not zero.</div>
+        <div class="subtle-divider"></div>
+        <div class="section-row"><div class="section-overline">DISCOVER ALONG YOUR WALK</div><span id="poiCount" class="small-count">0 VERIFIED</span></div>
+        <p class="soft-copy">Named OpenStreetMap POIs within 100 m of the selected real route. Live service may be unavailable.</p>
+        <div id="poiList" class="poi-list"><p class="status-empty">Select a walking route to search nearby points of interest.</p></div>
+        <div class="subtle-divider"></div>
+        <div class="section-overline">REFINE YOUR WALK</div>
+        <div class="refine-actions"><button type="button" data-refine="nature">More Nature</button><button type="button" data-refine="quiet">Quieter Streets</button><button type="button" data-refine="architecture">More Architecture</button><button type="button" data-refine="shorter">Shorter Walk</button></div>
+        <p class="field-description">Each action updates state and requests fresh pedestrian candidate routes. A preference without evidence will not be claimed as achieved.</p>
+        <div class="subtle-divider"></div>
+        <details class="research-details"><summary>RESEARCH / RAW STREET EVIDENCE</summary>
+          <div id="segmentDetail" class="segment-detail"><p class="soft-copy">Click a street segment to inspect its recorded attributes.</p></div><button id="clearSelection" class="mini-text-button" type="button">Clear selected street</button>
+        </details>
+        <button type="button" id="openMethodology" class="method-button">DATA &amp; METHODOLOGY ↗</button>
+      </div>
+      <div class="right-bottom"><button id="exportKepler" class="export-button"><span>◈</span> Export GIS data for Kepler.gl <span>↗</span></button></div>
+    </aside>
+  </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="modalOverlay" class="modal-overlay hidden"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button id="closeModal" class="modal-close" title="Close">✕</button><div class="section-overline">PROJECT NOTES / TRANSPARENCY</div><h2 id="modalTitle">What is real, and what's next.</h2><div id="modalContent"></div></div></div>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="./experience-core.js?v=8"></script>
+<script src="./app.js?v=8"></script>
+<script src="./route-client.js?v=8"></script>
+<script src="./explore-map.js?v=8"></script>
+<script src="./center-map.js?v=8"></script>
+</body>
+</html>

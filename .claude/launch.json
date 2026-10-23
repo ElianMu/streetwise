@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {"name": "streetwise", "runtimeExecutable": "env", "runtimeArgs": ["PORT=8090", "python3", "server.py"], "port": 8090}
+  ]
+}

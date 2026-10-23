@@ -1,0 +1,30 @@
+{
+  "retrieved_at": "2026-10-23T01:13:37.768926+00:00",
+  "routes": [
+    {
+      "id": "direct",
+      "km": 0.949,
+      "minutes": 11.450033333333332,
+      "sections": 12,
+      "nature": 174.7454133278692,
+      "architecture": 36.84391244864712
+    },
+    {
+      "id": "times",
+      "km": 1.51,
+      "minutes": 18.204066666666666,
+      "sections": 19,
+      "nature": 89.69455188594564,
+      "architecture": 21.104600443751917
+    },
+    {
+      "id": "nypl",
+      "km": 1.132,
+      "minutes": 13.602966666666667,
+      "sections": 15,
+      "nature": 171.2525075516339,
+      "architecture": 42.37175444576509
+    }
+  ],
+  "notes": "Real recorded pedestrian responses and real source snapshot. Aggregation verified; experience calibration pending."
+}
