@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"F14","station_id":"232","complex_id":"232","stop_name":"2 Av","daytime_routes":"F","line":"6th Av - Culver","structure":"Subway","ada":"0","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.989938,40.723402]}}]}

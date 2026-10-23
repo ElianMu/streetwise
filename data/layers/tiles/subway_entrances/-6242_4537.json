@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"A05-161","stop_name":"190 St","daytime_routes":"A","line":"8th Av - Fulton St","division":"IND","entrance_type":"Stair","entry_allowed":"YES","exit_allowed":"YES","station_id":"145","gtfs_stop_id":"A05"},"geometry":{"type":"Point","coordinates":[-73.934222,40.858902]}}]}

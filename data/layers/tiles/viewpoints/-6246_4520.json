@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/4200886990","tourism":"viewpoint"},"geometry":{"type":"Point","coordinates":[-73.990231,40.704817]}},{"type":"Feature","properties":{"feature_id":"node/4631363792","name":"Manhattan Bridge Viewpoint","tourism":"viewpoint"},"geometry":{"type":"Point","coordinates":[-73.988082,40.705048]}}]}

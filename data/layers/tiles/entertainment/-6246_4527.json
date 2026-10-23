@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/6392122786","addr:housenumber":"10","addr:street":"Columbus Circle","amenity":"nightclub","name":"Dizzy’s Club","operator":"Jazz at Lincoln Center","website":"https://www.jazz.org/dizzys/"},"geometry":{"type":"Point","coordinates":[-73.982428,40.768569]}}]}

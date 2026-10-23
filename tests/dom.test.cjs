@@ -4,7 +4,7 @@ const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.
 const dom=new JSDOM(html,{runScripts:'outside-only',url:'http://localhost:8080'}),w=dom.window;
 w.fetch=async()=>{throw new Error('Network intentionally blocked in DOM test')};w.HTMLElement.prototype.scrollIntoView=function(){};w.AbortSignal.timeout=()=>new w.AbortController().signal;
 const vm=require('vm'),context=dom.getInternalVMContext();
-for(const file of ['experience-core.js','app.js','route-client.js','urban-layers.js','explore-map.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
+for(const file of ['experience-core.js','api-config.js','app.js','route-client.js','urban-geo.js','urban-layers.js','explore-map.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
 const run=s=>vm.runInContext(s,context);
 (async()=>{
  assert.equal(w.document.querySelectorAll('#experienceDimension option').length,12);
@@ -43,13 +43,12 @@ const run=s=>vm.runInContext(s,context);
  run("applyInterpretation({weights:{},time_minutes:95},'local')");assert.equal(run('state.budget'),95);assert.equal(tr().max,'95');
  // AI Journey → routing engine: a recorded real /api/routes response (tests/fixtures, produced by routing/engine.py).
  const fixture=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/route-response.json')));
- const calls=[];w.fetch=async(url,opts={})=>{calls.push({url:String(url),body:opts.body&&JSON.parse(opts.body)});
-  if(String(url).endsWith('/api/routes'))return {ok:true,json:async()=>JSON.parse(JSON.stringify(fixture))};
-  if(String(url).endsWith('/api/layers'))return {ok:true,json:async()=>JSON.parse(fs.readFileSync(path.join(root,'data/layers/registry.json')))};
-  if(String(url).includes('/api/layers/street_trees?route_id='))return {ok:true,json:async()=>JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/layer-street-trees-along-route.json')))};
-  if(String(url).includes('/api/segments/')){const id=decodeURIComponent(String(url).split('/api/segments/')[1]),f=w.STREETWISE_STREETS.features.find(x=>x.properties.id===id),m=w.STREETWISE_STREETS.metadata,dims=run('DIMENSIONS').map(d=>d.name);
-   return {ok:true,json:async()=>({segment_id:id,street_name:f.properties.name,dimension_scores:Object.fromEntries(dims.map((d,i)=>[d,f.properties['d'+i]])),sub_indicators:Object.fromEntries(dims.map((d,i)=>[d,m.indicators[m.keys[i]].map(x=>({...x,value:f.properties[x.key]}))])),data_sources:m.source_labels})};}
-  if(String(url).endsWith('/api/navigation/progress'))return {ok:true,json:async()=>({state:'off_route',distance_from_route_m:82,remaining_m:700,remaining_min:9,reroute_recommended:true})};
+ // Response-like stub: JSON bodies with headers, and the real static catalog/tiles read from disk.
+ const resp=(obj,status=200,type='application/json')=>({ok:status<400,status,headers:{get:k=>k.toLowerCase()==='content-type'?type:null},json:async()=>typeof obj==='string'?JSON.parse(obj):JSON.parse(JSON.stringify(obj)),text:async()=>typeof obj==='string'?obj:JSON.stringify(obj)});
+ const calls=[];w.fetch=async(url,opts={})=>{url=String(url);calls.push({url,body:opts.body&&JSON.parse(opts.body)});
+  if(url.endsWith('/api/routes'))return resp(fixture);
+  if(url.startsWith('./data/layers/')){const f=path.join(root,url.slice(2));return fs.existsSync(f)?resp(fs.readFileSync(f,'utf8')):resp('<!DOCTYPE html><title>404</title>',404,'text/html');}
+  if(url.endsWith('/api/navigation/progress'))return resp({state:'off_route',distance_from_route_m:82,remaining_m:700,remaining_min:9,reroute_recommended:true});
   throw new Error('Network intentionally blocked in DOM test')};
  run("planner.weights.Nature=90;planner.origins.Nature='manual';planner.directions.Nature='high';setBudget(72);planner.maxDetourPct=25");
  await run('generateRoutes()');
@@ -70,28 +69,55 @@ const run=s=>vm.runInContext(s,context);
  assert(Math.abs(best.edges.reduce((s,e)=>s+e.traversed_length_m,0)-best.distance_m)<1);
  // Route-edge click (AI Journey) is a different inspector from the Explore segment inspector.
  const matched=best.edges.find(e=>e.matched_segment_ids.length);run(`selectRouteEdge(${best.edges.indexOf(matched)})`);
- const edgeHtml=w.document.querySelector('#segmentDetail').textContent;assert(edgeHtml.includes('Route Segment Inspector'));assert(edgeHtml.includes(matched.edge_id));assert(edgeHtml.includes(matched.matched_segment_ids[0]));assert(edgeHtml.includes(matched.street_name));
- const unmatched=best.edges.find(e=>!e.matched_segment_ids.length);run(`selectRouteEdge(${best.edges.indexOf(unmatched)})`);
- assert(w.document.querySelector('#segmentDetail').textContent.includes('Unmatched'));assert(!/MN-\d/.test(w.document.querySelector('#segmentDetail dl').textContent),'an unmatched edge must not show a LION ID');
- // Urban Data Layers: registry, 12 dimension groups, real toggle → along-route request, raw feature inspector, clear all.
- const panel=w.document.querySelector('#urbanLayers');assert(!panel.open,'panel starts collapsed');panel.open=true;await run('openUrbanPanel()');
- assert.equal(w.document.querySelectorAll('#urbanDims .urban-dim').length,12);
- assert.equal(JSON.stringify([...w.document.querySelectorAll('#urbanDims .urban-dim')].map(d=>d.dataset.dim)),JSON.stringify(run('ExperienceCore.keys')));
- assert(w.document.querySelectorAll('#urbanDims .urban-layer.unavailable').length>=10);assert(w.document.querySelector('#urbanDims').textContent.includes('Unavailable'));
- assert(w.document.querySelector('[data-dim="nature"]').textContent.includes('Street & park trees (live)'));assert(w.document.querySelector('[data-dim="walkability"]').textContent.includes('Context only'));
- run(`selectRoute(${JSON.stringify(best.route_id)})`);
- const tog=w.document.querySelector('[data-layer-toggle="street_trees"]');tog.checked=true;tog.dispatchEvent(new w.Event('change'));await new Promise(r=>setTimeout(r,50));
- const lreq=calls.filter(c=>c.url.includes('/api/layers/street_trees')).at(-1).url;assert(lreq.includes('route_id='+best.route_id)&&lreq.includes('distance=30'),lreq);
- assert(w.document.querySelector('[data-layer-opacity="street_trees"]').closest('.urban-live').textContent.includes('81 within 30 m'));
- assert.equal(run('urbanLayers.focusDim'),'nature');
- const tree=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/layer-street-trees-along-route.json'))).features[0];
- const fh=run(`urbanFeatureHtml('street_trees',${JSON.stringify(tree.properties)})`);assert(fh.includes(tree.properties.feature_id)&&fh.includes(tree.properties.genusspecies)&&fh.includes('NYC Parks via NYC Open Data'));assert(!fh.includes('undefined'));
- // Route Segment Inspector follows the focused dimension (Nature): score + its sub-indicators from the matched LION segment.
  await run(`showRouteEdgeInspector(state.routes.find(r=>r.id===state.activeRoute).raw.edges[${best.edges.indexOf(matched)}])`);
- const rsi=w.document.querySelector('#segmentDetail').textContent;assert(rsi.includes('Nature · Experience Score'));assert(rsi.includes('Living street trees per km'));assert(rsi.includes('NYC Parks Forestry Tree Points'));
- w.document.querySelector('#urbanClear').click();assert.equal(run('urbanLayers.active.size'),0);
- // Display range never changes route scores.
- const scoresBefore=JSON.stringify(run('state.routes.map(r=>r.raw.dimension_scores)'));run("urbanLayers.distance='300';refreshUrbanLayers()");assert.equal(JSON.stringify(run('state.routes.map(r=>r.raw.dimension_scores)')),scoresBefore);
+ const uinsp=()=>w.document.querySelector('#urbanInspector');assert(!uinsp().classList.contains('hidden'));
+ let ev=uinsp().textContent;assert(ev.includes('STREET SEGMENT EVIDENCE')&&ev.includes(matched.edge_id)&&ev.includes(matched.matched_segment_ids[0])&&ev.includes(matched.street_name));
+ // Evidence counts equal a brute-force scan of every tile (not only the tiles the page picked).
+ const G=run('UrbanGeo'),catalog=JSON.parse(fs.readFileSync(path.join(root,'data/layers/catalog.json')));
+ const allTiles=ts=>Object.keys(catalog.tilesets[ts].tiles).flatMap(k=>JSON.parse(fs.readFileSync(path.join(root,'data/layers/tiles',ts,k+'.json'))).features);
+ const nTrees=G.alongLine(allTiles('street_trees'),matched.geometry.coordinates,30).length;
+ const treeRow=[...uinsp().querySelectorAll('.evidence-row')].find(r=>r.textContent.startsWith('Street trees'));assert(treeRow.textContent.includes(`${nTrees} within 30 m`),treeRow.textContent);
+ assert(ev.includes('Raw feature count')&&ev.includes('Spatial density')&&ev.includes('Nearest distance')&&ev.includes('Area coverage')&&ev.includes('context only'));
+ assert(uinsp().querySelector('.evidence-scoring').textContent.includes('Living street trees per km'),'existing scoring indicators are labelled separately');
+ await run(`showRouteEdgeInspector(state.routes.find(r=>r.id===state.activeRoute).raw.edges[${best.edges.indexOf(best.edges.find(e=>!e.matched_segment_ids.length))}])`);
+ assert(uinsp().textContent.includes('Unmatched'));assert(!/MN-\d/.test(uinsp().querySelector('dl').textContent),'an unmatched edge must not show a LION ID');
+ // Urban Data Layers: dataset catalog (not dimensions), statuses, search.
+ const panel=w.document.querySelector('#urbanLayers');assert(!panel.open,'panel starts collapsed');panel.open=true;await run('openUrbanPanel()');
+ assert.equal(w.document.querySelectorAll('#urbanCats .urban-cat').length,10);
+ const catText=w.document.querySelector('#urbanCats').textContent;assert(catText.includes('Streets & Pedestrian Infrastructure')&&catText.includes('Available · not connected')&&catText.includes('Missing'));const heads=[...w.document.querySelectorAll('#urbanCats .urban-cat > summary span')].map(x=>x.textContent);assert(!heads.some(h=>run('DIMENSIONS').some(d=>h===d.name)),'categories are datasets, not experience dimensions');
+ assert(w.document.querySelector('[data-ud-toggle="air_quality"]')===null,'unconnected datasets cannot be switched on');
+ w.document.querySelector('#urbanSearch').value='tree';w.document.querySelector('#urbanSearch').dispatchEvent(new w.Event('input'));
+ assert(w.document.querySelector('[data-ud-toggle="street_trees"]')&&!w.document.querySelector('[data-ud-toggle="restaurants"]'));
+ w.document.querySelector('#urbanSearch').value='';w.document.querySelector('#urbanSearch').dispatchEvent(new w.Event('input'));
+ // Along the selected route (default 100 m): counts equal the brute-force reference; layers survive a route switch.
+ const ref=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/urban-along-route.json')));
+ run(`selectRoute(${JSON.stringify(best.route_id)})`);
+ for(const id of ['street_trees','landmarks','historic_districts']){run(`toggleUrbanDataset('${id}',true)`);}
+ await new Promise(r=>setTimeout(r,300));
+ const status=id=>w.document.querySelector(`[data-ud-status="${id}"]`).textContent;
+ assert.equal(status('street_trees'),`${Object.keys(ref.datasets.street_trees).length} within 100 m`);assert.equal(status('landmarks'),`${Object.keys(ref.datasets.landmarks).length} within 100 m`);
+ assert.equal(w.document.querySelector('#urbanActiveTitle').textContent,'ACTIVE LAYERS: 3');
+ run(`selectRoute(${JSON.stringify(ref.alt_route_id)})`);await new Promise(r=>setTimeout(r,300));
+ assert.equal(run('urbanData.active.size'),3,'layers kept after switching routes');assert.equal(status('landmarks'),`${Object.keys(ref.alt.landmarks).length} within 100 m`);
+ run(`selectRoute(${JSON.stringify(best.route_id)})`);await new Promise(r=>setTimeout(r,300));
+ // Route Urban Data summary = the same spatial query as the map.
+ await run('renderRouteUrbanData()');
+ const item=k=>[...w.document.querySelectorAll('#routeUrbanData .route-urban-item')].find(b=>b.textContent.startsWith(k)).querySelector('strong').textContent;
+ assert.equal(item('Trees'),String(Object.keys(ref.datasets.street_trees).length));
+ assert.equal(item('Restaurants & cafés'),String(Object.keys(ref.datasets.restaurants).length+Object.keys(ref.datasets.cafes).length));
+ assert.equal(item('Transit stops'),String(Object.keys(ref.datasets.subway_entrances).length+Object.keys(ref.datasets.bus_stops).length));
+ assert(item('Pedestrian crashes').startsWith(`${Object.keys(ref.datasets.pedestrian_crashes).length} · Crashes`));
+ run("urbanData.byId.get('bus_stops').status='MISSING'");await run('renderRouteUrbanData()');assert.equal(item('Transit stops'),'Data Unavailable');run("urbanData.byId.get('bus_stops').status='CONNECTED'");
+ // Urban Feature Inspector: real fields, Not Available for missing ones, historical note for crashes, source link.
+ const crash=allTiles('pedestrian_crashes').find(f=>f.properties.feature_id in ref.datasets.pedestrian_crashes&&!f.properties.off_street_name);
+ const fh=run(`urbanFeatureHtml(urbanData.byId.get('pedestrian_crashes'),${JSON.stringify({...crash.properties,distance_to_route_m:12})})`);
+ assert(fh.includes(crash.properties.feature_id)&&fh.includes(crash.properties.crash_date)&&fh.includes('Not Available')&&fh.includes('Historical record')&&fh.includes('h9gi-nx95')&&fh.includes('12 m from the route'));assert(!fh.includes('undefined'));
+ w.document.querySelector('#urbanClear').click();assert.equal(run('urbanData.active.size'),0);assert.equal(w.document.querySelector('#urbanActiveTitle').textContent,'ACTIVE LAYERS: 0');
+ assert(!calls.some(c=>c.url.includes('/api/layers')),'urban data comes from static files, never the old /api/layers');
+ // A missing static file is reported plainly, not as a JSON parse error.
+ await assert.rejects(run("streetwiseJson('./data/layers/tiles/nope/0_0.json')"),/HTML page/);
+ // Display corridor never changes route scores.
+ const scoresBefore=JSON.stringify(run('state.routes.map(r=>r.raw.dimension_scores)'));run("urbanData.corridor=500;refreshUrbanLayers()");assert.equal(JSON.stringify(run('state.routes.map(r=>r.raw.dimension_scores)')),scoresBefore);run('urbanData.corridor=100');
  assert(w.document.querySelector('#exploreInspector').classList.contains('hidden'));
  run(`selectRoute(${JSON.stringify(fixture.routes[1].route_id)})`);assert.equal(run('state.activeRoute'),fixture.routes[1].route_id);
  assert.equal(w.document.querySelectorAll('#routeEdgeList .edge-row').length,fixture.routes[1].ordered_edge_ids.length);
@@ -113,5 +139,5 @@ const run=s=>vm.runInContext(s,context);
  Object.defineProperty(w.navigator,'geolocation',{value:{getCurrentPosition:(good,bad)=>bad({code:3,message:'timeout'})},configurable:true});run('requestGPS()');assert.equal(w.document.querySelector('#gpsMain').textContent,'TIMED OUT');
  // Slider change must request fresh geometry, rather than merely recoloring.
  run("planner.constraints.stepFree=false;planner.adjust=true;renderDimensions();globalThis.replans=0;");const slider=w.document.querySelector('[data-weight="Nature"]');slider.value='80';slider.dispatchEvent(new w.Event('input'));slider.dispatchEvent(new w.Event('change'));await new Promise(r=>setTimeout(r,750));assert.equal(w.replans,1);
- console.log('DOM PASS: walking-time default/sync/validation/API, urban data layers (12 groups, unavailable, toggle→along-route, feature inspector, clear), route segment inspector (matched/unmatched/focus), mode, 13 explore views, segment inspector (single + overall, N/A), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
+ console.log('DOM PASS: walking-time default/sync/validation/API, urban data catalog (10 dataset categories, statuses, search), along-route counts = brute-force reference, route switch keeps layers, route urban data summary, feature inspector, segment evidence (matched/unmatched), static JSON errors, mode, 13 explore views, segment inspector (single + overall, N/A), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});

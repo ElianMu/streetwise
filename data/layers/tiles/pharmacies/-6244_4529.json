@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/5057178207","addr:housenumber":"691","addr:street":"Columbus Avenue","amenity":"pharmacy","name":"Ivan Pharmacy","opening_hours":"Mo-Fr 09:00-19:00, Sa 09:30-18:00","operator":"Ivan","website":"https://ivanpharmacy.com/"},"geometry":{"type":"Point","coordinates":[-73.968415,40.791199]}}]}

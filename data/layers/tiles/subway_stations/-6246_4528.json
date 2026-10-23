@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"123","station_id":"313","complex_id":"313","stop_name":"72 St","daytime_routes":"1 2 3","line":"Broadway - 7Av","structure":"Subway","ada":"1","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.98197,40.778453]}}]}

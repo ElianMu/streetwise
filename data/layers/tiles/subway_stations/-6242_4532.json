@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"224","station_id":"438","complex_id":"438","stop_name":"135 St","daytime_routes":"2 3","line":"Lenox - White Plains Rd","structure":"Subway","ada":"1","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.94077,40.814229]}}]}

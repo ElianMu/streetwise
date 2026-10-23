@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"A05","station_id":"145","complex_id":"145","stop_name":"190 St","daytime_routes":"A","line":"8th Av - Fulton St","structure":"Subway","ada":"0","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.93418,40.859022]}}]}

@@ -15,7 +15,6 @@ import time
 from urllib import request, error
 from urllib.parse import unquote, urlsplit, parse_qs
 from routing.engine import get_planner, reset_planner, RoutingError, DIMENSIONS as ROUTE_DIMENSIONS, MIN_WALK_MINUTES
-from routing.layers import get_store, reset_store, LayerError
 
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
@@ -226,9 +225,6 @@ class Handler(SimpleHTTPRequestHandler):
             i = net.by_id.get(unquote(self.path[len('/api/edges/'):]))
             self.send_json(200, net.edge_object(i)) if i is not None else self.send_json(404, {'error': 'Unknown OSM edge ID (expected "u-v-key")'})
             return
-        if self.path.startswith('/api/layers'):
-            self.handle_layers()
-            return
         if self.path.startswith('/api/segments/'):
             seg = street_segment(unquote(self.path[len('/api/segments/'):]))
             self.send_json(200, seg) if seg else self.send_json(404, {'error': 'Unknown analysis segment ID'})
@@ -236,39 +232,6 @@ class Handler(SimpleHTTPRequestHandler):
         if self.send_gzipped():
             return
         return super().do_GET()
-
-    def handle_layers(self):
-        """GET /api/layers (registry) and /api/layers/{id}?bbox=w,s,e,n | ?route_id=…&distance=m."""
-        url = urlsplit(self.path); q = {k: v[0] for k, v in parse_qs(url.query).items()}
-        lid = unquote(url.path[len('/api/layers'):].strip('/'))
-        try:
-            store = get_store()
-            if not lid:
-                self.send_json(200, store.registry); return
-            if 'route_id' in q:
-                with get_planner().lock:
-                    route = get_planner().routes.get(q['route_id'])
-                if not route:
-                    raise RoutingError('Unknown or expired route_id; plan the route again.')
-                dist = float(q['distance']) if q.get('distance') else None
-                self.send_json(200, {**store.along_route(lid, route['geometry']['coordinates'], dist), 'route_id': q['route_id']})
-            elif 'bbox' in q:
-                bbox = [float(x) for x in q['bbox'].split(',')]
-                if len(bbox) != 4:
-                    raise ValueError('bbox must be west,south,east,north')
-                self.send_json(200, store.in_view(lid, bbox))
-            else:
-                raise ValueError('Use ?bbox=west,south,east,north or ?route_id=…')
-        except FileNotFoundError:
-            self.send_json(503, {'error': 'Urban data layers not built; run scripts/build_urban_layers.py'})
-        except LayerError as e:
-            self.send_json(404 if 'Unknown layer' in str(e) or 'unavailable' in str(e) else 400, {'error': str(e)})
-        except RoutingError as e:
-            self.send_json(422, {'error': str(e)})
-        except (ValueError, TypeError) as e:
-            self.send_json(400, {'error': str(e)})
-        except RuntimeError as e:
-            self.send_json(503, {'error': str(e)})
 
     def send_gzipped(self):
         """Serve text assets gzip-compressed (the 12-dimension street file shrinks ~5x)."""
@@ -378,10 +341,9 @@ def refresh_street_data_if_stale():
         _segments = None
         reset_planner()
         print('Street data and edge scores refreshed.')
-        # Map layers are refreshed from the same day's sources; they need OSMnx, and a failure keeps the previous layers.
+        # Static urban data tiles are rebuilt from the same day's sources; they need OSMnx, and a failure keeps the previous tiles.
         result = subprocess.run([sys.executable, str(ROOT / 'scripts' / 'build_urban_layers.py')], capture_output=True, text=True)
-        reset_store()
-        print('Urban data layers refreshed.' if result.returncode == 0 else 'Urban data layers not refreshed (previous layers kept):\n' + result.stderr[-400:])
+        print('Urban data tiles refreshed.' if result.returncode == 0 else 'Urban data tiles not refreshed (previous tiles kept):\n' + result.stderr[-400:])
     threading.Thread(target=run, daemon=True).start()
 
 if __name__ == '__main__':

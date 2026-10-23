@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"110-470","stop_name":"191 St","daytime_routes":"1","line":"Broadway - 7Av","division":"IRT","entrance_type":"Station House","entry_allowed":"YES","exit_allowed":"YES","station_id":"300","gtfs_stop_id":"110"},"geometry":{"type":"Point","coordinates":[-73.929536,40.855374]}}]}

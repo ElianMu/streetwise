@@ -387,7 +387,8 @@ function setupMap(){
       setupRouteEdgeLayer();setupUrbanMap();
       state.mapLayersReady=true; setupExperienceMap(); syncMapData();updateMapStyles();
       m.on('click','road-highlight',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit',...urbanMapLayerIds()]}).length)return;const feat=e.features?.[0];if(!feat)return;const fid=feat.properties?.FID;const real=state.streetsById.get(String(fid));state.selectedStreet=real||feat;updateSegmentDetails();});
-      m.on('click','route-alts',(e)=>{if(state.pick)return;const name=e.features?.[0]?.properties?.id;if(name)selectRoute(name)});
+      m.on('click','route-alts',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;  // a click on the selected route's segment opens its evidence instead
+      const name=e.features?.[0]?.properties?.id;if(name)selectRoute(name)});
       m.on('click','poi-points',(e)=>{if(state.pick)return;const f=e.features?.[0];if(f?.properties?.name)showPOIPopup(f,e.lngLat)});
       m.on('click',(e)=>{if(!state.pick)return;const kind=state.pick;const p={name:`Map point ${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}`,lat:e.lngLat.lat,lon:e.lngLat.lng};state[kind==='start'?'customStart':'customEnd']=p;state[kind]='custom';$(kind==='start'?'startSelect':'endSelect').value='custom';$(kind==='start'?'searchStart':'searchEnd').value=p.name;state.pick=null;$('pickNotice').classList.add('hidden');m.getCanvas().style.cursor='';resetRoutes();syncMapData();toast(`${kind==='start'?'Start':'Destination'} set from the map.`)});
       for(const layer of ['road-highlight','route-alts']){m.on('mouseenter',layer,()=>{m.getCanvas().style.cursor=state.pick?'crosshair':'pointer'});m.on('mouseleave',layer,()=>{m.getCanvas().style.cursor=state.pick?'crosshair':''})}
@@ -398,7 +399,7 @@ function setupMap(){
   }catch(err){ $('mapFallback').querySelector('h2').textContent='Map initialization failed';$('mapFallback').querySelector('p').textContent=err.message;}
 }
 
-function resetRoutes(keepRun=false){if(!keepRun)planner.runId++; planner.routeResponse=null;state.routes=[];state.activeRoute=null;planner.routePois=[];planner.poiStatus='Not loaded';renderPOIs();updateWhyRoute();renderRouteEdges();$('rankingStatus').textContent='Journey changed. Plan again to update route geometry.';renderRouteCards();updateProfile();syncMapData();}
+function resetRoutes(keepRun=false){if(!keepRun)planner.runId++; planner.routeResponse=null;state.routes=[];state.activeRoute=null;planner.routePois=[];planner.poiStatus='Not loaded';renderPOIs();updateWhyRoute();renderRouteEdges();if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();$('rankingStatus').textContent='Journey changed. Plan again to update route geometry.';renderRouteCards();updateProfile();syncMapData();}
 function routeBounds(routes,extraMeters=100){
   const all=routes.flatMap(r=>r.coords);
   if(!all.length)return null;

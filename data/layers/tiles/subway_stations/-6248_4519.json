@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"142","station_id":"330","complex_id":"635","stop_name":"South Ferry","daytime_routes":"1","line":"Broadway - 7Av","structure":"Subway","ada":"1","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-74.013664,40.702068]}}]}

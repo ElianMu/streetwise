@@ -15,9 +15,6 @@ All endpoints are served by `server.py` (standard library). Field names below ar
 | GET | `/api/edges/{u-v-key}` | **new** | One Pedestrian Edge Object |
 | GET | `/api/segments/{segment_id}` | **new** | One Street Segment Object |
 | POST | `/api/navigation/progress` | **new** | Position along a planned route (for future GPS navigation) |
-| GET | `/api/layers` | **new** | Urban Data Layer registry (datasets, dimensions, sub-indicators, distances, status) |
-| GET | `/api/layers/{id}?route_id=…&distance=m` | **new** | Real features within `distance` of a planned route (default = layer display distance) |
-| GET | `/api/layers/{id}?bbox=w,s,e,n` | **new** | Real features in the current view (refused with `too_many` above 6,000, never truncated) |
 
 Errors: `400` invalid input, `422` valid input the network cannot satisfy (too far from a path, unreachable,
 unknown route), `503` routing data not built. Every error body is `{"error": "..."}`.
@@ -98,12 +95,21 @@ in order, first/last may be `partial`], `distance_m`, `estimated_duration_min` (
 All callers were updated in the same change (`app.js`, `center-map.js`, `explore-map.js`, `route-client.js`, tests).
 The single-file demo (`STREETWISE_single_file_demo.html`) has no server, so it can show Explore but cannot route.
 
-## Urban Data Layers
+## Urban Data Layers (static, no API)
 
-`data/layers/registry.json` (built by `scripts/build_urban_layers.py`) lists every candidate layer with `id`, `name`,
-`dataset`, `source`, `url`, `geometry`, `dims` [{dimension, role: scoring|context, sub_indicators}], `processing`,
-`scoring_distance_m` (range the indicator uses), `display_distance_m` (default Along Route display range only),
-`attributes` (the original fields kept), `updated` (publisher's last update), `retrieved`, `feature_count`, `status`
-(`available` | `unavailable` + `reason`). Chain: raw records → sub-indicator → dimension score → route score.
-Features keep their dataset IDs as `feature_id` (e.g. Forestry `objectid`, NYPD `collision_id`, LPC number, OSM
-`node/123`) — never a street segment ID. Along Route results add `distance_to_route_m`.
+Navigate → Urban Data Layers reads static files only, so it works on GitHub Pages without the backend:
+`data/layers/catalog.json` and `data/layers/tiles/<tileset>/<tx>_<ty>.json` (1 km tiles in the catalog's local metric
+projection; a feature is stored in every tile its bounding box touches and de-duplicated by `feature_id`).
+Built by `scripts/build_urban_layers.py`; the former `/api/layers` endpoints were removed (they loaded whole layers
+into backend memory).
+
+Catalog entry: `id`, `name`, `categories` (10 data categories, not experience dimensions), `status`
+(`CONNECTED` | `AVAILABLE_NOT_CONNECTED` | `MISSING` | `UNAVAILABLE`), and for connected datasets `tileset`, optional
+`filter` (a documented view of a dataset, e.g. elevator entrances), `geometry`, `layer_type`, `source`, `source_url`,
+`last_updated` (publisher), `time_range` (computed from the records where dated), `attributes` (original fields kept),
+`used_in_scoring` + `scoring` [{dimension, sub_indicators}] (only datasets that feed the existing scores), `historical`,
+`note`, `style`, `min_zoom_view`, `feature_count`. Unconnected entries carry `reason`.
+
+Filtering (urban-geo.js, mirrored by routing/layers.py for tests): Along Selected Route keeps records whose geometry is
+within the display corridor (50/100/200/500 m) of the route LineString — polygons by intersection or edge distance, not
+centroid; Current Map View keeps records whose bounds intersect the view. Corridors never change scores.

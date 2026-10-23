@@ -34,11 +34,13 @@ No Python packages are required to run the server; rebuilding the OSM graph need
 
 The tree census is from 2015, not a live vegetation inventory. LPC and centerline observation years are unspecified in the source snapshot; retrieval time is not substituted for observation year. The 477 interior street sections exclude the 75 m bounding-box margin; this is a Midtown pilot, not complete Manhattan experience coverage. NYC centerlines are not automatically walkable graph edges.
 
-## Navigate: Urban Data Layers & walking time / 图层与步行时间
+## Navigate: Urban Data Layers / 路线周边城市数据
 
-- 地图左下角 **Urban Data Layers**（默认收起）：上方是导航图层（备选路线、路线 POI、LION 街网；所选路线与起终点始终显示），下方按 12 个体验维度分组的真实城市数据图层。范围可选 **Along route**（所选路线附近，按各图层显示距离）或 **Current view**；显示距离只影响绘制，从不改变评分。每个图层可开关、调透明度、查看数据集来源、参与评分的子指标与更新日期；没有接入数据的候选图层标为 Unavailable。点击数据点打开 Raw Data Feature（数据集原始 ID 与属性）；点击路线路段打开 Route Segment Inspector（OSM Edge ID、LION 路段或 Unmatched、当前维度评分与子指标）。
-- 步行时间默认 60 分钟，滑块 10–60；在 Custom maximum 输入更大的整数（如 72、120）后滑块自动扩展到该值。输入在失焦或回车时校验（≥10 的整数），无效输入恢复上一次有效值。该值原样发送给路线引擎作为硬约束，右侧显示引擎实际使用的限制。
-- 重建图层：`python3 scripts/build_urban_layers.py`（需要 OSMnx；约 3 分钟，图层约 20 MB）。
+- 地图左下角 **Urban Data Layers**（默认收起）按**真实数据集**分为 10 类（街道与步行设施、自然、建筑、历史文化、餐饮商业、交通安全、环境、公共交通、公共服务、滨水与公共空间），不是按 12 个体验维度。54 个已接入数据集可独立开关、搜索、调透明度；未接入的标为 Available · not connected / Missing，并说明原因。
+- 范围：**Along selected route**（所选路线两侧 50/100/200/500 m，仅影响显示，不改变评分）或 **Current map view**。切换路线时保留已开启的图层并重新筛选。
+- 点击数据要素打开 Urban Feature Inspector（真实字段、缺失为 Not Available、来源、时间范围、更新日期、与路线的距离；事故/投诉标注为历史记录）。点击路线路段打开 Street Segment Evidence（OSM Edge ID、LION 路段或 Unmatched、附近数据的数量/密度/最近距离/覆盖率，以及现有评分指标）。右侧 **Route Urban Data** 汇总路线周边的真实要素数量，点击即在地图上显示。
+- 图层是静态文件（`data/layers/catalog.json` + 1 km 瓦片），GitHub Pages 可直接读取，不占用后端内存。重建：`python3 scripts/build_urban_layers.py`（需要 OSMnx/pyproj，约 3 分钟）。
+- 步行时间：默认 60 分钟，滑块 10–60，自定义更大值时滑块自动扩展；该值原样作为路线引擎的硬约束。
 
 ## Files / 文件
 
@@ -48,8 +50,8 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 - `explore-map.js`: Explore Urban Data (13 maps, segment inspector). `app.js`, `center-map.js`: existing shell, preferences, map, Street evidence panel.
 - `scripts/streetwise_indicators.py`: shared indicator definitions and measurement. `build_manhattan_streets.py`: LION scores. `build_pedestrian_network.py`: OSM graph. `match_lion_osm.py`: matching + edge scores.
 - `data/manhattan-streets.json`, `data/pedestrian/`: built data. `data/cache/`: raw downloads (safe to delete).
-- `urban-layers.js`: Navigate Urban Data Layers panel, map layers, Raw Data Feature inspector. `routing/layers.py`: layer queries (bbox / along route). `scripts/build_urban_layers.py`: layer datasets + registry.
-- `tests/`: `test_routing_engine.py` (network, matching, scores, ranking, navigation, HTTP), `test_urban_layers.py` (layers, walking-time limits), `test_street_data.py`, `test_server.py`, `dom.test.cjs`, JS spatial tests, Playwright scripts.
+- `urban-layers.js`: dataset catalog panel, static tile loading, map layers, Urban Feature Inspector, Street Segment Evidence, Route Urban Data. `urban-geo.js`: shared geometry (projection, corridor, nearest, coverage). `api-config.js`: API base + `streetwiseJson`. `routing/layers.py`: reference implementation for tests. `scripts/build_urban_layers.py`: datasets → catalog + tiles.
+- `tests/`: `test_routing_engine.py` (network, matching, scores, ranking, navigation, HTTP), `test_urban_layers.py` (catalog, geographic accuracy, route queries, static serving, walking-time limits), `urban-geo.test.cjs` (browser geometry = brute-force reference), `test_street_data.py`, `test_server.py`, `dom.test.cjs`, JS spatial tests, Playwright scripts.
 
 ## Automated checks / 自动测试
 

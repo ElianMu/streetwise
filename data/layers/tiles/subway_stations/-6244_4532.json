@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"116","station_id":"306","complex_id":"306","stop_name":"125 St","daytime_routes":"1","line":"Broadway - 7Av","structure":"Elevated","ada":"0","ada_notes":"NaN"},"geometry":{"type":"Point","coordinates":[-73.958372,40.815581]}}]}

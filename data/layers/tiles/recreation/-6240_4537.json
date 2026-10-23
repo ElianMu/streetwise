@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/9859499901","leisure":"playground"},"geometry":{"type":"Point","coordinates":[-73.920822,40.862766]}},{"type":"Feature","properties":{"feature_id":"way/474199300","leisure":"pitch"},"geometry":{"type":"Point","coordinates":[-73.920903,40.862373]}}]}

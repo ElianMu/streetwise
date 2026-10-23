@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"B06-338","stop_name":"Roosevelt Island","daytime_routes":"M","line":"63rd St","division":"IND","entrance_type":"Station House","entry_allowed":"YES","exit_allowed":"YES","station_id":"222","gtfs_stop_id":"B06"},"geometry":{"type":"Point","coordinates":[-73.953458,40.759019]}}]}

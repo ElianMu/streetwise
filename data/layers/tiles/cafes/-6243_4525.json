@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"feature_id":"node/7964143166","addr:housenumber":"2","addr:street":"West Loop Road","amenity":"cafe","name":"The Café @ Cornell Tech","opening_hours":"Mo-Fr 08:00-17:00; Sa-Su 11:00-17:00"},"geometry":{"type":"Point","coordinates":[-73.956482,40.755354]}}]}

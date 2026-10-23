@@ -217,3 +217,27 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .focus-subs{margin-top:6px}.focus-seg{margin-top:6px}.focus-seg strong{font-size:10.5px}.focus-seg small,.focus-subs small{color:#87a29c}.seg-id{color:#d8f365;font-weight:700}
 .all-dims{margin-top:8px}.all-dims summary{cursor:pointer;color:#d8f365;font-size:10px}
 @media(max-width:740px){.urban-layers[open]{width:calc(100vw - 20px);max-height:60vh}}
+
+/* Navigate v1.1: dataset-centred Urban Data Layers, docked inspector, segment evidence, route urban data. */
+.urban-lede{margin:0 0 6px;font-size:11px;color:#d8f365}
+.urban-distance small{color:#7f9993;font-size:9px}
+.urban-cat{border:1px solid #233d3d;border-radius:8px;background:#11262a}
+.urban-cat summary{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;padding:7px 9px;font-size:11px;color:#e6efe8;list-style:none}.urban-cat summary::-webkit-details-marker{display:none}
+.urban-cat summary small{color:#7f9993;font-size:9.5px;white-space:nowrap}.urban-cat[open] summary{border-bottom:1px solid #233d3d}
+.urban-ds{padding:6px 9px;border-top:1px solid #1b3234}.urban-ds:first-of-type{border-top:0}.urban-ds.off{opacity:.62}
+.urban-active-row{display:grid;grid-template-columns:12px 1fr auto 18px;align-items:center;gap:6px;padding:4px 0;font-size:10.5px;color:#d5e0d9}.urban-active-row small{color:#87a29c}
+.urban-active-row .urban-status{font-size:9.5px;color:#9fb4ae;text-align:right}.urban-active-row .urban-opacity{grid-column:2/-1;display:flex;align-items:center;gap:6px;font-size:9.5px;color:#9fb4ae}.urban-opacity input{flex:1;margin:0}
+.urban-remove{width:18px;height:18px;border:1px solid #3d5048;border-radius:50%;background:transparent;color:#c8d6cf;font-size:11px;line-height:1;padding:0}
+.urban-clear[aria-pressed=true]{background:#d8f365;color:#122322}
+.map-workspace .urban-inspector{top:64px;right:64px;max-height:calc(100% - 120px)}
+.inspector-fields{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:8px 0;padding:8px 0;border-top:1px solid #243b3c;border-bottom:1px solid #243b3c;font-size:10px}
+.inspector-fields dt{color:#8fa6a1;overflow-wrap:anywhere}.inspector-fields dd{margin:0;color:#e6efe8;text-align:right;overflow-wrap:anywhere}.na{color:#7f9993;font-style:italic}
+.urban-warn{margin:8px 0 0;padding:6px 8px;border:1px solid #6b4a3a;border-radius:7px;background:#2a1f1b;color:#f0b49a;font-size:10px}
+.urban-source{display:inline-block;margin-top:8px;color:#d8f365;font-size:10.5px}
+.evidence-row{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-top:1px solid #1d3436;font-size:10.5px;color:#d5e0d9}.evidence-row small{display:block;color:#7f9993;font-size:9px}
+.evidence-row strong{text-align:right;color:#eef6ea;font-weight:600}.evidence-row.sub{padding-left:10px;font-size:10px}.evidence-score{margin-bottom:6px}.evidence-list small,.evidence-scoring small{display:block;margin-top:4px;color:#7f9993;font-size:9.5px}
+.route-urban-items{display:grid;gap:4px;margin-top:6px}
+.route-urban-item{display:flex;justify-content:space-between;align-items:center;gap:8px;width:100%;padding:7px 9px;border:1px solid #2a4345;border-radius:7px;background:#122629;color:#d5e0d9;font-size:11px;text-align:left}
+.route-urban-item:hover{border-color:#d8f365}.route-urban-item small{display:block;color:#7f9993;font-size:9px}.route-urban-item strong{color:#eef6ea;font-weight:600;text-align:right}
+.route-urban-foot{display:block;margin-top:6px;color:#7f9993;font-size:9.5px;line-height:1.4}
+@media(max-width:740px){.map-workspace .urban-inspector{top:auto;bottom:76px;left:10px;right:10px;width:auto;max-height:50%}}
