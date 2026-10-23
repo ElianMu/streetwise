@@ -210,6 +210,71 @@ class PedestrianNetwork:
         return [start] + [list(c) for c in g[js:je]] + [end]
 
     # --- search ----------------------------------------------------------------------------------------------
+    def distances(self, origin, dests, edge_cost=lambda i: 1.0):
+        """One-to-many Dijkstra from a snapped origin to several snapped destinations (cost = multiplier × metres).
+        Returns a list of costs (None when unreachable). Same virtual endpoints as search(), so the matrix agrees
+        with the routes that are later drawn."""
+        cost_cache = {}
+
+        def cost(i):
+            if i not in cost_cache:
+                cost_cache[i] = edge_cost(i)
+            return cost_cache[i]
+
+        def step_cost(step):
+            c = cost(step[0])
+            return None if c is None else c * (step[2] - step[1])
+
+        out = [None] * len(dests)
+        ends = {}  # node -> [(dest index, step into that dest)]
+        for k, d in enumerate(dests):
+            i, off = d['edge'], d['offset_m']
+            ends.setdefault(self.edges[i][0], []).append((k, (i, 0.0, off)))
+            j = self.twin(i)
+            if j is not None:
+                ends.setdefault(self.edges[j][0], []).append((k, (j, 0.0, self.edges[j][5] - off)))
+            if d['edge'] in (origin['edge'], self.twin(origin['edge'])):  # same edge: walk straight along it
+                along = abs((origin['offset_m'] if origin['edge'] == i else self.edges[i][5] - origin['offset_m']) - off)
+                c = cost(i)
+                if c is not None:
+                    out[k] = c * along
+        best, heap, tie, done = {}, [], iter(range(1 << 62)), set()
+        i, off = origin['edge'], origin['offset_m']
+        starts = [(self.edges[i][1], (i, off, self.edges[i][5]))]
+        j = self.twin(i)
+        if j is not None:
+            starts.append((self.edges[j][1], (j, self.edges[j][5] - off, self.edges[j][5])))
+        for node, step in starts:
+            c = step_cost(step)
+            if c is not None and c < best.get(node, math.inf):
+                best[node] = c
+                heapq.heappush(heap, (c, next(tie), node))
+        remaining = set(range(len(dests)))
+        while heap and remaining:
+            g, _, node = heapq.heappop(heap)
+            if node in done or g > best.get(node, math.inf):
+                continue
+            done.add(node)
+            # A destination is final once the frontier passes its best known cost.
+            for k in [k for k in remaining if out[k] is not None and out[k] <= g]:
+                remaining.discard(k)
+            for k, step in ends.get(node, ()):
+                c = step_cost(step)
+                if c is not None and (out[k] is None or g + c < out[k]):
+                    out[k] = g + c
+            for e in self.adj.get(node, ()):
+                v = self.edges[e][1]
+                if v in done or self.nodes[v][3] != 0:
+                    continue
+                c = cost(e)
+                if c is None:
+                    continue
+                ng = g + c * self.edges[e][5]
+                if ng < best.get(v, math.inf):
+                    best[v] = ng
+                    heapq.heappush(heap, (ng, next(tie), v))
+        return out
+
     def search(self, origin, dest, edge_cost):
         """A* over the graph with virtual origin/destination nodes on their snapped edges.
         edge_cost(i) returns cost per metre multiplier (>= 1, so straight-line distance stays admissible) or None."""
@@ -417,12 +482,15 @@ class RoutePlanner:
             r['route_name'] = f'Alternative Experience Route {n}'
         shortest = min(r['distance_m'] for r in routes)
         max_minutes = constraints.get('max_minutes')
+        max_km = constraints.get('max_km')
         max_detour = constraints.get('max_detour_pct') if constraints.get('avoid_detours', True) else None
         for r in routes:
             r['detour_percentage'] = round((r['distance_m'] / shortest - 1) * 100, 1) if shortest else 0.0
             violations = []
             if max_minutes is not None and r['estimated_duration_min'] > max_minutes + 1e-6:
                 violations.append(f"{r['estimated_duration_min']:.0f} min exceeds the {max_minutes:g}-minute limit")
+            if max_km is not None and r['distance_m'] > max_km * 1000 + 1e-6:
+                violations.append(f"{r['distance_m'] / 1000:.1f} km exceeds the {max_km:g} km limit")
             if max_detour is not None and r['detour_percentage'] > max_detour + 1e-6:
                 violations.append(f"{r['detour_percentage']:.0f}% detour exceeds the {max_detour:g}% limit")
             r['constraints'] = {'feasible': not violations, 'violations': violations, 'avoid_stairs': avoid_stairs,
@@ -446,7 +514,7 @@ class RoutePlanner:
             'network_version': net.network_version, 'score_version': net.score_version,
             'origin': o, 'destination': d, 'shortest_distance_m': shortest,
             'preferences_used': {k: {'weight': w, 'direction': dr} for k, (w, dr) in weights.items()}, 'preferences_expressed': expressed,
-            'constraints_used': {'max_minutes': max_minutes, 'max_detour_pct': max_detour, 'avoid_detours': constraints.get('avoid_detours', True), 'avoid_stairs': avoid_stairs},
+            'constraints_used': {'max_minutes': max_minutes, 'max_km': max_km, 'max_detour_pct': max_detour, 'avoid_detours': constraints.get('avoid_detours', True), 'avoid_stairs': avoid_stairs},
             'feasible_count': sum(r['constraints']['feasible'] for r in ranked),
             'routes': ranked, 'compute_seconds': round(time.time() - t0, 2), 'weather_routing': wctx,
             'notes': ['Walking time uses a fixed 4.8 km/h planning pace; no live pedestrian or traffic data.',

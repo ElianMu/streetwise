@@ -23,7 +23,7 @@ function buildRouteRequest(a,b){
  const weights={},directions={};
  for(const d of DIMENSIONS)if(planner.origins[d.name]!=='default'&&planner.weights[d.name]>0){weights[d.name]=planner.weights[d.name];directions[d.name]=planner.directions[d.name]||'high';}
  return {origin:{lat:a.lat,lon:a.lon},destination:{lat:b.lat,lon:b.lon},preferences:{weights,directions},
-  constraints:{max_minutes:state.budget,max_detour_pct:planner.maxDetourPct,avoid_detours:planner.constraints.avoidDetours,avoid_stairs:planner.constraints.avoidStairs},
+  constraints:{max_minutes:state.budget,max_km:state.maxKm,max_detour_pct:planner.maxDetourPct,avoid_detours:planner.constraints.avoidDetours,avoid_stairs:planner.constraints.avoidStairs},
   // Weather snapshot for the walking window (weather.js); the engine decides whether it may change edge costs.
   weather:typeof weatherSnapshot==='function'?weatherSnapshot(state.budget):null};
 }
@@ -89,7 +89,7 @@ function scoreText(v){return v==null?'N/A':String(v);}
 /** The hard limits the engine actually applied to the current results (from the response, not the form). */
 function constraintSummary(){
  const c=planner.routeResponse?.constraints_used;if(!c)return '';
- return `Hard limits used: max ${c.max_minutes==null?'—':Math.round(c.max_minutes)} min walking · ${c.avoid_detours&&c.max_detour_pct!=null?`max ${c.max_detour_pct}% detour`:'detour limit off'}${c.avoid_stairs?' · avoiding stairs':''} · ${planner.routeResponse.feasible_count} of ${planner.routeResponse.routes.length} routes feasible`;
+ return `Hard limits used: max ${c.max_minutes==null?'—':Math.round(c.max_minutes)} min walking · ${c.max_km!=null?`max ${c.max_km} km · `:""}${c.avoid_detours&&c.max_detour_pct!=null?`max ${c.max_detour_pct}% detour`:'detour limit off'}${c.avoid_stairs?' · avoiding stairs':''} · ${planner.routeResponse.feasible_count} of ${planner.routeResponse.routes.length} routes feasible`;
 }
 function renderRouteCards(){
  const root=$('routeCards'),routes=state.routes;

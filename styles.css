@@ -291,3 +291,71 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .wx-route{background:#132529;border:1px solid #314c45;border-radius:10px;padding:10px 12px;color:#d7e5d9;margin-top:10px}
 .summary-fix{margin-left:8px;border:1px solid var(--lime);background:transparent;color:var(--lime);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700}
 .summary-fix:hover{background:#26372e}
+
+/* NYC place search (places.js) */
+.ps-wrap{position:relative}
+.ps-clear{border:0;background:transparent;color:#8fa6a1;font-size:16px;line-height:1;padding:0 2px}
+.ps-list{position:relative;z-index:30;margin-top:4px;display:flex;flex-direction:column;gap:2px;max-height:300px;overflow:auto;padding:5px;background:#182b2d;border:1px solid #405952;border-radius:8px;box-shadow:0 8px 24px #0006}
+.ps-item{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 9px;border:0;background:transparent;color:#dce9e1;text-align:left;border-radius:6px;cursor:pointer}
+.ps-item:hover,.ps-item.active{background:#24403f}
+.ps-name{font-size:11px;font-weight:700}.ps-cat{font-size:9px;color:#b7a3e1;text-align:right;white-space:nowrap}
+.ps-meta{grid-column:1/-1;font-size:9.5px;color:#8fa6a1;line-height:1.4}.ps-meta em{color:#e8b18f;font-style:normal}
+.ps-dist{grid-column:1/-1;font-size:9px;color:#7fb7c0}
+.ps-status{padding:9px;font-size:10px;color:#a9bdb7}.ps-status.error{color:#f2a99b}
+.ps-foot{padding:4px 9px 2px;font-size:8.5px;color:#6f8a86}
+.place-dot.hotel{border-color:#f2a876}.place-dot.stop{border-color:#b7a3e1}
+
+/* Walking budget chips */
+.budget-chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 2px}
+.budget-chips button{border:1px solid #39504e;background:#132529;color:#c9d7d1;border-radius:6px;padding:5px 9px;font-size:10px;font-weight:700}
+.budget-chips button[aria-pressed=true]{border-color:var(--lime);color:var(--lime);background:#26372e}
+.unit-toggle{display:inline-flex;margin-left:auto;gap:2px}.unit-toggle button{padding:5px 7px}
+.budget-row{margin-top:14px}
+
+/* End modes, My hotel, Journey stops */
+.end-modes{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 8px}
+.end-modes button{border:1px solid #39504e;background:#132529;color:#c9d7d1;border-radius:14px;padding:5px 10px;font-size:10px;font-weight:700}
+.end-modes button[aria-pressed=true]{border-color:var(--lime);color:#14221e;background:var(--lime)}
+.hotel-box{margin-top:10px;border:1px solid #2c4346;border-radius:9px;padding:8px 10px;background:#112326}
+.hotel-box summary{cursor:pointer;font-size:10.5px;font-weight:700;color:#d6e3dd}.hotel-box[open] summary{margin-bottom:8px}
+.hotel-actions{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.hotel-actions .mini-outline{width:auto;margin:0;padding:5px 9px}
+.journey-section{margin-top:16px;border-top:1px solid #2b4143;padding-top:14px}
+.journey-stops{margin:8px 0}
+.js-summary{display:flex;flex-wrap:wrap;gap:5px}.js-end{font-size:10.5px;color:#a9bdb7;margin:8px 0}.js-end strong{color:#e6efe9}
+.js-list{list-style:none;margin:6px 0;padding:0;display:grid;gap:5px;counter-reset:js}
+.js-list li{display:grid;grid-template-columns:1fr;gap:5px;border:1px solid #2c4346;border-radius:8px;padding:8px;background:#132529;counter-increment:js}
+.js-name{font-size:11px;font-weight:700;color:#e6efe9}.js-name::before{content:counter(js) ". ";color:var(--lime)}.js-name small{display:block;font-weight:400;color:#8fa6a1;font-size:9.5px}
+.js-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:5px}.js-ctl button{border:1px solid #39504e;background:transparent;color:#c9d7d1;border-radius:5px;padding:3px 7px;font-size:9.5px}
+.js-ctl button[aria-pressed=true]{border-color:var(--lime);color:var(--lime)}.js-ctl label{font-size:9.5px;color:#8fa6a1;display:flex;align-items:center;gap:3px}
+.js-ctl input{width:44px;background:#0f2023;border:1px solid #39504e;color:#e6efe9;border-radius:4px;padding:2px 4px;font-size:10px}
+.js-found{margin-top:10px;border:1px dashed #405952;border-radius:8px;padding:8px}.js-found-head{font-size:10px;font-weight:700;letter-spacing:.6px;color:#b7a3e1;margin-bottom:6px}
+.js-found-item{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #22383b}
+.js-found-item strong{font-size:10.5px;display:block}.js-found-item small{font-size:9px;color:#8fa6a1}.js-found-item .mini-outline{width:auto;margin:0 0 0 4px;padding:4px 7px;white-space:nowrap}
+.js-found>small{display:block;margin-top:6px;color:#6f8a86;font-size:9px;line-height:1.5}
+
+/* Voice */
+.voice-row{display:flex;align-items:center;gap:6px;margin:6px 0}
+.mic-btn{border:1px solid #476052;background:#132529;color:#e2f899;border-radius:50%;width:30px;height:30px;font-size:14px;flex:none}
+.mic-btn.recording{background:#f18d83;color:#141d1b;border-color:#f18d83;animation:micPulse 1.2s ease-in-out infinite}
+@keyframes micPulse{50%{box-shadow:0 0 0 6px #f18d8333}}
+.voice-row select{background:#132529;color:#c9d7d1;border:1px solid #39504e;border-radius:5px;font-size:10px;padding:3px}
+.voice-status{font-size:9.5px;color:#8fa6a1;line-height:1.3}
+
+/* Route Intelligence: Your City Walk */
+.city-walk{margin:16px 0 4px;border:1px solid #3d5a3a;border-radius:10px;padding:12px;background:#132529}
+.cw-theme{font-family:'Space Grotesk';font-size:16px;color:#eff8ec;margin:8px 0 2px}
+.cw-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.cw-grid>div{background:#0f2023;border:1px solid #263b3b;border-radius:7px;padding:7px 8px;display:flex;flex-direction:column;gap:2px}
+.cw-grid span{font-size:9px;color:#89a5a1;font-weight:700;letter-spacing:.6px;text-transform:uppercase}.cw-grid strong{font-size:14px;color:#eff8ec}.cw-grid small{font-size:9px;color:#8fa6a1}
+.cw-stops{list-style:none;padding:0;margin:8px 0;display:grid;gap:6px}
+.cw-stop{display:grid;grid-template-columns:22px 1fr;gap:8px}.cw-seq{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#0b1418;border:2px solid var(--lime);color:var(--lime);font-size:10px;font-weight:800}
+.cw-stop.end .cw-seq{border-color:#f2a876;color:#f2a876}
+.cw-body{display:flex;flex-direction:column;gap:2px}.cw-body strong{font-size:11px;color:#eef6ea}.cw-body small{font-size:9.5px;color:#8fa6a1;line-height:1.45}
+.cw-warn{color:#f2a99b!important}.cw-ok{color:#9fd3a6!important}
+.cw-menu.verified_on_menu{color:#d8f365!important}.cw-menu.not_found{color:#f2a99b!important}.cw-menu a,.jp a{color:#d8f365}
+.cw-alt{align-self:flex-start;border:1px solid #39504e;background:transparent;color:#c9d7d1;border-radius:5px;padding:2px 7px;font-size:9px;margin-top:3px;margin-right:4px;display:inline-block}
+.cw-refine{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.cw-refine .mini-outline{width:auto;margin:0;padding:5px 8px}
+.cw-method{display:block;margin-top:8px;color:#6f8a86;font-size:9px;line-height:1.5}
+.chat-choices{display:flex;flex-direction:column;gap:5px;margin:4px 0 10px}.chat-choices .mini-outline{width:100%;margin:0;text-align:left}
+.jp dl{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin:6px 0;font-size:10px}.jp dt{color:#89a5a1}.jp dd{margin:0}
+.jp-actions{display:flex;flex-wrap:wrap;gap:5px}.jp-actions button{border:1px solid #536d52;background:transparent;color:#e2f899;border-radius:5px;padding:4px 7px;font-size:10px}
+.jp-menu{margin-top:6px;font-size:10px;line-height:1.5}

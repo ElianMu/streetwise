@@ -4,7 +4,7 @@ const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.
 const dom=new JSDOM(html,{runScripts:'outside-only',url:'http://localhost:8080'}),w=dom.window;
 w.fetch=async()=>{throw new Error('Network intentionally blocked in DOM test')};w.HTMLElement.prototype.scrollIntoView=function(){};w.AbortSignal.timeout=()=>new w.AbortController().signal;
 const vm=require('vm'),context=dom.getInternalVMContext();
-for(const file of ['experience-core.js','api-config.js','weather.js','app.js','route-client.js','weather-ui.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
+for(const file of ['experience-core.js','api-config.js','weather.js','places.js','opening-hours.js','app.js','route-client.js','weather-ui.js','journey.js','journey-ui.js','voice.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
 const run=s=>vm.runInContext(s,context);
 (async()=>{
  assert.equal(w.document.querySelectorAll('#experienceDimension option').length,12);
@@ -31,23 +31,33 @@ const run=s=>vm.runInContext(s,context);
  w.document.querySelector('#experienceDimension').value='Architecture';w.document.querySelector('#experienceDimension').dispatchEvent(new w.Event('change'));
  assert(w.document.querySelector('#legendTitle').textContent.includes('Architecture'));
  w.document.querySelector('#experienceView').value='score';w.document.querySelector('#experienceView').dispatchEvent(new w.Event('change'));assert(w.document.querySelector('#legendSubtitle').textContent.includes('all score fields NULL'));
- // Walking constraints: default 60, slider 10–60 extending to the custom value, validation on commit only.
+ // Walking constraints: default 100, slider 10–150 extending to the custom value, quick chips, validation on commit only.
  const tr=()=>w.document.querySelector('#timeRange'),ct=()=>w.document.querySelector('#customTime'),tv=()=>w.document.querySelector('#timeValue').textContent,tm=()=>w.document.querySelector('#timeRangeMax').textContent;
- assert.equal(run('state.budget'),60);assert.equal(tr().min,'10');assert.equal(tr().max,'60');assert.equal(tr().value,'60');assert.equal(tv(),'60 MIN');assert.equal(tm(),'60 MIN');assert.equal(ct().value,'60');
+ assert.equal(run('state.budget'),100);assert.equal(tr().min,'10');assert.equal(tr().max,'150');assert.equal(tr().value,'100');assert.equal(tv(),'100 MIN');assert.equal(tm(),'150 MIN');assert.equal(ct().value,'100');
+ assert.equal(w.document.querySelector('[data-walk-min="100"]').getAttribute('aria-pressed'),'true');assert.equal(run('state.maxKm'),null,'no hidden distance limit by default');
  const commit=v=>{ct().focus();ct().value=v;ct().dispatchEvent(new w.KeyboardEvent('keydown',{key:'Enter'}));ct().blur();};
- for(const [v,max] of [['45','60'],['60','60'],['72','72'],['120','120']]){commit(v);assert.equal(run('state.budget'),Number(v));assert.equal(tv(),`${v} MIN`);assert.equal(tr().max,max);assert.equal(tm(),`${max} MIN`);assert.equal(tr().value,v);assert.equal(ct().value,v);}
- for(const bad of ['5','','-3','12.5','9']){commit(bad);assert.equal(run('state.budget'),120,`"${bad}" must not change the limit`);assert.equal(ct().value,'120');}
- ct().focus();ct().value='';assert.equal(run('state.budget'),120,'an empty box while typing is allowed and does not touch state');ct().value='72';ct().blur();assert.equal(run('state.budget'),72);
- tr().value='50';tr().dispatchEvent(new w.Event('input'));assert.equal(run('state.budget'),50);assert.equal(ct().value,'50');assert.equal(tr().max,'60');assert.equal(tm(),'60 MIN');
+ for(const [v,max] of [['45','150'],['60','150'],['72','150'],['120','150'],['180','180']]){commit(v);assert.equal(run('state.budget'),Number(v));assert.equal(tv(),`${v} MIN`);assert.equal(tr().max,max);assert.equal(tm(),`${max} MIN`);assert.equal(tr().value,v);assert.equal(ct().value,v);}
+ for(const bad of ['5','','-3','12.5','9']){commit(bad);assert.equal(run('state.budget'),180,`"${bad}" must not change the limit`);assert.equal(ct().value,'180');}
+ ct().focus();ct().value='';assert.equal(run('state.budget'),180,'an empty box while typing is allowed and does not touch state');ct().value='72';ct().blur();assert.equal(run('state.budget'),72);
+ tr().value='50';tr().dispatchEvent(new w.Event('input'));assert.equal(run('state.budget'),50);assert.equal(ct().value,'50');assert.equal(tr().max,'150');assert.equal(tm(),'150 MIN');
+ for(const m of ['60','120','150']){w.document.querySelector(`[data-walk-min="${m}"]`).click();assert.equal(run('state.budget'),+m);assert.equal(w.document.querySelector(`[data-walk-min="${m}"]`).getAttribute('aria-pressed'),'true');}
+ tr().value='50';tr().dispatchEvent(new w.Event('input'));
+ // Distance limit: chips, custom, unit switch (km ↔ mi), and 'Not set' clears it.
+ w.document.querySelector('[data-walk-km="5"]').click();assert.equal(run('state.maxKm'),5);assert.equal(w.document.querySelector('#distValue').textContent,'5 KM');
+ w.document.querySelector('[data-dist-unit="mi"]').click();assert.equal(w.document.querySelector('#distValue').textContent,'3.1 MI');assert.equal(run('state.maxKm'),5);
+ const cd=w.document.querySelector('#customDist');cd.value='2';cd.dispatchEvent(new w.Event('change'));assert.equal(run('state.maxKm'),3.22);
+ w.document.querySelector('[data-dist-unit="km"]').click();w.document.querySelector('[data-walk-km="none"]').click();assert.equal(run('state.maxKm'),null);
  assert(run("applyInterpretation({weights:{},time_minutes:5},'local')").some(c=>c.includes('ignored')));assert.equal(run('state.budget'),50);
- run("applyInterpretation({weights:{},time_minutes:95},'local')");assert.equal(run('state.budget'),95);assert.equal(tr().max,'95');
+ run("applyInterpretation({weights:{},time_minutes:95},'local')");assert.equal(run('state.budget'),95);assert.equal(tr().max,'150');
  // AI Journey → routing engine: a recorded real /api/routes response (tests/fixtures, produced by routing/engine.py).
  const fixture=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/route-response.json')));
  // Response-like stub: JSON bodies with headers, and the real static catalog/tiles read from disk.
  const resp=(obj,status=200,type='application/json')=>({ok:status<400,status,headers:{get:k=>k.toLowerCase()==='content-type'?type:null},json:async()=>typeof obj==='string'?JSON.parse(obj):JSON.parse(JSON.stringify(obj)),text:async()=>typeof obj==='string'?obj:JSON.stringify(obj)});
  const calls=[];w.fetch=async(url,opts={})=>{url=String(url);calls.push({url,body:opts.body&&JSON.parse(opts.body)});
   if(url.endsWith('/api/routes'))return resp(fixture);
-  if(url.startsWith('./data/layers/')){const f=path.join(root,url.slice(2));return fs.existsSync(f)?resp(fs.readFileSync(f,'utf8')):resp('<!DOCTYPE html><title>404</title>',404,'text/html');}
+  if(url.endsWith('/api/itinerary'))return resp(JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/itinerary-response.json'))));
+  if(url.endsWith('/api/menu/verify'))return resp({status:'unverified',item:'cappuccino',reason:'No readable menu page was found on the official website.',checked_at:'2026-10-23T00:00:00Z'});
+  if(url.startsWith('./data/layers/')||url.startsWith('./data/places/')){const f=path.join(root,url.slice(2));return fs.existsSync(f)?resp(fs.readFileSync(f,'utf8')):resp('<!DOCTYPE html><title>404</title>',404,'text/html');}
   if(url.endsWith('/api/navigation/progress'))return resp({state:'off_route',distance_from_route_m:82,remaining_m:700,remaining_min:9,reroute_recommended:true});
   throw new Error('Network intentionally blocked in DOM test')};
  run("planner.weights.Nature=90;planner.origins.Nature='manual';planner.directions.Nature='high';setBudget(72);planner.maxDetourPct=25");
@@ -177,5 +187,34 @@ const run=s=>vm.runInContext(s,context);
  assert(run('weatherRouteSentence(HOT)').includes('not measured shade'));
  const fixtureMild=JSON.parse(JSON.stringify(hot));fixtureMild.weather_routing.routing={status:'not_active',active:false,reason:'Below the heat-caution band.'};w.MILD=fixtureMild;run('applyRouteResponse(MILD);updateWhyRoute()');
  assert(w.document.querySelector('#wxRoute').textContent.includes('weather-based route optimization is not active for this route'));
- console.log('DOM PASS: weather offline → weather:null + honest status, weather intents, engine weather record shown as computed, walking-time default/sync/validation/API, urban data catalog (10 dataset categories, statuses, search), along-route counts = brute-force reference, route switch keeps layers, route urban data summary, feature inspector, segment evidence (matched/unmatched), static JSON errors, mode, 13 explore views, segment inspector (single + overall, N/A), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
+ // AI Discover My Walk: multi-turn journey state (Scenario H), real POI index, planner request, rendering of a real /api/itinerary response.
+ await run('warmNameIndex()');
+ const hotel=JSON.parse(fs.readFileSync(path.join(root,'data/places/hotels.json'))).records.find(r=>r.name==='Hilton New York Midtown');w.HOTEL=hotel;run('setMyHotel(poiPlace(HOTEL));setJourneyPlace("start",journey.hotel)');
+ const turn=async q=>run(`applyJourney(localJourney(${JSON.stringify(q)}))`),jr=x=>JSON.parse(run(`JSON.stringify(${x})`));
+ await turn('我想逛纽约著名景点。');assert.deepEqual(jr('journey.interests'),['famous']);assert.equal(run('journey.endMode'),'open','no destination needed');
+ await turn('再加一个博物馆。');assert.deepEqual(jr('journey.extra'),{museums:1});
+ await turn('顺路喝一杯卡布奇诺。');assert.equal(run('journey.food[0].item'),'cappuccino');
+ await turn('还要经过洛克菲勒中心。');assert.equal(run('journey.named[0].place.name'),'Rockefeller Center');assert(run('journey.named[0].place.id').startsWith('osm:'),'named place resolved from real data');
+ await turn('最后回我的酒店。');assert.equal(run('journey.endMode'),'hotel');
+ await turn('最多走 5 公里。');assert.equal(run('state.maxKm'),5);
+ await turn('时间可以延长到 150 分钟。');assert.equal(run('state.outingMin'),150);
+ // everything settled earlier is still there
+ assert.deepEqual(jr('journey.interests'),['famous','museums']);assert.equal(run('journey.food.length'),1);assert.equal(run('journey.named.length'),1);assert.equal(run('journey.endMode'),'hotel');assert.equal(run('getPlace("start").name'),'Hilton New York Midtown');assert.equal(run('state.maxKm'),5);
+ const jreq=await run('itineraryRequest()');
+ assert.equal(jreq.end.mode,'hotel');assert.equal(jreq.end.place.name,'Hilton New York Midtown');assert.equal(jreq.constraints.max_km,5);assert.equal(jreq.constraints.max_outing_minutes,150);
+ assert(jreq.stops.some(s=>s.name==='Rockefeller Center'&&s.required));
+ const cs=jreq.slots.find(x=>x.slot_id==='food:cafes:cappuccino');assert(cs&&cs.candidates.length>0);for(const c of cs.candidates)assert(c.id.startsWith('osm:')&&Number.isFinite(c.lat));
+ assert(jreq.slots.some(x=>x.slot_id==='interest:famous'));assert(jreq.slots.some(x=>x.slot_id==='interest:museums'));
+ assert(!jreq.slots.flatMap(x=>x.candidates).some(c=>c.name==='Hilton New York Midtown'),'the hotel itself is never discovered as a stop');
+ calls.length=0;await run('planJourney()');
+ assert(calls.some(c=>c.url.endsWith('/api/itinerary')),'planning goes to the engine');
+ const itfx=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/itinerary-response.json'))).itinerary;
+ const cw=w.document.querySelector('#cityWalk').textContent;assert(cw.includes('YOUR CITY WALK'));for(const s of itfx.stops)assert(cw.includes(s.name),`stop ${s.name} shown`);
+ assert(cw.includes(`${(itfx.totals.walk_m/1000).toFixed(2)} km`));assert(cw.includes('(est.)'),'visit times are labelled as estimates');
+ assert.equal(run('state.routes.length'),1);assert.equal(run('state.activeRoute'),JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/itinerary-response.json'))).routes[0].route_id);
+ await new Promise(r=>setTimeout(r,50));assert(['unverified','checking'].includes(run("journey.menu[Object.keys(journey.menu)[0]]?.status")),'menu status is never assumed verified');
+ // "find" services do not add stops; hotel ambiguity asks instead of guessing
+ const fr=await run("findServices('pharmacies','near_hotel')");assert(fr.places.length>0&&fr.places.every(p=>p.category&&p.source));assert.equal(run('journey.named.length'),1);
+ await turn("I'm staying at a Marriott near Times Square");assert(w.document.querySelectorAll('.chat-choices [data-choice]').length>1,'several Marriotts: the user chooses');assert.equal(run('journey.hotel.name'),'Hilton New York Midtown','not changed until chosen');
+ console.log('DOM PASS: AI Discover My Walk (multi-turn state kept, real POI index, itinerary request + rendering, menu status honest, find vs add, hotel confirmation), weather offline → weather:null + honest status, weather intents, engine weather record shown as computed, walking-time default/sync/validation/API, urban data catalog (10 dataset categories, statuses, search), along-route counts = brute-force reference, route switch keeps layers, route urban data summary, feature inspector, segment evidence (matched/unmatched), static JSON errors, mode, 13 explore views, segment inspector (single + overall, N/A), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});

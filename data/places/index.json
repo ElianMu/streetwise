@@ -1,0 +1,115 @@
+{
+ "built_at": "2026-10-23T23:22:20+00:00",
+ "osm_timestamp": "2026-10-23T23:19:36Z",
+ "coverage": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
+ "network_version": "osm-walk-20261023-99602011",
+ "categories": [
+  {
+   "id": "hotels",
+   "label": "Hotels & accommodation",
+   "count": 480
+  },
+  {
+   "id": "museums",
+   "label": "Museums & galleries",
+   "count": 375
+  },
+  {
+   "id": "attractions",
+   "label": "Famous attractions & viewpoints",
+   "count": 229
+  },
+  {
+   "id": "historic",
+   "label": "Historic places",
+   "count": 431
+  },
+  {
+   "id": "parks",
+   "label": "Parks & gardens",
+   "count": 527
+  },
+  {
+   "id": "cafes",
+   "label": "Caf\u00e9s & coffee",
+   "count": 1285
+  },
+  {
+   "id": "bakeries",
+   "label": "Bakeries & desserts",
+   "count": 405
+  },
+  {
+   "id": "restaurants",
+   "label": "Restaurants",
+   "count": 5057
+  },
+  {
+   "id": "bars",
+   "label": "Bars & pubs",
+   "count": 886
+  },
+  {
+   "id": "culture",
+   "label": "Theatres, libraries & landmarks of worship",
+   "count": 437
+  },
+  {
+   "id": "shopping",
+   "label": "Shopping",
+   "count": 282
+  },
+  {
+   "id": "pharmacies",
+   "label": "Pharmacies",
+   "count": 328
+  },
+  {
+   "id": "groceries",
+   "label": "Groceries & convenience",
+   "count": 1014
+  },
+  {
+   "id": "health",
+   "label": "Hospitals & clinics",
+   "count": 236
+  },
+  {
+   "id": "banks",
+   "label": "Banks & ATMs",
+   "count": 538
+  },
+  {
+   "id": "restrooms",
+   "label": "Public restrooms",
+   "count": 422
+  },
+  {
+   "id": "luggage",
+   "label": "Luggage storage",
+   "count": 1
+  },
+  {
+   "id": "historic_lpc",
+   "label": "NYC designated individual landmarks",
+   "count": 926
+  }
+ ],
+ "sources": {
+  "osm": "OpenStreetMap contributors via Overpass API (ODbL); names, tags and hours as mapped, not verified by STREETWISE",
+  "lpc": "NYC Landmarks Preservation Commission individual landmarks (NYC Open Data)",
+  "nyc_restrooms": "NYC Open Data Public Restrooms (i7jb-7jku), status as published",
+  "wikidata": "Wikidata API sitelink counts (CC0)"
+ },
+ "fields": {
+  "sub": "source tag",
+  "web": "website",
+  "menu": "website:menu (official menu link if mapped)",
+  "hours": "opening_hours (OSM syntax)",
+  "wd": "Wikidata ID",
+  "sl": "Wikidata sitelink count (Wikipedia language editions etc.): notability signal",
+  "drink": "drink:* tags (community-mapped, not menu verification)",
+  "diet": "diet:* tags"
+ },
+ "dropped_outside_routing_coverage": 4973
+}

@@ -286,7 +286,7 @@ class HttpApi(unittest.TestCase):
 
     def test_existing_endpoint_unchanged(self):
         status, doc = self.call('/api/status')
-        self.assertEqual(status, 200); self.assertEqual(set(doc), {'llm', 'model'})
+        self.assertEqual(status, 200); self.assertLessEqual({'llm', 'model'}, set(doc))  # original contract kept; 'features' is additive
 
     def test_routes_edges_segments_progress(self):
         status, doc = self.call('/api/routes', {'origin': pt('bryant'), 'destination': pt('rock'), 'preferences': {'weights': {'Nature': 90}},

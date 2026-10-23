@@ -305,6 +305,74 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .summary-fix{margin-left:8px;border:1px solid var(--lime);background:transparent;color:var(--lime);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700}
 .summary-fix:hover{background:#26372e}
 
+/* NYC place search (places.js) */
+.ps-wrap{position:relative}
+.ps-clear{border:0;background:transparent;color:#8fa6a1;font-size:16px;line-height:1;padding:0 2px}
+.ps-list{position:relative;z-index:30;margin-top:4px;display:flex;flex-direction:column;gap:2px;max-height:300px;overflow:auto;padding:5px;background:#182b2d;border:1px solid #405952;border-radius:8px;box-shadow:0 8px 24px #0006}
+.ps-item{display:grid;grid-template-columns:1fr auto;gap:2px 8px;padding:8px 9px;border:0;background:transparent;color:#dce9e1;text-align:left;border-radius:6px;cursor:pointer}
+.ps-item:hover,.ps-item.active{background:#24403f}
+.ps-name{font-size:11px;font-weight:700}.ps-cat{font-size:9px;color:#b7a3e1;text-align:right;white-space:nowrap}
+.ps-meta{grid-column:1/-1;font-size:9.5px;color:#8fa6a1;line-height:1.4}.ps-meta em{color:#e8b18f;font-style:normal}
+.ps-dist{grid-column:1/-1;font-size:9px;color:#7fb7c0}
+.ps-status{padding:9px;font-size:10px;color:#a9bdb7}.ps-status.error{color:#f2a99b}
+.ps-foot{padding:4px 9px 2px;font-size:8.5px;color:#6f8a86}
+.place-dot.hotel{border-color:#f2a876}.place-dot.stop{border-color:#b7a3e1}
+
+/* Walking budget chips */
+.budget-chips{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0 2px}
+.budget-chips button{border:1px solid #39504e;background:#132529;color:#c9d7d1;border-radius:6px;padding:5px 9px;font-size:10px;font-weight:700}
+.budget-chips button[aria-pressed=true]{border-color:var(--lime);color:var(--lime);background:#26372e}
+.unit-toggle{display:inline-flex;margin-left:auto;gap:2px}.unit-toggle button{padding:5px 7px}
+.budget-row{margin-top:14px}
+
+/* End modes, My hotel, Journey stops */
+.end-modes{display:flex;flex-wrap:wrap;gap:5px;margin:2px 0 8px}
+.end-modes button{border:1px solid #39504e;background:#132529;color:#c9d7d1;border-radius:14px;padding:5px 10px;font-size:10px;font-weight:700}
+.end-modes button[aria-pressed=true]{border-color:var(--lime);color:#14221e;background:var(--lime)}
+.hotel-box{margin-top:10px;border:1px solid #2c4346;border-radius:9px;padding:8px 10px;background:#112326}
+.hotel-box summary{cursor:pointer;font-size:10.5px;font-weight:700;color:#d6e3dd}.hotel-box[open] summary{margin-bottom:8px}
+.hotel-actions{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}.hotel-actions .mini-outline{width:auto;margin:0;padding:5px 9px}
+.journey-section{margin-top:16px;border-top:1px solid #2b4143;padding-top:14px}
+.journey-stops{margin:8px 0}
+.js-summary{display:flex;flex-wrap:wrap;gap:5px}.js-end{font-size:10.5px;color:#a9bdb7;margin:8px 0}.js-end strong{color:#e6efe9}
+.js-list{list-style:none;margin:6px 0;padding:0;display:grid;gap:5px;counter-reset:js}
+.js-list li{display:grid;grid-template-columns:1fr;gap:5px;border:1px solid #2c4346;border-radius:8px;padding:8px;background:#132529;counter-increment:js}
+.js-name{font-size:11px;font-weight:700;color:#e6efe9}.js-name::before{content:counter(js) ". ";color:var(--lime)}.js-name small{display:block;font-weight:400;color:#8fa6a1;font-size:9.5px}
+.js-ctl{display:flex;flex-wrap:wrap;align-items:center;gap:5px}.js-ctl button{border:1px solid #39504e;background:transparent;color:#c9d7d1;border-radius:5px;padding:3px 7px;font-size:9.5px}
+.js-ctl button[aria-pressed=true]{border-color:var(--lime);color:var(--lime)}.js-ctl label{font-size:9.5px;color:#8fa6a1;display:flex;align-items:center;gap:3px}
+.js-ctl input{width:44px;background:#0f2023;border:1px solid #39504e;color:#e6efe9;border-radius:4px;padding:2px 4px;font-size:10px}
+.js-found{margin-top:10px;border:1px dashed #405952;border-radius:8px;padding:8px}.js-found-head{font-size:10px;font-weight:700;letter-spacing:.6px;color:#b7a3e1;margin-bottom:6px}
+.js-found-item{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid #22383b}
+.js-found-item strong{font-size:10.5px;display:block}.js-found-item small{font-size:9px;color:#8fa6a1}.js-found-item .mini-outline{width:auto;margin:0 0 0 4px;padding:4px 7px;white-space:nowrap}
+.js-found>small{display:block;margin-top:6px;color:#6f8a86;font-size:9px;line-height:1.5}
+
+/* Voice */
+.voice-row{display:flex;align-items:center;gap:6px;margin:6px 0}
+.mic-btn{border:1px solid #476052;background:#132529;color:#e2f899;border-radius:50%;width:30px;height:30px;font-size:14px;flex:none}
+.mic-btn.recording{background:#f18d83;color:#141d1b;border-color:#f18d83;animation:micPulse 1.2s ease-in-out infinite}
+@keyframes micPulse{50%{box-shadow:0 0 0 6px #f18d8333}}
+.voice-row select{background:#132529;color:#c9d7d1;border:1px solid #39504e;border-radius:5px;font-size:10px;padding:3px}
+.voice-status{font-size:9.5px;color:#8fa6a1;line-height:1.3}
+
+/* Route Intelligence: Your City Walk */
+.city-walk{margin:16px 0 4px;border:1px solid #3d5a3a;border-radius:10px;padding:12px;background:#132529}
+.cw-theme{font-family:'Space Grotesk';font-size:16px;color:#eff8ec;margin:8px 0 2px}
+.cw-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.cw-grid>div{background:#0f2023;border:1px solid #263b3b;border-radius:7px;padding:7px 8px;display:flex;flex-direction:column;gap:2px}
+.cw-grid span{font-size:9px;color:#89a5a1;font-weight:700;letter-spacing:.6px;text-transform:uppercase}.cw-grid strong{font-size:14px;color:#eff8ec}.cw-grid small{font-size:9px;color:#8fa6a1}
+.cw-stops{list-style:none;padding:0;margin:8px 0;display:grid;gap:6px}
+.cw-stop{display:grid;grid-template-columns:22px 1fr;gap:8px}.cw-seq{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#0b1418;border:2px solid var(--lime);color:var(--lime);font-size:10px;font-weight:800}
+.cw-stop.end .cw-seq{border-color:#f2a876;color:#f2a876}
+.cw-body{display:flex;flex-direction:column;gap:2px}.cw-body strong{font-size:11px;color:#eef6ea}.cw-body small{font-size:9.5px;color:#8fa6a1;line-height:1.45}
+.cw-warn{color:#f2a99b!important}.cw-ok{color:#9fd3a6!important}
+.cw-menu.verified_on_menu{color:#d8f365!important}.cw-menu.not_found{color:#f2a99b!important}.cw-menu a,.jp a{color:#d8f365}
+.cw-alt{align-self:flex-start;border:1px solid #39504e;background:transparent;color:#c9d7d1;border-radius:5px;padding:2px 7px;font-size:9px;margin-top:3px;margin-right:4px;display:inline-block}
+.cw-refine{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.cw-refine .mini-outline{width:auto;margin:0;padding:5px 8px}
+.cw-method{display:block;margin-top:8px;color:#6f8a86;font-size:9px;line-height:1.5}
+.chat-choices{display:flex;flex-direction:column;gap:5px;margin:4px 0 10px}.chat-choices .mini-outline{width:100%;margin:0;text-align:left}
+.jp dl{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin:6px 0;font-size:10px}.jp dt{color:#89a5a1}.jp dd{margin:0}
+.jp-actions{display:flex;flex-wrap:wrap;gap:5px}.jp-actions button{border:1px solid #536d52;background:transparent;color:#e2f899;border-radius:5px;padding:4px 7px;font-size:10px}
+.jp-menu{margin-top:6px;font-size:10px;line-height:1.5}
+
 </style>
 </head>
 <body>
@@ -323,20 +391,34 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
         <div class="field-group journey-fields">
           <div class="field-top"><label for="searchStart">FROM</label><button id="gpsStart" class="mini-text-button" title="Requires permission">◎ Use GPS</button></div>
           <div class="search-place"><span class="place-dot start"></span><input id="searchStart" aria-label="Search starting point or address" placeholder="Search address or landmark" autocomplete="off"><button id="pickStart" class="pick-pin" title="Pick start from map" aria-label="Pick start on map">⌖</button></div>
-          <div id="startResults" class="place-results hidden" role="listbox"></div>
-          <select id="startSelect" class="preset-select" aria-label="Or select a popular start"><option value="bryant">Bryant Park · selected</option><option value="times">Times Square</option><option value="rock">Rockefeller Center</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option><option value="gps">My current location</option></select>
+          <select id="startSelect" class="preset-select" aria-label="Or quick-pick a popular start"><option value="bryant">Bryant Park · selected</option><option value="times">Times Square</option><option value="rock">Rockefeller Center</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option><option value="gps">My current location</option></select>
           <div class="field-top"><label for="searchEnd">TO</label><span>⌖ PICK ON MAP</span></div>
+          <div class="end-modes" role="group" aria-label="Where the walk ends"><button type="button" data-end-mode="fixed" aria-pressed="true">Destination</button><button type="button" data-end-mode="open" aria-pressed="false">Discover for me</button><button type="button" data-end-mode="round" aria-pressed="false">Back to start</button><button type="button" data-end-mode="hotel" aria-pressed="false">Back to hotel</button></div>
+          <div id="endFixedBox">
           <div class="search-place"><span class="place-dot end"></span><input id="searchEnd" aria-label="Search destination or address" placeholder="Search address or landmark" autocomplete="off"><button id="pickEnd" class="pick-pin" title="Pick destination on map" aria-label="Pick destination on map">⌖</button></div>
-          <div id="endResults" class="place-results hidden" role="listbox"></div>
-          <select id="endSelect" class="preset-select" aria-label="Or select a popular destination"><option value="rock">Rockefeller Center · selected</option><option value="carnegie">Carnegie Hall</option><option value="times">Times Square</option><option value="bryant">Bryant Park</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option></select>
+          <select id="endSelect" class="preset-select" aria-label="Or quick-pick a popular destination"><option value="rock">Rockefeller Center · selected</option><option value="carnegie">Carnegie Hall</option><option value="times">Times Square</option><option value="bryant">Bryant Park</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option></select>
+          </div>
+          <details class="hotel-box" id="hotelBox"><summary>🏨 My hotel · <span id="hotelName">not set</span></summary>
+            <div class="search-place"><span class="place-dot hotel"></span><input id="hotelSearch" aria-label="Search your hotel" autocomplete="off"></div>
+            <div class="hotel-actions"><button type="button" class="mini-outline" id="hotelAsStart">Start here</button><button type="button" class="mini-outline" id="hotelReturn">Return here</button><button type="button" class="mini-outline" id="hotelNearby">Explore nearby</button></div>
+            <label class="constraint-check"><input type="checkbox" id="rememberHotel"> Remember on this device <small>stored only in this browser</small></label>
+            <p class="custom-help">Hotel search shows real places from map data. No live room availability, prices or booking.</p>
+          </details>
         </div>
 
         <div class="line-divider"></div>
         <div class="section-row"><div class="section-overline">02 / TELL STREETWISE WHAT YOU WANT</div><span class="subtag">NATURAL LANGUAGE</span></div>
         <p class="field-description">Describe the experience. You don't need to select any data layers.</p>
+        <div class="voice-row"><button type="button" class="mic-btn" data-mic="intentText" aria-pressed="false" aria-label="Speak your request">🎙</button><select id="voiceLang" aria-label="Voice language"><option value="en-US">EN</option><option value="zh-CN">中文</option></select><span id="voiceStatus" class="voice-status">Voice or text — you can edit the transcript.</span></div>
         <textarea id="intentText" class="intent-box" rows="3" spellcheck="false" placeholder="I’d like a greener, quieter walk with interesting architecture.">I'd like a greener, quieter walk with interesting architecture.</textarea>
         <button id="generateRoutes" class="primary-cta"><span id="ctaLabel">✦ Plan My Walk</span><span class="cta-arrow">↗</span></button>
         <div id="interpretMode" class="interpret-mode" aria-live="polite">Checking AI interpretation service…</div>
+        <section class="journey-section" aria-label="Journey stops">
+          <div class="section-row"><div class="section-overline">JOURNEY STOPS</div><span class="small-count" id="journeyCount"></span></div>
+          <div id="journeyStops" class="journey-stops"></div>
+          <div class="search-place"><span class="place-dot stop"></span><input id="addStopSearch" aria-label="Add a stop" autocomplete="off"></div>
+          <button type="button" class="mini-text-button" id="journeyReset">Clear journey</button>
+        </section>
 
         <div class="line-divider"></div>
         <div class="section-row"><div class="section-overline">03 / YOUR WALKING PREFERENCES</div><span id="preferenceSource" class="small-count">NOT INTERPRETED</span></div>
@@ -351,10 +433,15 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
         </div>
 
         <div class="line-divider"></div>
-        <div class="section-row"><label for="timeRange" class="section-overline">04 / WALKING CONSTRAINTS</label><span id="timeValue" class="range-value">60 MIN</span></div>
+        <div class="section-row"><label for="timeRange" class="section-overline">04 / WALKING CONSTRAINTS</label><span id="timeValue" class="range-value">100 MIN</span></div>
         <div class="field-description">MAX WALKING TIME · A HARD LIMIT</div>
-        <input id="timeRange" type="range" min="10" max="60" value="60" step="1" aria-label="Maximum walking time" />
-        <div class="range-labels"><span>10 MIN</span><span id="timeRangeMax">60 MIN</span></div><label class="custom-limit">Custom maximum (minutes) <input type="number" id="customTime" min="10" step="1" value="60" inputmode="numeric" aria-label="Custom maximum walking time in whole minutes, at least 10" aria-describedby="customTimeHelp"></label><p id="customTimeHelp" class="custom-help">Default 60 min. Type any whole number of minutes (10 or more); the slider extends to match.</p><label class="custom-limit">Maximum detour over shortest candidate (%) <input type="number" id="maxDetourPct" min="0" max="100" step="5" value="25" aria-label="Maximum detour percentage"></label>
+        <div class="budget-chips" role="group" aria-label="Quick walking time"><button type="button" data-walk-min="60">60</button><button type="button" data-walk-min="100" aria-pressed="true">100</button><button type="button" data-walk-min="120">120</button><button type="button" data-walk-min="150">150</button><button type="button" data-walk-min="custom">Custom</button></div>
+        <input id="timeRange" type="range" min="10" max="150" value="100" step="1" aria-label="Maximum walking time" />
+        <div class="range-labels"><span>10 MIN</span><span id="timeRangeMax">150 MIN</span></div><label class="custom-limit">Custom maximum (minutes) <input type="number" id="customTime" min="10" step="1" value="100" inputmode="numeric" aria-label="Custom maximum walking time in whole minutes, at least 10" aria-describedby="customTimeHelp"></label><p id="customTimeHelp" class="custom-help">Default 100 min. Type any whole number of minutes (10 or more); the slider extends to match.</p>
+        <div class="section-row budget-row"><span class="field-description">MAX WALKING DISTANCE · HARD LIMIT</span><span id="distValue" class="range-value">NOT SET</span></div>
+        <div class="budget-chips" role="group" aria-label="Walking distance limit"><button type="button" data-walk-km="none" aria-pressed="true">Not set</button><button type="button" data-walk-km="2">2 km</button><button type="button" data-walk-km="5">5 km</button><button type="button" data-walk-km="8">8 km</button><button type="button" data-walk-km="10">10 km</button><button type="button" data-walk-km="custom">Custom</button><span class="unit-toggle"><button type="button" data-dist-unit="km" aria-pressed="true">km</button><button type="button" data-dist-unit="mi">mi</button></span></div>
+        <label class="custom-limit">Custom distance <input type="number" id="customDist" min="0.1" step="0.1" inputmode="decimal" aria-label="Custom maximum walking distance"></label>
+        <label class="custom-limit">Total outing (walking + visits, optional, minutes) <input type="number" id="outingMin" min="10" step="5" inputmode="numeric" placeholder="not set" aria-label="Total outing duration in minutes"></label><label class="custom-limit">Maximum detour over shortest candidate (%) <input type="number" id="maxDetourPct" min="0" max="100" step="5" value="25" aria-label="Maximum detour percentage"></label>
         <label class="constraint-check"><input id="avoidDetours" type="checkbox" checked> Avoid excessive detours <small>≤ 25% longer than baseline</small></label>
         <label class="constraint-check"><input id="stepFree" type="checkbox"> Step-free access <small>verified pedestrian-access data required</small></label>
         <label class="constraint-check"><input id="avoidStairs" type="checkbox"> Avoid stairs <small>excludes OpenStreetMap steps from routing</small></label>
@@ -365,7 +452,7 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
           <div class="section-row"><div class="section-overline">05 / REFINE YOUR WALK</div><span class="small-count">CONVERSATION</span></div>
           <p class="field-description">Ask for changes. New route results and the map are recomputed when possible.</p>
           <div id="chatHistory" class="chat-history" role="log" aria-live="polite"></div>
-          <form id="chatForm" class="chat-form"><textarea id="chatInput" rows="2" placeholder="Make it quieter, even if it takes five more minutes…" aria-label="Follow-up route instructions"></textarea><button id="chatSend" type="submit" aria-label="Send instruction">↗</button></form>
+          <form id="chatForm" class="chat-form"><button type="button" class="mic-btn" data-mic="chatInput" aria-pressed="false" aria-label="Speak a follow-up">🎙</button><textarea id="chatInput" rows="2" placeholder="Make it quieter, even if it takes five more minutes…" aria-label="Follow-up route instructions"></textarea><button id="chatSend" type="submit" aria-label="Send instruction">↗</button></form>
           <div class="chat-hint">Enter to send · Shift + Enter for a new line</div>
         </section>
 
@@ -420,6 +507,7 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
         <div class="right-head"><div><div class="section-overline">ROUTE INTELLIGENCE</div><h2>Your route <span>explained.</span></h2></div><span class="results-symbol">↗</span></div>
         <div class="context-row"><div class="context-card"><span class="context-label">LIVE WEATHER</span><strong id="weatherMain">—</strong><span id="weatherMeta">Awaiting forecast</span></div><div class="context-card"><span class="context-label">GPS STATUS</span><strong id="gpsMain">OFF</strong><span id="gpsMeta">Location unavailable</span></div></div>
         <p class="context-updated" id="contextUpdated">Weather observation time: unavailable</p>
+        <section id="cityWalk" class="city-walk hidden" aria-live="polite"></section>
         <div class="subtle-divider"></div>
         <div class="section-row"><div class="section-overline">AI RECOMMENDED ROUTES</div><span class="small-count" id="routeCount">0 LOADED</span></div>
         <p class="soft-copy">Real routes from the STREETWISE engine on the OpenStreetMap pedestrian graph, ranked by your preferences on the same 12 experience scores as Explore.</p>
@@ -650,6 +738,228 @@ if(typeof module!=='undefined')module.exports={WEATHER,weatherContext,weatherWin
 </script>
 <script>
 'use strict';
+/* NYC-wide place search shared by Starting Point, Destination, My Hotel and Add Stop.
+
+   Providers (all called from the browser; no private key is ever shipped):
+   · Photon (komoot) — OpenStreetMap POIs and addresses, designed for search-as-you-type, CORS-enabled.
+   · NYC GeoSearch (NYC Planning Labs, Pelias over PAD/LION) — official NYC addresses and venues in all five boroughs,
+     plus reverse geocoding for map picks.
+   · Mapbox Search Box (/suggest + /retrieve) — only when a public token is configured (STREETWISE_CONFIG.mapboxToken);
+     a suggestion is never treated as a confirmed place until /retrieve returns its coordinates.
+   Results are normalized to one Place model, de-duplicated across providers and limited to the five boroughs.
+   Search coverage (five boroughs) is not routing coverage: walking routes exist only where the pedestrian graph does. */
+const NYC_BBOX=[-74.2591,40.4774,-73.7004,40.9176];
+const BOROUGHS={'manhattan':'Manhattan','new york county':'Manhattan','new york':null,'brooklyn':'Brooklyn','kings county':'Brooklyn','queens':'Queens',
+ 'queens county':'Queens','bronx':'Bronx','the bronx':'Bronx','bronx county':'Bronx','staten island':'Staten Island','richmond county':'Staten Island'};
+const PLACE_SEARCH={minChars:2,debounceMs:300,limit:7,timeoutMs:8000};
+const OSM_LABEL={'tourism:museum':'Museum','tourism:gallery':'Gallery','tourism:hotel':'Hotel','tourism:hostel':'Hostel','tourism:guest_house':'Guest house',
+ 'tourism:attraction':'Attraction','tourism:viewpoint':'Viewpoint','amenity:cafe':'Café','amenity:restaurant':'Restaurant','amenity:fast_food':'Fast food',
+ 'amenity:bar':'Bar','amenity:pub':'Pub','amenity:pharmacy':'Pharmacy','amenity:hospital':'Hospital','amenity:clinic':'Clinic','amenity:bank':'Bank',
+ 'amenity:atm':'ATM','amenity:toilets':'Public restroom','amenity:university':'University','amenity:library':'Library','amenity:theatre':'Theatre',
+ 'shop:supermarket':'Supermarket','shop:convenience':'Convenience store','shop:bakery':'Bakery','shop:mall':'Shopping mall','shop:department_store':'Department store',
+ 'leisure:park':'Park','leisure:garden':'Garden','railway:station':'Station','railway:subway_entrance':'Subway entrance','public_transport:station':'Transit station',
+ 'highway:bus_stop':'Bus stop','building:yes':'Building','office:yes':'Building','place:house':'Address','highway:residential':'Street','highway:primary':'Street',
+ 'highway:secondary':'Street','highway:tertiary':'Street','place:square':'Square','historic:monument':'Monument','historic:memorial':'Memorial'};
+const titleCase=s=>String(s||'').toLowerCase().replace(/\b\w/g,c=>c.toUpperCase());
+function boroughOf(...names){for(const n of names){const b=BOROUGHS[String(n||'').toLowerCase()];if(b)return b;}return null;}
+function haversineKm(a,b){const R=6371.0088,r=Math.PI/180,dl=(b.lat-a.lat)*r,dn=(b.lon-a.lon)*r;const s=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(s));}
+function inNYC(p){return p.lon>=NYC_BBOX[0]&&p.lon<=NYC_BBOX[2]&&p.lat>=NYC_BBOX[1]&&p.lat<=NYC_BBOX[3];}
+/** Walking routes exist only on the pedestrian graph (today Manhattan); the engine's snap is the final word. */
+function inRoutingCoverage(p){return p.borough?p.borough==='Manhattan':typeof latLonInsideManhattanEnvelope==='function'&&latLonInsideManhattanEnvelope(p);}
+const normName=s=>String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g,'').replace(/^the\s+/,'').replace(/[^a-z0-9一-鿿]+/g,' ').trim();
+
+/** Unified Place model. */
+function makePlace(o){
+ return {id:o.id,name:o.name,address:o.address||null,neighborhood:o.neighborhood||null,borough:o.borough||null,category:o.category||null,
+  lat:+o.lat,lon:+o.lon,source:o.source,sourceUrl:o.sourceUrl||null,website:o.website||null,hours:o.hours||null,retrievedAt:new Date().toISOString(),
+  verification:o.verification||'Listed by source (not verified by STREETWISE)',raw:o.raw||null};
+}
+const PROVIDERS={
+ photon:{label:'OpenStreetMap (Photon)',async search(q,opts,signal){
+  const bias=opts.near||{lat:40.758,lon:-73.985};
+  const p=new URLSearchParams({q,limit:'10',lat:bias.lat.toFixed(4),lon:bias.lon.toFixed(4),lang:'en',bbox:NYC_BBOX.join(',')});
+  for(const t of opts.osmTags||[])p.append('osm_tag',t);
+  const r=await fetch(`https://photon.komoot.io/api/?${p}`,{signal});if(!r.ok)throw new Error(`Photon HTTP ${r.status}`);
+  const d=await r.json();
+  return (d.features||[]).map(f=>{const x=f.properties||{},[lon,lat]=f.geometry.coordinates;
+   const borough=boroughOf(x.district,x.city,x.county,x.locality);
+   const street=[x.housenumber,x.street].filter(Boolean).join(' ');
+   const name=x.name||street||null;if(!name||x.state&&x.state!=='New York')return null;
+   return makePlace({id:`osm:${{N:'node',W:'way',R:'relation'}[x.osm_type]||x.osm_type}/${x.osm_id}`,name,address:[street,x.postcode].filter(Boolean).join(', ')||null,
+    neighborhood:x.locality||x.district||null,borough,category:OSM_LABEL[`${x.osm_key}:${x.osm_value}`]||titleCase(String(x.osm_value||'').replace(/_/g,' ')),lat,lon,
+    source:'OpenStreetMap via Photon',sourceUrl:`https://www.openstreetmap.org/${{N:'node',W:'way',R:'relation'}[x.osm_type]}/${x.osm_id}`,raw:{osm_key:x.osm_key,osm_value:x.osm_value}});
+  }).filter(Boolean);
+ }},
+ geosearch:{label:'NYC GeoSearch (NYC Planning)',async search(q,opts,signal){
+  if(opts.osmTags?.length)return [];  // category-only searches (e.g. hotels) are answered by POI providers
+  const r=await fetch(`https://geosearch.planninglabs.nyc/v2/autocomplete?${new URLSearchParams({text:q})}`,{signal});if(!r.ok)throw new Error(`GeoSearch HTTP ${r.status}`);
+  const d=await r.json();
+  return (d.features||[]).map(f=>{const x=f.properties||{},[lon,lat]=f.geometry.coordinates;
+   const venue=x.layer==='venue';
+   return makePlace({id:`nycgeo:${x.gid||x.id}`,name:venue?titleCase(x.name):titleCase(x.name||x.label),address:venue?null:titleCase(x.label?.replace(/, (New York|Brooklyn|Bronx|Queens|Staten Island), NY, USA$/,'')),
+    neighborhood:x.neighbourhood||null,borough:boroughOf(x.borough)||x.borough||null,category:venue?'Place':x.layer==='address'?'Address':titleCase(x.layer),lat,lon,
+    source:'NYC GeoSearch (NYC Planning Labs · PAD)',raw:{layer:x.layer}});
+  });
+ }},
+ mapbox:{label:'Mapbox Search Box',enabled:()=>Boolean(window.STREETWISE_CONFIG?.mapboxToken),async search(q,opts,signal){
+  const token=window.STREETWISE_CONFIG.mapboxToken,session=placeSearchState.session||(placeSearchState.session=crypto.randomUUID());
+  const p=new URLSearchParams({q,access_token:token,session_token:session,limit:'8',language:'en',bbox:NYC_BBOX.join(','),country:'US'});
+  if(opts.near)p.set('proximity',`${opts.near.lon},${opts.near.lat}`);
+  const r=await fetch(`https://api.mapbox.com/search/searchbox/v1/suggest?${p}`,{signal});if(!r.ok)throw new Error(`Mapbox HTTP ${r.status}`);
+  const d=await r.json();
+  // Suggestions have no confirmed coordinates: they are retrieved on selection (retrievePlace).
+  return (d.suggestions||[]).map(s=>({id:`mapbox:${s.mapbox_id}`,name:s.name,address:s.full_address||s.place_formatted,borough:null,category:s.poi_category?.[0]||s.feature_type,
+   source:'Mapbox Search Box',pending:true,mapboxId:s.mapbox_id}));
+ }},
+};
+const placeSearchState={session:null};
+async function retrievePlace(p){
+ if(!p.pending)return p;
+ const token=window.STREETWISE_CONFIG.mapboxToken;
+ const r=await fetch(`https://api.mapbox.com/search/searchbox/v1/retrieve/${encodeURIComponent(p.mapboxId)}?${new URLSearchParams({access_token:token,session_token:placeSearchState.session||''})}`);
+ if(!r.ok)throw new Error(`Mapbox retrieve HTTP ${r.status}`);
+ const f=(await r.json()).features?.[0];if(!f)throw new Error('Mapbox returned no feature');placeSearchState.session=null;
+ const [lon,lat]=f.geometry.coordinates;return makePlace({...p,lat,lon,borough:boroughOf(f.properties.context?.locality?.name,f.properties.context?.place?.name)});
+}
+/** Search all enabled providers in parallel, merge, de-duplicate and rank. Each provider can fail on its own. */
+async function searchPlaces(q,opts={},signal){
+ const names=Object.keys(PROVIDERS).filter(k=>!PROVIDERS[k].enabled||PROVIDERS[k].enabled());
+ const settled=await Promise.allSettled(names.map(k=>Promise.race([PROVIDERS[k].search(q,opts,signal),new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),PLACE_SEARCH.timeoutMs))])));
+ if(signal?.aborted)throw new DOMException('aborted','AbortError');
+ const errors=settled.map((s,i)=>s.status==='rejected'?`${PROVIDERS[names[i]].label}: ${s.reason?.message||s.reason}`:null).filter(Boolean);
+ const lists=settled.map(s=>s.status==='fulfilled'?s.value:[]);
+ if(errors.length===names.length)throw new Error(errors.join(' · '));
+ const nq=normName(q),merged=[];
+ // Interleave providers so the best of each shows; then de-duplicate same-name places within 250 m.
+ for(let i=0;i<10;i++)for(const l of lists)if(l[i])merged.push(l[i]);
+ const out=[];
+ for(const p of merged){
+  if(!p.pending&&!inNYC(p))continue;
+  const dup=out.find(o=>normName(o.name)===normName(p.name)&&(p.pending||o.pending||haversineKm(o,p)<.25));
+  if(dup){dup.borough=dup.borough||p.borough;dup.neighborhood=dup.neighborhood||p.neighborhood;dup.address=dup.address||p.address;dup.alsoIn=[...(dup.alsoIn||[]),p.source];continue;}
+  if(!p.pending&&!p.borough)continue;   // outside the five boroughs (e.g. Yonkers, Jersey City)
+  out.push(p);
+ }
+ const score=p=>{const n=normName(p.name);return (n===nq?0:n.startsWith(nq)?1:n.includes(nq)?2:3);};
+ out.sort((a,b)=>score(a)-score(b));
+ return {places:out.slice(0,opts.limit||PLACE_SEARCH.limit),errors};
+}
+async function reverseGeocode(lat,lon){
+ try{const r=await fetch(`https://geosearch.planninglabs.nyc/v2/reverse?${new URLSearchParams({'point.lat':lat,'point.lon':lon,size:'1'})}`,{signal:AbortSignal.timeout(6000)});
+  const f=(await r.json()).features?.[0];if(!f)return null;const x=f.properties;
+  return {address:titleCase(x.label.replace(/, NY, USA$/,'')),borough:boroughOf(x.borough)||x.borough||null,neighborhood:x.neighbourhood||null};
+ }catch(e){return null;}
+}
+function placeDistanceText(p){
+ const g=typeof state!=='undefined'&&state.gps;if(!g||p.pending)return '';
+ const km=haversineKm(g,p);return `${km<1?Math.round(km*1000)+' m':km.toFixed(1)+' km'} straight-line from you`;
+}
+
+/** Autocomplete input: debounce, cancellation, stale-response guard, keyboard / mouse / touch, loading / empty / error. */
+function attachPlaceSearch(input,{onSelect,onClear,osmTags=null,placeholder=null,emptyHint='No NYC place found. Try another spelling, or pick the point on the map.'}){
+ if(placeholder)input.placeholder=placeholder;
+ input.setAttribute('role','combobox');input.setAttribute('aria-autocomplete','list');input.setAttribute('aria-expanded','false');
+ const wrap=input.closest('.search-place')||input.parentElement;wrap.classList.add('ps-wrap');
+ const list=document.createElement('div');list.className='ps-list hidden';list.setAttribute('role','listbox');list.id=input.id+'List';input.setAttribute('aria-controls',list.id);
+ wrap.after(list);
+ const clear=document.createElement('button');clear.type='button';clear.className='ps-clear hidden';clear.setAttribute('aria-label','Clear');clear.textContent='×';input.after(clear);
+ const st={timer:null,ctrl:null,seq:0,items:[],active:-1,selected:null};
+ const close=()=>{list.classList.add('hidden');input.setAttribute('aria-expanded','false');st.active=-1;};
+ const show=html=>{list.innerHTML=html;list.classList.remove('hidden');input.setAttribute('aria-expanded','true');};
+ const render=()=>{
+  show(st.items.map((p,i)=>`<button type="button" role="option" class="ps-item ${i===st.active?'active':''}" data-i="${i}" aria-selected="${i===st.active}">
+   <span class="ps-name">${esc(p.name)}</span><span class="ps-cat">${esc(p.category||'')}</span>
+   <span class="ps-meta">${esc([p.address,p.neighborhood,p.borough].filter(Boolean).filter((v,j,a)=>a.indexOf(v)===j).join(' · '))}${p.borough&&p.borough!=='Manhattan'?' · <em>search only — walking routes cover Manhattan</em>':''}</span>
+   ${placeDistanceText(p)?`<span class="ps-dist">${esc(placeDistanceText(p))}</span>`:''}</button>`).join('')+`<div class="ps-foot">Sources: ${esc([...new Set(st.items.map(p=>p.source))].join(' · '))}</div>`);
+  list.querySelectorAll('[data-i]').forEach(b=>b.addEventListener('mousedown',e=>{e.preventDefault();choose(+b.dataset.i);}));
+ };
+ async function choose(i){
+  let p=st.items[i];if(!p)return;close();
+  try{p=await retrievePlace(p);}catch(e){toast('Could not confirm that place: '+e.message);return;}
+  st.selected=p;input.value=p.name;clear.classList.remove('hidden');onSelect(p);
+ }
+ async function run(q){
+  st.ctrl?.abort();st.ctrl=new AbortController();const seq=++st.seq;
+  show('<div class="ps-status">Searching NYC places…</div>');
+  try{const {places,errors}=await searchPlaces(q,{near:state.gps||(state.mapReady?{lat:state.map.getCenter().lat,lon:state.map.getCenter().lng}:null),osmTags},st.ctrl.signal);
+   if(seq!==st.seq)return;  // a newer keystroke owns the list
+   st.items=places;st.active=places.length?0:-1;
+   if(!places.length){show(`<div class="ps-status">${esc(emptyHint)}</div>${errors.length?`<div class="ps-foot">Partly unavailable: ${esc(errors.join(' · '))}</div>`:''}`);return;}
+   render();
+  }catch(e){if(e.name==='AbortError'||seq!==st.seq)return;show(`<div class="ps-status error">Place search unavailable (${esc(e.message)}). Pick the point on the map instead.</div>`);}
+ }
+ input.addEventListener('input',()=>{
+  const q=input.value.trim();clear.classList.toggle('hidden',!input.value);
+  // Editing a chosen place invalidates its coordinates until a new result is chosen.
+  if(st.selected&&input.value!==st.selected.name){st.selected=null;onClear?.();}
+  clearTimeout(st.timer);st.ctrl?.abort();
+  if(q.length<PLACE_SEARCH.minChars){st.seq++;close();return;}
+  st.timer=setTimeout(()=>run(q),PLACE_SEARCH.debounceMs);
+ });
+ input.addEventListener('keydown',e=>{
+  if(list.classList.contains('hidden')||!st.items.length){if(e.key==='Enter')e.preventDefault();return;}
+  if(e.key==='ArrowDown'){e.preventDefault();st.active=(st.active+1)%st.items.length;render();}
+  else if(e.key==='ArrowUp'){e.preventDefault();st.active=(st.active-1+st.items.length)%st.items.length;render();}
+  else if(e.key==='Enter'){e.preventDefault();if(st.active>=0)choose(st.active);}
+  else if(e.key==='Escape'){close();}
+ });
+ input.addEventListener('blur',()=>setTimeout(close,150));
+ clear.addEventListener('click',()=>{input.value='';clear.classList.add('hidden');st.seq++;st.ctrl?.abort();close();if(st.selected){st.selected=null;onClear?.();}input.focus();});
+ return {set(p){st.selected=p;input.value=p?.name||'';clear.classList.toggle('hidden',!p);},clear(){st.selected=null;input.value='';clear.classList.add('hidden');},get selected(){return st.selected;}};
+}
+if(typeof module!=='undefined')module.exports={searchPlaces,makePlace,boroughOf,normName,haversineKm,inNYC,PROVIDERS,PLACE_SEARCH};
+
+</script>
+<script>
+'use strict';
+/* Minimal evaluator for OpenStreetMap opening_hours, for "open when you arrive" checks.
+   Supports: 24/7; rules separated by ';'; day lists/ranges (Mo-Fr, Sa,Su); time lists/ranges (09:00-17:00, 08:00-12:00,13:00-18:00);
+   ranges past midnight (18:00-02:00); "off"/"closed"; PH rules are ignored. Anything else returns null (unknown) rather
+   than a guess. Times are evaluated in New York local time. */
+const OH_DAYS=['Mo','Tu','We','Th','Fr','Sa','Su'];
+function ohNyParts(date){
+ const p=Object.fromEntries(new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',hour:'2-digit',minute:'2-digit',hour12:false}).formatToParts(date).map(x=>[x.type,x.value]));
+ const day=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].indexOf(p.weekday);return {day,min:(+p.hour%24)*60+(+p.minute)};
+}
+function ohDays(spec){
+ const out=new Set();
+ for(const part of spec.split(',')){const m=part.trim().match(/^(Mo|Tu|We|Th|Fr|Sa|Su)(?:-(Mo|Tu|We|Th|Fr|Sa|Su))?$/);if(!m)return null;
+  let a=OH_DAYS.indexOf(m[1]),b=m[2]?OH_DAYS.indexOf(m[2]):a;for(let i=0;i<7;i++){const d=(a+i)%7;out.add(d);if(d===b)break;}}
+ return out;
+}
+function ohTimes(spec){
+ const out=[];for(const part of spec.split(',')){const m=part.trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})\+?$/);if(!m)return null;out.push([+m[1]*60+ +m[2],+m[3]*60+ +m[4]]);}return out;
+}
+/** true / false / null (unknown or unsupported syntax). */
+function isOpenAt(hours,date){
+ if(!hours||typeof hours!=='string')return null;const h=hours.trim();
+ if(h==='24/7')return true;
+ const {day,min}=ohNyParts(date);let verdict=null,anyRule=false;
+ for(const raw of h.split(';')){
+  const r=raw.trim();if(!r)continue;if(/^PH\b/.test(r))continue;
+  const m=r.match(/^((?:(?:Mo|Tu|We|Th|Fr|Sa|Su)(?:-(?:Mo|Tu|We|Th|Fr|Sa|Su))?)(?:,(?:Mo|Tu|We|Th|Fr|Sa|Su)(?:-(?:Mo|Tu|We|Th|Fr|Sa|Su))?)*)?\s*(.*)$/);
+  if(!m)return null;
+  const days=m[1]?ohDays(m[1]):new Set([0,1,2,3,4,5,6]),rest=m[2].trim();if(!days)return null;anyRule=true;
+  const prevDay=(day+6)%7;
+  if(/^(off|closed)$/i.test(rest)){if(days.has(day))verdict=false;continue;}
+  const times=rest===''?[[0,1440]]:ohTimes(rest);if(!times)return null;
+  for(const [a,b] of times){
+   if(b>a){if(days.has(day)){verdict=verdict||false;if(min>=a&&min<b)verdict=true;}}
+   else{ // past midnight: open from a today, or until b from yesterday's rule
+    if(days.has(day)){verdict=verdict||false;if(min>=a)verdict=true;}
+    if(days.has(prevDay)&&min<b)verdict=true;
+   }
+  }
+  // A later rule for the same day replaces earlier ones in OSM syntax; we keep the most permissive match among the rules.
+ }
+ if(!anyRule)return null;
+ return verdict===null?false:verdict;
+}
+if(typeof module!=='undefined')module.exports={isOpenAt};
+
+</script>
+<script>
+'use strict';
 
 /** STREETWISE / Manhattan research prototype. All displayed geometry is remote GIS source data or external routing output. **/
 const $ = (id) => document.getElementById(id);
@@ -719,24 +1029,43 @@ const planner = {
   profileView:'selected', routePois:[], poiStatus:'Not loaded', poiRun:0, lastBest:null
 };
 
-const DEFAULT_WALK_MINUTES = 60, MIN_WALK_MINUTES = 10, SLIDER_BASE_MAX = 60;  // max walking time: default, minimum, base slider end
+const DEFAULT_WALK_MINUTES = 100, MIN_WALK_MINUTES = 10, SLIDER_BASE_MAX = 150;  // max walking time: default, minimum, base slider end
+const WALK_QUICK_MINUTES = [60, 100, 120, 150], WALK_QUICK_KM = [2, 5, 8, 10], KM_PER_MILE = 1.609344;
 const state = {
   map: null, mapReady: false, mapLayersReady:false,
   start:'bryant', end:'rock', customStart:null, customEnd:null, gps:null, gpsWatch:null,
-  pick:null, dimension:'Streets', budget:DEFAULT_WALK_MINUTES,
+  pick:null, dimension:'Streets', budget:DEFAULT_WALK_MINUTES, maxKm:null, distUnit:'km', outingMin:null,
   datasets:{streets:null, trees:null, lpc:null}, dataComplete:{streets:false,trees:false,lpc:false},
   dataErrors:{}, loading:{}, routes:[], activeRoute:null, selectedStreet:null,
   display:{roads:true,trees:false,lpc:false,routes:true,pois:true}, routingBusy:false, weather:null,
   treeStatsReady:false, thresholds:[0,0], intentTags:[], streetsById:new Map(), streetExpected:null, streetRetrying:false, overlayCoverage:{trees:null,lpc:null}, overlayRequestId:0
 };
 
-/* Max walking time: default 60 min, at least 10, no upper cap. The slider spans 10–60 and extends to the current
-   value when it is higher, so slider, custom input and header always show the same number. */
+/* Max walking time: default 100 min, at least 10, no upper cap. The slider spans 10–150 and extends to the current
+   value when it is higher, so slider, chips, custom input and header always show the same number.
+   Max walking distance: not set by default (no hidden limit); optional total outing duration = walking + visits. */
 function validWalkMinutes(v){const n=typeof v==='string'?v.trim():v;if(n===''||n===null)return null;const x=Number(n);return Number.isInteger(x)&&x>=MIN_WALK_MINUTES?x:null;}
 function syncBudgetUI(){
   const max=Math.max(SLIDER_BASE_MAX,state.budget),r=$('timeRange');
   r.max=max;r.value=state.budget;$('timeRangeMax').textContent=`${max} MIN`;$('timeValue').textContent=`${state.budget} MIN`;
   if(document.activeElement!==$('customTime'))$('customTime').value=state.budget;  // never overwrite what the user is typing
+  document.querySelectorAll('[data-walk-min]').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.walkMin===state.budget)));
+  const custom=!WALK_QUICK_MINUTES.includes(state.budget);document.querySelector('[data-walk-min="custom"]')?.setAttribute('aria-pressed',String(custom));
+  syncDistanceUI();
+}
+/** Distance limit in km (null = not set); shown in the chosen unit. */
+function setDistanceLimit(km){
+  if(km===null||km===''||km===undefined){state.maxKm=null;syncDistanceUI();return true;}
+  const x=Number(km);if(!Number.isFinite(x)||x<=0||x>100)return false;state.maxKm=Math.round(x*100)/100;syncDistanceUI();return true;
+}
+function syncDistanceUI(){
+  const u=state.distUnit,v=state.maxKm==null?null:u==='mi'?state.maxKm/KM_PER_MILE:state.maxKm;
+  const out=$('distValue');if(!out)return;
+  out.textContent=v==null?'NOT SET':`${(Math.round(v*10)/10)} ${u.toUpperCase()}`;
+  document.querySelectorAll('[data-walk-km]').forEach(b=>{const k=b.dataset.walkKm;b.setAttribute('aria-pressed',String(k==='none'?state.maxKm==null:k!=='custom'&&state.maxKm!=null&&Math.abs(+k-state.maxKm)<.01));
+    if(k!=='none'&&k!=='custom')b.textContent=u==='mi'?`${(+k/KM_PER_MILE).toFixed(1)} mi`:`${k} km`;});
+  if(document.activeElement!==$('customDist'))$('customDist').value=v==null?'':Math.round(v*10)/10;
+  document.querySelectorAll('[data-dist-unit]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.distUnit===u)));
 }
 /** Sets the hard limit if valid; returns false (state unchanged) otherwise. */
 function setBudget(v){const x=validWalkMinutes(v);if(x===null)return false;state.budget=x;syncBudgetUI();return true;}
@@ -871,8 +1200,10 @@ async function interpretIntent(q){
     }catch(err){console.warn('LLM parsing unavailable:',err);toast('AI parsing unavailable. Using clearly marked limited local preview.');}
   }
   if(!data)data=localInterpret(input);
+  // Tourist / multi-stop intent: the LLM's structured `journey`, or the labelled local parser when no LLM is configured.
+  if(mode!=='llm'&&typeof localJourney==='function'){await warmNameIndex().catch(()=>{});data.journey=localJourney(input);}
   if(typeof data?.clarification==='string'&&data.clarification.trim())return {changes:[],clarification:data.clarification.trim()};
-  return {changes:applyInterpretation(data,mode),clarification:null};
+  return {changes:applyInterpretation(data,mode),clarification:null,journey:data.journey||null};
 }
 async function checkInterpreter(){
   if(location.protocol==='file:'){$('interpretMode').textContent='LOCAL PREVIEW · Start server.py with an API key for genuine LLM understanding';return}
@@ -1006,6 +1337,7 @@ function syncMapData(){
   for(const [id,data] of [['nyc-roads',state.datasets.streets],['nyc-trees',state.datasets.trees],['nyc-landmarks',state.datasets.lpc],['candidate-routes',currentRoutesGeojson()],['route-edges',routeEdgesGeojson()],['selected-route',activeRouteGeojson()],['points',pointGeojson()],['route-pois',poiGeojson()]]){
     const s=map.getSource(id);if(s)s.setData(data||emptyFC());
   }
+  if(typeof updateJourneyMap==='function')updateJourneyMap();
   // An over-limit preview is dashed; a feasible selection is solid lime.
   const active=state.routes.find(x=>x.id===state.activeRoute);
   if(map.getLayer('route-selected'))map.setPaintProperty('route-selected','line-dasharray',active&&!active.feasible?[1.4,1.1]:[1,0]);
@@ -1053,13 +1385,13 @@ function setupMap(){
       m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#6fd2d8','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
       m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
       m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':7,'circle-stroke-color':'#fff','circle-stroke-width':3}});
-      setupRouteEdgeLayer();setupUrbanMap();
+      setupRouteEdgeLayer();setupUrbanMap();if(typeof setupJourneyMap==='function')setupJourneyMap();
       state.mapLayersReady=true; setupExperienceMap(); syncMapData();updateMapStyles();
       m.on('click','road-highlight',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit',...urbanMapLayerIds()]}).length)return;const feat=e.features?.[0];if(!feat)return;const fid=feat.properties?.FID;const real=state.streetsById.get(String(fid));state.selectedStreet=real||feat;updateSegmentDetails();});
       m.on('click','route-alts',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;  // a click on the selected route's segment opens its evidence instead
       const name=e.features?.[0]?.properties?.id;if(name)selectRoute(name)});
       m.on('click','poi-points',(e)=>{if(state.pick)return;const f=e.features?.[0];if(f?.properties?.name)showPOIPopup(f,e.lngLat)});
-      m.on('click',(e)=>{if(!state.pick)return;const kind=state.pick;const p={name:`Map point ${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}`,lat:e.lngLat.lat,lon:e.lngLat.lng};state[kind==='start'?'customStart':'customEnd']=p;state[kind]='custom';$(kind==='start'?'startSelect':'endSelect').value='custom';$(kind==='start'?'searchStart':'searchEnd').value=p.name;state.pick=null;$('pickNotice').classList.add('hidden');m.getCanvas().style.cursor='';resetRoutes();syncMapData();toast(`${kind==='start'?'Start':'Destination'} set from the map.`)});
+      m.on('click',async(e)=>{if(!state.pick)return;const kind=state.pick;const p={id:`map:${e.lngLat.lat.toFixed(5)},${e.lngLat.lng.toFixed(5)}`,name:`Map point ${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}`,lat:e.lngLat.lat,lon:e.lngLat.lng,source:'Selected on map'};state[kind==='start'?'customStart':'customEnd']=p;state[kind]='custom';$(kind==='start'?'startSelect':'endSelect').value='custom';$(kind==='start'?'searchStart':'searchEnd').value=p.name;state.pick=null;$('pickNotice').classList.add('hidden');m.getCanvas().style.cursor='';resetRoutes();syncMapData();if(typeof placeInputs!=='undefined')placeInputs[kind]?.set(p);if(typeof reverseGeocode==='function'){const r=await reverseGeocode(p.lat,p.lon);if(r){p.address=r.address;p.borough=r.borough;p.name=`Near ${r.address}`;placeInputs[kind]?.set(p);$(kind==='start'?'searchStart':'searchEnd').value=p.name;}}toast(`${kind==='start'?'Start':'Destination'} set from the map.`)});
       for(const layer of ['road-highlight','route-alts']){m.on('mouseenter',layer,()=>{m.getCanvas().style.cursor=state.pick?'crosshair':'pointer'});m.on('mouseleave',layer,()=>{m.getCanvas().style.cursor=state.pick?'crosshair':''})}
       m.on('moveend',()=>{scheduleOverlayRefresh();$('mapCoords').textContent=`${m.getCenter().lat.toFixed(3)}° N · ${Math.abs(m.getCenter().lng).toFixed(3)}° W`});
     });
@@ -1068,7 +1400,7 @@ function setupMap(){
   }catch(err){ $('mapFallback').querySelector('h2').textContent='Map initialization failed';$('mapFallback').querySelector('p').textContent=err.message;}
 }
 
-function resetRoutes(keepRun=false){if(!keepRun)planner.runId++; planner.routeResponse=null;state.routes=[];state.activeRoute=null;planner.routePois=[];planner.poiStatus='Not loaded';renderPOIs();updateWhyRoute();renderRouteEdges();if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();$('rankingStatus').textContent='Journey changed. Plan again to update route geometry.';renderRouteCards();updateProfile();syncMapData();}
+function resetRoutes(keepRun=false){if(!keepRun)planner.runId++; planner.routeResponse=null;if(typeof journey!=='undefined'){journey.plan=null;renderCityWalk();}state.routes=[];state.activeRoute=null;planner.routePois=[];planner.poiStatus='Not loaded';renderPOIs();updateWhyRoute();renderRouteEdges();if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();$('rankingStatus').textContent='Journey changed. Plan again to update route geometry.';renderRouteCards();updateProfile();syncMapData();}
 function routeBounds(routes,extraMeters=100){
   const all=routes.flatMap(r=>r.coords);
   if(!all.length)return null;
@@ -1111,16 +1443,27 @@ async function fetchCompleteEvidence(kind,bbox,maxRecords){
 async function handlePlan(text,isFollowUp=false){
   if(state.routingBusy||planner.parsing)return;
   const q=(text||'').trim();if(!q){toast('Describe the walk you want.');return}
-  for(const kind of ['start','end']){const typed=$(kind==='start'?'searchStart':'searchEnd').value.trim(),chosen=getPlace(kind);if(typed!==chosen?.name){toast(`Search and choose a ${kind==='start'?'starting point':'destination'} result first, or use a preset.`);return}}
+  for(const kind of ['start','end']){if(kind==='end'&&typeof journey!=='undefined'&&journey.endMode!=='fixed')continue;const typed=$(kind==='start'?'searchStart':'searchEnd').value.trim(),chosen=getPlace(kind);if(typed!==chosen?.name){toast(`Search and choose a ${kind==='start'?'starting point':'destination'} result first, or use a preset.`);return}}
   planner.parsing=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;
   appendChat('user',q);
   try{const result=await interpretIntent(q);if(result.clarification){appendChat('assistant',result.clarification);return;}
     if(planner.weatherIntent==='ask'&&state.routes.length){if(weatherContext.status!=='ok')await loadWeather();appendChat('assistant',weatherAnswer());return;}
+    if(typeof applyJourney==='function'&&result.journey){
+      const jc=await applyJourney(result.journey);
+      if(jc.length)appendChat('assistant',`${planner.interpretation==='llm'?'AI':'Limited local'} journey interpretation: ${jc.join(' · ')}.`);
+      // "find" requests (nearby / along the walk) list real places without changing the plan
+      const finds=journey.services.filter(s=>!s.addAsStop&&result.journey.services.includes(s.type));
+      for(const s of finds){const r=await findServices(s.type,s.scope);showFoundPlaces(`${SERVICE_LABEL[s.type]} ${s.scope==='near_hotel'?'near your hotel':s.scope==='along_route'?'along your walk':'near the start'}`,r.places,{note:r.note});
+        appendChat('assistant',r.places.length?`${r.places.length} ${SERVICE_LABEL[s.type].toLowerCase()} option(s): ${r.places.slice(0,3).map(p=>p.name+(p.detour?` (+${p.detour.detour_min} min)`:'')).join(', ')}. Add one as a stop from the list. ${r.note}`:`No ${SERVICE_LABEL[s.type].toLowerCase()} found. ${r.note}`);
+        journey.services=journey.services.filter(x=>x!==s);}
+      if(finds.length&&!journeyIntentPresent({...result.journey,services:[]})&&state.routes.length)return;
+    }
     const changes=result.changes;if(changes.length)appendChat('assistant',`${planner.interpretation==='llm'?'AI interpretation':'Limited local interpretation'}: ${changes.join(' · ')}. Checking feasible pedestrian paths…`);
     else appendChat('assistant',`No explicit preference change recognized${planner.interpretation==='local'?' by limited local preview':''}. I’ll check route options using current settings.`);
   }catch(err){toast('Unable to interpret preferences: '+err.message)}
   finally{planner.parsing=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false}
-  await generateRoutes(q,isFollowUp);
+  if(typeof journeyMode==='function'&&journeyMode())await planJourney(isFollowUp);
+  else await generateRoutes(q,isFollowUp);
 }
 
 function poiDimension(tags){if(tags.tourism==='museum'||tags.tourism==='gallery'||tags.amenity==='theatre')return'Culture';if(tags.leisure==='park'||tags.leisure==='garden')return'Nature';if(tags.historic||tags.tourism==='attraction')return'Architecture';if(tags.amenity==='cafe'||tags.amenity==='restaurant')return'Food & Retail';if(tags.tourism==='viewpoint')return'Scenic & Visual';return null}
@@ -1209,42 +1552,26 @@ function renderMethodology(){
   return `<p><strong>Two layers, one score definition.</strong> Experience scores are measured on NYC LION street segments (Explore Urban Data). Routing uses the OpenStreetMap pedestrian graph; each OSM edge takes the scores of the LION segments it matches (by distance, direction, street name and level), or is measured directly with the same indicator code when no reliable match exists (crossings, park paths, bridges).</p><p><strong>Scores</strong> are 0–100 percentile ranks among Manhattan street segments, not calibrated measurements. Missing data is N/A, never zero. Each dimension's sub-indicators, units, methods and sources are listed in the Street Segment Inspector in Explore Urban Data.</p><p><strong>Route score</strong> per dimension = Σ(length × score) / Σ(scored length) over the route's OSM edges, with coverage = scored length ÷ route length. <strong>Ranking</strong> = weighted experience (your preferences; low-coverage dimensions pulled toward neutral 50) − 0.4 × detour %. Routes over the time or detour limit are not recommended.</p><h3>12 dimensions</h3><ol>${DIMENSIONS.map(d=>`<li><strong>${esc(d.name)}</strong> — ${esc(d.desc)}</li>`).join('')}</ol>`;
 }
 function closeModal(){modalOverlay.classList.add('hidden')}
-async function geocodePlace(kind,query){
-  if(!query.trim())return;
-  const root=$(kind==='start'?'startResults':'endResults');root.classList.remove('hidden');root.innerHTML='<div class="place-option">Searching Manhattan locations…</div>';
-  try{
-    const u=`https://photon.komoot.io/api/?${new URLSearchParams({q:query,limit:'8',lon:'-73.98',lat:'40.76',lang:'en'})}`;
-    const d=await timedJson(u,10000);
-    const matches=(d.features||[]).filter(f=>Array.isArray(f.geometry?.coordinates)&&latLonInsideManhattanEnvelope({lon:f.geometry.coordinates[0],lat:f.geometry.coordinates[1]})).slice(0,5);
-    root.innerHTML=matches.length?matches.map((f,i)=>{
-      const p=f.properties||{};return `<button class="place-option" type="button" data-place="${i}">${esc([p.name,p.housenumber,p.street,p.city].filter(Boolean).join(', ')||query)}</button>`;
-    }).join(''):'<div class="place-option">No matching Manhattan location. Try another address or pick the map.</div>';
-    root.querySelectorAll('[data-place]').forEach(el=>el.addEventListener('click',()=>{
-      const f=matches[+el.dataset.place],p=f.properties||{};
-      const place={name:[p.name,p.street,p.city].filter(Boolean).join(', ')||query,lon:f.geometry.coordinates[0],lat:f.geometry.coordinates[1]};
-      state[kind==='start'?'customStart':'customEnd']=place;state[kind]='custom';
-      $(kind==='start'?'startSelect':'endSelect').value='custom';$(kind==='start'?'searchStart':'searchEnd').value=place.name;
-      root.classList.add('hidden');resetRoutes();syncMapData();
-      if(state.mapReady)state.map.flyTo({center:[place.lon,place.lat],zoom:15,duration:450});
-    }));
-  }catch(err){root.innerHTML='<div class="place-option">Geocoder unavailable. Use a popular location or pick on map.</div>'}
-}
 function setupControls(){
   renderPreferenceSummary();updateLegend();checkInterpreter();renderPOIs();updateWhyRoute();
   $('searchStart').value='Bryant Park';$('searchEnd').value='Rockefeller Center';
   for(const kind of ['start','end']){
     $(kind==='start'?'startSelect':'endSelect').addEventListener('change',e=>{
-      state[kind]=e.target.value;const p=getPlace(kind);$(kind==='start'?'searchStart':'searchEnd').value=p?.name||'';resetRoutes();syncMapData();
-    });
-    const search=$(kind==='start'?'searchStart':'searchEnd');
-    search.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();geocodePlace(kind,search.value)}});
-    search.addEventListener('blur',()=>{if(search.value.trim() && ![getPlace(kind)?.name].includes(search.value.trim())){ /* free text must be explicitly geocoded before routing */ }});
-    search.addEventListener('input',()=>{
-      const root=$(kind==='start'?'startResults':'endResults');root.classList.remove('hidden');root.innerHTML='<button type="button" class="place-option search-trigger">↗ Search this location</button>';
-      root.querySelector('button').addEventListener('click',()=>geocodePlace(kind,search.value));
+      state[kind]=e.target.value;const p=getPlace(kind);$(kind==='start'?'searchStart':'searchEnd').value=p?.name||'';if(typeof placeInputs!=='undefined')placeInputs[kind]?.set(p);if(kind==='end'&&typeof setEndMode==='function'){journey.userSetDestination=true;setEndMode('fixed');}resetRoutes();syncMapData();
     });
   }
   $('timeRange').addEventListener('input',e=>{setBudget(Number(e.target.value));updateRoutesUI()});
+  document.querySelectorAll('[data-walk-min]').forEach(b=>b.addEventListener('click',()=>{
+    if(b.dataset.walkMin==='custom'){$('customTime').focus();$('customTime').select();return;}
+    setBudget(Number(b.dataset.walkMin));renderPreferenceSummary();updateRoutesUI();}));
+  document.querySelectorAll('[data-walk-km]').forEach(b=>b.addEventListener('click',()=>{
+    const k=b.dataset.walkKm;if(k==='custom'){$('customDist').focus();return;}
+    setDistanceLimit(k==='none'?null:Number(k));renderPreferenceSummary();updateRoutesUI();}));
+  document.querySelectorAll('[data-dist-unit]').forEach(b=>b.addEventListener('click',()=>{state.distUnit=b.dataset.distUnit;syncDistanceUI();}));
+  $('customDist').addEventListener('change',e=>{const raw=e.target.value.trim();const km=raw===''?null:Number(raw)*(state.distUnit==='mi'?KM_PER_MILE:1);
+    if(!setDistanceLimit(km)){toast('Enter a distance above 0.');syncDistanceUI();}renderPreferenceSummary();updateRoutesUI();});
+  $('outingMin').addEventListener('change',e=>{const raw=e.target.value.trim(),x=Number(raw);
+    state.outingMin=raw===''?null:Number.isInteger(x)&&x>=10?x:state.outingMin;e.target.value=state.outingMin??'';renderPreferenceSummary();});
   // Custom maximum: free typing (empty allowed while editing); validated on blur / Enter; invalid input restores the last valid value.
   const commitCustomTime=()=>{const raw=$('customTime').value;if(String(state.budget)===raw.trim())return;
     if(setBudget(raw)){renderPreferenceSummary();updateRoutesUI();}
@@ -1323,7 +1650,7 @@ function buildRouteRequest(a,b){
  const weights={},directions={};
  for(const d of DIMENSIONS)if(planner.origins[d.name]!=='default'&&planner.weights[d.name]>0){weights[d.name]=planner.weights[d.name];directions[d.name]=planner.directions[d.name]||'high';}
  return {origin:{lat:a.lat,lon:a.lon},destination:{lat:b.lat,lon:b.lon},preferences:{weights,directions},
-  constraints:{max_minutes:state.budget,max_detour_pct:planner.maxDetourPct,avoid_detours:planner.constraints.avoidDetours,avoid_stairs:planner.constraints.avoidStairs},
+  constraints:{max_minutes:state.budget,max_km:state.maxKm,max_detour_pct:planner.maxDetourPct,avoid_detours:planner.constraints.avoidDetours,avoid_stairs:planner.constraints.avoidStairs},
   // Weather snapshot for the walking window (weather.js); the engine decides whether it may change edge costs.
   weather:typeof weatherSnapshot==='function'?weatherSnapshot(state.budget):null};
 }
@@ -1389,7 +1716,7 @@ function scoreText(v){return v==null?'N/A':String(v);}
 /** The hard limits the engine actually applied to the current results (from the response, not the form). */
 function constraintSummary(){
  const c=planner.routeResponse?.constraints_used;if(!c)return '';
- return `Hard limits used: max ${c.max_minutes==null?'—':Math.round(c.max_minutes)} min walking · ${c.avoid_detours&&c.max_detour_pct!=null?`max ${c.max_detour_pct}% detour`:'detour limit off'}${c.avoid_stairs?' · avoiding stairs':''} · ${planner.routeResponse.feasible_count} of ${planner.routeResponse.routes.length} routes feasible`;
+ return `Hard limits used: max ${c.max_minutes==null?'—':Math.round(c.max_minutes)} min walking · ${c.max_km!=null?`max ${c.max_km} km · `:""}${c.avoid_detours&&c.max_detour_pct!=null?`max ${c.max_detour_pct}% detour`:'detour limit off'}${c.avoid_stairs?' · avoiding stairs':''} · ${planner.routeResponse.feasible_count} of ${planner.routeResponse.routes.length} routes feasible`;
 }
 function renderRouteCards(){
  const root=$('routeCards'),routes=state.routes;
@@ -1597,6 +1924,587 @@ function setupWeatherUI(){
  setInterval(()=>{if(weatherContext.status==='ok')renderWeatherStatus();},60000);  // age / stale labels
  renderWeatherStatus();
 }
+
+</script>
+<script>
+'use strict';
+/* AI Discover My Walk: shared journey state, agent tools and multi-stop planning.
+
+   One state object (journey) is read by the left panel, the map and Route Intelligence; start and destination stay in
+   the existing state.start / state.end (getPlace), so every panel sees the same places.
+   Tools (each returns real data or an explicit "not available"):
+     autocomplete_places / search_places      places.js (Photon + NYC GeoSearch, five boroughs)
+     discover_attractions / search_restaurants / search_hotels / search_local_services
+                                              data/places/*.json — OpenStreetMap + NYC LPC + NYC restrooms snapshot,
+                                              limited to the walking-route coverage (Manhattan)
+     verify_menu_item                         POST /api/menu/verify (official website only)
+     find_along_route                         POST /api/detours (real network detours)
+     plan_itinerary                           POST /api/itinerary (network matrix, ordering, experience-aware legs)
+     get_current_location / get_weather_context   existing GPS and weather.js
+   The language step (LLM when configured, otherwise the clearly-labelled local parser) only fills names, categories and
+   limits. It never supplies coordinates, menus, hours, distances or scores. */
+const journey={
+ endMode:'fixed',          // fixed | open | round | hotel
+ hotel:null,rememberHotel:false,
+ interests:[],             // famous | museums | historic | parks | shopping | culture
+ food:[],                  // {category,item,cuisine,required}
+ services:[],              // {type,scope,addAsStop}
+ named:[],                 // resolved concrete stops: {place,required,order,visitMin,visitEstimated}
+ extra:{},                 // "one more museum": extra pool places per interest
+ removed:new Set(),        // place ids the user removed
+ replaced:{},              // slot id -> place chosen by the user
+ plan:null,lastFound:null,menu:{},pending:false,active:false,
+};
+const POI_CACHE={};
+// Typical short-visit estimates (minutes); always shown as estimates and editable per stop.
+const VISIT_MIN={museums:45,attractions:20,historic:10,historic_lpc:10,parks:20,culture:20,shopping:25,cafes:15,bakeries:10,restaurants:45,bars:30,
+ pharmacies:10,groceries:10,health:0,banks:5,restrooms:5,luggage:10,hotels:0};
+const INTEREST_SOURCES={famous:['attractions','museums','historic','culture','parks'],museums:['museums'],historic:['historic_lpc','historic'],
+ parks:['parks'],shopping:['shopping'],culture:['culture','museums']};
+const INTEREST_VISIT={famous:20,museums:45,historic:10,parks:20,shopping:25,culture:20};
+const INTEREST_LABEL={famous:'Famous sight',museums:'Museum',historic:'Historic building',parks:'Park',shopping:'Shopping',culture:'Culture venue'};
+const SERVICE_LABEL={pharmacies:'Pharmacy',groceries:'Grocery / supermarket',health:'Hospital / clinic',banks:'ATM / bank',restrooms:'Public restroom',luggage:'Luggage storage'};
+const placesUrl=c=>`./data/places/${c}.json`;
+async function loadPlaces(cat){
+ if(!POI_CACHE[cat])POI_CACHE[cat]=streetwiseJson(placesUrl(cat)).then(d=>d.records.map(r=>({...r,cat}))).catch(e=>{delete POI_CACHE[cat];throw e;});
+ return POI_CACHE[cat];
+}
+let PLACE_INDEX=null;
+async function placeIndex(){return PLACE_INDEX||(PLACE_INDEX=streetwiseJson('./data/places/index.json').catch(e=>{PLACE_INDEX=null;throw e;}));}
+/** POI index record → unified Place (same model as places.js), with its provenance. */
+function poiPlace(r){
+ const src=r.src==='lpc'?'NYC Landmarks Preservation Commission':r.src==='nyc_restrooms'?'NYC Open Data Public Restrooms':'OpenStreetMap (Overpass snapshot)';
+ return {id:r.id,name:r.name,address:r.addr||null,neighborhood:null,borough:'Manhattan',category:poiCategoryLabel(r),lat:r.lat,lon:r.lon,source:src,
+  sourceUrl:r.id.startsWith('osm:')?`https://www.openstreetmap.org/${r.id.slice(4)}`:r.report||null,website:r.web||null,menuUrl:r.menu||null,hours:r.hours||null,
+  wikidata:r.wd||null,cat:r.cat,drink:r.drink||null,cuisine:r.cuisine||null,verification:'Listed by source (not verified by STREETWISE)',raw:r};
+}
+function poiCategoryLabel(r){
+ const s=r.sub||'';const v=s.split('=')[1]||'';
+ if(r.src==='lpc')return `NYC Landmark${r.type?' · '+r.type:''}`;
+ return titleCase(v.replace(/_/g,' '))||titleCase(r.cat);
+}
+const kmBetween=(a,b)=>haversineKm(a,b);
+function distToPathKm(p,path){
+ if(path.length===1)return kmBetween(p,path[0]);
+ let best=Infinity;const kx=84.4143,ky=111.0497;
+ for(let i=1;i<path.length;i++){const a=path[i-1],b=path[i];const ax=a.lon*kx,ay=a.lat*ky,bx=b.lon*kx,by=b.lat*ky,px=p.lon*kx,py=p.lat*ky;
+  const ux=bx-ax,uy=by-ay,l2=ux*ux+uy*uy,t=l2?Math.max(0,Math.min(1,((px-ax)*ux+(py-ay)*uy)/l2)):0;best=Math.min(best,Math.hypot(px-ax-t*ux,py-ay-t*uy));}
+ return best;
+}
+/** Anchor path the walk is likely to follow (start → fixed stops → end), used only to pre-select nearby candidates;
+    the planner then compares them on the real network. */
+function anchorPath(){
+ const pts=[getPlace('start')];
+ for(const n of journey.named)pts.push(n.place);
+ const end=journeyEndPlace();if(end)pts.push(end);
+ return pts.filter(Boolean);
+}
+function journeyEndPlace(){
+ if(journey.endMode==='fixed')return getPlace('end');
+ if(journey.endMode==='hotel')return journey.hotel;
+ if(journey.endMode==='round')return getPlace('start');
+ return null;
+}
+/** Relevance 0..1 from source evidence only: notability (Wikidata sitelinks = Wikipedia editions), designation (LPC),
+    item evidence (OSM drink / cuisine tags), data completeness. */
+function relevance(r,{item=null,cuisine=null}={}){
+ let s=.3;
+ if(r.sl)s+=.55*Math.min(1,Math.log10(1+r.sl)/2.1);else if(r.wd)s+=.05;
+ if(r.src==='lpc')s+=.2;if(r.web)s+=.05;if(r.hours)s+=.05;
+ if(item){const d=r.drink||{};if(d[item]==='yes')s+=.3;else if(['cappuccino','latte','espresso','flat white'].includes(item)&&(d.espresso==='yes'||d.coffee==='yes'||/coffee/.test(r.cuisine||'')))s+=.15;}
+ if(cuisine&&new RegExp(`(^|;)${cuisine}(;|$)`,'i').test(r.cuisine||''))s+=.3;
+ return Math.min(1,s);
+}
+/** Tool: candidate places of some categories near the walk, ranked by relevance minus straight-line distance to the path
+    (pre-selection only; real walking cost is computed by the planner). */
+async function discoverPlaces(cats,{item=null,cuisine=null,filter=null,limit=8,near=null,radiusKm=2.5}={}){
+ const lists=await Promise.all(cats.map(c=>loadPlaces(c).catch(()=>[])));
+ const path=near?[near]:anchorPath();if(!path.length)return [];
+ // never "discover" the start, the end or a stop already chosen
+ const fixedPts=[...anchorPath(),journey.hotel].filter(Boolean);
+ const seen=new Set(),out=[];
+ for(const r of lists.flat()){
+  if(journey.removed.has(r.id)||filter&&!filter(r))continue;
+  const key=normName(r.name);if(seen.has(key+Math.round(r.lat*500)+Math.round(r.lon*500)))continue;seen.add(key+Math.round(r.lat*500)+Math.round(r.lon*500));
+  const d=distToPathKm(r,path);if(d>radiusKm)continue;
+  if(fixedPts.some(f=>kmBetween(f,r)<.15||normName(f.name)===key))continue;
+  const rel=relevance(r,{item,cuisine});out.push({r,rel,d,score:rel-.3*d});
+ }
+ out.sort((a,b)=>b.score-a.score);
+ return out.slice(0,limit).map(x=>({...poiPlace(x.r),score:Math.round(x.rel*100)/100,straightKm:Math.round(x.d*100)/100}));
+}
+async function findNamedPlace(name){
+ // Index first (real records with provenance), then the five-borough search providers.
+ const n=normName(name);
+ for(const c of ['attractions','museums','historic','historic_lpc','culture','parks','hotels','shopping']){
+  const hit=(await loadPlaces(c).catch(()=>[])).filter(r=>normName(r.name)===n||normName(r.name).startsWith(n+' ')).sort((a,b)=>Boolean(b.wd)-Boolean(a.wd))[0];
+  if(hit)return poiPlace(hit);
+ }
+ try{const {places}=await searchPlaces(name,{near:{lat:40.758,lon:-73.985},limit:3});return places.find(p=>!p.pending)||null;}catch(e){return null;}
+}
+
+/* ---------- language: local fallback parser (labelled), same output shape as the LLM's `journey` ---------- */
+const ZH_PLACES={'洛克菲勒中心':'Rockefeller Center','时代广场':'Times Square','中央公园':'Central Park','帝国大厦':'Empire State Building','大都会博物馆':'The Metropolitan Museum of Art',
+ '大都会艺术博物馆':'The Metropolitan Museum of Art','布鲁克林大桥':'Brooklyn Bridge','华尔街':'Wall Street','中央车站':'Grand Central Terminal','现代艺术博物馆':'Museum of Modern Art',
+ '高线公园':'The High Line','联合广场':'Union Square','华盛顿广场':'Washington Square Park','911纪念馆':'National September 11 Memorial & Museum','炮台公园':'The Battery',
+ '古根海姆':'Solomon R. Guggenheim Museum','自然历史博物馆':'American Museum of Natural History','熨斗大厦':'Flatiron Building','克莱斯勒大厦':'Chrysler Building',
+ '圣帕特里克大教堂':"St. Patrick's Cathedral",'纽约公共图书馆':'New York Public Library','哥伦比亚大学':'Columbia University','切尔西市场':'Chelsea Market','布莱恩特公园':'Bryant Park',
+ '无线电城':'Radio City Music Hall','卡内基音乐厅':'Carnegie Hall','林肯中心':'Lincoln Center','唐人街':'Chinatown','小意大利':'Little Italy'};
+const FOOD_RULES=[
+ [/cappuccino|卡布奇诺/i,{category:'cafes',item:'cappuccino'}],[/latte|拿铁/i,{category:'cafes',item:'latte'}],[/espresso|浓缩咖啡/i,{category:'cafes',item:'espresso'}],
+ [/flat white|澳白|馥芮白/i,{category:'cafes',item:'flat white'}],[/matcha|抹茶/i,{category:'cafes',item:'matcha'}],[/coffee|café|cafe|咖啡/i,{category:'cafes',item:null}],
+ [/cheesecake|芝士蛋糕/i,{category:'bakeries',item:'cheesecake'}],[/bagel|贝果/i,{category:'bakeries',item:'bagel'}],[/croissant|可颂|羊角包/i,{category:'bakeries',item:'croissant'}],
+ [/dessert|甜品|甜点|ice cream|冰淇淋/i,{category:'bakeries',item:null}],[/bakery|面包/i,{category:'bakeries',item:null}],
+ [/pizza|披萨|比萨/i,{category:'restaurants',cuisine:'pizza'}],[/italian|意大利菜|意餐/i,{category:'restaurants',cuisine:'italian'}],[/chinese food|中餐|中国菜/i,{category:'restaurants',cuisine:'chinese'}],
+ [/sushi|寿司|japanese|日料|日本菜/i,{category:'restaurants',cuisine:'japanese'}],[/ramen|拉面/i,{category:'restaurants',cuisine:'ramen'}],[/mexican|墨西哥/i,{category:'restaurants',cuisine:'mexican'}],
+ [/brunch|早午餐/i,{category:'restaurants',cuisine:'brunch'}],[/\brestaurant|eat\b|dinner|lunch|吃饭|晚餐|午餐|餐厅/i,{category:'restaurants'}],[/\bbar\b|cocktail|beer|酒吧|啤酒|鸡尾酒/i,{category:'bars'}]];
+const SERVICE_RULES=[[/pharmac|drugstore|药店|药房/i,'pharmacies'],[/restroom|toilet|bathroom|washroom|洗手间|厕所|卫生间/i,'restrooms'],[/\batm\b|取钱|取款/i,'banks'],[/\bbank\b|银行/i,'banks'],
+ [/supermarket|grocery|convenience store|超市|便利店/i,'groceries'],[/hospital|clinic|urgent care|医院|诊所/i,'health'],[/luggage|baggage|存行李|寄存|行李/i,'luggage']];
+const INTEREST_RULES=[[/famous|landmark|sights?\b|must.see|attraction|tourist|著名|景点|地标|必去/i,'famous'],[/museum|galler|art\b|博物馆|美术馆|艺术馆|画廊/i,'museums'],
+ [/historic|history|architecture|heritage|old building|历史|建筑|古迹/i,'historic'],[/\bparks?\b|garden|公园|花园/i,'parks'],[/shopping|shops|mall|购物|商场|逛街/i,'shopping'],[/theat(er|re)|broadway|library|剧院|图书馆|百老汇/i,'culture']];
+const CN_NUM={'一':1,'两':2,'二':2,'三':3,'四':4,'五':5,'六':6,'七':7,'八':8,'九':9,'十':10,'半':.5};
+const EN_NUM={one:1,an:1,a:1,two:2,three:3,four:4,five:5,six:6,half:.5};
+function parseHours(q){
+ let m=q.match(/(\d+(?:\.\d+)?)\s*(?:hours?|hrs?|h\b|小时)/i);if(m)return Math.round(+m[1]*60)+(/(and a half|个半|半)/.test(q.slice(m.index,m.index+m[0].length+10))&&!m[1].includes('.')?30:0);
+ m=q.match(/([一两二三四五六七八九十])\s*个?\s*(半)?\s*小时/);if(m)return Math.round((CN_NUM[m[1]]+(m[2]?.5:0))*60);
+ m=q.match(/\b(one|an|a|two|three|four|five|six)\s+(?:and a half\s+)?hours?(\s+and a half)?/i);if(m)return Math.round((EN_NUM[m[1].toLowerCase()]+(/and a half/i.test(m[0])?.5:0))*60);
+ m=q.match(/(\d{2,3})\s*(?:minutes?|mins?|分钟)/i);if(m)return +m[1];
+ return null;
+}
+function localJourney(q){
+ const j={interests:[],named_stops:[],food:[],services:[],service_scope:null,hotel:null,origin:null,destination:null,end_mode:null,walking_minutes:null,outing_minutes:null,distance_km:null,more:{},remove:[]};
+ const seqWords=/(then|after that|afterwards|before|first|finally|先|再|然后|接着|之后|最后)/i.test(q);
+ for(const [re,v] of INTEREST_RULES)if(re.test(q)&&!j.interests.includes(v))j.interests.push(v);
+ // "one more museum" / "再加一个博物馆" adds to what is already planned
+ const more=q.match(/(?:another|one more|add (?:a|one)|再加(?:一个|一家|个)?|再来一个|多加一个)\s*([^,，。.]{0,14})/i);
+ if(more){const what=more[1];for(const [re,v] of INTEREST_RULES)if(re.test(what)){j.more[v]=(j.more[v]||0)+1;j.interests=j.interests.filter(x=>x!==v);}}
+ for(const [re,v] of FOOD_RULES){if(re.test(q)&&!j.food.some(f=>f.category===v.category&&(f.item||f.cuisine))){j.food.push({category:v.category,item:v.item||null,cuisine:v.cuisine||null,required:true});}}
+ // keep only the most specific coffee request
+ if(j.food.some(f=>f.category==='cafes'&&f.item))j.food=j.food.filter(f=>!(f.category==='cafes'&&!f.item));
+ if(j.food.filter(f=>f.category==='restaurants').length>1)j.food=j.food.filter(f=>!(f.category==='restaurants'&&!f.cuisine));
+ for(const [re,v] of SERVICE_RULES)if(re.test(q)&&!j.services.includes(v))j.services.push(v);
+ j.service_scope=/near (my |the )?hotel|酒店附近|酒店旁/i.test(q)?'near_hotel':/along|on the way|on my (walk|route)|途中|路上|顺路|沿途/i.test(q)?'along_route':j.services.length?'near_start':null;
+ const serviceAsStop=/(先去|first go|go to|stop at|drop (off )?(my )?(luggage|bags)|存行李|need to|must)/i.test(q);
+ j.service_stop=serviceAsStop;
+ // named places: Chinese aliases and English names found in the discovery index
+ const named=[];
+ for(const [zh,en] of Object.entries(ZH_PLACES)){const i=q.indexOf(zh);if(i>=0)named.push({name:en,at:i});}
+ for(const n of (localJourney.names||[])){const i=q.toLowerCase().indexOf(n.toLowerCase());if(i>=0&&!named.some(x=>normName(x.name)===normName(n)))named.push({name:n,at:i});}
+ named.sort((a,b)=>a.at-b.at);
+ const hotelM=q.match(/(?:staying at|stay at|my hotel is|我住在|住在|我的酒店是)\s*(?:the |a |an )?([^,，。.;]+?)(?:\s+(?:near|by|in|附近)\s+([^,，。.;]+))?(?=[,，。.;]|$)/i);
+ if(hotelM)j.hotel={name:hotelM[1].trim(),near:hotelM[2]?.trim()||null,is_mine:true};
+ else if(/find (a |me a )?hotels?|hotels? near|找(个|家)?酒店|推荐酒店/i.test(q)){const near=q.match(/hotels? near ([^,，。.;]+)|(?:在)?([^,，。.;]{2,12})附近的?酒店/i);j.hotel={name:null,near:(near?.[1]||near?.[2]||'').trim()||null,is_mine:false};}
+ const endHotel=/back to (my |the )?hotel|return to (my |the )?hotel|回(到)?(我的)?酒店|返回酒店/i.test(q),endStart=/back to (the )?start|round.?trip|loop|回到起点|回到出发/i.test(q);
+ j.end_mode=endHotel?'hotel':endStart?'round':null;
+ if(/from (my |the )?hotel|start (at|from) (my |the )?hotel|从(我的)?酒店出发/i.test(q))j.origin='hotel';
+ else if(/from (here|my location|where i am)|从这里|从我(现在)?的位置/i.test(q))j.origin='gps';
+ const endAt=q.match(/(?:end (?:at|in)|finish (?:at|in)|最后(?:到|去|在))\s*([^,，。.;]+)/i);
+ for(const n of named){
+  const before=q.slice(Math.max(0,n.at-14),n.at);
+  if(endAt&&endAt[1].includes(n.name.split(' ')[0])||/最后(到|去|在)\s*$|end (at|in)\s*$|finish (at|in)\s*$/i.test(before)){j.destination=n.name;j.end_mode='fixed';continue;}
+  if(/(from|start (at|from)|从)\s*$/i.test(before)){j.origin=n.name;continue;}
+  j.named_stops.push({name:n.name,required:true,order:seqWords?j.named_stops.length+1:null});
+ }
+ const outing=/(i have|i've got|we have|total|altogether|我有|总共|一共|有)\s*.{0,10}?(hours?|hrs?|minutes?|小时|分钟)/i.test(q)||/(two|three|two and a half)\s+hours to/i.test(q);
+ const mins=parseHours(q);
+ if(mins!=null){if(outing||/hour|小时/.test(q))j.outing_minutes=mins;}
+ // "extend to 180 minutes" / "时间可以延长到 180 分钟" / "延长到三个小时": a new total outing time
+ if(/extend|longer|延长|增加|放宽/i.test(q)){const e=q.match(/(\d{2,3}(?:\.\d)?)\s*(hours?|hrs?|小时|minutes?|mins?|分钟)?/i);
+  if(e)j.outing_minutes=/hour|hr|小时/i.test(e[2]||'')?Math.round(+e[1]*60):+e[1];else{const h=parseHours(q);if(h)j.outing_minutes=h;}}
+ const km=q.match(/(\d+(?:\.\d+)?)\s*(km|kilomet(?:er|re)s?|公里|千米)/i),mi=q.match(/(\d+(?:\.\d+)?)\s*(miles?|mi\b|英里)/i);
+ j.distance_km=km?+km[1]:mi?Math.round(+mi[1]*KM_PER_MILE*10)/10:null;
+ if(/less walking|walk less|少走|少走路/i.test(q))j.less_walking=true;
+ const rm=q.match(/(?:remove|skip|drop|去掉|删掉|不要去|不去)\s*([^,，。.;]+)/i);if(rm)j.remove.push(rm[1].trim());
+ return j;
+}
+async function warmNameIndex(){
+ if(localJourney.names)return;
+ const lists=await Promise.all(['attractions','museums','historic','culture','parks'].map(c=>loadPlaces(c).catch(()=>[])));
+ // notable names only (Wikidata), long enough not to match common words
+ localJourney.names=[...new Set(lists.flat().filter(r=>r.wd&&r.name.length>=8).map(r=>r.name))].concat(Object.values(PLACES).map(p=>p.name));
+}
+function journeyIntentPresent(j){return Boolean(j&&(j.interests.length||j.named_stops.length||j.food.length||j.services.length||j.hotel||j.end_mode||j.origin==='hotel'||Object.keys(j.more||{}).length||j.remove.length||(j.outing_minutes!=null)));}
+
+/* ---------- state updates (multi-turn: merge, never wipe what is already settled) ---------- */
+async function applyJourney(j){
+ const changes=[];if(!j)return changes;
+ journey.active=journey.active||journeyIntentPresent(j);
+ for(const i of j.interests)if(!journey.interests.includes(i)){journey.interests.push(i);changes.push(`interest: ${INTEREST_LABEL[i]}`);}
+ for(const [k,v] of Object.entries(j.more||{})){if(!journey.interests.includes(k))journey.interests.push(k);journey.extra[k]=(journey.extra[k]||0)+v;changes.push(`+${v} ${INTEREST_LABEL[k]||k}`);}
+ for(const f of j.food){const same=journey.food.findIndex(x=>x.category===f.category);if(same>=0)journey.food[same]=f;else journey.food.push(f);
+  changes.push(f.item?`${f.item} (${f.category})`:f.cuisine?`${f.cuisine} ${f.category}`:f.category);}
+ for(const s of j.services){if(!journey.services.some(x=>x.type===s)){journey.services.push({type:s,scope:j.service_scope||'near_start',addAsStop:Boolean(j.service_stop)});changes.push(SERVICE_LABEL[s]+(j.service_stop?' (stop)':''));}}
+ for(const n of j.named_stops){
+  if(journey.named.some(x=>normName(x.place.name)===normName(n.name)))continue;
+  const p=await findNamedPlace(n.name);
+  if(!p){changes.push(`“${n.name}” not found in NYC place data`);continue;}
+  journey.named.push({place:p,required:n.required!==false,order:n.order,visitMin:VISIT_MIN[p.cat]??20,visitEstimated:true});changes.push(`stop: ${p.name}`);
+ }
+ if(j.origin==='hotel'){if(journey.hotel){setJourneyPlace('start',journey.hotel);changes.push('start: my hotel');}else changes.push('start: my hotel (set your hotel first)');}
+ else if(j.origin==='gps'){if(state.gps){state.start='gps';$('searchStart').value='My current location';changes.push('start: my location');}else changes.push('start: GPS (allow location first)');}
+ else if(j.origin){const p=await findNamedPlace(j.origin);if(p){setJourneyPlace('start',p);changes.push(`start: ${p.name}`);}}
+ if(j.destination){const p=await findNamedPlace(j.destination);if(p){setJourneyPlace('end',p);setEndMode('fixed');changes.push(`end: ${p.name}`);}}
+ if(j.end_mode&&j.end_mode!=='fixed'){setEndMode(j.end_mode);changes.push({hotel:'end: back to my hotel',round:'end: back to start',open:'flexible end'}[j.end_mode]);}
+ else if(journey.active&&!j.destination&&journey.endMode==='fixed'&&(j.interests.length||Object.keys(j.more||{}).length)&&!journey.userSetDestination){setEndMode('open');changes.push('flexible end (discover for me)');}
+ if(j.outing_minutes!=null){state.outingMin=j.outing_minutes;$('outingMin').value=j.outing_minutes;changes.push(`outing ${j.outing_minutes} min (walking + visits)`);
+  if(j.outing_minutes>state.budget){setBudget(j.outing_minutes);}}
+ if(j.walking_minutes!=null&&setBudget(Math.round(j.walking_minutes)))changes.push(`max ${state.budget} min walking`);
+ if(j.distance_km!=null&&setDistanceLimit(j.distance_km))changes.push(`max ${j.distance_km} km`);
+ if(j.less_walking&&journey.plan){const km=Math.max(1,Math.round(journey.plan.totals.walk_m/1000*.8*10)/10);setDistanceLimit(km);changes.push(`less walking: max ${km} km`);}
+ for(const name of j.remove||[]){const n=normName(name);const hit=journey.named.find(x=>normName(x.place.name).includes(n))||journey.plan?.stops.find(s=>normName(s.name).includes(n));
+  if(hit){const id=hit.place?.id||hit.id;journey.removed.add(id);journey.named=journey.named.filter(x=>x.place.id!==id);changes.push(`removed ${hit.place?.name||hit.name}`);}}
+ if(j.hotel)changes.push(...await handleHotelIntent(j.hotel));
+ renderJourneyPanel();
+ return changes.filter(Boolean);
+}
+function setJourneyPlace(kind,p){
+ state[kind==='start'?'customStart':'customEnd']=p;state[kind]='custom';
+ placeInputs[kind]?.set(p);$(kind==='start'?'startSelect':'endSelect').value='custom';
+ if(kind==='end')journey.userSetDestination=true;
+ syncMapData();
+}
+function setEndMode(mode){
+ journey.endMode=mode;document.querySelectorAll('[data-end-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.endMode===mode)));
+ $('endFixedBox').classList.toggle('hidden',mode!=='fixed');
+ if(mode==='hotel'&&!journey.hotel)toast('Set My Hotel first (search it under My hotel).');
+ syncMapData();
+}
+
+/* ---------- hotels ---------- */
+async function handleHotelIntent(h){
+ const out=[];
+ let near=null;if(h.near){near=await findNamedPlace(h.near);}
+ if(h.name){
+  const q=normName(h.name);
+  const idx=(await loadPlaces('hotels').catch(()=>[])).filter(r=>normName(r.name).includes(q)||normName(r.brand||'').includes(q));
+  const ranked=idx.map(r=>({r,d:near?kmBetween(r,near):0})).sort((a,b)=>a.d-b.d).slice(0,5).map(x=>poiPlace(x.r));
+  if(h.is_mine){
+   if(ranked.length===1){setMyHotel(ranked[0]);out.push(`my hotel: ${ranked[0].name}`);}
+   else if(ranked.length>1){askChoice(`Which hotel are you staying at? ${ranked.length} real matches${near?` near ${near.name}`:''}:`,ranked,p=>{setMyHotel(p);appendChat('assistant',`My hotel set to ${p.name}. It will be used as start / return point when you ask.`);});out.push('hotel: please confirm which one');}
+   else out.push(`no hotel named “${h.name}” in the Manhattan data — search it under My hotel`);
+  }else{showFoundPlaces(`Hotels matching “${h.name}”`,ranked);out.push(`${ranked.length} hotels found (not set as yours)`);}
+ }else{
+  const res=await discoverPlaces(['hotels'],{near:near||getPlace('start'),limit:8,radiusKm:1.5});
+  showFoundPlaces(`Hotels near ${near?.name||getPlace('start')?.name||'the start'}`,res,{hotel:true});out.push(`${res.length} hotels near ${near?.name||'the start'} (search only, no live availability or prices)`);
+ }
+ return out;
+}
+function setMyHotel(p){
+ journey.hotel=p?{...p,category:p.category||'Hotel'}:null;
+ $('hotelName').textContent=p?p.name:'not set';hotelInput?.set(p);
+ try{if(journey.rememberHotel&&p)localStorage.setItem('sw.myHotel',JSON.stringify({id:p.id,name:p.name,lat:p.lat,lon:p.lon,address:p.address,source:p.source}));else localStorage.removeItem('sw.myHotel');}catch(e){}
+ renderJourneyPanel();syncMapData();
+}
+
+/* ---------- building the planner request ---------- */
+async function itineraryRequest(){
+ const start=getPlace('start');if(!start)throw new Error('Choose a starting point (search, GPS, My hotel or the map).');
+ const end=journey.endMode==='fixed'?getPlace('end'):journey.endMode==='hotel'?journey.hotel:null;
+ if(journey.endMode==='fixed'&&!end)throw new Error('Choose a destination, or pick “Discover for me”.');
+ if(journey.endMode==='hotel'&&!end)throw new Error('Set My Hotel to return to it.');
+ const ordered=journey.named.some(n=>n.order!=null);
+ // a named stop that is the start or the end (same name, or within 250 m under another record) is not a second visit
+ const sameAs=(p,q)=>q&&(kmBetween(p,q)<.05||(kmBetween(p,q)<.25&&(normName(p.name).includes(normName(q.name))||normName(q.name).includes(normName(p.name)))));
+ const stops=journey.named.filter(n=>!journey.removed.has(n.place.id)&&!sameAs(n.place,start)&&!sameAs(n.place,end)).map(n=>({...pick(n.place),required:n.required,order:n.order,visit_min:n.visitMin,visit_estimated:n.visitEstimated}));
+ const slots=[],poolCands=[];let order=stops.length;
+ for(const i of journey.interests){
+  const cands=await discoverPlaces(INTEREST_SOURCES[i],{limit:10,filter:i==='famous'?(r=>(r.sl||0)>=8):null});
+  const fixed=journey.replaced['interest:'+i];
+  if(fixed)stops.push({...pick(fixed),required:true,order:null,visit_min:VISIT_MIN[fixed.cat]??30});
+  else if(cands.length)slots.push({slot_id:'interest:'+i,label:INTEREST_LABEL[i],required:true,visit_min:INTEREST_VISIT[i],candidates:cands.slice(0,4).map(slotCand)});
+  for(const c of cands.slice(4))poolCands.push({...slotCand(c),visit_min:INTEREST_VISIT[i],group:i});
+ }
+ for(const f of journey.food){
+  const cats=f.item==='cheesecake'?['bakeries','restaurants']:[f.category];
+  const filt=f.cuisine?(r=>new RegExp(`(^|;)${f.cuisine}(;|$)`,'i').test(r.cuisine||'')):f.category==='cafes'&&f.item?(r=>r.cat==='cafes'):null;
+  const cands=await discoverPlaces(cats,{item:f.item,cuisine:f.cuisine,filter:filt,limit:6,radiusKm:1.2});
+  const id='food:'+f.category+':'+(f.item||f.cuisine||'');const fixed=journey.replaced[id];
+  if(fixed)stops.push({...pick(fixed),required:true,order:null,visit_min:VISIT_MIN[fixed.cat]??20});
+  else if(cands.length)slots.push({slot_id:id,label:foodLabel(f),required:f.required!==false,visit_min:VISIT_MIN[f.category]??20,candidates:cands.map(slotCand),order:ordered?++order:null});
+ }
+ for(const s of journey.services.filter(s=>s.addAsStop)){
+  const cands=await discoverPlaces([s.type],{limit:6,radiusKm:1.5});const id='service:'+s.type;
+  if(cands.length)slots.push({slot_id:id,label:SERVICE_LABEL[s.type],required:true,visit_min:VISIT_MIN[s.type]??10,candidates:cands.map(slotCand),order:s.type==='luggage'?0:null});
+ }
+ const outing=state.outingMin;
+ // extra discoveries scale with the time available (walking budget, or the total outing when set)
+ const base=outing||state.budget,maxPool=Math.max(0,Object.values(journey.extra).reduce((a,b)=>a+b,0)+(journey.interests.length?Math.max(1,Math.min(4,Math.round((base-30)/40))):0));
+ return {origin:pick(start),end:{mode:journey.endMode,place:end?pick(end):null},stops,slots,pool:{label:'Discovered places',max_stops:maxPool,candidates:poolCands.slice(0,16)},
+  constraints:{max_minutes:state.budget,max_km:state.maxKm,max_outing_minutes:outing,avoid_stairs:planner.constraints.avoidStairs},
+  preferences:buildRouteRequest(start,end||start).preferences,theme:journeyTheme()};
+}
+const pick=p=>({id:p.id,name:p.name,lat:p.lat,lon:p.lon,category:p.category||null,address:p.address||null,source:p.source||null});
+const slotCand=c=>({...pick(c),score:c.score,evidence:candidateEvidence(c)});
+function foodLabel(f){return f.item?`${titleCase(f.item)} (${f.category==='cafes'?'café':f.category.replace(/s$/,'')})`:f.cuisine?`${titleCase(f.cuisine)} restaurant`:{cafes:'Café',restaurants:'Restaurant',bakeries:'Bakery / dessert',bars:'Bar'}[f.category];}
+function candidateEvidence(c){
+ const e=[];if(c.raw?.sl)e.push(`Wikipedia in ${c.raw.sl} editions`);else if(c.wikidata)e.push('Wikidata-listed');if(c.raw?.src==='lpc')e.push('NYC designated landmark');if(c.drink?.espresso==='yes')e.push('OSM tag: serves espresso');if(c.drink?.coffee==='yes')e.push('OSM tag: serves coffee');
+ if(c.cuisine)e.push('cuisine: '+c.cuisine.replace(/;/g,', '));if(c.hours)e.push('hours listed');return e.join(' · ')||null;
+}
+function journeyTheme(){
+ const parts=[...journey.interests.map(i=>INTEREST_LABEL[i]+'s'),...journey.food.map(foodLabel),...journey.named.map(n=>n.place.name)];
+ return parts.length?`City walk: ${parts.slice(0,4).join(' · ')}`:'Your City Walk';
+}
+function journeyMode(){return journey.active||journey.named.length>0||journey.endMode!=='fixed';}
+
+/* ---------- planning ---------- */
+async function planJourney(isFollowUp=false){
+ if(state.routingBusy)return;
+ const run=++planner.runId;state.routingBusy=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;$('ctaLabel').textContent='✦ Finding places & routing…';
+ try{
+  resetRoutes(true);renderRouteCards();
+  const req=await itineraryRequest();
+  const res=await streetwiseFetch('/api/itinerary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req),signal:AbortSignal.timeout(45000)});
+  const json=await res.json().catch(()=>({}));if(run!==planner.runId)return;
+  if(!res.ok)throw new Error(json.error||`Itinerary service HTTP ${res.status}`);
+  journey.plan=json.itinerary;journey.request=req;
+  applyRouteResponse(json);
+  planner.lastExplanation=itinerarySummaryText(json.itinerary);
+  $('rankingStatus').textContent=planner.lastExplanation;
+  renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();renderCityWalk();renderJourneyPanel();
+  appendChat('assistant',planner.lastExplanation);
+  if(state.mapReady){const bx=routeBounds(state.routes,80);if(bx)state.map.fitBounds([[bx[0],bx[1]],[bx[2],bx[3]]],{padding:65,maxZoom:15.5,duration:700});}
+  autoVerifyMenus();cacheStopPlaces();
+ }catch(err){
+  if(run!==planner.runId)return;resetRoutes();renderRouteCards();
+  const msg=`Could not build the walk: ${err.message}`;$('rankingStatus').textContent=msg;appendChat('assistant',msg);toast(msg);
+ }finally{if(run===planner.runId){state.routingBusy=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false;$('ctaLabel').textContent='✦ Plan My Walk';}}
+}
+function itinerarySummaryText(it){
+ const t=it.totals,c=it.constraints;
+ const stops=it.stops.filter(s=>s.role!=='end').map(s=>s.name).join(' → ');
+ const pool=it.pool&&it.pool.requested>it.pool.added?` ${it.pool.requested-it.pool.added} more discovered place(s) did not fit the ${c.max_outing_minutes?`${c.max_outing_minutes}-minute outing`:'budget'}; extend the time to add them.`:'';
+ return pool+`${c.feasible?'Planned':'Not feasible'}: ${t.stops} stop(s)${stops?` — ${stops}`:''}${it.end_mode==='round'?' → back to start':it.end_mode==='hotel'?' → back to my hotel':''}. `+
+  `${(t.walk_m/1000).toFixed(2)} km, ${Math.round(t.walk_min)} min walking + ${Math.round(t.visit_min)} min visits (estimated) = ${Math.round(t.outing_min)} min.`+
+  (c.violations.length?` ${c.violations.join('; ')}.`:'')+(it.skipped.length?` Skipped: ${it.skipped.map(s=>`${s.name} (${s.reason})`).join('; ')}.`:'');
+}
+
+/* ---------- menu verification ---------- */
+async function verifyMenuItem(place,item){
+ const key=place.id+'|'+item;if(journey.menu[key]?.status&&journey.menu[key].status!=='checking')return journey.menu[key];
+ journey.menu[key]={status:'checking'};renderCityWalk();
+ try{const r=await streetwiseFetch('/api/menu/verify',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({place_id:place.id,name:place.name,website:place.website||place.raw?.web||null,menu_url:place.menuUrl||place.raw?.menu||null,item}),signal:AbortSignal.timeout(30000)});
+  const d=await r.json();if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);journey.menu[key]=d;
+ }catch(e){journey.menu[key]={status:'unverified',reason:`Menu check unavailable (${e.message}).`};}
+ renderCityWalk();return journey.menu[key];
+}
+async function autoVerifyMenus(){
+ if(!journey.plan)return;
+ for(const s of journey.plan.stops){const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);
+  if(f){const p=await placeById(s.id);if(p)verifyMenuItem(p,f.item);}}
+}
+async function placeById(id){
+ for(const c of Object.keys(POI_CACHE)){const r=(await POI_CACHE[c]).find(x=>x.id===id);if(r)return poiPlace(r);}
+ return null;
+}
+const MENU_LABEL={verified_on_menu:'Verified on menu',unverified:'Unverified',not_found:'Not found in available sources',checking:'Checking official menu…'};
+
+/* ---------- nearby / along-route search (find, without adding) ---------- */
+async function findServices(type,scope){
+ const anchor=scope==='near_hotel'?journey.hotel:getPlace('start');
+ if(scope==='near_hotel'&&!anchor)return {places:[],note:'Set My Hotel first to search near it.'};
+ if(scope==='along_route'&&journey.plan||scope==='along_route'&&state.routes.length){
+  const seq=journey.plan?[journey.plan.start,...journey.plan.stops]:[getPlace('start'),getPlace('end')].filter(Boolean);
+  const cands=await discoverPlaces([type],{limit:10,radiusKm:.8});
+  try{const r=await streetwiseFetch('/api/detours',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({sequence:seq.map(pick),candidates:cands.map(pick)}),signal:AbortSignal.timeout(20000)});
+   const d=await r.json();if(!r.ok)throw new Error(d.error);
+   const by=Object.fromEntries(d.candidates.map(c=>[c.id,c]));
+   return {places:cands.map(c=>({...c,detour:by[c.id]})).filter(c=>c.detour?.reachable).sort((a,b)=>a.detour.detour_m-b.detour.detour_m).slice(0,6),note:'Ranked by real walking detour added to your current walk.'};
+  }catch(e){return {places:cands.slice(0,6),note:`Detours unavailable (${e.message}); shown by straight-line distance to the walk.`};}
+ }
+ const res=await discoverPlaces([type],{near:anchor,limit:6,radiusKm:1.2});
+ return {places:res,note:`Nearest by straight-line distance to ${anchor?.name||'the start'}; add one as a stop to get the real walking route.`};
+}
+
+</script>
+<script>
+'use strict';
+/* Journey UI: shared place inputs, end modes, My Hotel, Journey Stops (left); waypoints, hotel and found places (map);
+   "Your City Walk" (Route Intelligence). Every panel renders from `journey`, state.start/end and the last planner
+   response, so they cannot disagree. */
+const placeInputs={};let hotelInput=null,addStopInput=null;
+const clockAt=min=>new Date(Date.now()+min*60000).toLocaleTimeString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit'});
+
+function setupJourneyUI(){
+ for(const kind of ['start','end']){
+  placeInputs[kind]=attachPlaceSearch($(kind==='start'?'searchStart':'searchEnd'),{
+   placeholder:'Search any NYC address, place or business',
+   onSelect:p=>{setJourneyPlace(kind,p);resetRoutes();syncMapData();
+    if(!inRoutingCoverage(p))toast(`${p.name} is in ${p.borough||'NYC'}: place search covers all five boroughs, but walking routes cover Manhattan only.`);
+    if(state.mapReady)state.map.flyTo({center:[p.lon,p.lat],zoom:15,duration:450});},
+   onClear:()=>{state[kind]=null;state[kind==='start'?'customStart':'customEnd']=null;resetRoutes();syncMapData();}});
+ }
+ placeInputs.start.set(getPlace('start'));placeInputs.end.set(getPlace('end'));
+ hotelInput=attachPlaceSearch($('hotelSearch'),{osmTags:['tourism:hotel','tourism:hostel','tourism:guest_house','tourism:motel'],placeholder:'Search your hotel (name or brand)',
+  emptyHint:'No hotel found with that name in NYC map data.',onSelect:p=>{setMyHotel(p);appendChat('assistant',`My hotel set to ${p.name}. Use it as start, return point or search anchor.`);},onClear:()=>setMyHotel(null)});
+ addStopInput=attachPlaceSearch($('addStopSearch'),{placeholder:'Add a stop: any NYC place',onSelect:p=>{addNamedStop(p);addStopInput.clear();}});
+ document.querySelectorAll('[data-end-mode]').forEach(b=>b.addEventListener('click',()=>{setEndMode(b.dataset.endMode);if(b.dataset.endMode!=='fixed')journey.active=true;renderJourneyPanel();}));
+ $('rememberHotel').addEventListener('change',e=>{journey.rememberHotel=e.target.checked;setMyHotel(journey.hotel);});
+ $('hotelAsStart').addEventListener('click',()=>{if(!journey.hotel)return toast('Set My Hotel first.');setJourneyPlace('start',journey.hotel);resetRoutes();});
+ $('hotelReturn').addEventListener('click',()=>{if(!journey.hotel)return toast('Set My Hotel first.');setEndMode('hotel');journey.active=true;renderJourneyPanel();});
+ $('hotelNearby').addEventListener('click',async()=>{if(!journey.hotel)return toast('Set My Hotel first.');const res=await discoverPlaces(['museums','attractions','cafes'],{near:journey.hotel,limit:8,radiusKm:1});showFoundPlaces(`Near ${journey.hotel.name}`,res);});
+ $('journeyReset').addEventListener('click',()=>{Object.assign(journey,{interests:[],food:[],services:[],named:[],extra:{},removed:new Set(),replaced:{},plan:null,lastFound:null,active:false});setEndMode('fixed');resetRoutes();renderJourneyPanel();renderCityWalk();syncMapData();});
+ // Privacy: My Hotel is stored only when the user ticks "Remember on this device".
+ try{const saved=JSON.parse(localStorage.getItem('sw.myHotel')||'null');if(saved){journey.rememberHotel=true;$('rememberHotel').checked=true;setMyHotel({...saved,category:'Hotel'});}}catch(e){}
+ renderJourneyPanel();renderCityWalk();
+}
+function addNamedStop(p,required=true){
+ if(journey.named.some(n=>n.place.id===p.id))return toast(`${p.name} is already a stop.`);
+ if(!inRoutingCoverage(p))toast(`${p.name} is outside walking-route coverage (Manhattan); it cannot be routed.`);
+ journey.removed.delete(p.id);journey.named.push({place:p,required,order:null,visitMin:VISIT_MIN[p.cat]??20,visitEstimated:true});journey.active=true;
+ if(journey.endMode==='fixed'&&!getPlace('end'))setEndMode('open');
+ renderJourneyPanel();syncMapData();toast(`Added ${p.name}. Plan My Walk to route it.`);
+}
+function renderJourneyPanel(){
+ const root=$('journeyStops');if(!root)return;
+ const chips=[...journey.interests.map(i=>INTEREST_LABEL[i]+(journey.extra[i]?` +${journey.extra[i]}`:'')),...journey.food.map(foodLabel),...journey.services.map(s=>SERVICE_LABEL[s.type]+(s.addAsStop?' (stop)':' (find)'))];
+ const end={fixed:getPlace('end')?.name||'destination not set',open:'flexible end',round:'back to start',hotel:journey.hotel?`back to ${journey.hotel.name}`:'back to hotel (not set)'}[journey.endMode];
+ const planned=journey.plan?.stops.filter(s=>s.role!=='end')||[];
+ root.innerHTML=`<div class="js-summary">${chips.length?chips.map(c=>`<span class="intent-tag">${esc(c)}</span>`).join(''):'<span class="soft-copy">No discovery request yet. Describe what you want, or add stops.</span>'}</div>
+  <p class="js-end">From <strong>${esc(getPlace('start')?.name||'start not set')}</strong> · to <strong>${esc(end)}</strong></p>
+  ${journey.named.length?`<ol class="js-list">${journey.named.map((n,i)=>`<li><span class="js-name">${esc(n.place.name)}<small>${esc(n.place.category||'')}${n.place.borough&&n.place.borough!=='Manhattan'?' · outside route coverage':''}</small></span>
+   <span class="js-ctl"><button type="button" data-js-req="${i}" title="Required or optional" aria-pressed="${n.required}">${n.required?'Required':'Optional'}</button>
+   <label title="Visit minutes (estimate, editable)"><input type="number" min="0" step="5" value="${n.visitMin}" data-js-visit="${i}" aria-label="Visit minutes for ${esc(n.place.name)}">min</label>
+   <button type="button" data-js-up="${i}" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" data-js-x="${i}" aria-label="Remove">×</button></span></li>`).join('')}</ol>
+   <label class="constraint-check"><input type="checkbox" id="jsKeepOrder" ${journey.named.some(n=>n.order!=null)?'checked':''}> Keep this order</label>`:''}
+  ${planned.length&&!journey.named.length?`<p class="soft-copy">Planned stops are listed under “Your city walk” on the right.</p>`:''}
+  ${journey.lastFound?foundListHtml():''}`;
+ root.querySelectorAll('[data-js-req]').forEach(b=>b.addEventListener('click',()=>{const n=journey.named[+b.dataset.jsReq];n.required=!n.required;renderJourneyPanel();}));
+ root.querySelectorAll('[data-js-visit]').forEach(inp=>inp.addEventListener('change',()=>{const n=journey.named[+inp.dataset.jsVisit],v=Number(inp.value);if(Number.isFinite(v)&&v>=0&&v<=600){n.visitMin=v;n.visitEstimated=false;}else inp.value=n.visitMin;}));
+ root.querySelectorAll('[data-js-up]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.jsUp;[journey.named[i-1],journey.named[i]]=[journey.named[i],journey.named[i-1]];if(journey.named.some(n=>n.order!=null))journey.named.forEach((n,k)=>n.order=k+1);renderJourneyPanel();}));
+ root.querySelectorAll('[data-js-x]').forEach(b=>b.addEventListener('click',()=>{const n=journey.named.splice(+b.dataset.jsX,1)[0];journey.removed.add(n.place.id);renderJourneyPanel();syncMapData();}));
+ $('jsKeepOrder')?.addEventListener('change',e=>{journey.named.forEach((n,k)=>n.order=e.target.checked?k+1:null);});
+ bindFoundList(root);
+ $('journeyCount').textContent=journey.named.length||planned.length?`${journey.named.length||planned.length} STOP${(journey.named.length||planned.length)===1?'':'S'}`:'';
+}
+function foundListHtml(){
+ const f=journey.lastFound;
+ return `<div class="js-found"><div class="js-found-head">${esc(f.title)}</div>${f.places.length?f.places.map((p,i)=>`<div class="js-found-item"><span><strong>${esc(p.name)}</strong><small>${esc([p.category,p.address].filter(Boolean).join(' · '))}${p.detour?` · +${p.detour.detour_min} min walking detour`:p.straightKm!=null?` · ${p.straightKm} km straight-line`:''}</small></span>
+  <span>${f.hotel?`<button type="button" class="mini-outline" data-found-hotel="${i}">My hotel</button>`:''}<button type="button" class="mini-outline" data-found-add="${i}">Add stop</button></span></div>`).join(''):'<p class="soft-copy">No matching place in the walking-route area.</p>'}
+  <small>${esc(f.note||'')} Source: OpenStreetMap / NYC Open Data snapshot; hours as mapped, not live.</small></div>`;
+}
+function bindFoundList(root){
+ root.querySelectorAll('[data-found-add]').forEach(b=>b.addEventListener('click',()=>addNamedStop(journey.lastFound.places[+b.dataset.foundAdd])));
+ root.querySelectorAll('[data-found-hotel]').forEach(b=>b.addEventListener('click',()=>{const p=journey.lastFound.places[+b.dataset.foundHotel];setMyHotel(p);appendChat('assistant',`My hotel set to ${p.name}.`);}));
+}
+function showFoundPlaces(title,places,opts={}){journey.lastFound={title,places,note:opts.note||null,hotel:Boolean(opts.hotel)};renderJourneyPanel();syncMapData();}
+function askChoice(question,places,onPick){
+ appendChat('assistant',question);
+ const box=document.createElement('div');box.className='chat-choices';
+ box.innerHTML=places.map((p,i)=>`<button type="button" class="mini-outline" data-choice="${i}">${esc(p.name)}${p.address?` · ${esc(p.address)}`:''}</button>`).join('');
+ box.querySelectorAll('[data-choice]').forEach(b=>b.addEventListener('click',()=>{onPick(places[+b.dataset.choice]);box.remove();}));
+ $('chatHistory').appendChild(box);$('chatHistory').scrollTop=$('chatHistory').scrollHeight;
+}
+
+/* ---------- Route Intelligence: Your City Walk ---------- */
+function renderCityWalk(){
+ const root=$('cityWalk');if(!root)return;
+ const it=journey.plan;root.classList.toggle('hidden',!it&&!journeyMode());
+ if(!it){root.innerHTML=`<div class="section-row"><div class="section-overline">YOUR CITY WALK</div></div><p class="soft-copy">Describe what you want to see, eat or do — or add stops — then Plan My Walk.</p>`;return;}
+ const t=it.totals,c=it.constraints,route=state.routes[0]?.raw;
+ const stopRows=it.stops.map(s=>{
+  const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);const m=f?journey.menu[s.id+'|'+f.item]:null;
+  const p=placeCache[s.id];const open=p?.hours?isOpenAt(p.hours,new Date(Date.now()+s.arrival_min*60000)):null;
+  return `<li class="cw-stop ${s.role==='end'?'end':''}"><span class="cw-seq">${s.role==='end'?'■':s.seq}</span><span class="cw-body"><strong>${esc(s.name)}</strong>
+   <small>${esc([s.category,s.address].filter(Boolean).join(' · '))}</small>
+   <small>Arrive ~${clockAt(s.arrival_min)} · +${(s.leg_in_m/1000).toFixed(2)} km / ${Math.round(s.leg_in_min)} min walk${s.visit_min?` · stay ${s.visit_min} min (est.)`:''}${s.slot_label?` · for “${esc(s.slot_label)}”`:''}${s.required?'':' · optional'}</small>
+   ${open===false?'<small class="cw-warn">Opening hours (OSM) say closed at arrival time</small>':open===true?'<small class="cw-ok">Open at arrival per OSM hours</small>':p?.hours?'':'<small>Hours not listed</small>'}
+   ${f?`<small class="cw-menu ${m?.status||''}">${esc(f.item)}: ${esc(MENU_LABEL[m?.status]||'not checked')}${m?.price?` · $${m.price.toFixed(2)} as listed`:''}${m?.source_url?` · <a href="${esc(m.source_url)}" target="_blank" rel="noopener">source</a>`:''}${m?.reason?` — ${esc(m.reason)}`:''}</small>`:''}
+   ${s.evidence?`<small>${esc(s.evidence)}</small>`:''}
+   ${s.alternatives?.length?`<button type="button" class="cw-alt" data-cw-replace="${esc(s.slot_id)}" data-cw-id="${esc(s.id)}">Replace</button>`:''}${s.role!=='end'?`<button type="button" class="cw-alt" data-cw-remove="${esc(s.id)}">Remove</button>`:''}</span></li>`;}).join('');
+ root.innerHTML=`<div class="section-row"><div class="section-overline">YOUR CITY WALK</div><span class="small-count">${c.feasible?'WITHIN LIMITS':'NOT FEASIBLE'}</span></div>
+  <div class="cw-theme">${esc(route?.route_name||'City walk')}</div>
+  <p class="soft-copy">From ${esc(it.start.name)}${it.end_mode==='round'?' and back':it.end_mode==='hotel'?' back to your hotel':it.end_mode==='open'?' · flexible end':''}.</p>
+  <div class="cw-grid"><div><span>Walking</span><strong>${(t.walk_m/1000).toFixed(2)} km</strong><small>${Math.round(t.walk_min)} min</small></div><div><span>Stops</span><strong>${t.stops}</strong><small>${Math.round(t.visit_min)} min stay (est.)</small></div>
+   <div><span>Total outing</span><strong>${Math.round(t.outing_min)} min</strong><small>${c.max_outing_minutes?`limit ${c.max_outing_minutes}`:'no limit set'}</small></div><div><span>Experience</span><strong>${route?.personalized_score?.utility??'N/A'}</strong><small>route match</small></div></div>
+  ${c.violations.length?`<p class="cw-warn">${esc(c.violations.join('; '))}. Required stops are never dropped silently: remove one or extend the limit.</p>`:''}
+  <ol class="cw-stops">${stopRows}</ol>
+  ${it.skipped.length?`<p class="soft-copy">Skipped: ${esc(it.skipped.map(s=>`${s.name} (${s.reason})`).join('; '))}</p>`:''}
+  <div class="cw-refine">${[['museums','More museums'],['historic','More historic'],['coffee','Add coffee'],['cappuccino','Find cappuccino'],['restaurant','Add restaurant'],['hotel','Return to hotel'],['less','Less walking'],['extend','Extend time']].map(([k,l])=>`<button type="button" class="mini-outline" data-refine="${k}">${l}</button>`).join('')}</div>
+  <small class="cw-method">${esc(it.method.join(' · '))}. Matrix: ${it.matrix.points} places, ${esc(it.matrix.basis)}. ${esc(it.coverage)}</small>`;
+ root.querySelectorAll('[data-refine]').forEach(b=>b.addEventListener('click',()=>refineWalk(b.dataset.refine)));
+ root.querySelectorAll('[data-cw-remove]').forEach(b=>b.addEventListener('click',()=>{journey.removed.add(b.dataset.cwRemove);journey.named=journey.named.filter(n=>n.place.id!==b.dataset.cwRemove);planJourney(true);}));
+ root.querySelectorAll('[data-cw-replace]').forEach(b=>b.addEventListener('click',()=>{journey.removed.add(b.dataset.cwId);delete journey.replaced[b.dataset.cwReplace];planJourney(true);}));
+}
+const placeCache={};
+async function cacheStopPlaces(){if(!journey.plan)return;for(const s of journey.plan.stops){if(!placeCache[s.id]){const p=await placeById(s.id);if(p)placeCache[s.id]=p;}}renderCityWalk();}
+async function refineWalk(k){
+ const j={interests:[],named_stops:[],food:[],services:[],more:{},remove:[]};
+ if(k==='museums')j.more.museums=1;else if(k==='historic')j.more.historic=1;
+ else if(k==='coffee')j.food.push({category:'cafes',item:null,required:true});else if(k==='cappuccino')j.food.push({category:'cafes',item:'cappuccino',required:true});
+ else if(k==='restaurant')j.food.push({category:'restaurants',item:null,cuisine:null,required:true});
+ else if(k==='hotel'){if(!journey.hotel)return toast('Set My Hotel first.');j.end_mode='hotel';}
+ else if(k==='less')j.less_walking=true;
+ else if(k==='extend'){const base=state.outingMin||state.budget;j.outing_minutes=base+30;}
+ const changes=await applyJourney(j);appendChat('assistant',`Updated: ${changes.join(' · ')}. Re-planning…`);planJourney(true);
+}
+
+/* ---------- map: numbered stops, hotel, found places ---------- */
+function setupJourneyMap(){
+ const m=state.map;
+ for(const id of ['journey-found','journey-stops','journey-hotel'])m.addSource(id,{type:'geojson',data:emptyFC()});
+ m.addLayer({id:'journey-found',type:'circle',source:'journey-found',paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,3,16,6],'circle-color':'#b7a3e1','circle-stroke-color':'#0b1418','circle-stroke-width':1.5,'circle-opacity':.9}});
+ m.addLayer({id:'journey-hotel',type:'circle',source:'journey-hotel',paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,6,16,10],'circle-color':'#f2a876','circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
+ m.addLayer({id:'journey-hotel-label',type:'symbol',source:'journey-hotel',layout:{'text-field':'H','text-font':['Montserrat Medium','Open Sans Regular'],'text-size':11,'text-allow-overlap':true},paint:{'text-color':'#0b1418'}});
+ m.addLayer({id:'journey-stops',type:'circle',source:'journey-stops',paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,7,16,11],'circle-color':'#0b1418','circle-stroke-color':['case',['get','planned'],'#d8f365','#8a9e9c'],'circle-stroke-width':2.5}});
+ m.addLayer({id:'journey-stops-label',type:'symbol',source:'journey-stops',layout:{'text-field':['to-string',['get','seq']],'text-font':['Montserrat Medium','Open Sans Regular'],'text-size':11,'text-allow-overlap':true},paint:{'text-color':'#d8f365'}});
+ for(const id of ['journey-found','journey-stops','journey-hotel']){
+  m.on('click',id,e=>{if(state.pick)return;const f=e.features?.[0];if(f)journeyPopup(f,e.lngLat);});
+  m.on('mouseenter',id,()=>{m.getCanvas().style.cursor='pointer';});m.on('mouseleave',id,()=>{m.getCanvas().style.cursor='';});
+ }
+}
+function updateJourneyMap(){
+ const m=state.map;if(!state.mapLayersReady||!m.getSource('journey-stops'))return;
+ const fc=fs=>({type:'FeatureCollection',features:fs});
+ const pt=(p,props)=>({type:'Feature',properties:props,geometry:{type:'Point',coordinates:[p.lon,p.lat]}});
+ const stops=journey.plan?journey.plan.stops.filter(s=>s.role!=='end').map(s=>pt(s,{id:s.id,seq:s.seq,name:s.name,planned:true})):journey.named.map((n,i)=>pt(n.place,{id:n.place.id,seq:i+1,name:n.place.name,planned:false}));
+ m.getSource('journey-stops').setData(fc(stops));
+ m.getSource('journey-hotel').setData(fc(journey.hotel?[pt(journey.hotel,{id:journey.hotel.id,name:journey.hotel.name,hotel:true})]:[]));
+ m.getSource('journey-found').setData(fc((journey.lastFound?.places||[]).map((p,i)=>pt(p,{id:p.id,name:p.name,i,found:true}))));
+}
+async function journeyPopup(f,lngLat){
+ const pr=f.properties;
+ const p=pr.found?journey.lastFound.places[pr.i]:pr.hotel?journey.hotel:(await placeById(pr.id))||journey.named.find(n=>n.place.id===pr.id)?.place||{name:pr.name,id:pr.id};
+ const isHotel=/hotel|hostel|guest/i.test(p.category||'')||p.cat==='hotels';
+ const cafe=p.cat==='cafes'||/caf/i.test(p.category||'');
+ const div=document.createElement('div');div.className='jp';
+ div.innerHTML=`<strong>${esc(p.name)}</strong><dl>${[['Category',p.category],['Address',p.address],['Hours (OSM)',p.hours],['Website',p.website?`<a href="${esc(p.website)}" target="_blank" rel="noopener">${esc(p.website.replace(/^https?:\/\//,'').slice(0,40))}</a>`:null],['Source',p.source]].filter(x=>x[1]).map(([k,v])=>`<dt>${k}</dt><dd>${k==='Website'?v:esc(v)}</dd>`).join('')}</dl>
+  <div class="jp-actions">${!pr.planned?'<button type="button" data-a="add">Add stop</button>':''}${isHotel?'<button type="button" data-a="hotel">Set as My Hotel</button>':''}${cafe?'<button type="button" data-a="menu">Check cappuccino on menu</button>':''}</div><div class="jp-menu"></div>`;
+ div.querySelector('[data-a="add"]')?.addEventListener('click',()=>addNamedStop(p));
+ div.querySelector('[data-a="hotel"]')?.addEventListener('click',()=>{setMyHotel(p);toast(`My hotel: ${p.name}`);});
+ div.querySelector('[data-a="menu"]')?.addEventListener('click',async()=>{const out=div.querySelector('.jp-menu');out.textContent='Checking the official menu…';const r=await verifyMenuItem(p,'cappuccino');
+  out.innerHTML=`<strong>${esc(MENU_LABEL[r.status]||r.status)}</strong> ${esc(r.reason||'')}${r.source_url?` <a href="${esc(r.source_url)}" target="_blank" rel="noopener">source</a>`:''}`;});
+ new maplibregl.Popup({maxWidth:'300px'}).setLngLat(lngLat).setDOMContent(div).addTo(state.map);
+}
+
+</script>
+<script>
+'use strict';
+/* Voice input for the AI Journey Assistant: Speech → browser speech-to-text (Web Speech API) → editable transcript in
+   the same text box → the same interpreter and planner as typed text. Nothing is recorded or uploaded by STREETWISE;
+   in Chrome / Edge the browser's own speech service performs recognition. No server speech service is connected. */
+const voice={rec:null,active:false,target:null,lang:'en-US'};
+function speechSupported(){return Boolean(window.SpeechRecognition||window.webkitSpeechRecognition);}
+function setupVoice(){
+ const buttons=document.querySelectorAll('[data-mic]');
+ if(!speechSupported()){buttons.forEach(b=>{b.disabled=true;b.title='Voice input is not supported in this browser (try Chrome, Edge or Safari). Type instead.';});$('voiceStatus').textContent='Voice: not supported in this browser — type instead.';return;}
+ $('voiceLang').addEventListener('change',e=>{voice.lang=e.target.value;});
+ buttons.forEach(b=>b.addEventListener('click',()=>voice.active?stopVoice():startVoice($(b.dataset.mic),b)));
+}
+function startVoice(target,button){
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;const rec=new SR();
+ Object.assign(voice,{rec,active:true,target,button});
+ rec.lang=voice.lang;rec.interimResults=true;rec.continuous=false;
+ const base=target.value.trim()?target.value.trim()+' ':'';
+ rec.onresult=e=>{let txt='';for(const r of e.results)txt+=r[0].transcript;target.value=base+txt;};
+ rec.onerror=e=>{const msg={'not-allowed':'Microphone permission was denied.','no-speech':'No speech heard.','audio-capture':'No microphone found.','network':'The browser speech service is unreachable.'}[e.error]||`Voice error: ${e.error}`;
+  $('voiceStatus').textContent=msg+' You can type instead.';};
+ rec.onend=()=>{voice.active=false;button.classList.remove('recording');button.setAttribute('aria-pressed','false');
+  if(!/error|denied|not/i.test($('voiceStatus').textContent))$('voiceStatus').textContent=target.value.trim()?'Transcript ready — edit it if needed, then send.':'Voice stopped.';target.focus();};
+ try{rec.start();}catch(e){$('voiceStatus').textContent='Voice could not start: '+e.message;voice.active=false;return;}
+ button.classList.add('recording');button.setAttribute('aria-pressed','true');$('voiceStatus').textContent=`Listening (${voice.lang==='zh-CN'?'中文':'English'})… tap again to stop.`;
+}
+function stopVoice(){voice.rec?.stop();}
 
 </script>
 <script>
@@ -2344,7 +3252,7 @@ const dimensionDefinitions=[
 const fc=features=>({type:'FeatureCollection',features});
 function experienceFeatures(){return mapExperience.sections;}
 function selectedEvidenceKey(){return state.dimension==='Nature'?'nature':state.dimension==='Architecture'?'architecture':null;}
-function queueMapReplan(){clearTimeout(mapExperience.queue);mapExperience.queue=setTimeout(()=>{if(state.routingBusy){queueMapReplan();return;}generateRoutes(null,true);},650);}
+function queueMapReplan(){clearTimeout(mapExperience.queue);mapExperience.queue=setTimeout(()=>{if(state.routingBusy){queueMapReplan();return;}if(typeof journeyMode==='function'&&journeyMode()&&journey.plan)planJourney(true);else generateRoutes(null,true);},650);}
 function chooseIntentLayer(){const preferred=['Nature','Architecture'].filter(n=>planner.origins[n]!=='default').sort((a,b)=>planner.weights[b]-planner.weights[a]);if(preferred.length){state.dimension=preferred[0];$('experienceDimension').value=state.dimension;updateLegend();}}
 function boxFeature(b,label){return {type:'Feature',properties:{label},geometry:{type:'Polygon',coordinates:[[[b[0],b[1]],[b[2],b[1]],[b[2],b[3]],[b[0],b[3]],[b[0],b[1]]]]}};}
 function setupExperienceMap(){
@@ -2450,7 +3358,7 @@ function setupExperienceControls(){
  renderExperienceLegend();
 }
 function loadSelectedRaw(){const kind=selectedEvidenceKey()==='nature'?'trees':selectedEvidenceKey()==='architecture'?'lpc':null;if(kind&&!state.datasets[kind])loadViewportEvidence(kind);}
-setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupWeatherUI();setupMap();loadData('streets');loadWeather();
+setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupWeatherUI();setupJourneyUI();setupVoice();setupMap();loadData('streets');loadWeather();
 
 </script>
 </body>
