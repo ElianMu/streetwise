@@ -380,4 +380,4 @@ if __name__ == '__main__':
         except RuntimeError as e:
             print('Routing unavailable:', e)
     threading.Thread(target=warm, daemon=True).start()
-    ThreadingHTTPServer(('127.0.0.1', PORT), Handler).serve_forever()
+    ThreadingHTTPServer(('0.0.0.0', PORT), Handler).serve_forever()
