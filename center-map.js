@@ -70,7 +70,12 @@ function renderExperienceLegend(){
  if(n){const [lo,hi]=mapExperience.breaks||[0,0];scale.innerHTML=`<span><i style="background:#315e67"></i>≤${lo.toFixed(1)}</span><span><i style="background:#46b6ad"></i>≤${hi.toFixed(1)}</span><span><i style="background:#d8f365"></i>&gt;${hi.toFixed(1)}</span><span>records/km · local thirds</span><span><i style="background:#69777d"></i>No Data</span>`;}
 }
 function renderRouteSummary(){
- const r=state.routes.find(x=>x.id===state.activeRoute);$('selectedRouteSummary').textContent=r?`${r.feasible?'Selected':'Outside constraints'} · ${r.label} · ${Math.ceil(r.min)} min · ${r.km.toFixed(2)} km`:'Choose a journey to compare real walking routes.';
+ const r=state.routes.find(x=>x.id===state.activeRoute),el=$('selectedRouteSummary');
+ if(r&&!r.feasible&&typeof minutesToFit==='function'&&minutesToFit()!=null){
+  el.innerHTML=`No route within ${state.budget} min · showing ${esc(r.label)} · ${Math.ceil(r.min)} min · ${r.km.toFixed(2)} km <button type="button" class="summary-fix" id="allowTime">Allow ${minutesToFit()} min</button>`;
+  $('allowTime').addEventListener('click',allowTimeToFit);return;
+ }
+ el.textContent=r?`${r.feasible?'Selected':'Outside constraints'} · ${r.label} · ${Math.ceil(r.min)} min · ${r.km.toFixed(2)} km`:'Choose a journey to compare real walking routes.';
 }
 function showSectionPopup(f,lngLat){
  const p=f.properties,key=selectedEvidenceKey();const value=key&&Number.isFinite(p[key])?`${p[key].toFixed(1)} records/km`:'No Data';

@@ -139,9 +139,14 @@ const run=s=>vm.runInContext(s,context);
  run(`selectRoute(${JSON.stringify(fixture.routes[1].route_id)})`);assert.equal(run('state.activeRoute'),fixture.routes[1].route_id);
  assert.equal(w.document.querySelectorAll('#routeEdgeList .edge-row').length,fixture.routes[1].ordered_edge_ids.length);
  run("planner.profileView='compare';updateProfile()");assert.equal(w.document.querySelectorAll('#profileChart .route-compare tbody tr').length,15);run("planner.profileView='selected';updateProfile()");
- // No feasible candidate: nothing is recommended and the reason is stated.
+ // No feasible candidate: nothing is recommended, the reason is stated, and the shortest computed route is still
+ // shown as an over-limit preview with a one-click "Allow N min" (the map never looks empty after a computation).
  const blocked=JSON.parse(JSON.stringify(fixture));blocked.routes.forEach(r=>{r.recommended=false;r.constraints.feasible=false;r.constraints.violations=['13 min exceeds the 10-minute limit']});
- run(`applyRouteResponse(${JSON.stringify(blocked)})`);assert.equal(run('state.activeRoute'),null);assert(run('planner.lastExplanation').includes('10-minute limit'));
+ run(`applyRouteResponse(${JSON.stringify(blocked)})`);assert(run('planner.lastExplanation').includes('10-minute limit'));
+ const shortestBlocked=blocked.routes.reduce((a,r)=>r.estimated_duration_min<a.estimated_duration_min?r:a);
+ assert.equal(run('state.activeRoute'),shortestBlocked.route_id);assert(!run('state.routes.some(r=>r.raw.recommended)'));
+ run('renderRouteSummary()');assert.equal(w.document.querySelector('#allowTime').textContent,`Allow ${Math.ceil(shortestBlocked.estimated_duration_min)} min`);
+ assert.equal(run('minutesToFit()'),Math.ceil(shortestBlocked.estimated_duration_min));
  run(`applyRouteResponse(${JSON.stringify(fixture)})`);
  // Step-free cannot be verified: the engine is not even asked.
  const before=calls.length;run('planner.constraints.stepFree=true');await run('generateRoutes()');assert.equal(calls.length,before);assert.equal(run('state.routes.length'),0);run('planner.constraints.stepFree=false');

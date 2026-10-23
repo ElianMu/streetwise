@@ -32,10 +32,18 @@ function adaptRoute(r){return {id:r.route_id,label:r.route_name,coords:r.geometr
 function applyRouteResponse(json){
  planner.routeResponse=json;state.routes=json.routes.map(adaptRoute);
  planner.weatherSignature=typeof weatherWindow==='function'?WEATHER.signature(weatherWindow(state.budget)):undefined;
- const best=json.routes.find(r=>r.recommended);state.activeRoute=best?.route_id||null;routeNav.selectedEdge=null;
+ const best=json.routes.find(r=>r.recommended);
+ // Nothing feasible: nothing is recommended, but the shortest computed route is still shown (dashed, "outside
+ // constraints") so the map never looks empty after a real computation, with a one-click way to allow its time.
+ const preview=best?null:json.routes.reduce((a,r)=>!a||r.estimated_duration_min<a.estimated_duration_min?r:a,null);
+ state.activeRoute=best?.route_id||preview?.route_id||null;routeNav.selectedEdge=null;
  if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();
- planner.lastExplanation=best?best.ranking_explanation:`No Feasible Route: none of the ${json.routes.length} candidate routes meets your limits (${[...new Set(json.routes.flatMap(r=>r.constraints.violations))].join('; ')}). Increase the limit or change endpoints. Over-limit routes are shown for comparison only.`;
+ planner.lastExplanation=best?best.ranking_explanation:`No Feasible Route: none of the ${json.routes.length} candidate routes meets your limits (${[...new Set(json.routes.flatMap(r=>r.constraints.violations))].join('; ')}). Increase the limit or change endpoints. Over-limit routes are shown for comparison only${preview?`; the map shows the shortest (${Math.ceil(preview.estimated_duration_min)} min) as a dashed preview`:''}.`;
 }
+/** Minutes needed for the shortest computed route when none fits the limit (null when one fits). */
+function minutesToFit(){const rs=state.routes;if(!rs.length||rs.some(r=>r.feasible))return null;return Math.ceil(Math.min(...rs.map(r=>r.min)));}
+/** "Allow N min": raise the hard limit to the shortest computed route and re-plan. */
+function allowTimeToFit(){const m=minutesToFit();if(m==null)return;setBudget(m);generateRoutes(null,true);}
 async function generateRoutes(userText=null,isFollowUp=false){
  if(state.routingBusy)return;
  const a=getPlace('start'),b=getPlace('end');

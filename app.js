@@ -355,6 +355,9 @@ function syncMapData(){
   for(const [id,data] of [['nyc-roads',state.datasets.streets],['nyc-trees',state.datasets.trees],['nyc-landmarks',state.datasets.lpc],['candidate-routes',currentRoutesGeojson()],['route-edges',routeEdgesGeojson()],['selected-route',activeRouteGeojson()],['points',pointGeojson()],['route-pois',poiGeojson()]]){
     const s=map.getSource(id);if(s)s.setData(data||emptyFC());
   }
+  // An over-limit preview is dashed; a feasible selection is solid lime.
+  const active=state.routes.find(x=>x.id===state.activeRoute);
+  if(map.getLayer('route-selected'))map.setPaintProperty('route-selected','line-dasharray',active&&!active.feasible?[1.4,1.1]:[1,0]);
   updateMapStyles();
   syncExperienceMap();
 }
