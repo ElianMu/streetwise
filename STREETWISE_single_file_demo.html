@@ -302,6 +302,8 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .wx-actions .mini-outline{width:auto;margin-top:0;padding:5px 10px;font-size:10px}
 .wx-route{font-size:11px;line-height:1.6}
 .wx-route{background:#132529;border:1px solid #314c45;border-radius:10px;padding:10px 12px;color:#d7e5d9;margin-top:10px}
+.summary-fix{margin-left:8px;border:1px solid var(--lime);background:transparent;color:var(--lime);border-radius:6px;padding:3px 8px;font-size:10px;font-weight:700}
+.summary-fix:hover{background:#26372e}
 
 </style>
 </head>
@@ -1004,6 +1006,9 @@ function syncMapData(){
   for(const [id,data] of [['nyc-roads',state.datasets.streets],['nyc-trees',state.datasets.trees],['nyc-landmarks',state.datasets.lpc],['candidate-routes',currentRoutesGeojson()],['route-edges',routeEdgesGeojson()],['selected-route',activeRouteGeojson()],['points',pointGeojson()],['route-pois',poiGeojson()]]){
     const s=map.getSource(id);if(s)s.setData(data||emptyFC());
   }
+  // An over-limit preview is dashed; a feasible selection is solid lime.
+  const active=state.routes.find(x=>x.id===state.activeRoute);
+  if(map.getLayer('route-selected'))map.setPaintProperty('route-selected','line-dasharray',active&&!active.feasible?[1.4,1.1]:[1,0]);
   updateMapStyles();
   syncExperienceMap();
 }
@@ -1327,10 +1332,18 @@ function adaptRoute(r){return {id:r.route_id,label:r.route_name,coords:r.geometr
 function applyRouteResponse(json){
  planner.routeResponse=json;state.routes=json.routes.map(adaptRoute);
  planner.weatherSignature=typeof weatherWindow==='function'?WEATHER.signature(weatherWindow(state.budget)):undefined;
- const best=json.routes.find(r=>r.recommended);state.activeRoute=best?.route_id||null;routeNav.selectedEdge=null;
+ const best=json.routes.find(r=>r.recommended);
+ // Nothing feasible: nothing is recommended, but the shortest computed route is still shown (dashed, "outside
+ // constraints") so the map never looks empty after a real computation, with a one-click way to allow its time.
+ const preview=best?null:json.routes.reduce((a,r)=>!a||r.estimated_duration_min<a.estimated_duration_min?r:a,null);
+ state.activeRoute=best?.route_id||preview?.route_id||null;routeNav.selectedEdge=null;
  if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();
- planner.lastExplanation=best?best.ranking_explanation:`No Feasible Route: none of the ${json.routes.length} candidate routes meets your limits (${[...new Set(json.routes.flatMap(r=>r.constraints.violations))].join('; ')}). Increase the limit or change endpoints. Over-limit routes are shown for comparison only.`;
+ planner.lastExplanation=best?best.ranking_explanation:`No Feasible Route: none of the ${json.routes.length} candidate routes meets your limits (${[...new Set(json.routes.flatMap(r=>r.constraints.violations))].join('; ')}). Increase the limit or change endpoints. Over-limit routes are shown for comparison only${preview?`; the map shows the shortest (${Math.ceil(preview.estimated_duration_min)} min) as a dashed preview`:''}.`;
 }
+/** Minutes needed for the shortest computed route when none fits the limit (null when one fits). */
+function minutesToFit(){const rs=state.routes;if(!rs.length||rs.some(r=>r.feasible))return null;return Math.ceil(Math.min(...rs.map(r=>r.min)));}
+/** "Allow N min": raise the hard limit to the shortest computed route and re-plan. */
+function allowTimeToFit(){const m=minutesToFit();if(m==null)return;setBudget(m);generateRoutes(null,true);}
 async function generateRoutes(userText=null,isFollowUp=false){
  if(state.routingBusy)return;
  const a=getPlace('start'),b=getPlace('end');
@@ -2384,7 +2397,12 @@ function renderExperienceLegend(){
  if(n){const [lo,hi]=mapExperience.breaks||[0,0];scale.innerHTML=`<span><i style="background:#315e67"></i>≤${lo.toFixed(1)}</span><span><i style="background:#46b6ad"></i>≤${hi.toFixed(1)}</span><span><i style="background:#d8f365"></i>&gt;${hi.toFixed(1)}</span><span>records/km · local thirds</span><span><i style="background:#69777d"></i>No Data</span>`;}
 }
 function renderRouteSummary(){
- const r=state.routes.find(x=>x.id===state.activeRoute);$('selectedRouteSummary').textContent=r?`${r.feasible?'Selected':'Outside constraints'} · ${r.label} · ${Math.ceil(r.min)} min · ${r.km.toFixed(2)} km`:'Choose a journey to compare real walking routes.';
+ const r=state.routes.find(x=>x.id===state.activeRoute),el=$('selectedRouteSummary');
+ if(r&&!r.feasible&&typeof minutesToFit==='function'&&minutesToFit()!=null){
+  el.innerHTML=`No route within ${state.budget} min · showing ${esc(r.label)} · ${Math.ceil(r.min)} min · ${r.km.toFixed(2)} km <button type="button" class="summary-fix" id="allowTime">Allow ${minutesToFit()} min</button>`;
+  $('allowTime').addEventListener('click',allowTimeToFit);return;
+ }
+ el.textContent=r?`${r.feasible?'Selected':'Outside constraints'} · ${r.label} · ${Math.ceil(r.min)} min · ${r.km.toFixed(2)} km`:'Choose a journey to compare real walking routes.';
 }
 function showSectionPopup(f,lngLat){
  const p=f.properties,key=selectedEvidenceKey();const value=key&&Number.isFinite(p[key])?`${p[key].toFixed(1)} records/km`:'No Data';
