@@ -1491,11 +1491,15 @@ async function ensureUrbanCatalog(){
 function tileUrl(tileset,key){return `./data/layers/tiles/${tileset}/${key}.json`;}
 function tilesFor(tileset,box){const m=urbanData.catalog.tilesets[tileset].tiles;return UrbanGeo.tileKeys(box,urbanData.catalog.tile_size_m).filter(k=>m[k]);}
 function tileRecordCount(tileset,box){const m=urbanData.catalog.tilesets[tileset].tiles;return tilesFor(tileset,box).reduce((s,k)=>s+m[k],0);}
+// At most 12 tile requests in flight: a whole-island view must not fire thousands of requests at once.
+const tileQueue={active:0,waiting:[]};
+function queuedJson(url){return new Promise((res,rej)=>{const run=()=>{tileQueue.active++;streetwiseJson(url).then(res,rej).finally(()=>{tileQueue.active--;tileQueue.waiting.shift()?.();});};
+ tileQueue.active<12?run():tileQueue.waiting.push(run);});}
 async function tileFeatures(tileset,box){
  const keys=tilesFor(tileset,box);
  const parts=await Promise.all(keys.map(k=>{const url=tileUrl(tileset,k);
-  if(!urbanData.tiles.has(url)){urbanData.tiles.set(url,streetwiseJson(url).then(fc=>fc.features).catch(e=>{urbanData.tiles.delete(url);throw e;}));
-   if(urbanData.tiles.size>500)urbanData.tiles.delete(urbanData.tiles.keys().next().value);}  // bounded tile cache
+  if(!urbanData.tiles.has(url)){urbanData.tiles.set(url,queuedJson(url).then(fc=>fc.features).catch(e=>{urbanData.tiles.delete(url);throw e;}));
+   if(urbanData.tiles.size>3000)urbanData.tiles.delete(urbanData.tiles.keys().next().value);}  // bounded tile cache
   return urbanData.tiles.get(url);}));
  return parts.flat();
 }
@@ -1665,11 +1669,11 @@ function setupUrbanMap(){
  m.on('mousemove',e=>{if(state.pick||(typeof exploreMap!=='undefined'&&exploreMap.active))return;const on=!!topHit(e.point);if(on!==hovering){hovering=on;m.getCanvas().style.cursor=on?'pointer':'';}});
  m.on('moveend',urbanViewMoved);
  m.on('zoomend',()=>{refreshRepresentations();renderUrbanLegend();});
- applyBuildingTheme();applyEnvTheme();scheduleUrbanCompose();
+ applyBuildingTheme();applyEnvTheme();refreshUrbanLayers();
 }
 let udComposeFrame=0;
 // Batched to one compose per frame (a timer where there is no frame loop, e.g. tests).
-const udRaf=typeof requestAnimationFrame==='function'?[requestAnimationFrame,cancelAnimationFrame]:[f=>setTimeout(f,16),clearTimeout];
+const udRaf=typeof requestAnimationFrame==='function'?[f=>requestAnimationFrame(f),h=>cancelAnimationFrame(h)]:[f=>setTimeout(f,16),h=>clearTimeout(h)];
 function scheduleUrbanCompose(){udRaf[1](udComposeFrame);udComposeFrame=udRaf[0](composeUrbanGroups);}
 /** Build each render group's data from the enabled datasets' records (each tagged with its dataset, colour, opacity). */
 function composeUrbanGroups(){
@@ -1727,9 +1731,8 @@ async function loadUrbanDataset(id){
  const a=urbanData.active.get(id),d=urbanData.byId.get(id);if(!a)return;const seq=++a.seq;
  const done=(fc,text,kind)=>{if(seq!==a.seq||!urbanData.active.has(id))return;urbanData.drawn.set(id,new Map(fc.features.map(f=>[String(f.properties.feature_id),f])));setUrbanStatus(id,text,kind);scheduleUrbanCompose();};
  try{
-  if(urbanData.scope==='route'){
+  if(!urbanViewScope()){
    const coords=routeCoords();
-   if(!coords){done(emptyFC(),'Waiting for a route','waiting');return}
    setUrbanStatus(id,'Loading…','loading');
    const hits=await datasetAlong(d,coords,urbanData.corridor);
    done({type:'FeatureCollection',features:hits.map(h=>({...h.feature,properties:{...h.feature.properties,distance_to_route_m:Math.round(h.distance*10)/10}}))},
@@ -1737,7 +1740,9 @@ async function loadUrbanDataset(id){
   }else{
    if(!state.mapReady){done(emptyFC(),'Map not ready','waiting');return}
    const b=state.map.getBounds(),box=UrbanGeo.lonLatBox(b.getWest(),b.getSouth(),b.getEast(),b.getNorth()),n=tileRecordCount(d.tileset,box);
-   if(state.map.getZoom()<d.min_zoom_view&&n>5000){done(emptyFC(),`Zoom in to load (${n.toLocaleString()} records nearby)`,'waiting');return}
+   const tiles=tilesFor(d.tileset,box).length;
+   // Sparse datasets load at any zoom (parks, landmarks, stations); dense ones wait for a closer view.
+   if(n>1100&&(state.map.getZoom()<d.min_zoom_view&&n>5000||tiles>40)){done(emptyFC(),`Zoom in to load (${n.toLocaleString()} records in view)`,'waiting');return}
    setUrbanStatus(id,'Loading…','loading');
    const feats=(await tileFeatures(d.tileset,box)).filter(f=>UrbanGeo.matchesFilter(f,d.filter)),seen=new Set(),inView=[];
    for(const f of feats){if(seen.has(f.properties.feature_id))continue;seen.add(f.properties.feature_id);const bb=UrbanGeo.bboxOf(UrbanGeo.project(f.geometry));if(bb[0]<=box[2]&&bb[2]>=box[0]&&bb[1]<=box[3]&&bb[3]>=box[1])inView.push(f);}
@@ -1745,10 +1750,12 @@ async function loadUrbanDataset(id){
   }
  }catch(e){if(seq===a.seq){urbanData.drawn.delete(id);setUrbanStatus(id,'Error: '+e.message,'error');scheduleUrbanCompose();}}
 }
+/** Along-route scope needs a route; until one is planned the datasets are drawn for the current map view. */
+function urbanViewScope(){return urbanData.scope==='view'||!routeCoords();}
 function refreshUrbanLayers(){for(const id of urbanData.active.keys())loadUrbanDataset(id);}
 /** Route changed (planned, switched or cleared): keep the user's layers, re-filter them, update the summary. */
-function urbanLayersRouteChanged(){if(urbanData.scope==='route')refreshUrbanLayers();renderRouteUrbanData();closeUrbanInspector();}
-function urbanViewMoved(){if(urbanData.scope!=='view'||!urbanData.active.size)return;clearTimeout(urbanData.viewTimer);urbanData.viewTimer=setTimeout(refreshUrbanLayers,400);}
+function urbanLayersRouteChanged(){if(urbanData.scope==='route')refreshUrbanLayers();renderUrbanLegend();renderRouteUrbanData();closeUrbanInspector();}
+function urbanViewMoved(){if(!urbanViewScope()||!urbanData.active.size)return;clearTimeout(urbanData.viewTimer);urbanData.viewTimer=setTimeout(refreshUrbanLayers,400);}
 
 // --- legend: only what is visible now -------------------------------------------------------------------
 function renderUrbanLegend(){
@@ -1776,7 +1783,7 @@ function renderUrbanLegend(){
  if(z<T.cluster.maxZoom)notes.push(`Rings with a number are clusters: that many records of one category. They split into individual records from z${T.cluster.maxZoom}.`);
  if(z<T.zoom.street)notes.push(`Sidewalks, crosswalks and building edges are generalised away until z${T.zoom.street}.`);
  if(urbanData.scope==='route'&&state.routes.length)notes.push(`Records within ${urbanData.corridor} m of the selected route; farther records are drawn lighter.`);
- if(!state.routes.length&&urbanData.scope==='route')notes.push('Plan a route to draw the enabled datasets along it, or switch to Current map view.');
+ if(!state.routes.length&&urbanData.scope==='route')notes.push('Showing the current map view; plan a route to focus the datasets along it.');
  box.querySelector('.lg-body').innerHTML=rows.join('')+(notes.length?`<p class="lg-note">${notes.map(esc).join(' ')}</p>`:'');
 }
 
