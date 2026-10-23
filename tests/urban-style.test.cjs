@@ -20,5 +20,7 @@ function zoomNested(e,top=true){if(!Array.isArray(e))return false;if(e[0]==='zoo
 for(const [k,v] of Object.entries({tree:T.tree.radius,cluster:T.cluster.radius,ramp:S.rampExpr('h',T.building.height.stops)}))assert(!zoomNested(v),`${k} nests zoom`);
 const src=['urban-layers.js','explore-map.js','app.js','center-map.js'].map(f=>fs.readFileSync(path.join(root,f),'utf8')).join('\n');
 assert(!/\['\*',[\d.]+,width\]/.test(src),'no scaled zoom ramps');
+// Browser APIs called unbound throw "Illegal invocation" (jsdom does not catch this): never store them in arrays/objects.
+assert(!/\[\s*requestAnimationFrame\s*,/.test(src),'requestAnimationFrame must be wrapped, not stored unbound');
 assert.equal(S.shade('#7cb68a',0,1),'#7cb68a');assert.notEqual(S.shade('#7cb68a',0,3),S.shade('#7cb68a',2,3));
 console.log(`URBAN STYLE PASS: route is the only lime (${dataColours.length} data colours checked), ${cat.categories.length} category tokens, ordered zoom tiers, no nested zoom expressions`);

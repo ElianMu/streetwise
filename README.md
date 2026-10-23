@@ -37,7 +37,7 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 ## Navigate: Urban Data Layers / 路线周边城市数据
 
 - 地图左下角 **Urban Data Layers**（默认收起）按**真实数据集**分为 10 类（街道与步行设施、自然、建筑、历史文化、餐饮商业、交通安全、环境、公共交通、公共服务、滨水与公共空间），不是按 12 个体验维度。首次打开时所有已接入数据集（59 个）**默认全部开启**；提供 All on / All off、类别开关（部分开启时为半选状态）、单个数据集开关、搜索、透明度和计数。未接入的标为 Not connected · available / Not connected · no dataset，并说明原因。
-- 每个数据集的状态互相区分：Loaded · N within 100 m / No nearby features / Loading / Error / Waiting for a route / Zoom in to load；失败不会显示为 0。
+- 每个数据集的状态互相区分：Loaded · N within 100 m / No nearby features / Loading / Error / Zoom in to load；失败不会显示为 0。还没有规划路线时，数据按**当前地图视野**显示，规划路线后自动切换为路线两侧。全岛视野下只加载稀疏数据集（公园、地标、车站等），密集数据集（树木、建筑、人行道等）提示放大后加载；瓦片请求最多 12 个并发。
 - 范围：**Along selected route**（所选路线两侧 50/100/200/500 m，仅影响显示，不改变评分）或 **Current map view**。切换路线时保留已开启的图层并重新筛选。
 - 点击数据要素打开 Urban Feature Inspector（真实字段、缺失为 Not Available、来源、时间范围、更新日期、与路线的距离；事故/投诉标注为历史记录）。点击路线路段打开 Street Segment Evidence（OSM Edge ID、LION 路段或 Unmatched、附近数据的数量/密度/最近距离/覆盖率，以及现有评分指标）。右侧 **Route Urban Data** 汇总路线周边的真实要素数量，点击即在地图上显示。
 - 图层是静态文件（`data/layers/catalog.json` + 1 km 瓦片），GitHub Pages 可直接读取，不占用后端内存。重建：`python3 scripts/build_urban_layers.py`（需要 OSMnx/pyproj，约 3 分钟）。
