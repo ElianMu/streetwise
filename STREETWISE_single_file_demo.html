@@ -279,6 +279,30 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 @media(max-width:740px){.ud-legend{right:10px;bottom:120px;width:200px;max-height:35%}}
 .lg-chips{display:flex;flex-wrap:wrap;gap:3px 9px;font-size:9.5px;color:#a9bdb4}.lg-chips span{display:inline-flex;align-items:center;gap:4px}.lg-chips .lg-sw{width:7px;height:7px}
 
+/* Weather status (Navigate) and "Weather & your walk" (Route Intelligence) — weather-ui.js */
+.wx-panel{position:absolute;top:70px;left:165px;z-index:4;max-width:290px;font-size:11px;color:#d9e4dd}
+.wx-pill{list-style:none;display:flex;align-items:center;gap:7px;cursor:pointer;padding:9px 12px;border:1px solid #344b48;border-radius:13px;background:#112426ed;box-shadow:0 6px 28px #0003;white-space:nowrap}
+.wx-pill::-webkit-details-marker{display:none}.wx-pill strong{font-size:12px;color:#eef6ea}.wx-pill span{color:#a5b6ad}
+.wx-ico{color:#f8d385;font-size:15px;line-height:1}
+.wx-flag{font-size:8.5px!important;letter-spacing:.6px;text-transform:uppercase;font-weight:800;padding:2px 5px;border-radius:4px;background:#1f3436;color:#a9c4d8!important}
+.wx-flag.alert{background:#3a2622;color:#f2a99b!important}.wx-flag.on{background:#2c3b22;color:var(--lime)!important}
+.wx-dot{width:7px;height:7px;border-radius:50%;background:var(--orange);display:inline-block}
+.wx-panel[open] .wx-pill{border-bottom-left-radius:4px;border-bottom-right-radius:4px}
+.wx-body{margin-top:4px;padding:11px 12px;border:1px solid #344b48;border-radius:10px;background:#112426f5;box-shadow:0 6px 28px #0005;width:290px}
+.wx-grid{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;margin:0}.wx-grid dt{color:#89a5a1;font-size:9.5px;font-weight:700;letter-spacing:.6px}.wx-grid dd{margin:0;color:#e3ece5;font-size:10.5px}
+.wx-list{margin:9px 0 0;padding-left:15px;color:#a9bdb7;font-size:10px;line-height:1.55}.wx-alert{color:#f2a99b}
+.wx-route-state{margin:9px 0 0;font-size:10px;line-height:1.55;color:#a9bdb7;border-left:2px solid #3d5651;padding-left:8px}
+.wx-route-state.active{border-color:var(--lime);color:#e2f2c6}
+.wx-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}.wx-actions label{display:flex;align-items:center;gap:5px;color:#c9d7d1;font-size:10px;margin-right:auto}.wx-actions input{accent-color:var(--lime)}
+.wx-source{display:block;margin-top:8px;color:#6f8a86;font-size:9px;line-height:1.5}
+.wx-route .wx-sub{margin:12px 0 4px;font-size:9.5px;letter-spacing:1px;font-weight:700;color:#a1b2af;text-transform:uppercase}.wx-route .wx-sub:first-child{margin-top:4px}
+.wx-route p{font-size:11px;line-height:1.6;color:#c6d4cf}.wx-route small{display:block;color:#7f9a95;font-size:9px;line-height:1.55;margin-top:6px}
+.wx-route .mini-outline{margin-top:10px}
+@media(max-width:680px){.wx-panel{top:64px;left:155px;max-width:165px}.wx-pill{padding:8px 10px;overflow:hidden}.wx-panel[open]{left:10px;right:56px;max-width:none}.wx-body{width:auto}}
+.wx-actions .mini-outline{width:auto;margin-top:0;padding:5px 10px;font-size:10px}
+.wx-route{font-size:11px;line-height:1.6}
+.wx-route{background:#132529;border:1px solid #314c45;border-radius:10px;padding:10px 12px;color:#d7e5d9;margin-top:10px}
+
 </style>
 </head>
 <body>
@@ -352,6 +376,7 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
       <div id="mapFallback" class="map-fallback" aria-live="polite"><div class="fallback-loader"></div><h2>Connecting to the city</h2><p>Loading the Manhattan basemap and official NYC street-centerline data.</p></div>
       <div class="map-mode-control" role="group" aria-label="Map mode"><button id="modeNavigate" aria-pressed="true">Navigate</button><button id="modeExplore" aria-pressed="false">Explore Urban Data</button></div>
       <details class="experience-controls"><summary>Street evidence ▾</summary><label for="experienceDimension">Dimension</label><select id="experienceDimension"></select><label for="experienceView">Display</label><select id="experienceView"><option value="evidence">Street evidence · raw units</option><option value="raw">Original points / polygons</option><option value="score">Validated score · 0–100</option></select><div class="experience-checks"><label><input id="layerExperience" type="checkbox" checked> Experience</label><label><input id="layerCoverage" type="checkbox" checked> Coverage</label></div><button id="analyzeView">Analyze current view</button><button id="exportExperience">Export sections to Kepler.gl</button><p id="experienceStatus" role="status">Scores require calibration. Unknown ≠ zero.</p></details>
+      <details class="wx-panel" id="wxPanel"><summary id="wxPill" class="wx-pill" aria-label="Weather status"><span class="wx-ico">·</span><span>Weather…</span></summary><div id="wxBody" class="wx-body"></div></details>
       <section id="explorePanel" class="explore-panel hidden" aria-label="Manhattan street experience map">
         <div class="explore-head"><div class="explore-heading"><div class="explore-eyebrow">ALL MANHATTAN · STREET SEGMENTS</div><strong id="exploreTitle">Nature</strong></div><button id="exploreThumbsToggle" class="explore-collapse" aria-pressed="false" title="Show all 13 maps side by side" aria-label="Show all 13 small maps">▦</button><button id="exploreCollapse" class="explore-collapse" aria-expanded="true" title="Collapse panel" aria-label="Collapse panel">–</button></div>
         <div class="explore-ramp"><span id="exploreRampLow">0</span><i></i><span id="exploreRampHigh">100</span><span class="ramp-na"><s></s>N/A</span></div>
@@ -400,6 +425,9 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
         <div class="route-cards" id="routeCards"><div class="empty-route"><strong>No routes generated yet</strong><p>Set your journey to compare real pedestrian paths.</p></div></div>
         <div class="subtle-divider"></div>
         <div class="section-overline">✦ WHY THIS ROUTE?</div><div class="why-box" id="whyRoute">Generate routes to see evidence-grounded reasons.</div>
+        <div class="subtle-divider"></div>
+        <div class="section-row"><div class="section-overline">WEATHER &amp; YOUR WALK</div><span id="wxRouteStatus" class="small-count"></span></div>
+        <div id="wxRoute" class="wx-route"><p class="soft-copy">Loading the forecast…</p></div>
         <div class="subtle-divider"></div>
         <div class="section-row"><div class="section-overline">ROUTE URBAN DATA</div><span id="routeUrbanCorridor" class="small-count"></span></div>
         <div id="routeUrbanData" class="route-urban"><p class="soft-copy">Select a route to see the real city data around it.</p></div>
@@ -512,6 +540,110 @@ async function streetwiseJson(url, options) {
   if (!res.ok) throw new Error(data.error || `${url} returned HTTP ${res.status}`);
   return data;
 }
+
+</script>
+<script>
+'use strict';
+/* STREETWISE weather context: fetched once, shared by AI Journey, the routing request and Route Intelligence.
+   Weather is a dynamic context next to the 12 static dimensions, never a 13th dimension and never a street-level
+   measurement: one Open-Meteo grid value describes the whole walk, and only the routing engine decides whether it
+   may change a route (routing/weather.py, where heat meets the street-tree / park cover proxy).
+
+   Sources: Open-Meteo forecast API (no key; current = 15-minute model state, hourly = forecast) and the US National
+   Weather Service active alerts API (no key). Missing values stay null; a failure never blocks ordinary routing. */
+const WEATHER={
+ forecastUrl:'https://api.open-meteo.com/v1/forecast',
+ alertsUrl:'https://api.weather.gov/alerts/active',
+ refreshMin:15,      // automatic refresh interval; map moves never trigger a request
+ staleMin:45,        // shown as stale after this; the engine ignores snapshots older than 180 min
+ timeoutMs:10000,
+ // A route recalculation is suggested only when one of these changes (not on small value drift).
+ signature:s=>s?[s.heatBand,s.daylight,s.rainAdvisory,s.windAdvisory].join('|'):'none',
+};
+const weatherContext={status:'idle',source:'Open-Meteo forecast API (model data, not a station observation)',fetchedAt:null,location:null,
+ current:null,hourly:[],alerts:{status:'idle',items:[],source:'US National Weather Service active alerts'},error:null,mode:'auto',priority:'normal',lastSignature:null,listeners:[]};
+
+function weatherAgeMin(){return weatherContext.fetchedAt?(Date.now()-weatherContext.fetchedAt)/60000:null;}
+function weatherFresh(){const a=weatherAgeMin();return weatherContext.status==='ok'&&a!==null&&a<=WEATHER.staleMin;}
+function onWeather(fn){weatherContext.listeners.push(fn);}
+function emitWeather(){for(const fn of weatherContext.listeners){try{fn(weatherContext)}catch(e){console.warn('weather listener',e)}}}
+
+async function fetchJsonTimeout(url,ms,headers){const r=await fetch(url,{signal:AbortSignal.timeout(ms),headers});if(!r.ok)throw new Error(`HTTP ${r.status}`);return r.json();}
+
+/** Fetch (or reuse) the weather. `force` ignores the cache (user pressed refresh). Never throws. */
+async function refreshWeather(force=false,here=null){
+ if(weatherContext.pending)return weatherContext.pending;
+ const age=weatherAgeMin();if(!force&&weatherContext.status==='ok'&&age!==null&&age<WEATHER.refreshMin)return weatherContext;
+ const loc=here||weatherContext.location||{lat:40.783,lon:-73.969};weatherContext.location=loc;
+ if(weatherContext.status!=='ok')weatherContext.status='loading';emitWeather();
+ weatherContext.pending=(async()=>{
+  try{
+   const q=new URLSearchParams({latitude:loc.lat.toFixed(4),longitude:loc.lon.toFixed(4),timezone:'America/New_York',forecast_hours:'6',
+    current:'temperature_2m,apparent_temperature,relative_humidity_2m,precipitation,weather_code,wind_speed_10m,wind_direction_10m,is_day',
+    hourly:'temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,wind_speed_10m,is_day'});
+   const d=await fetchJsonTimeout(`${WEATHER.forecastUrl}?${q}`,WEATHER.timeoutMs);
+   if(!d.current||!d.hourly)throw new Error('No model output');
+   const c=d.current;
+   weatherContext.current={time:c.time,temperature:c.temperature_2m??null,feelsLike:c.apparent_temperature??null,humidity:c.relative_humidity_2m??null,
+    precipitation:c.precipitation??null,windSpeed:c.wind_speed_10m??null,windDirection:c.wind_direction_10m??null,code:c.weather_code??null,isDay:c.is_day==null?null:c.is_day===1,
+    units:{temperature:'°C',precipitation:'mm',windSpeed:'km/h',windDirection:'°',humidity:'%'}};
+   // Hourly times are New York local without an offset: convert to absolute ms with the response's UTC offset.
+   const off=(d.utc_offset_seconds||0)*1000,abs=t=>Date.parse(t+'Z')-off;
+   const h=d.hourly;weatherContext.hourly=h.time.map((t,i)=>({time:t,t:abs(t),temperature:h.temperature_2m[i],feelsLike:h.apparent_temperature[i],precipProbability:h.precipitation_probability[i],
+    precipitation:h.precipitation[i],code:h.weather_code[i],windSpeed:h.wind_speed_10m[i],isDay:h.is_day[i]===1}));
+   weatherContext.status='ok';weatherContext.error=null;weatherContext.fetchedAt=Date.now();
+  }catch(e){
+   weatherContext.error=e.name==='TimeoutError'?'Weather service timed out':navigator.onLine===false?'No network connection':`Weather service unavailable (${e.message})`;
+   // Keep the last good data but mark it; with no data at all the context is unavailable.
+   weatherContext.status=weatherContext.current?'ok':'error';
+  }
+  await refreshAlerts(loc);
+  weatherContext.pending=null;emitWeather();return weatherContext;
+ })();
+ return weatherContext.pending;
+}
+async function refreshAlerts(loc){
+ const A=weatherContext.alerts;
+ try{const d=await fetchJsonTimeout(`${WEATHER.alertsUrl}?point=${loc.lat.toFixed(4)},${loc.lon.toFixed(4)}`,WEATHER.timeoutMs,{Accept:'application/geo+json'});
+  A.items=(d.features||[]).map(f=>({event:f.properties.event,headline:f.properties.headline,severity:f.properties.severity,ends:f.properties.ends||f.properties.expires}));A.status='ok';A.fetchedAt=Date.now();
+ }catch(e){A.status='error';A.items=[];}
+}
+
+/** Forecast summary for a walk starting now and lasting `minutes`: worst case over the hourly slots it touches. */
+function weatherWindow(minutes,now=Date.now()){
+ if(weatherContext.status!=='ok'||!weatherContext.hourly.length)return null;
+ const start=now,end=start+Math.max(10,minutes||30)*60000;
+ const slots=weatherContext.hourly.filter(s=>s.t<=end&&s.t+3600000>start);
+ if(!slots.length)return null;
+ const max=k=>{const v=slots.map(s=>s[k]).filter(x=>x!=null);return v.length?Math.max(...v):null;};
+ const c=weatherContext.current;
+ const feels=Math.max(...[max('feelsLike'),c?.feelsLike].filter(x=>x!=null));
+ const w={from:slots[0].time,to:slots.at(-1).time,minutes:Math.round((end-start)/60000),feelsLikeMax:Number.isFinite(feels)?feels:null,temperatureMax:max('temperature'),
+  precipProbabilityMax:max('precipProbability'),precipMax:max('precipitation'),windMax:Math.max(max('windSpeed')??0,c?.windSpeed??0)||null,daylight:slots.some(s=>s.isDay)};
+ w.heatBand=w.feelsLikeMax==null?'na':w.feelsLikeMax<27?'none':w.feelsLikeMax<32?'caution':'extreme';
+ w.rainAdvisory=(w.precipProbabilityMax??0)>=40||(w.precipMax??0)>=.5;w.windAdvisory=(w.windMax??0)>=30;
+ return w;
+}
+/** Routing request field `weather` (routing/weather.py validates it); null when there is nothing trustworthy to send. */
+function weatherSnapshot(minutes,now=Date.now()){
+ const w=weatherWindow(minutes,now);if(!w)return null;
+ return {source:'open-meteo',kind:'forecast_window',valid_from:w.from,valid_to:w.to,age_min:Math.round(weatherAgeMin()),feels_like_max_c:w.feelsLikeMax,temperature_max_c:w.temperatureMax,
+  precip_probability_max_pct:w.precipProbabilityMax,precip_max_mm_per_h:w.precipMax,wind_max_kmh:w.windMax,daylight:w.daylight,mode:weatherContext.mode,priority:weatherContext.priority,
+  alerts:weatherContext.alerts.items.map(a=>a.event)};
+}
+function weatherName(c){if(c==null)return'Unknown';if(c===0)return'Clear';if(c<=3)return'Cloudy';if(c===45||c===48)return'Fog';if(c>=51&&c<=67)return'Rain';if(c>=71&&c<=77)return'Snow';if(c>=80&&c<=82)return'Showers';if(c>=95)return'Storm';return'Variable'}
+function weatherIcon(c){if(c==null)return'·';if(c===0)return'☀';if(c<=3)return'☁';if(c>=71&&c<=77)return'❄';if(c>=95)return'⚡';if(c>=51)return'☂';return'☁'}
+function windArrow(deg){if(deg==null)return'';return['N','NE','E','SE','S','SW','W','NW'][Math.round(deg/45)%8];}
+/** General walking advice from the walk-window forecast; never claims one street is cooler, drier or calmer than another. */
+function weatherAdvice(w){
+ if(!w)return [];const out=[];
+ if(w.heatBand==='extreme')out.push(`Feels like up to ${Math.round(w.feelsLikeMax)} °C: carry water and take breaks in shade.`);
+ else if(w.heatBand==='caution')out.push(`Feels like up to ${Math.round(w.feelsLikeMax)} °C: warm for a long walk.`);
+ if(w.rainAdvisory)out.push(`Rain likely (${w.precipProbabilityMax??'?'}% chance${w.precipMax?`, up to ${w.precipMax} mm/h`:''}): no covered-walkway data is connected, so routes are not rain-optimised.`);
+ if(w.windAdvisory)out.push(`Wind up to ${Math.round(w.windMax)} km/h: street-level wind exposure is not modelled, so no route is claimed to be sheltered.`);
+ return out;
+}
+if(typeof module!=='undefined')module.exports={WEATHER,weatherContext,weatherWindow,weatherSnapshot,weatherAdvice};
 
 </script>
 <script>
@@ -657,16 +789,24 @@ function renderPreferenceSummary(){
   renderDimensions();
 }
 // Clearly labelled LIMITED offline preview; an actual LLM is used only through server.py when configured.
+/** Weather intent: 'ask' (a question about comfort, answered without re-routing), 'cooler' (heat term weighted up),
+    'consider' (use today's weather, nothing else changes), or null. */
+function localWeatherIntent(q){
+  if(/\b(is|will|would)\b[^?]*\b(comfortable|ok|okay|fine|bearable|pleasant)\b[^?]*\bweather\b|这(个)?天气.*(舒服|合适|舒适)|天气.*(舒服|舒适)吗/i.test(q))return 'ask';
+  if(/cool(er)?\b|too hot|really hot|so hot|\bheat\b|hot (day|today|weather)|shad(e|ed|y|ier)|less sun|out of the sun|凉快|凉爽|太热|很热|好热|阴凉|遮阴|晒/i.test(q))return 'cooler';
+  if(/weather|天气/i.test(q))return 'consider';
+  return null;
+}
 function localInterpret(q){
   q=q.replace(/\b(one|two|three|four|five|six|seven|eight|nine|ten|fifteen|twenty|thirty|forty|fifty|sixty)\b/gi,word=>({one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8,nine:9,ten:10,fifteen:15,twenty:20,thirty:30,forty:40,fifty:50,sixty:60}[word.toLowerCase()]));
   const map=[
     ['Architecture',/architect|historic|heritage|landmark|building|建筑|历史|地标/i],
-    ['Nature',/green|tree|park|shade|nature|greener|绿|树|自然|公园|阴凉/i],
-    ['Culture',/culture|museum|art|gallery|艺术|文化|博物馆/i],
+    ['Nature',/green|\btrees?\b|\bparks?\b|shade|nature|greener|绿|树|自然|公园|阴凉/i],
+    ['Culture',/culture|museum|\barts?\b|gallery|艺术|文化|博物馆/i],
     ['Quiet & Relax',/quiet|peaceful|calm|relax|less noisy|安静|清静|少噪音/i],
     ['Spatial Comfort',/comfort|spacious|uncrowded|宽敞|舒适/i],
     ['Urban Vibrancy',/lively|vibrant|busy|energetic|热闹|活力/i],
-    ['Food & Retail',/food|coffee|restaurant|shop|eat|餐厅|咖啡|美食|购物/i],
+    ['Food & Retail',/food|coffee|restaurant|shop|\beat\b|餐厅|咖啡|美食|购物/i],
     ['Scenic & Visual',/scenic|beautiful view|viewpoint|photogenic|风景|景观|拍照/i],
     ['Walkability',/walkable|easy to walk|pedestrian.friend|好走|步行友好/i],
     ['Access & Safety',/safe|well.lit|safety|安全|照明/i],
@@ -681,7 +821,7 @@ function localInterpret(q){
     if(name==='Quiet & Relax' && /less noisy|少噪音/i.test(q))directions[name]='high';
   }
   if(/less crowded|fewer crowds|avoid crowds|less busy|少拥挤|少人群/i.test(q)){weights['Urban Vibrancy']=90;directions['Urban Vibrancy']='low'}
-  const result={weights,directions,time_minutes:null,time_delta_minutes:null,constraints:{}};
+  const result={weights,directions,time_minutes:null,time_delta_minutes:null,constraints:{},weather:localWeatherIntent(q)};
   const explicit=q.match(/(?:within|under|maximum|max|no more than|at most|less than|最多|不超过|限制|以内|控制在)\s*(\d{1,3})\s*(?:minutes?|mins?|分钟)/i)||q.match(/(\d{1,3})\s*(?:minutes?|mins?|分钟)\s*(?:max|or less|以内|之内)/i);
   if(explicit)result.time_minutes=+explicit[1];
   const more=q.match(/(?:another|additional|extra|up to|多|增加|再|延长)\s*(\d{1,2})\s*(?:minutes?|mins?|分钟)/i)||q.match(/(\d{1,2})\s*(?:minutes?|mins?|分钟)\s*(?:more|extra|longer|也行|也可以)/i)||q.match(/(\d{1,2})\s*(?:more|extra|additional)\s*(?:minutes?|mins?)/i);
@@ -709,6 +849,12 @@ function applyInterpretation(result,source){
     if(typeof result.constraints?.[c]==='boolean'){planner.constraints[c]=result.constraints[c];changes.push(`${c}: ${planner.constraints[c]?'yes':'no'}`)}
   }
   if(Number.isFinite(result.max_detour_percent)){planner.maxDetourPct=Math.max(0,Math.min(100,Math.round(result.max_detour_percent)));changes.push(`max detour ${planner.maxDetourPct}%`)}
+  if(['cooler','consider'].includes(result.weather)){
+    weatherContext.mode='auto';
+    if(result.weather==='cooler'){weatherContext.priority='high';changes.push('weather: cooler walk (heat term ×2 when it is hot)');}
+    else changes.push('weather: use today’s forecast');
+  }
+  planner.weatherIntent=result.weather||null;
   renderPreferenceSummary();
   return changes;
 }
@@ -717,7 +863,7 @@ async function interpretIntent(q){
   let data,mode='local';
   if(planner.llmConnected){
     try{
-      const r=await streetwiseFetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(22000)});
+      const r=await streetwiseFetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,weather:weatherWindow(state.budget),history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(22000)});
       if(!r.ok)throw new Error(`LLM service ${r.status}`);
       data=await r.json();mode='llm';
     }catch(err){console.warn('LLM parsing unavailable:',err);toast('AI parsing unavailable. Using clearly marked limited local preview.');}
@@ -964,6 +1110,7 @@ async function handlePlan(text,isFollowUp=false){
   planner.parsing=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;
   appendChat('user',q);
   try{const result=await interpretIntent(q);if(result.clarification){appendChat('assistant',result.clarification);return;}
+    if(planner.weatherIntent==='ask'&&state.routes.length){if(weatherContext.status!=='ok')await loadWeather();appendChat('assistant',weatherAnswer());return;}
     const changes=result.changes;if(changes.length)appendChat('assistant',`${planner.interpretation==='llm'?'AI interpretation':'Limited local interpretation'}: ${changes.join(' · ')}. Checking feasible pedestrian paths…`);
     else appendChat('assistant',`No explicit preference change recognized${planner.interpretation==='local'?' by limited local preview':''}. I’ll check route options using current settings.`);
   }catch(err){toast('Unable to interpret preferences: '+err.message)}
@@ -1014,22 +1161,11 @@ function updateSegmentDetails(){
   root.innerHTML=html;
 }
 
-async function loadWeather(){
-  if(state.weatherRequestAt&&Date.now()-state.weatherRequestAt<60000)return;state.weatherRequestAt=Date.now();
-  const here=state.gps && latLonInsideManhattanEnvelope(state.gps)?state.gps:{lat:40.783,lon:-73.969};
-  try{
-    const url=`${API.weather}?${new URLSearchParams({latitude:String(here.lat),longitude:String(here.lon),current:'temperature_2m,precipitation,wind_speed_10m,weather_code',timezone:'America/New_York'})}`;
-    const d=await timedJson(url,10000);if(!d.current)throw new Error('No current model output');
-    state.weather=d.current;
-    const c=d.current,w=weatherName(c.weather_code);
-    $('contextUpdated').textContent=`Forecast valid: ${esc(c.time||'not supplied')} · Open-Meteo (model context)`;
-    $('weatherMain').textContent=`${Math.round(c.temperature_2m)}°C`;
-    $('weatherMeta').textContent=`${w} · ${Math.round(c.wind_speed_10m)} km/h wind`;
-    $('topWeather').innerHTML=`<span class="tiny-sun">${weatherIcon(c.weather_code)}</span> ${Math.round(c.temperature_2m)}°C · ${esc(w)}`;
-  }catch(err){$('contextUpdated').textContent='Weather observation time unavailable';$('weatherMain').textContent='UNAVAILABLE';$('weatherMeta').textContent='Weather API not reachable';$('topWeather').textContent='Weather unavailable';}
+/** Weather lives in weather.js (one shared context); this keeps the old entry point and passes the GPS position. */
+function loadWeather(force=false){
+  const here=state.gps&&latLonInsideManhattanEnvelope(state.gps)?{lat:state.gps.lat,lon:state.gps.lon}:null;
+  return refreshWeather(force,here);
 }
-function weatherName(c){if(c===0)return'Clear';if(c<=3)return'Cloudy';if(c===45||c===48)return'Fog';if(c>=51&&c<=67)return'Rain';if(c>=71&&c<=77)return'Snow';if(c>=80&&c<=82)return'Showers';if(c>=95)return'Storm';return'Variable'}
-function weatherIcon(c){if(c===0)return'☀';if(c<=3)return'☁';if(c>=71&&c<=77)return'❄';if(c>=51)return'☂';return'☁'}
 function requestGPS(useAsStart=false,follow=false){
   if(!navigator.geolocation){$('gpsMain').textContent='UNAVAILABLE';toast('Geolocation is unavailable in this browser.');return}
   if(!window.isSecureContext && !['localhost','127.0.0.1'].includes(location.hostname)){$('gpsMain').textContent='HTTPS REQUIRED';toast('GPS requires HTTPS or localhost.');return}
@@ -1182,12 +1318,15 @@ function buildRouteRequest(a,b){
  const weights={},directions={};
  for(const d of DIMENSIONS)if(planner.origins[d.name]!=='default'&&planner.weights[d.name]>0){weights[d.name]=planner.weights[d.name];directions[d.name]=planner.directions[d.name]||'high';}
  return {origin:{lat:a.lat,lon:a.lon},destination:{lat:b.lat,lon:b.lon},preferences:{weights,directions},
-  constraints:{max_minutes:state.budget,max_detour_pct:planner.maxDetourPct,avoid_detours:planner.constraints.avoidDetours,avoid_stairs:planner.constraints.avoidStairs}};
+  constraints:{max_minutes:state.budget,max_detour_pct:planner.maxDetourPct,avoid_detours:planner.constraints.avoidDetours,avoid_stairs:planner.constraints.avoidStairs},
+  // Weather snapshot for the walking window (weather.js); the engine decides whether it may change edge costs.
+  weather:typeof weatherSnapshot==='function'?weatherSnapshot(state.budget):null};
 }
 /** Adapter: engine Route Object → the shape the existing map and panels read (id/label/coords/km/min). */
 function adaptRoute(r){return {id:r.route_id,label:r.route_name,coords:r.geometry.coordinates,km:r.distance_m/1000,min:r.estimated_duration_min,feasible:r.constraints.feasible,score:r.personalized_score.utility,raw:r};}
 function applyRouteResponse(json){
  planner.routeResponse=json;state.routes=json.routes.map(adaptRoute);
+ planner.weatherSignature=typeof weatherWindow==='function'?WEATHER.signature(weatherWindow(state.budget)):undefined;
  const best=json.routes.find(r=>r.recommended);state.activeRoute=best?.route_id||null;routeNav.selectedEdge=null;
  if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();
  planner.lastExplanation=best?best.ranking_explanation:`No Feasible Route: none of the ${json.routes.length} candidate routes meets your limits (${[...new Set(json.routes.flatMap(r=>r.constraints.violations))].join('; ')}). Increase the limit or change endpoints. Over-limit routes are shown for comparison only.`;
@@ -1213,6 +1352,7 @@ async function generateRoutes(userText=null,isFollowUp=false){
   applyRouteResponse(json);
   const now=state.routes.find(r=>r.id===state.activeRoute)?.raw.ordered_edge_ids.join(',');
   if(previous&&now)planner.lastExplanation+=previous===now?' The recommended path is unchanged: it still ranks best under the updated preferences.':' The recommended path changed after recalculation.';
+  if(typeof weatherRouteSentence==='function'&&(json.weather_routing?.routing?.active||planner.weatherIntent))planner.lastExplanation+=weatherRouteSentence(json);
   $('rankingStatus').textContent=planner.lastExplanation;
   renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
   appendChat('assistant',planner.lastExplanation);
@@ -1245,7 +1385,7 @@ function renderRouteCards(){
  root.innerHTML=routes.map(x=>{
   const r=x.raw,selected=x.id===state.activeRoute,feasible=r.constraints.feasible;
   const tag=r.recommended?'BEST MATCH':r.objective==='shortest'?'SHORTEST':'ALTERNATIVE';
-  return `<button class="route-card ${selected?'selected':''} ${!feasible?'over-budget':''}" type="button" data-route="${esc(x.id)}" aria-pressed="${selected}"><span class="route-icon">${selected?'✓':r.rank}</span><span class="route-names"><span class="route-category">${tag}${!feasible?' · NOT FEASIBLE':''}</span><strong>${esc(r.route_name)}</strong><small>Personalized ${r.personalized_score.utility} · Overall ${scoreText(r.overall_score)} · ${Math.round(r.data_coverage.mean*100)}% data coverage</small><small class="evidence-line">${r.detour_percentage>0?`+${r.detour_percentage}% vs shortest`:'Shortest distance'} · ${r.ordered_edge_ids.length} OSM edges</small>${!feasible?`<small>${esc(r.constraints.violations.join('; '))}</small>`:''}</span><span class="route-metrics"><strong>${(r.distance_m/1000).toFixed(2)} km</strong><small>${Math.ceil(r.estimated_duration_min)} min</small></span></button>`;
+  return `<button class="route-card ${selected?'selected':''} ${!feasible?'over-budget':''}" type="button" data-route="${esc(x.id)}" aria-pressed="${selected}"><span class="route-icon">${selected?'✓':r.rank}</span><span class="route-names"><span class="route-category">${tag}${!feasible?' · NOT FEASIBLE':''}</span><strong>${esc(r.route_name)}</strong><small>Personalized ${r.personalized_score.utility} · Overall ${scoreText(r.overall_score)} · ${Math.round(r.data_coverage.mean*100)}% data coverage</small><small class="evidence-line">${r.detour_percentage>0?`+${r.detour_percentage}% vs shortest`:'Shortest distance'} · ${r.ordered_edge_ids.length} OSM edges${r.weather&&planner.routeResponse?.weather_routing?.routing?.active?` · ${Math.round(r.weather.heat_exposure_share*100)}% heat-exposed (tree proxy)`:''}</small>${!feasible?`<small>${esc(r.constraints.violations.join('; '))}</small>`:''}</span><span class="route-metrics"><strong>${(r.distance_m/1000).toFixed(2)} km</strong><small>${Math.ceil(r.estimated_duration_min)} min</small></span></button>`;
  }).join('')+`<p class="route-constraints">${esc(constraintSummary())}</p><p class="route-footnote">Routes are computed on the OSM pedestrian graph (${esc(planner.routeResponse?.network_version||'')}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${esc(planner.routeResponse?.score_version||'')}), shared with Explore Urban Data.</p>`;
  root.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',()=>selectRoute(el.dataset.route)));
 }
@@ -1267,10 +1407,11 @@ function updateProfile(){
 }
 function updateWhyRoute(){
  const x=state.routes.find(r=>r.id===state.activeRoute),root=$('whyRoute');
- if(!x){root.textContent=planner.constraints.stepFree?'Step-free access cannot be verified, so no route is recommended.':planner.routeResponse?planner.lastExplanation:'No selected route yet.';return}
+ if(!x){root.textContent=planner.constraints.stepFree?'Step-free access cannot be verified, so no route is recommended.':planner.routeResponse?planner.lastExplanation:'No selected route yet.';if(typeof renderWeatherRoute==='function')renderWeatherRoute();return}
  const p=x.raw.personalized_score;
  const parts=Object.entries(p.components).sort((a,b)=>b[1].weight-a[1].weight).slice(0,6).map(([d,c])=>`<div class="data-pair"><span>${esc(dimLabel(d))} · weight ${c.weight}${c.direction==='low'?' · less':''}</span><span>${scoreText(c.route_score)} → fit ${c.adjusted_fit}</span></div>`).join('');
- root.innerHTML=`<p>${esc(x.raw.ranking_explanation)}</p>${parts}<small>${esc(p.formula)}. ${p.preferences_expressed?'Weights come from your request.':'No preference expressed yet, so all 12 dimensions count equally.'}</small>`;
+ root.innerHTML=`<p>${esc(x.raw.ranking_explanation)}</p>${parts}${p.weather_adjustment!=null?`<div class="data-pair"><span>Weather (heat) adjustment</span><span>−${p.weather_adjustment}</span></div>`:''}<small>${esc(p.formula)}. ${p.preferences_expressed?'Weights come from your request.':'No preference expressed yet, so all 12 dimensions count equally.'}</small>`;
+ if(typeof renderWeatherRoute==='function'){renderWeatherRoute();renderWeatherPanel();}
 }
 // --- Route edges: list in Route Intelligence and clickable on the map -------------------------------------
 function routeEdgesGeojson(){
@@ -1331,6 +1472,117 @@ async function updateRouteProgress(accuracy){
   if(p.reroute_recommended&&state.start==='gps')queueMapReplan();
  }catch(err){routeNav.last=null;}
  finally{routeNav.pending=false;}
+}
+
+</script>
+<script>
+'use strict';
+/* Weather UI: compact status in Navigate, "Weather & your walk" in Route Intelligence, and the AI Journey's weather
+   answers. Everything about routing comes from the engine's `weather_routing` record in the last route response
+   (routing/weather.py), never from the browser's own guess. Four states are kept apart:
+   Weather Data Available · Weather Context Applied · Weather Routing Active · Weather Routing Unavailable. */
+const wxUI={timer:null};
+const fmt=(v,u,d=0)=>v==null?'—':`${Number(v).toFixed(d)}${u}`;
+function wxRouting(){return planner.routeResponse?.weather_routing||null;}
+/** One label for the four states (data / context / routing active / routing unavailable). */
+function weatherStates(){
+ const data=weatherContext.status==='ok',fresh=weatherFresh(),r=wxRouting()?.routing;
+ return {data:data?(fresh?'Weather data available':'Weather data stale'):weatherContext.status==='loading'?'Loading weather':'Weather data unavailable',
+  context:Boolean(wxRouting()?.data_available),routing:r?.active?'active':r?r.status:'none',reason:r?.reason||null};
+}
+function renderWeatherStatus(){
+ const c=weatherContext.current,ok=weatherContext.status==='ok'&&c,age=weatherAgeMin(),stale=ok&&!weatherFresh();
+ const when=ok?`${c.time.replace('T',' ')} (New York) · ${Math.round(age)} min ago`:'';
+ $('topWeather').innerHTML=ok?`<span class="tiny-sun">${weatherIcon(c.code)}</span> ${fmt(c.temperature,'°C')} · ${esc(weatherName(c.code))}${stale?' · stale':''}`:
+  weatherContext.status==='loading'?'<span class="tiny-sun">·</span> Weather loading…':'Weather unavailable';
+ $('weatherMain').textContent=ok?fmt(c.temperature,'°C'):weatherContext.status==='loading'?'…':'UNAVAILABLE';
+ $('weatherMeta').textContent=ok?`Feels ${fmt(c.feelsLike,'°C')} · ${weatherName(c.code)} · ${fmt(c.windSpeed,' km/h')} wind`:(weatherContext.error||'Awaiting forecast');
+ $('contextUpdated').textContent=ok?`Open-Meteo model (not a station observation) · valid ${when}${stale?' · STALE, refresh to update':''}`:`Weather: ${weatherContext.error||'not loaded'}. Routes use the static experience scores.`;
+ renderWeatherPanel();renderWeatherRoute();
+}
+function renderWeatherPanel(){
+ const pill=$('wxPill'),body=$('wxBody');if(!pill||!body)return;
+ const c=weatherContext.current,ok=weatherContext.status==='ok'&&c,w=weatherWindow(state.budget),st=weatherStates(),changed=weatherChangedSinceRouting();
+ pill.innerHTML=ok?`<span class="wx-ico">${weatherIcon(c.code)}</span><strong>${fmt(c.temperature,'°')}</strong><span>feels ${fmt(c.feelsLike,'°')}</span>${w?.rainAdvisory?'<span class="wx-flag">rain</span>':''}${w?.windAdvisory?'<span class="wx-flag">wind</span>':''}${weatherContext.alerts.items.length?'<span class="wx-flag alert">alert</span>':''}${st.routing==='active'?'<span class="wx-flag on">routing</span>':''}${changed?'<span class="wx-dot" title="Weather changed since routes were computed"></span>':''}`
+  :`<span class="wx-ico">·</span><span>${weatherContext.status==='loading'?'Weather…':'Weather n/a'}</span>`;
+ const alerts=weatherContext.alerts.status==='ok'?(weatherContext.alerts.items.length?weatherContext.alerts.items.map(a=>`<li class="wx-alert">${esc(a.event)}${a.ends?` · until ${esc(new Date(a.ends).toLocaleString('en-US',{timeZone:'America/New_York',hour:'numeric',minute:'2-digit',weekday:'short'}))}`:''}</li>`).join(''):'<li>No active NWS alerts for this point</li>'):'<li>NWS alerts unavailable</li>';
+ body.innerHTML=ok?`<dl class="wx-grid">
+   <dt>Now</dt><dd>${fmt(c.temperature,' °C')} · feels ${fmt(c.feelsLike,' °C')} · ${esc(weatherName(c.code))}</dd>
+   <dt>Humidity</dt><dd>${fmt(c.humidity,' %')}</dd>
+   <dt>Wind</dt><dd>${fmt(c.windSpeed,' km/h')} ${windArrow(c.windDirection)}</dd>
+   <dt>Next ${w?.minutes||state.budget} min</dt><dd>${w?`feels up to ${fmt(w.feelsLikeMax,' °C')} · rain ${fmt(w.precipProbabilityMax,' %')} · wind up to ${fmt(w.windMax,' km/h')}${w.daylight?'':' · after dark'}`:'Forecast window unavailable'}</dd></dl>
+  <ul class="wx-list">${alerts}</ul>
+  <p class="wx-route-state ${st.routing}">${esc(routingStateText())}</p>`
+  :`<p class="wx-route-state">${esc(weatherContext.error||'Weather has not loaded.')} Routes use the static experience scores.</p>`;
+ body.insertAdjacentHTML('beforeend',`<div class="wx-actions"><label><input type="checkbox" id="wxAuto" ${weatherContext.mode==='auto'?'checked':''}> Weather-aware routing</label><button type="button" id="wxRefresh" class="mini-outline">Refresh</button>${changed&&state.routes.length?'<button type="button" id="wxReroute" class="mini-outline">Recalculate</button>':''}</div>
+  <small class="wx-source">Open-Meteo forecast (grid model, one value for the whole walk) · NWS alerts. Never a street-level measurement.</small>`);
+ $('wxAuto').addEventListener('change',e=>{weatherContext.mode=e.target.checked?'auto':'off';renderWeatherPanel();if(state.routes.length)toast('Recalculate to apply this to the routes.');});
+ $('wxRefresh').addEventListener('click',()=>refreshWeather(true));
+ $('wxReroute')?.addEventListener('click',()=>generateRoutes(null,true));
+}
+function routingStateText(){
+ const r=wxRouting()?.routing;
+ if(!state.routes.length)return weatherContext.mode==='off'?'Weather-aware routing is off.':'Weather will be checked when you plan a route.';
+ if(!r)return 'These routes were computed without weather data.';
+ if(r.active)return `Weather routing active: ${r.reason}`;
+ return r.status==='unavailable'?`Weather routing unavailable: ${r.reason}`:`Weather information is available, but weather-based route optimization is not active for this route. ${r.reason}`;
+}
+/** Route Intelligence: conditions for the walk, impact, and what the engine actually did. */
+function renderWeatherRoute(){
+ const root=$('wxRoute');if(!root)return;
+ const x=state.routes.find(r=>r.id===state.activeRoute),w=weatherWindow(x?Math.ceil(x.raw.estimated_duration_min):state.budget),wr=wxRouting(),r=wr?.routing;
+ $('wxRouteStatus').textContent=r?.active?'ROUTING ACTIVE':weatherContext.status==='ok'?'INFO ONLY':'UNAVAILABLE';
+ const cond=w?`<div class="data-pair"><span>During the walk (${w.minutes} min from now)</span><span>feels up to ${fmt(w.feelsLikeMax,' °C')}</span></div><div class="data-pair"><span>Rain chance · wind</span><span>${fmt(w.precipProbabilityMax,' %')} · ${fmt(w.windMax,' km/h')}</span></div>`
+  :`<p class="soft-copy">${esc(weatherContext.error||'Weather forecast not loaded.')}</p>`;
+ const advice=weatherAdvice(w);
+ const impact=`<p class="wx-sub">Weather impact on your walk</p>${advice.length?`<ul class="wx-list">${advice.map(a=>`<li>${esc(a)}</li>`).join('')}</ul>`:`<p class="soft-copy">${w?'No weather condition expected to affect walking comfort.':'Unknown — no forecast.'}</p>`}`;
+ let expl='';
+ if(!x)expl='<p class="soft-copy">Plan a route to see whether weather changed it.</p>';
+ else if(!r||!wr.data_available)expl=`<p class="soft-copy">These routes were computed without usable weather data${r?.reason?`: ${esc(r.reason)}`:''}.</p>`;
+ else if(!r.active)expl=`<p class="wx-route-state">Weather information is available, but weather-based route optimization is not active for this route.</p><small>${esc(r.reason)}</small>`;
+ else{
+  const e=r.effect,mine=x.raw.weather,cooler=state.routes.find(y=>y.raw.objective==='weather_heat');
+  expl=`<div class="data-pair"><span>Factor considered</span><span>Heat · feels ${fmt(wr.snapshot.feels_like_max_c,' °C')} (level ${r.level}${r.multiplier>1?', ×'+r.multiplier+' on request':''})</span></div>
+   <div class="data-pair"><span>Spatial evidence</span><span>Street-tree / park cover proxy</span></div>
+   ${mine?`<div class="data-pair"><span>This route, heat-exposed length</span><span>${Math.round(mine.heat_exposure_share*100)}% · evidence on ${Math.round(mine.evidence_coverage*100)}%</span></div>`:''}
+   <p>${e?.changed?`Weather changed the recommendation: <strong>${esc(state.routes.find(y=>y.id===e.recommended_route_id)?.label||'')}</strong> replaces <strong>${esc(state.routes.find(y=>y.id===e.baseline_route_id)?.label||'the static best match')}</strong>, ${Math.round(e.exposure_reduction*100)} points less heat-exposed length for ${e.extra_minutes>=0?'+':''}${e.extra_minutes} min.`
+    :'Weather was applied, and the static recommendation still ranks best, so it is kept.'}${cooler?` A dedicated <strong>Cooler Route</strong> (${Math.round(cooler.raw.weather.heat_exposure_share*100)}% exposed, ${Math.ceil(cooler.raw.estimated_duration_min)} min) is in the list.`:''}</p>
+   <small>${esc(mine?.evidence||'')} Coefficients ${esc(wr.config_version)}; routes keep every walking-time, detour and stairs limit.</small>`;
+ }
+ root.innerHTML=`<p class="wx-sub">Weather conditions</p>${cond}${impact}<p class="wx-sub">Weather-aware route explanation</p>${expl}${weatherChangedSinceRouting()&&x?'<button type="button" class="mini-outline" id="wxReroute2">Weather changed · Recalculate</button>':''}`;
+ $('wxReroute2')?.addEventListener('click',()=>generateRoutes(null,true));
+}
+/** Chat sentence describing what weather did in the last computation (from the engine record). */
+function weatherRouteSentence(json){
+ const wr=json?.weather_routing,r=wr?.routing;if(!r)return '';
+ if(!wr.data_available)return ' Weather: no usable forecast, so routes use the static scores only.';
+ if(!r.active)return ` Weather: considered but not used for routing — ${r.reason}`;
+ const e=r.effect;
+ return ` Weather routing active (${r.reason.replace(/\.$/,'')}). `+(e?.changed?`The recommendation changed to reduce heat-exposed length by ${Math.round(e.exposure_reduction*100)} points for ${e.extra_minutes>=0?'+':''}${e.extra_minutes} min.`:'The recommended route is unchanged: it still ranks best with the heat term.')+' Evidence: street-tree / park cover proxy, not measured shade.';
+}
+/** "Is my route comfortable in this weather?" — answered from the forecast and computed route fields only. */
+function weatherAnswer(){
+ const x=state.routes.find(r=>r.id===state.activeRoute),w=weatherWindow(x?Math.ceil(x.raw.estimated_duration_min):state.budget);
+ if(!w)return `I can't read the weather right now (${weatherContext.error||'no forecast'}), so I can't judge comfort.`;
+ const parts=[`For the next ${w.minutes} min the forecast is feels-like up to ${fmt(w.feelsLikeMax,' °C')}, ${fmt(w.precipProbabilityMax,' %')} rain chance, wind up to ${fmt(w.windMax,' km/h')}${w.daylight?'':', after dark'}.`];
+ parts.push(...weatherAdvice(w));
+ if(x?.raw.weather)parts.push(`Your selected route has ${Math.round(x.raw.weather.heat_exposure_share*100)}% of its length with little street-tree or park cover (a proxy, not measured shade).`);
+ parts.push('This forecast is one value for the whole area; I have no street-level temperature, rain-cover or wind data, so I can\'t say one street is actually more comfortable than another.');
+ if(w.heatBand!=='none'&&w.heatBand!=='na')parts.push('Ask for "a cooler route" to re-plan with the heat term weighted up.');
+ return parts.join(' ');
+}
+function weatherChangedSinceRouting(){
+ if(!state.routes.length||planner.weatherSignature===undefined)return false;
+ return WEATHER.signature(weatherWindow(state.budget))!==planner.weatherSignature;
+}
+function setupWeatherUI(){
+ onWeather(renderWeatherStatus);
+ // The open panel never stays over the route: any map interaction closes it.
+ $('map').addEventListener('pointerdown',()=>{$('wxPanel').open=false;});
+ // Periodic refresh; requests never follow map movement. Hidden tabs skip the refresh.
+ wxUI.timer=setInterval(()=>{if(!document.hidden)refreshWeather(false);},WEATHER.refreshMin*60000);
+ setInterval(()=>{if(weatherContext.status==='ok')renderWeatherStatus();},60000);  // age / stale labels
+ renderWeatherStatus();
 }
 
 </script>
@@ -2030,7 +2282,7 @@ function setExploreMode(on){
  document.querySelectorAll('.maplibregl-popup').forEach(p=>p.remove());
  if(typeof closeUrbanInspector==='function')closeUrbanInspector();
  $('explorePanel').classList.toggle('hidden',!on);
- for(const sel of ['.experience-controls','.map-layer-switch'])document.querySelector(sel).classList.toggle('hidden',on);
+ for(const sel of ['.experience-controls','.map-layer-switch','.wx-panel'])document.querySelector(sel).classList.toggle('hidden',on);
  document.querySelector('.map-legend').classList.toggle('explore-hidden',on);
  $('selectedRouteSummary').classList.toggle('hidden',on);
  if(!on)$('exploreTooltip').classList.add('hidden');
@@ -2180,7 +2432,7 @@ function setupExperienceControls(){
  renderExperienceLegend();
 }
 function loadSelectedRaw(){const kind=selectedEvidenceKey()==='nature'?'trees':selectedEvidenceKey()==='architecture'?'lpc':null;if(kind&&!state.datasets[kind])loadViewportEvidence(kind);}
-setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupMap();loadData('streets');loadWeather();
+setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupWeatherUI();setupMap();loadData('streets');loadWeather();
 
 </script>
 </body>

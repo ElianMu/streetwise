@@ -26,13 +26,23 @@ unknown route), `503` routing data not built. Every error body is `{"error": "..
   "origin": {"lat": 40.7536, "lon": -73.9832},
   "destination": {"lat": 40.7587, "lon": -73.9787},
   "preferences": {"weights": {"Nature": 90, "Quiet & Relax": 90}, "directions": {"Nature": "high"}},
-  "constraints": {"max_minutes": 30, "max_detour_pct": 25, "avoid_detours": true, "avoid_stairs": false}
+  "constraints": {"max_minutes": 30, "max_detour_pct": 25, "avoid_detours": true, "avoid_stairs": false},
+  "weather": {"source": "open-meteo", "kind": "forecast_window", "valid_from": "2026-07-15T14:00", "valid_to": "2026-07-15T15:00",
+              "age_min": 4, "feels_like_max_c": 34, "temperature_max_c": 31, "precip_probability_max_pct": 10,
+              "precip_max_mm_per_h": 0, "wind_max_kmh": 12, "daylight": true, "mode": "auto", "priority": "normal", "alerts": []}
 }
 ```
 
 `max_minutes` is the user's hard limit: any number ≥ 10, no upper cap (`constraints_used` echoes the limits applied, `feasible_count` how many routes meet them). `weights` keys must be among the 12 dimension names exactly. Only weights > 0 count; with none, all 12 count equally.
 Weights describe the user and never change street scores. Response:
-`{network_version, score_version, origin, destination, shortest_distance_m, preferences_used, preferences_expressed, routes: [Route], compute_seconds, notes}`.
+`{network_version, score_version, origin, destination, shortest_distance_m, preferences_used, preferences_expressed, routes: [Route], compute_seconds, weather_routing, notes}`.
+`weather` is optional (null/absent → static routing only). Out-of-range values become null (unknown, never "normal"). `mode: "off"` disables
+the weather term; `priority: "high"` (user asked for a cooler walk) multiplies it by `explicit_request_multiplier`.
+`weather_routing` = `{config_version, snapshot, data_available, factors: [{factor: heat|rain|wind, …, routing_capable}],
+routing: {status: active|not_active|unavailable, active, factor, level, multiplier, reason, effect}}`; `effect` (heat routing only) =
+`{baseline_route_id, recommended_route_id, changed, extra_minutes, exposure_reduction}` against the recommendation the static ranking alone makes.
+Each route then carries `weather: {heat_exposure_share, tree_cover_proxy_share, evidence_coverage, evidence}`, and while heat routing is
+active `personalized_score.weather_adjustment`. A route with `objective: "weather_heat"` ("Cooler Route (tree-cover proxy)") is added on hot days.
 Routes are sorted by rank; at most one has `recommended: true`, and none if no route meets the hard constraints.
 
 ### POST /api/navigation/progress
@@ -81,6 +91,10 @@ in order, first/last may be `partial`], `distance_m`, `estimated_duration_min` (
 - Personalized utility: `Σ w_d · (50 + coverage_d · (fit_d − 50)) / Σ w_d − 0.4 × detour %`, with `fit = score` or
   `100 − score` for "prefer less". Missing coverage pulls a dimension toward neutral 50, so sparse data cannot win.
 - Hard constraints (time, detour, avoid stairs) filter before ranking; step-free is refused (no verified accessibility data).
+- Weather (routing/weather.py `CONFIG`): heat level `h = clamp((feels_like − 27) / (32 − 27))`, only by day; edge exposure
+  `x = 1 − max(min(tree_km / 150, 1), park_pct / 100)` (median where no evidence). Weather candidate edge cost per metre
+  `1 + 0.8·(1 − utility) + 0.6·h·m·x`; ranking `utility − 20·h·m·(exposed length share)`, `m` = 2 on explicit request, else 1.
+  Rain and wind are advisory only (no covered-walkway or wind-exposure data).
 
 ## Breaking changes and migration (front end)
 

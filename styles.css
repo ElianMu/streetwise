@@ -265,3 +265,27 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .map-workspace .selected-route-summary{z-index:5}
 @media(max-width:740px){.ud-legend{right:10px;bottom:120px;width:200px;max-height:35%}}
 .lg-chips{display:flex;flex-wrap:wrap;gap:3px 9px;font-size:9.5px;color:#a9bdb4}.lg-chips span{display:inline-flex;align-items:center;gap:4px}.lg-chips .lg-sw{width:7px;height:7px}
+
+/* Weather status (Navigate) and "Weather & your walk" (Route Intelligence) — weather-ui.js */
+.wx-panel{position:absolute;top:70px;left:165px;z-index:4;max-width:290px;font-size:11px;color:#d9e4dd}
+.wx-pill{list-style:none;display:flex;align-items:center;gap:7px;cursor:pointer;padding:9px 12px;border:1px solid #344b48;border-radius:13px;background:#112426ed;box-shadow:0 6px 28px #0003;white-space:nowrap}
+.wx-pill::-webkit-details-marker{display:none}.wx-pill strong{font-size:12px;color:#eef6ea}.wx-pill span{color:#a5b6ad}
+.wx-ico{color:#f8d385;font-size:15px;line-height:1}
+.wx-flag{font-size:8.5px!important;letter-spacing:.6px;text-transform:uppercase;font-weight:800;padding:2px 5px;border-radius:4px;background:#1f3436;color:#a9c4d8!important}
+.wx-flag.alert{background:#3a2622;color:#f2a99b!important}.wx-flag.on{background:#2c3b22;color:var(--lime)!important}
+.wx-dot{width:7px;height:7px;border-radius:50%;background:var(--orange);display:inline-block}
+.wx-panel[open] .wx-pill{border-bottom-left-radius:4px;border-bottom-right-radius:4px}
+.wx-body{margin-top:4px;padding:11px 12px;border:1px solid #344b48;border-radius:10px;background:#112426f5;box-shadow:0 6px 28px #0005;width:290px}
+.wx-grid{display:grid;grid-template-columns:auto 1fr;gap:5px 10px;margin:0}.wx-grid dt{color:#89a5a1;font-size:9.5px;font-weight:700;letter-spacing:.6px}.wx-grid dd{margin:0;color:#e3ece5;font-size:10.5px}
+.wx-list{margin:9px 0 0;padding-left:15px;color:#a9bdb7;font-size:10px;line-height:1.55}.wx-alert{color:#f2a99b}
+.wx-route-state{margin:9px 0 0;font-size:10px;line-height:1.55;color:#a9bdb7;border-left:2px solid #3d5651;padding-left:8px}
+.wx-route-state.active{border-color:var(--lime);color:#e2f2c6}
+.wx-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px}.wx-actions label{display:flex;align-items:center;gap:5px;color:#c9d7d1;font-size:10px;margin-right:auto}.wx-actions input{accent-color:var(--lime)}
+.wx-source{display:block;margin-top:8px;color:#6f8a86;font-size:9px;line-height:1.5}
+.wx-route .wx-sub{margin:12px 0 4px;font-size:9.5px;letter-spacing:1px;font-weight:700;color:#a1b2af;text-transform:uppercase}.wx-route .wx-sub:first-child{margin-top:4px}
+.wx-route p{font-size:11px;line-height:1.6;color:#c6d4cf}.wx-route small{display:block;color:#7f9a95;font-size:9px;line-height:1.55;margin-top:6px}
+.wx-route .mini-outline{margin-top:10px}
+@media(max-width:680px){.wx-panel{top:64px;left:155px;max-width:165px}.wx-pill{padding:8px 10px;overflow:hidden}.wx-panel[open]{left:10px;right:56px;max-width:none}.wx-body{width:auto}}
+.wx-actions .mini-outline{width:auto;margin-top:0;padding:5px 10px;font-size:10px}
+.wx-route{font-size:11px;line-height:1.6}
+.wx-route{background:#132529;border:1px solid #314c45;border-radius:10px;padding:10px 12px;color:#d7e5d9;margin-top:10px}

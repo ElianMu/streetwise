@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=18" />
+  <link rel="stylesheet" href="./styles.css?v=19" />
 </head>
 <body>
 <div class="site-shell">
@@ -83,6 +83,7 @@
       <div id="mapFallback" class="map-fallback" aria-live="polite"><div class="fallback-loader"></div><h2>Connecting to the city</h2><p>Loading the Manhattan basemap and official NYC street-centerline data.</p></div>
       <div class="map-mode-control" role="group" aria-label="Map mode"><button id="modeNavigate" aria-pressed="true">Navigate</button><button id="modeExplore" aria-pressed="false">Explore Urban Data</button></div>
       <details class="experience-controls"><summary>Street evidence ▾</summary><label for="experienceDimension">Dimension</label><select id="experienceDimension"></select><label for="experienceView">Display</label><select id="experienceView"><option value="evidence">Street evidence · raw units</option><option value="raw">Original points / polygons</option><option value="score">Validated score · 0–100</option></select><div class="experience-checks"><label><input id="layerExperience" type="checkbox" checked> Experience</label><label><input id="layerCoverage" type="checkbox" checked> Coverage</label></div><button id="analyzeView">Analyze current view</button><button id="exportExperience">Export sections to Kepler.gl</button><p id="experienceStatus" role="status">Scores require calibration. Unknown ≠ zero.</p></details>
+      <details class="wx-panel" id="wxPanel"><summary id="wxPill" class="wx-pill" aria-label="Weather status"><span class="wx-ico">·</span><span>Weather…</span></summary><div id="wxBody" class="wx-body"></div></details>
       <section id="explorePanel" class="explore-panel hidden" aria-label="Manhattan street experience map">
         <div class="explore-head"><div class="explore-heading"><div class="explore-eyebrow">ALL MANHATTAN · STREET SEGMENTS</div><strong id="exploreTitle">Nature</strong></div><button id="exploreThumbsToggle" class="explore-collapse" aria-pressed="false" title="Show all 13 maps side by side" aria-label="Show all 13 small maps">▦</button><button id="exploreCollapse" class="explore-collapse" aria-expanded="true" title="Collapse panel" aria-label="Collapse panel">–</button></div>
         <div class="explore-ramp"><span id="exploreRampLow">0</span><i></i><span id="exploreRampHigh">100</span><span class="ramp-na"><s></s>N/A</span></div>
@@ -132,6 +133,9 @@
         <div class="subtle-divider"></div>
         <div class="section-overline">✦ WHY THIS ROUTE?</div><div class="why-box" id="whyRoute">Generate routes to see evidence-grounded reasons.</div>
         <div class="subtle-divider"></div>
+        <div class="section-row"><div class="section-overline">WEATHER &amp; YOUR WALK</div><span id="wxRouteStatus" class="small-count"></span></div>
+        <div id="wxRoute" class="wx-route"><p class="soft-copy">Loading the forecast…</p></div>
+        <div class="subtle-divider"></div>
         <div class="section-row"><div class="section-overline">ROUTE URBAN DATA</div><span id="routeUrbanCorridor" class="small-count"></span></div>
         <div id="routeUrbanData" class="route-urban"><p class="soft-copy">Select a route to see the real city data around it.</p></div>
         <div class="subtle-divider"></div>
@@ -163,14 +167,16 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="modalOverlay" class="modal-overlay hidden"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button id="closeModal" class="modal-close" title="Close">✕</button><div class="section-overline">PROJECT NOTES / TRANSPARENCY</div><h2 id="modalTitle">What is real, and what's next.</h2><div id="modalContent"></div></div></div>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="./experience-core.js?v=18"></script>
-<script src="./api-config.js?v=18"></script>
-<script src="./app.js?v=18"></script>
-<script src="./route-client.js?v=18"></script>
-<script src="./urban-geo.js?v=18"></script>
-<script src="./urban-style.js?v=18"></script>
-<script src="./urban-layers.js?v=18"></script>
-<script src="./explore-map.js?v=18"></script>
-<script src="./center-map.js?v=18"></script>
+<script src="./experience-core.js?v=19"></script>
+<script src="./api-config.js?v=19"></script>
+<script src="./weather.js?v=19"></script>
+<script src="./app.js?v=19"></script>
+<script src="./route-client.js?v=19"></script>
+<script src="./weather-ui.js?v=19"></script>
+<script src="./urban-geo.js?v=19"></script>
+<script src="./urban-style.js?v=19"></script>
+<script src="./urban-layers.js?v=19"></script>
+<script src="./explore-map.js?v=19"></script>
+<script src="./center-map.js?v=19"></script>
 </body>
 </html>
