@@ -1,5 +1,5 @@
 {
- "built_at": "2026-10-24T20:02:07+00:00",
+ "built_at": "2026-10-24T20:11:05+00:00",
  "datasets": [
   {
    "dataset_id": "lion_centerline",
@@ -3496,7 +3496,7 @@
    "valid_geometry_count": 2206,
    "publisher_updated_at": "2024-04-24T20:08:25+00:00",
    "retrieved_at": "2026-10-24T18:43:04.871072+00:00",
-   "freshness_days": 912,
+   "freshness_days": 913,
    "missing_fields": {
     "name": 0.7438803263825929,
     "source_id": 0.0,

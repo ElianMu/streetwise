@@ -18,6 +18,7 @@ class IndexedUrban(unittest.TestCase):
    self.assertEqual(db.execute('select count(*) from incidents').fetchone()[0],m['records'])
    self.assertEqual(db.execute('select count(*) from incident_rtree').fetchone()[0],m['records'])
    self.assertEqual(db.execute('select count(distinct id) from incidents').fetchone()[0],m['records'])
+   self.assertEqual(db.execute('select count(*) from corridor_points').fetchone()[0],m['records'])
  def test_crime_dates_types_and_direction_are_strict(self):
   for bad in [{'direction':'safe'},{'direction':'high','from':'1800-01-01'},{'direction':'high','offense_codes':[99999]},{'direction':'low','weight':float('nan')},{'direction':'high','offense_types':[None]},{'direction':'high','offense_types':'ROBBERY'},{'direction':'high','offense_codes':{}},{'direction':'high','from':'20250101'}]:
    with self.subTest(bad=bad),self.assertRaises(ValueError):crime.validate(bad)
@@ -86,6 +87,12 @@ class IndexedUrban(unittest.TestCase):
   p=crime.validate({'direction':'high','offense_types':['ROBBERY']});fc=crime.map_cells([-74.01,40.74,-73.97,40.77],p,15)
   self.assertTrue(fc['features']);self.assertTrue(all(f['geometry']['type']=='Polygon' and f['properties']['count']>0 for f in fc['features']))
   self.assertLessEqual(len(fc['features']),1800)
+  small=crime.map_cells([-73.98501,40.755,-73.985,40.75501],p,13)
+  for f in small['features']:
+   gx,gy=map(int,f['id'].split('_'));where,args=crime._where(p)
+   with connection('crime') as db:
+    actual=db.execute('SELECT count(*) FROM incidents WHERE x>=? AND x<? AND y>=? AND y<? AND '+where,[gx*400,(gx+1)*400,gy*400,(gy+1)*400]+args).fetchone()[0]
+   self.assertEqual(f['properties']['count'],actual,'Map counts cover the complete parent cell even when the viewport cuts through a child cell')
 
 class FoodEvidence(unittest.TestCase):
  def test_all_required_items_need_source_evidence(self):

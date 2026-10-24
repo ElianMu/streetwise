@@ -1,0 +1,86 @@
+{
+  "label": "extended",
+  "commit": "f63afd52c8c54e577363098121ebc9d46dde4510",
+  "python": "3.12.14",
+  "memory": {
+    "VmHWM": "412876 kB",
+    "VmRSS": "412876 kB"
+  },
+  "first_route_s": 1.464034388998698,
+  "warm_route_s": [
+    0.018854182999348268,
+    0.01941439599613659,
+    0.01793861499754712,
+    0.018546027000411414,
+    0.018636569002410397
+  ],
+  "warm_median_s": 0.018636569002410397,
+  "concurrent_4_s": [
+    0.0397624680044828,
+    0.0683831599963014,
+    0.03649122399656335,
+    0.056947935998323373
+  ],
+  "concurrent_wall_s": 0.07150683600048069,
+  "routes": 4,
+  "shipped_data_bytes": 804521493,
+  "extended": {
+    "first_crime_s": 1.035627763994853,
+    "warm_crime_s": [
+      0.29509995200351113,
+      0.2754114990020753,
+      0.27796421800303506
+    ],
+    "concurrent_crime_4_s": [
+      0.9217976879954222,
+      1.124386333001894,
+      1.0248646319960244,
+      1.1539413349964889
+    ],
+    "/api/urban/trees?bbox=-73.97,40.66,-73.93,40.70&zoom=17": 0.026544827000179794,
+    "/api/urban/context?category=hydrography&bbox=-74.3,40.45,-73.68,40.95": 0.07949714400456287,
+    "/api/segments/MN-3": 0.008241163995990064,
+    "status": {
+      "llm": false,
+      "model": null,
+      "process_memory": {
+        "VmHWM_kib": 412880,
+        "VmRSS_kib": 412880
+      },
+      "diagnostics": {
+        "route_cache": {
+          "full_routes": 32,
+          "full_serialized_bytes": 5635681,
+          "navigation_routes": 80,
+          "navigation_serialized_bytes": 739764
+        },
+        "crime_query_counters": {
+          "edge_cache_hits": 7,
+          "edge_cache_misses": 1,
+          "sql_queries": 6,
+          "corridor_cache_hits": 35
+        }
+      },
+      "deployment_commit": null,
+      "interpretation_contract": "strict-paired-v3-independent",
+      "features": {
+        "itinerary": true,
+        "menu_verify": "official website only (no menu API connected)",
+        "routing_coverage": "Manhattan OSM pedestrian graph",
+        "place_search": "Manhattan discovery + NYC DOHMH food permits + NYC Parks and public restrooms (citywide discovery; new unsnapped points are search only)",
+        "food_recommendations": true,
+        "menu_ocr_available": true,
+        "citywide_official_discovery": true
+      },
+      "providers": {
+        "google_places": false,
+        "yelp_fusion": false,
+        "foursquare": false,
+        "booking_demand": false,
+        "expedia_rapid": false
+      }
+    }
+  },
+  "scope": "Fresh local server and process /proc memory; not Render memory. No paid services called.",
+  "working_tree_note": "Measured f63afd5 plus the subsequently committed clustered crime query and bounded corridor-cache changes; the recorded git commit alone is not a clean-build identifier."
+}

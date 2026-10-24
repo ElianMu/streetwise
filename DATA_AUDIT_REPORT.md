@@ -1,6 +1,6 @@
 # STREETWISE · NYC — Data Audit Report
 
-Generated 2026-10-24T20:02:23+00:00 by `scripts/build_audit_report.py` from the shipped files (no estimates).
+Generated 2026-10-24T20:11:16+00:00 by `scripts/build_audit_report.py` from the shipped files (no estimates).
 
 **125 datasets** (97 connected), **2,693,559 records** in the shipped files. A record count is not a count of places verified open today.
 
@@ -125,7 +125,7 @@ Generated 2026-10-24T20:02:23+00:00 by `scripts/build_audit_report.py` from the 
 | NYPD Complaint Data Historic | NYPD / NYC Open Data | static_urban | NYC five boroughs + unknown source borough | 567391 | 179 | boro_nm 0%, ofns_desc 0%, cmplnt_num 0% | good | connected |
 | NYPD Complaint Data Current (Year To Date) | NYPD / NYC Open Data | static_urban | NYC five boroughs + unknown source borough | 277593 | 89 | boro_nm 0%, ofns_desc 0%, cmplnt_num 0% | good | connected |
 | Forestry Tree Points | NYC Parks | static_urban | NYC five boroughs; published coordinate inventory | 897619 | 3 | planteddate 86%, updateddate 21%, dbh 0% | fair (a field missing in 86%) | connected |
-| NYC Planimetric Database: Hydrography | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 2206 | 912 | name 74%, source_id 0%, feat_code 0% | fair (a field missing in 74%) | connected |
+| NYC Planimetric Database: Hydrography | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 2206 | 913 | name 74%, source_id 0%, feat_code 0% | fair (a field missing in 74%) | connected |
 | Waterfront Public Access Areas (WPAAs) | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 78 | 1088 | cpc_approv 72%, res_dec 60%, cpc_report 5% | fair (a field missing in 72%) | connected |
 | NYC DOT Pedestrian Plazas - Polygon | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 93 | 23 | tostreet 13%, femafldt 2%, objectid 0% | good | connected |
 | Street Closures due to Construction Activities by Block and Intersection | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 4157 | 5 | tostreetname 35%, onstreetname 0%, fromstreetname 0% | good | connected |

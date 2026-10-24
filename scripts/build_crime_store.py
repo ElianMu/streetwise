@@ -23,7 +23,7 @@ def build(start='2025-01-01',force=False):
     metas=[get(HOST+'/api/views/'+id+'.json') for id,_ in SOURCES]
     signatures={m['id']:m.get('rowsUpdatedAt') for m in metas}
     prior=json.loads((OUT/'manifest.json').read_text()) if (OUT/'manifest.json').exists() else None
-    if not force and prior and prior.get('schema_version')==2 and prior['publisher_versions']==signatures and prior['requested_start']==start:
+    if not force and prior and prior.get('schema_version')==3 and prior['publisher_versions']==signatures and prior['requested_start']==start:
         print('Publisher versions and requested window unchanged; retaining indexed snapshot',flush=True);return
     full=[]
     for id,_ in SOURCES:
@@ -79,16 +79,18 @@ def build(start='2025-01-01',force=False):
         db.execute('CREATE TABLE grid_daily AS SELECT CAST(floor(x/200) AS INTEGER) gx,CAST(floor(y/200) AS INTEGER) gy,day,offense,law,count(*) n FROM incidents GROUP BY gx,gy,day,offense,law')
         db.execute('CREATE INDEX grid_time ON grid_daily(day,offense,law,gx,gy)')
         db.execute('CREATE INDEX grid_position ON grid_daily(gx,gy,day)')
+        db.execute('CREATE TABLE corridor_points(gx INTEGER,gy INTEGER,day INTEGER,id INTEGER,offense INTEGER,law TEXT,x REAL,y REAL,PRIMARY KEY(gx,gy,day,id)) WITHOUT ROWID')
+        db.execute('INSERT INTO corridor_points SELECT CAST(floor(x/200) AS INTEGER),CAST(floor(y/200) AS INTEGER),day,id,offense,law,x,y FROM incidents')
         db.execute('ANALYZE');db.commit()
         total=db.execute('SELECT count(*) FROM incidents').fetchone()[0]
         boro=dict(db.execute('SELECT borough,count(*) FROM incidents GROUP BY borough'))
         dates=db.execute('SELECT min(day),max(day) FROM incidents').fetchone()
         missing_offenses=db.execute("SELECT count(*) FROM incidents WHERE offense IS NULL OR law='UNKNOWN'").fetchone()[0]
-        manifest={'schema_version':2,'metric':'Historical Reported Complaint Density','requested_start':start,'available_start':date.fromordinal(dates[0]).isoformat(),
+        manifest={'schema_version':3,'metric':'Historical Reported Complaint Density','requested_start':start,'available_start':date.fromordinal(dates[0]).isoformat(),
             'available_end_exclusive':(date.fromordinal(dates[1])+timedelta(days=1)).isoformat(),'default_start':max(date.fromordinal(dates[0]),date.fromordinal(dates[1])-timedelta(days=364)).isoformat(),
             'records':total,'by_borough':boro,'missing_offense_or_law':missing_offenses,'valid_coordinate_records':total,
             'temporal_quarantine_records':len(quarantine),'duplicate_source_ids':sum(s['accepted_rows_before_dedup'] for s in sources)-total,'publisher_versions':signatures,'sources':sources,
-            'offenses':{k:sorted(v) for k,v in sorted(offenses.items(),key=lambda x:int(x[0]))},'grid_cell_m':CELL,'projection':{'mx':MX,'my':MY},
+            'offenses':{k:sorted(v) for k,v in sorted(offenses.items(),key=lambda x:int(x[0]))},'runtime_spatial_method':'Source-identical corridor points clustered by 200 m cell/date/ID; complete daily-cell sums for map queries','grid_cell_m':CELL,'projection':{'mx':MX,'my':MY},
             'database':'complaints.sqlite.gz','license':'NYC Open Data Terms of Use','license_url':'https://www.nyc.gov/home/terms-of-use.page',
             'method':'Exact published points indexed by R*Tree; daily/200 m grid aggregates accelerate candidate edge costs. Final route statistics use published point-to-polyline distances, a common corridor and de-duplicated complaint IDs.',
             'limitations':['Reported complaints, not victimization rates or personal risk. No population/activity denominator.','Occurrence dates and approximate published block-level coordinates; not live street conditions.','Most serious recorded offense only; reporting and policing patterns affect counts.','Snapshot is source-bounded and delayed; later reports and corrections can change historical counts.','Bounding-box plausibility does not independently verify every coordinate or borough.','Unknown boroughs remain unknown; no demographic fields are retained.']}

@@ -1,6 +1,6 @@
 # Urban data expansion and spatial pipeline audit
 
-Generated 2026-10-24T20:02:07.411667+00:00. Counts below are computed from indexed source snapshots; the existing full inventory remains in DATA_AUDIT_REPORT.md and data/registry.json.
+Generated 2026-10-24T20:12:32.994492+00:00. Counts below are computed from indexed source snapshots; the existing full inventory remains in DATA_AUDIT_REPORT.md and data/registry.json.
 
 | Dataset | Retained records | Source URL | Routing role |
 |---|---:|---|---|
@@ -20,7 +20,7 @@ Generated 2026-10-24T20:02:07.411667+00:00. Counts below are computed from index
 
 NYPD retained 844,984 unique complaint IDs across both sources. Borough counts: {'BRONX': 190549, 'BROOKLYN': 239168, 'MANHATTAN': 197804, 'QUEENS': 181045, 'STATEN ISLAND': 34336, 'UNKNOWN': 2082}. Rejections: {'qgea-i56i': {'invalid_or_missing_identity_date_coordinate_or_offense': 277, 'report_before_occurrence': 0}, '5uac-w243': {'invalid_or_missing_identity_date_coordinate_or_offense': 125, 'report_before_occurrence': 4}}. Raw source date ranges include impossible early dates; only the declared interval is ingested. SQL NULL and literal (null) are both counted as missing text. Publisher narrative descriptions still mention 2019; actual row maxima and update timestamps, not that stale prose, establish the data interval. Unknown boroughs remain unknown.
 
-Crime raw → exact-source point R*Tree and daily 200 m grid counts → graph candidate-search heuristic using 600 m neighbourhoods sampled every <=50 m → final de-duplicated source complaint counts within 100 m of each real route → reports per route km and a declared nominal strip-area density → monotonic density/(density+fixed graph p95) preference fit → weighted objective utility with unchanged distance penalties. Both high and low search candidates are generated for either preference, so tests compare the same candidate geometries. No hard clipping at p95. No personal-risk prediction.
+Crime raw → exact-source point R*Tree and daily 200 m grid counts → graph candidate-search heuristic using 600 m neighbourhoods sampled every <=50 m → physically cell/date-clustered source rows for final de-duplicated complaint counts within 100 m of each real route → reports per route km and a declared nominal strip-area density → monotonic density/(density+fixed graph p95) preference fit → weighted objective utility with unchanged distance penalties. Both high and low search candidates are generated for either preference, so tests compare the same candidate geometries. No hard clipping at p95. No personal-risk prediction.
 
 Official hydrography polygons → <=25 m samples along graph geometries → share within 100 m of mapped water → candidate costs and final traversed-length-weighted proximity. Water includes rivers, coastal water and lakes; this is not viewshed analysis or proof of a public waterfront entrance. Display polygons are clipped to 2 km fragments and simplified by 2 m; routing uses the original geometry.
 
@@ -34,7 +34,7 @@ Existing building footprints, PLUTO land use/building ages and many street-furni
 
 ## Bounded infrastructure
 
-Raw large inventories are streamed offline into SQLite and shipped compressed. Runtime streams decompression to a versioned temporary file, verifies the hash and uses read-only immutable SQLite with 1 MiB page cache and mmap disabled. R*Trees and date/type indexes bound queries; the API never downloads an NYC dataset during routing. Crime edge fields use a four-entry cache. Full route objects are bounded to 8 MiB/32 entries; lightweight navigation geometry has a separate 4 MiB/200-entry bound. Segment Inspector uses a small indexed view, while source-hash validation prevents stale derived fields. All indices are derived from real source records.
+Raw large inventories are streamed offline into SQLite and shipped compressed. Runtime streams decompression to a versioned temporary file, verifies the hash and uses read-only immutable SQLite with 1 MiB page cache and mmap disabled. R*Trees and date/type indexes bound queries; the API never downloads an NYC dataset during routing. Crime edge fields use a four-entry cache and a single-flight build lock. Exact corridor metrics have a separate bounded 64-entry cache keyed by source hash, geometry, distance and all time/type filters; direction is excluded because counts do not depend on preference direction. Map queries sum complete daily cells instead of random source row lookups. Full route objects are bounded to 8 MiB/32 entries; lightweight navigation geometry has a separate 4 MiB/200-entry bound. Segment Inspector uses a small indexed view, while source-hash validation prevents stale derived fields. All indices are derived from real source records.
 
 ## Menu evidence
 

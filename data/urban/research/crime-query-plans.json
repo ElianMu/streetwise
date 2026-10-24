@@ -1,0 +1,43 @@
+{
+  "old_plan": [
+    [
+      3,
+      0,
+      182,
+      "SCAN r VIRTUAL TABLE INDEX 2:B0D1B2D3"
+    ],
+    [
+      11,
+      0,
+      45,
+      "SEARCH i USING INTEGER PRIMARY KEY (rowid=?)"
+    ]
+  ],
+  "new_plan": [
+    [
+      2,
+      0,
+      0,
+      "CO-ROUTINE cells"
+    ],
+    [
+      3,
+      2,
+      0,
+      "SCAN CONSTANT ROW"
+    ],
+    [
+      9,
+      0,
+      16,
+      "SCAN c"
+    ],
+    [
+      12,
+      0,
+      47,
+      "SEARCH i USING PRIMARY KEY (gx=? AND gy=? AND day>? AND day<?)"
+    ]
+  ],
+  "explanation": "Old spatial hits cause primary-key table lookups. New exact source points are clustered in a covering WITHOUT ROWID table by corridor cell/date. Final 100 m distance criterion is unchanged."
+}

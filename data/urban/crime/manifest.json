@@ -1,5 +1,5 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "metric": "Historical Reported Complaint Density",
   "requested_start": "2025-01-01",
   "available_start": "2025-01-01",
@@ -358,11 +358,13 @@
     "Bounding-box plausibility does not independently verify every coordinate or borough.",
     "Unknown boroughs remain unknown; no demographic fields are retained."
   ],
-  "compressed_bytes": 59475077,
-  "database_bytes": 203587584,
-  "sha256": "00e40eeef9286107dfd57975b7c71bc6890863a4b7553deeb8920e0ef2d848c3",
+  "compressed_bytes": 71589910,
+  "database_bytes": 251707392,
+  "sha256": "04639c01a93c691f6ba805e9863cd3a7e2e307c470822f5a9c6639d147d52566",
   "built_at": "2026-10-24T18:25:12.475713+00:00",
   "build_seconds": 169.5,
   "quality_null_definition": "Text field SQL NULL and literal (null) both count as missing; rechecked via official aggregate queries.",
-  "temporal_quarantine_records": 4
+  "temporal_quarantine_records": 4,
+  "indexed_at": "2026-10-24T20:09:51.936590+00:00",
+  "runtime_spatial_method": "Source-identical corridor points physically clustered by 200 m cell/date/ID, exact distance filtering; map cells use complete offline daily-cell sums. No random row-ID lookups for density queries."
 }
