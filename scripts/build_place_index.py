@@ -24,7 +24,7 @@ UNNAMED_LABEL = {'restrooms': 'Public restroom', 'banks': 'ATM', 'luggage': 'Lug
 KEEP = ('name', 'tourism', 'historic', 'amenity', 'shop', 'leisure', 'cuisine', 'opening_hours', 'website', 'website:menu', 'wikidata',
         'wikipedia', 'brand', 'operator', 'stars', 'wheelchair', 'addr:housenumber', 'addr:street', 'phone', 'fee', 'toilets:wheelchair',
         'charge', 'reservation', 'description', 'rooms', 'beds', 'internet_access', 'air_conditioning', 'check_in', 'check_out', 'contact:phone',
-        'contact:website', 'diet:vegetarian', 'diet:vegan', 'outdoor_seating', 'takeaway', 'delivery', 'reservation', 'payment:cash')
+        'contact:website', 'diet:vegetarian', 'diet:vegan', 'outdoor_seating', 'takeaway', 'delivery', 'reservation', 'payment:cash', 'access')
 
 # Discovery categories: (id, label, matcher on OSM tags). A place belongs to the first category that matches.
 CATEGORIES = [
@@ -141,10 +141,17 @@ def _norm(name):
 
 
 def _addr(a):
-    a = _norm(a or '')
-    for k, v in (('street', 'st'), ('avenue', 'av'), ('ave', 'av'), ('west', 'w'), ('east', 'e'), ('place', 'pl')):
-        a = re.sub(rf'\b{k}\b', v, a)
-    return a or None
+    from routing.identity import normalized_address
+    return normalized_address(a)
+
+
+def permit_matches(record, permit):
+    """Require source address plus specific name agreement, not nearest-name alone."""
+    stop={'the','and','of','nyc','new','york','cafe','restaurant','inc','llc'}
+    a=set(_norm(record.get('name')).split())-stop
+    b=set(_norm(permit.get('name')).split())-stop
+    names=bool(a and b) and (a<=b or b<=a or len(a&b)/len(a|b)>=.67)
+    return bool(names and _addr(record.get('addr')) and _addr(record.get('addr'))==_addr(permit.get('addr')) and _metres(record,permit)<60)
 
 
 def _metres(a, b):
@@ -201,7 +208,7 @@ def link_inspections(groups, routable):
     linked, added, closed = 0, 0, 0
     for d in recs:
         dw = set(_norm(d['name']).split()) - {'the', 'and', 'of', 'nyc', 'new', 'york', 'cafe', 'restaurant', 'inc', 'llc'}
-        best = None
+        matches = []
         gy, gx = int(d['lat'] * 1500), int(d['lon'] * 1150)
         for dy in (-1, 0, 1):
             for dx in (-1, 0, 1):
@@ -210,8 +217,9 @@ def link_inspections(groups, routable):
                         continue
                     rw = set(_norm(r['name']).split()) - {'the', 'and', 'of', 'nyc', 'new', 'york', 'cafe', 'restaurant'}
                     m = _metres(r, d)
-                    if dw and rw and len(dw & rw) >= max(1, min(len(dw), len(rw)) / 2) and m < 60 and (best is None or m < _metres(best, d)):
-                        best = r
+                    if permit_matches(r,d):
+                        matches.append(r)
+        best = matches[0] if len(matches)==1 else None
         insp = {'dohmh': d['camis'], 'grade': d['grade'], 'gdate': d['grade_date'], 'insp': d['last_inspection'], 'dcuisine': d['cuisine']}
         if d['closed_by_dohmh']:
             insp['closed'] = d['closure_date']
@@ -258,7 +266,7 @@ def resolve_entities(groups, osm_stamp, built):
         for name, rs in by_name.items():
             clusters = []
             for r in sorted(rs, key=lambda r: (-len(r), r['id'])):   # the most complete record leads its cluster
-                home = next((c for c in clusters if (_addr(r.get('addr')) and _addr(r.get('addr')) == _addr(c[0].get('addr')) and _metres(r, c[0]) < 60) or r['id'] == c[0]['id']), None)
+                home = next((c for c in clusters if (_addr(r.get('addr')) and _addr(r.get('addr')) == _addr(c[0].get('addr')) and _metres(r, c[0]) < 60 and not (r.get('wd') and c[0].get('wd') and r['wd']!=c[0]['wd'])) or r['id'] == c[0]['id']), None)
                 (home.append(r) if home else clusters.append([r]))
             for c in clusters:
                 lead = dict(c[0])
@@ -343,7 +351,7 @@ def main():
             continue
         rec = {'id': f"osm:{x['type']}/{x['id']}", 'name': t.get('name') or UNNAMED_LABEL[cat], 'unnamed': None if t.get('name') else True, 'lat': round(lat, 6), 'lon': round(lon, 6), 'sub': subtype(t), 'src': 'osm',
                'addr': ' '.join(v for v in (t.get('addr:housenumber'), t.get('addr:street')) if v) or None,
-               'web': t.get('website'), 'menu': t.get('website:menu'), 'hours': t.get('opening_hours'), 'wd': t.get('wikidata'),
+               'web': t.get('website'), 'menu': t.get('website:menu'), 'hours': t.get('opening_hours'), 'wd': t.get('wikidata'), 'access': t.get('access'),
                'cuisine': t.get('cuisine'), 'brand': t.get('brand'), 'stars': t.get('stars'), 'wheelchair': t.get('wheelchair'),
                'drink': {k[6:]: v for k, v in t.items() if k.startswith('drink:')} or None,
                'diet': {k[5:]: v for k, v in t.items() if k.startswith('diet:')} or None, 'snap': round(snap, 1),

@@ -42,7 +42,7 @@ function foodEvidenceStatus(r){
  if(typeof journey==='undefined'||!journey.plan||r?.objective!=='itinerary')return 'not_checked';
  const items=journey.plan.stops.flatMap(s=>stopMenuItems(s).map(item=>journey.menu[s.id+'|'+item]||{status:'not_checked'}));
  if(!items.length)return 'not_checked';
- return items.every(m=>m.status==='confirmed_menu_match')?'pass':items.some(m=>m.status==='checking')?'not_checked':'warning';
+ return items.every(m=>m.status==='confirmed_menu_match'&&freshMenuEvidence(m))?'pass':items.some(m=>m.status==='checking')?'not_checked':'warning';
 }
 
 /* ---------- start ---------- */

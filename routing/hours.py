@@ -32,7 +32,10 @@ def _times(spec):
         m = re.fullmatch(r'(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})\+?', part.strip())
         if not m:
             return None
-        out.append((int(m.group(1)) * 60 + int(m.group(2)), int(m.group(3)) * 60 + int(m.group(4))))
+        a, am, b, bm = map(int, m.groups())
+        if a > 23 or b > 24 or am > 59 or bm > 59 or (b == 24 and bm != 0):
+            return None
+        out.append((a * 60 + am, b * 60 + bm))
     return out
 
 
@@ -43,13 +46,17 @@ def is_open_at(hours, when):
     h = hours.strip()
     if h == '24/7':
         return True
+    # No authoritative/local holiday calendar is connected. A PH exception may
+    # override an ordinary-day rule; silently skipping it could claim open.
+    if re.search(r'\bPH\b', h):
+        return None
     t = when.astimezone(NY)
     day, minute = t.weekday(), t.hour * 60 + t.minute
     prev = (day + 6) % 7
     verdict, any_rule = None, False
     for raw in h.split(';'):
         r = raw.strip()
-        if not r or r.startswith('PH'):
+        if not r:
             continue
         mm = re.match(r'(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b\s*(.*)', r)
         if mm:

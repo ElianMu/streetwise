@@ -29,6 +29,9 @@ MAX_BYTES, TIMEOUT_S, DEADLINE_S, MAX_PAGES = 1_500_000, 6, 20, 3
 CACHE, TTL = OrderedDict(), 12 * 3600
 CACHE_LIMIT=256
 _CACHE_LOCK=threading.RLock()
+DOCUMENTS=OrderedDict()
+DOCUMENT_BYTES=0
+DOCUMENT_LIMIT=8*1024*1024
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Known names and spellings of an item (confirmed); anything else close is only "probable".
 SYNONYMS = {'cappuccino': ['cappuccino', 'capuccino', 'cappucino', 'cappuccini'], 'latte': ['latte', 'caffe latte', 'caffè latte'],
@@ -159,6 +162,31 @@ def _allowed(url, deadline=None):
     return rp.can_fetch(UA, url)
 
 
+def _read_document(url, deadline):
+    """Reuse a short-lived, successfully read first-party page across dish checks.
+
+    Only source-approved URLs reach this function. Retain at most 8 MiB/32
+    documents for five minutes; preserve the actual read timestamp for evidence.
+    robots.txt is still checked for each verification before this cache is used.
+    """
+    global DOCUMENT_BYTES
+    with _CACHE_LOCK:
+        row=DOCUMENTS.get(url)
+        if row and 0<=time.time()-row[0]<300:
+            DOCUMENTS.move_to_end(url)
+            return row[1],row[0]
+    result=safe_get(url,deadline=deadline)
+    checked=time.time()
+    size=len(result[2])
+    with _CACHE_LOCK:
+        old=DOCUMENTS.pop(url,None)
+        if old:DOCUMENT_BYTES-=len(old[1][2])
+        DOCUMENTS[url]=(checked,result);DOCUMENT_BYTES+=size
+        while DOCUMENT_BYTES>DOCUMENT_LIMIT or len(DOCUMENTS)>32:
+            DOCUMENT_BYTES-=len(DOCUMENTS.popitem(last=False)[1][1][2])
+    return result,checked
+
+
 def _html_text(page):
     page = re.sub(r'(?is)<(script|style|noscript)[^>]*>.*?</\1>', ' ', page)
     return re.sub(r'\s+', ' ', html.unescape(re.sub(r'(?s)<[^>]+>', ' ', page))).strip()
@@ -182,12 +210,19 @@ def pdf_text(data):
     """Text from simple PDFs: (Flate-)compressed content streams with Tj / TJ string operators. Fonts with custom
     encodings come out unreadable — then the menu stays unverified rather than guessed."""
     chunks = []
+    expanded_bytes = 0
     for m in re.finditer(rb'stream\r?\n(.*?)\r?\nendstream', data, re.S):
         raw = m.group(1)
         try:
-            s = zlib.decompress(raw)
+            # A small compressed PDF can otherwise expand far beyond a 512 MiB
+            # instance. Oversized content is unverified, never truncated evidence.
+            decoder=zlib.decompressobj()
+            s=decoder.decompress(raw,8*1024*1024+1)
+            if len(s)>8*1024*1024 or decoder.unconsumed_tail:return ''
         except zlib.error:
             s = raw
+        expanded_bytes += len(s)
+        if expanded_bytes > 8*1024*1024:return ''
         for t in re.findall(rb'\((?:\\.|[^\\)])*\)\s*Tj|\[[^\]]*\]\s*TJ', s):
             for part in re.findall(rb'\(((?:\\.|[^\\)])*)\)', t):
                 chunks.append(re.sub(rb'\\(.)', rb'\1', part).decode('latin-1', 'replace'))
@@ -244,11 +279,13 @@ def _menu_date(headers, text):
     return (m.group(0), 'date printed on the page') if m else (None, None)
 
 
-def image_text(data):
+def image_text(data, deadline=None):
     tool = shutil.which('tesseract')
     if not tool: return ''
     try:
-        result = subprocess.run([tool,'stdin','stdout','--psm','6'],input=data,capture_output=True,timeout=5)
+        remaining=min(5,deadline-time.monotonic()) if deadline is not None else 5
+        if remaining<=0:return ''
+        result = subprocess.run([tool,'stdin','stdout','--psm','6'],input=data,capture_output=True,timeout=remaining)
         return result.stdout[:200000].decode('utf-8','replace') if result.returncode == 0 else ''
     except (OSError,subprocess.TimeoutExpired): return ''
 
@@ -344,7 +381,7 @@ def cached_evidence(pid, item):
     return None
 
 
-def verify(doc, now=None):
+def verify(doc, now=None, deadline=None):
     item = str(doc.get('item') or '').strip()[:60]
     if not item:
         raise ValueError('item is required')
@@ -373,19 +410,20 @@ def verify(doc, now=None):
         return {**entry[1], 'cached': True}
     queue = ([(menu_url, True)] if menu_url else []) + ([(site, False)] if site else [])
     seen, start, reasons, pages = set(), time.monotonic(), [], []
+    deadline=min(deadline,start+DEADLINE_S) if deadline is not None else start+DEADLINE_S
     while queue and len(seen) < MAX_PAGES:
         url, is_menu = queue.pop(0)
         if url in seen:
             continue
-        if time.monotonic() - start > DEADLINE_S:
+        if time.monotonic() >= deadline:
             reasons.append('time limit reached')
             break
         seen.add(url)
         try:
-            if not _allowed(url, deadline=start+DEADLINE_S):
+            if not _allowed(url, deadline=deadline):
                 reasons.append(f'{url}: robots.txt does not allow automated reading')
                 continue
-            final, ctype, body, headers = safe_get(url, deadline=start+DEADLINE_S)
+            (final, ctype, body, headers),read_at = _read_document(url, deadline)
         except UnsafeURL as e:
             reasons.append(f'{url}: refused ({e})')
             continue
@@ -399,7 +437,7 @@ def verify(doc, now=None):
                 reasons.append(f'{final}: PDF text could not be extracted (scanned or custom-encoded menu)')
                 continue
         elif ctype.startswith('image/'):
-            text, kind, menu_page = image_text(body), 'image_menu_ocr', True
+            text, kind, menu_page = image_text(body,deadline), 'image_menu_ocr', True
             if not text:
                 reasons.append(f'{final}: image menu could not be read (OCR unavailable or failed)')
                 continue
@@ -414,7 +452,7 @@ def verify(doc, now=None):
             if len(text) < 200 and menu_page:
                 reasons.append(f'{final}: page text is nearly empty (menu probably drawn by scripts)')
         date, basis = _menu_date(headers, text)
-        pages.append({'url': final, 'menu_page': menu_page, 'type': kind, 'text': text, 'date': date, 'date_basis': basis, 'structured_items': structured})
+        pages.append({'url': final, 'menu_page': menu_page, 'type': kind, 'text': text, 'date': date, 'date_basis': basis, 'structured_items': structured,'read_at':read_at})
     base['pages_checked'] = [{'url': p['url'], 'menu_page': p['menu_page'], 'type': p['type']} for p in pages]
     best = None
     for p in pages:
@@ -460,5 +498,8 @@ def verify(doc, now=None):
                            reason='Dated menu evidence is stale or future-dated; current item availability and price are unverified.')
         except ValueError: pass
     out = menu_profile(out)
-    _remember(key,(time.time(),out))
+    evidence_page=next((p for p in pages if p['url']==out.get('source_url')),None)
+    checked_at=evidence_page['read_at'] if evidence_page else time.time()
+    if evidence_page:out['checked_at']=datetime.fromtimestamp(checked_at,timezone.utc).isoformat(timespec='seconds')
+    _remember(key,(checked_at,out))
     return out

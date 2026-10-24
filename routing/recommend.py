@@ -19,7 +19,7 @@ from .engine import WALK_SPEED_M_PER_MIN, RoutingError
 from .places import store, _metres
 
 EVIDENCE_RANK = {'confirmed_menu_match': 0, 'probable_match_review': 1, 'unverified': 2, 'not_checked': 2, 'not_found_in_checked_sources': 3, None: 2}
-CHECK_LIMIT, WORKERS, DEADLINE_S = 6, 3, 25   # 3 parallel page reads keep memory bounded on the server
+CHECK_LIMIT, WORKERS, DEADLINE_S = 6, 3, 10   # Shared remaining-time budget, including queued checks.
 
 
 def _pt(d, name):
@@ -61,6 +61,7 @@ def recommend_food(planner, doc):
             c=S.get(pid)
             if not c or c['category'] not in cats:continue
             raw=S.raw(pid)
+            if not c.get('public_access',{}).get('recommendation_eligible',True):continue
             if cuisine and cuisine.lower() not in f"{raw.get('cuisine') or ''};{(raw.get('dcuisine') or '').lower()}":continue
             distance=min(_metres(c['coordinates'],p) for p in search_points)
             if distance>int(doc.get('radius_m') or 700):continue
@@ -116,8 +117,9 @@ def recommend_food(planner, doc):
     fresh_ready=not ratings_required and max_price is None and any(fresh_eligible(c) for c in cands)
     to_check = [c for c in cands if (c.get('official_website') or (c.get('restaurant') or {}).get('menu_url')) and c['place_id'] not in menus][:CHECK_LIMIT] if item and not fresh_ready and (not ratings_required or rating_ready) else []
     if to_check:
+        deadline=time.monotonic()+DEADLINE_S
         with cf.ThreadPoolExecutor(max_workers=WORKERS) as ex:
-            futs = {ex.submit(menu.verify, {'place_id': c['place_id'], 'name': c['name'], 'item': item}): c['place_id'] for c in to_check}
+            futs = {ex.submit(menu.verify, {'place_id': c['place_id'], 'name': c['name'], 'item': item}, deadline=deadline): c['place_id'] for c in to_check}
             try:
                 for f in cf.as_completed(futs, timeout=DEADLINE_S):
                     try:

@@ -4,14 +4,14 @@ Readers should reload only after index.json changes; old versions are retained o
 import hashlib,json,os,pathlib,tempfile
 
 
-def publish(directory, documents, history):
+def publish(directory, documents, history, pretty=()):
     directory, history = pathlib.Path(directory), pathlib.Path(history)
     for name,doc in documents.items():
         if name.endswith('.json') and 'records' in doc and (directory/name).exists():
             old=json.loads((directory/name).read_text())
             if old.get('records') and len(doc['records']) < .7*len(old['records']):
                 raise ValueError('Suspicious record loss; review before replacing '+name)
-    encoded = {name: json.dumps(doc,ensure_ascii=False,allow_nan=False,separators=(',',':')).encode() for name,doc in documents.items()}
+    encoded = {name: json.dumps(doc,ensure_ascii=False,allow_nan=False,indent=1 if name in pretty else None,separators=None if name in pretty else (',',':')).encode() for name,doc in documents.items()}
     # Serialize everything before touching current data, so malformed update output cannot truncate files.
     previous={name:(directory/name).read_bytes() if (directory/name).exists() else None for name in encoded}
     digest=hashlib.sha256(b''.join(v or b'' for k,v in sorted(previous.items()))).hexdigest()

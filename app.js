@@ -63,7 +63,7 @@ const planner = {
   origins: Object.fromEntries(DIMENSIONS.map(d => [d.name, 'default'])),
   directions: Object.fromEntries(DIMENSIONS.map(d => [d.name, 'high'])),
   constraints: {avoidDetours:true,stepFree:false,avoidStairs:false},
-  conversations:[], llmConnected:false, interpretation:'unavailable', adjust:false,
+  conversations:[], llmConnected:false, llmConfigured:null, interpretation:'unavailable', adjust:false,
   routeResponse:null, lastExplanation:'', runId:0, parsing:false, maxDetourPct:25,
   profileView:'selected', routePois:[], poiStatus:'Not loaded', poiRun:0, lastBest:null
 };
@@ -233,14 +233,17 @@ function applyInterpretation(result,source){
 async function interpretIntent(q){
   const input=(q||'').trim();if(!input)return [];
   let data,mode='local';
-  if(planner.llmConnected){
+  // A failed short status probe (for example a sleeping Render instance) is not
+  // proof that AI is disabled. Attempt the real parse when configuration is unknown.
+  if(location.protocol!=='file:' && planner.llmConfigured!==false){
     try{
       const r=await streetwiseFetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,crime:planner.crime||null,waterfront:planner.waterfront||null,weather:weatherWindow(state.budget),history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(32000)});
       if(!r.ok){const j=await r.json().catch(()=>({}));const why=j.reason?[j.reason.stage,j.reason.http_status,j.reason.type,j.reason.code].filter(Boolean).join(' · '):'';
         console.warn('LLM response rejected:',j.reason||{status:r.status});
         throw new Error(`LLM service ${r.status}${why?` (${why})`:''}`);}
-      data=await r.json();mode='llm';
-    }catch(err){console.warn('LLM parsing unavailable:',err);toast(`AI parsing unavailable — ${err.message}. Using clearly marked limited local preview.`);}
+      data=await r.json();mode='llm';planner.llmConnected=true;planner.llmConfigured=true;
+      $('interpretMode').textContent='✦ AI VERIFIED · Latest natural-language request succeeded';
+    }catch(err){planner.llmConnected=false;$('interpretMode').textContent='◇ LIMITED LOCAL PREVIEW · AI request failed; next plan retries';console.warn('LLM parsing unavailable:',err);toast(`AI parsing unavailable — ${err.message}. Using clearly marked limited local preview.`);}
   }
   if(!data){data=localInterpret(input);if(/\bcrime\b|犯罪/.test(input.toLowerCase()))data.crime={mode:'set',direction:/avoid|lower|less|low crime|避开|低犯罪/i.test(input)?'low':'high',weight:90};}
   if(mode!=='llm'&&/waterfront|river|河边|河岸|海边/i.test(input))data.waterfront={mode:'set',direction:/avoid|away from|not along|避开|不走/i.test(input)?'low':'high',weight:90};
@@ -252,9 +255,9 @@ async function interpretIntent(q){
 async function checkInterpreter(){
   if(location.protocol==='file:'){$('interpretMode').textContent='LOCAL PREVIEW · Start server.py with an API key for genuine LLM understanding';return}
   try{
-    const r=await streetwiseFetch('/api/status',{signal:AbortSignal.timeout(2500)});const d=await r.json();planner.llmConnected=Boolean(r.ok&&d.llm);
-  }catch(_) {planner.llmConnected=false}
-  $('interpretMode').textContent=planner.llmConnected?'✦ LLM CONNECTED · Real semantic parsing enabled':'◇ LOCAL PREVIEW · Limited parsing; enable AI backend for full understanding';
+    const r=await streetwiseFetch('/api/status',{signal:AbortSignal.timeout(2500)});const d=await r.json();planner.llmConfigured=r.ok?Boolean(d.llm):null;planner.llmConnected=Boolean(r.ok&&d.llm);
+  }catch(_) {planner.llmConnected=false;planner.llmConfigured=null;}
+  $('interpretMode').textContent=planner.llmConnected?'✦ AI CONFIGURED · Connection verified when you plan':planner.llmConfigured===false?'◇ LOCAL PREVIEW · AI backend key is missing or invalid':'◇ AI STATUS UNAVAILABLE · Planning will retry the AI service';
 }
 function appendChat(role,message){
   planner.conversations.push({role,content:message});$('conversationSection').classList.remove('hidden');

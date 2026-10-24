@@ -86,7 +86,7 @@ function renderCityWalk(){
  const t=it.totals,c=it.constraints,route=state.routes[0]?.raw;
  const stopRows=it.stops.map(s=>{
   const menuRows=stopMenuItems(s).map(item=>{
-   const m=journey.menu[s.id+'|'+item],url=m?.menu_source_url||m?.source_url;
+   const m=menuEvidenceForDisplay(journey.menu[s.id+'|'+item]),url=m?.menu_source_url||m?.source_url;
    return `<small class="cw-menu ${m?.status||''}">${esc(item)}: ${esc(MENU_LABEL[m?.status]||'not checked')}${m?.price?` · $${m.price.toFixed(2)} as listed`:''}${url?` · <a href="${esc(url)}" target="_blank" rel="noopener">source</a>`:''}${m?.reason?` — ${esc(m.reason)}`:''}</small>`;
   }).join('');
   const p=placeCache[s.id],hrs=p?.hours||s.hours;const open=s.open_at_arrival!=null?s.open_at_arrival:hrs?isOpenAt(hrs,new Date(Date.now()+s.arrival_min*60000)):null;
@@ -192,6 +192,6 @@ function typedCard(d){
  if(d.attraction){const a=d.attraction;
   rows+=row('About',a.description&&`${a.description} (${a.description_source})`)+row('Admission',a.admission?`${a.admission} (${a.admission_source})`:'unknown')+row('Reservation',a.reservation)+
    row('Typical visit',`${a.recommended_visit_min} min — ${a.visit_duration_basis}`)+row('Landmark',a.designated_landmark?'NYC designated (LPC)':null);}
- const provenance=row('Updated at source',d.source_updated_at||'Unknown')+row('Retrieved',d.retrieved_at||'Unknown')+row('Last verified',d.last_verified_at||'Not independently verified')+row('Conflicts',d.field_conflicts?.length?d.field_conflicts.map(x=>x.field).join(', '):null)+row('Coverage',d.routing_coverage==='search_only'?'search only — walking access unverified':null)+row('Sources',d.data_sources.join(', '));
+ const provenance=row('Public access',d.public_access?.basis)+row('Corroboration',(d.verification_basis||[]).map(x=>`${x.source} ${x.record_id}: ${x.scope}`).join('; '))+row('Hours evidence',d.opening_hours?'OSM mapped schedule; may be missing/outdated; not live status. PH rules need a holiday calendar.':null)+row('Updated at source',d.source_updated_at||'Unknown')+row('Retrieved',d.retrieved_at||'Unknown')+row('Last verified',d.last_verified_at||'Not independently verified')+row('Conflicts',d.field_conflicts?.length?d.field_conflicts.map(x=>x.field).join(', '):null)+row('Coverage',d.routing_coverage==='search_only'?'search only — walking access unverified':null)+row('Sources',d.data_sources.join(', '));
  return `<span class="jp-q ${esc(d.quality_status)}">${esc(QUALITY_LABEL[d.quality_status]||d.quality_status)}</span><dl>${rows}</dl><details><summary>Evidence &amp; sources</summary><dl>${provenance}</dl><small>${esc(d.verification_scope||'Source evidence only; current business facts may be unavailable.')}</small>${d.official_website?`<p><a href="${esc(tourismHref(d.official_website))}" target="_blank" rel="noopener">Official website (source)</a></p>`:''}</details>`;
 }

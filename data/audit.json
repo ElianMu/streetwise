@@ -1,8 +1,8 @@
 {
- "built_at": "2026-10-24T20:11:16+00:00",
+ "built_at": "2026-10-24T22:18:53+00:00",
  "datasets": 125,
  "connected": 97,
- "records": 2693559,
+ "records": 2695498,
  "presets": [
   {
    "key": "bryant",
@@ -180,10 +180,10 @@
   "openai": false
  },
  "tourism_quality": {
-  "category_records": 20654,
-  "distinct_provider_records": 20654,
+  "category_records": 22593,
+  "distinct_provider_records": 22593,
   "duplicate_provider_record_ids": 0,
-  "distinct_canonical_ids": 20437,
+  "distinct_canonical_ids": 22376,
   "linked_records_sharing_canonical_id": 217,
   "records_with_source_conflicts": 13,
   "categories": {
@@ -238,32 +238,32 @@
     "duplicate_ids": 0
    },
    "cafes": {
-    "records": 2001,
+    "records": 2210,
     "invalid_coordinates": 0,
     "missing_fields": {
      "addr": 328,
-     "web": 1294,
-     "hours": 1273
+     "web": 1503,
+     "hours": 1482
     },
     "duplicate_ids": 0
    },
    "bakeries": {
-    "records": 713,
+    "records": 857,
     "invalid_coordinates": 0,
     "missing_fields": {
      "addr": 97,
-     "web": 511,
-     "hours": 497
+     "web": 655,
+     "hours": 641
     },
     "duplicate_ids": 0
    },
    "restaurants": {
-    "records": 10919,
+    "records": 12505,
     "invalid_coordinates": 0,
     "missing_fields": {
      "addr": 1150,
-     "web": 7875,
-     "hours": 7988
+     "web": 9461,
+     "hours": 9574
     },
     "duplicate_ids": 0
    },

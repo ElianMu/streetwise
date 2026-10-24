@@ -1,7 +1,7 @@
 'use strict';
 /* Minimal evaluator for OpenStreetMap opening_hours, for "open when you arrive" checks.
    Supports: 24/7; rules separated by ';'; day lists/ranges (Mo-Fr, Sa,Su); time lists/ranges (09:00-17:00, 08:00-12:00,13:00-18:00);
-   ranges past midnight (18:00-02:00); "off"/"closed"; PH rules are ignored. Anything else returns null (unknown) rather
+   ranges past midnight (18:00-02:00); "off"/"closed". PH rules return unknown without a holiday calendar. Anything else returns null rather
    than a guess. Times are evaluated in New York local time. */
 const OH_DAYS=['Mo','Tu','We','Th','Fr','Sa','Su'];
 function ohNyParts(date){
@@ -15,16 +15,17 @@ function ohDays(spec){
  return out;
 }
 function ohTimes(spec){
- const out=[];for(const part of spec.split(',')){const m=part.trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})\+?$/);if(!m)return null;out.push([+m[1]*60+ +m[2],+m[3]*60+ +m[4]]);}return out;
+ const out=[];for(const part of spec.split(',')){const m=part.trim().match(/^(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})\+?$/);if(!m||+m[1]>23||+m[3]>24||+m[2]>59||+m[4]>59||(+m[3]===24&&+m[4]!==0))return null;out.push([+m[1]*60+ +m[2],+m[3]*60+ +m[4]]);}return out;
 }
 /** true / false / null (unknown or unsupported syntax). */
 function isOpenAt(hours,date){
  if(!hours||typeof hours!=='string')return null;const h=hours.trim();
  if(h==='24/7')return true;
+ if(/\bPH\b/.test(h))return null;
  const {day,min}=ohNyParts(date);let verdict=null,anyRule=false;
  const nyDate=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',month:'numeric',day:'numeric'}).formatToParts(date).reduce((o,x)=>(o[x.type]=+x.value,o),{});
  for(const raw of h.split(';')){
-  const r=raw.trim();if(!r)continue;if(/^PH\b/.test(r))continue;
+  const r=raw.trim();if(!r)continue;
   // date exceptions ('Dec 25 off', 'Nov Th[4] off') apply on their date only; other dated rules this month are unknown
   const mm=r.match(/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b\s*(.*)$/);
   if(mm){const mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(mm[1])+1,rest=mm[2].trim();
