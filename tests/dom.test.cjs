@@ -8,6 +8,21 @@ for(const file of ['experience-core.js','api-config.js','weather.js','places.js'
 const run=s=>vm.runInContext(s,context);
 (async()=>{
  assert.equal(w.document.querySelectorAll('#experienceDimension option').length,12);
+ // Mock AI transport only; never claim this as a real OpenAI call.
+ const initialFetch=w.fetch;
+ run('planner.llmConnected=true');
+ w.fetch=async(url)=>String(url).endsWith('/api/interpret')?({ok:true,json:async()=>({weights:{'Scenic & Visual':90,Architecture:85,Nature:85},constraints:{},journey:{food:[{category:'cafes',item:'coffee',required:true}],interests:['parks']}})}):initialFetch(url);
+ const ai=await run("interpretIntent('I want a scenic walk with architecture, parks, and good coffee.')");
+ assert.equal(run('planner.interpretation'),'llm');
+ assert.equal(run("planner.weights['Scenic & Visual']"),90);
+ assert.equal(ai.journey.food[0].item,'coffee');
+ run('planner.llmConnected=true');
+ w.fetch=async(url)=>String(url).endsWith('/api/interpret')?({ok:false,status:502,json:async()=>({reason:{stage:'upstream_http',code:'invalid_api_key'}})}):initialFetch(url);
+ await run("interpretIntent('greener walk')");
+ assert.equal(run('planner.interpretation'),'local');
+ assert(w.document.querySelector('#toast').textContent.includes('invalid_api_key'));
+ run('planner.llmConnected=false');w.fetch=initialFetch;
+
  w.STREETWISE_STREETS=JSON.parse(fs.readFileSync(path.join(root,'data/manhattan-streets.json')));
  w.document.querySelector('#modeExplore').click();assert.equal(run('mapExperience.mode'),'explore');
  await run('loadExploreStreets()');assert(!w.document.querySelector('#explorePanel').classList.contains('hidden'));

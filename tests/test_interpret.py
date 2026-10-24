@@ -113,6 +113,34 @@ class InterpretFailures(unittest.TestCase):
         status, body, _ = self.run_with(completion({'weights': {'Nature': 90}, 'directions': {'Nature': 'high'}, 'constraints': {}}))
         self.assertEqual(status, 200); self.assertEqual(body['weights'], {'Nature': 90}); self.assertNotIn('reason', body)
 
+    def test_history_must_be_array(self):
+        with mock.patch.object(server, 'KEY', FAKE_KEY):
+            status, _ = server.interpret({'message': 'walk', 'history': None})
+        self.assertEqual(status, 400)
+
+    def test_unexpected_failure_logs_frames_without_message(self):
+        status, body, log = self.run_with(ValueError('SECRET header value'))
+        self.assertEqual(status, 500)
+        self.assertIn('frames', log)
+        self.assertIn('call_llm', log)
+
+    def test_coffee_is_preserved_separately_from_weights(self):
+        result = {'weights': {'Scenic & Visual': 90, 'Architecture': 85, 'Nature': 85},
+                  'journey': {'interests': ['parks'], 'food': [
+                      {'category': 'cafes', 'item': 'coffee', 'required': True}]}}
+        status, body, _ = self.run_with(completion(result))
+        self.assertEqual(status, 200)
+        self.assertEqual(body['journey']['food'][0]['item'], 'coffee')
+        self.assertEqual(body['journey']['interests'], ['parks'])
+        from routing.engine import get_planner
+        routes = get_planner().plan({'lon': -73.9832, 'lat': 40.7536},
+                                   {'lon': -73.9787, 'lat': 40.7587}, body,
+                                   {'max_minutes': 30, 'max_detour_pct': 25})['routes']
+        self.assertTrue(routes)
+        self.assertTrue(all(r['distance_m'] > 0 and r['ordered_edge_ids'] for r in routes))
+        self.assertEqual(set(routes[0]['dimension_scores']), set(server.DIMENSIONS))
+        self.assertIn('food must preserve it', server.SYSTEM)
+
     def test_scrub(self):
         with mock.patch.object(server, 'KEY', FAKE_KEY):
             self.assertEqual(server.scrub(f'value {FAKE_KEY} and sk-proj-abcdEFGH1234 end'), 'value [key] and [key] end')
