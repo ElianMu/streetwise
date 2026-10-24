@@ -105,6 +105,110 @@
           }
         ]
       }
+    },
+    {
+      "place_id": "osm:node/11762033170",
+      "name": "Zucker's Bagels & Smoked Fish",
+      "requested_item": "bagel",
+      "item": "bagel",
+      "matched_item": "Bagel",
+      "evidence_type": "html_menu_page",
+      "menu_source_url": "https://www.zuckersbagels.com/menu/",
+      "source_url": "https://www.zuckersbagels.com/menu/",
+      "evidence": "HEAT EVERYTHING WHOLESOME \u2018FLATZ\u2019 \u00bd the Calories & Carbs of a Regular Bagel! WHEAT FLATZ WHEAT EVERYTHING FLATZ BREADS We\u2019re Proud to Offer Daily",
+      "menu_date": null,
+      "menu_date_basis": null,
+      "checked_at": "2026-10-24T20:18:29+00:00",
+      "price": null,
+      "currency": null,
+      "pages_checked": [
+        {
+          "url": "https://www.zuckersbagels.com/",
+          "menu_page": false,
+          "type": "website_page"
+        },
+        {
+          "url": "https://www.zuckersbagels.com/menu/",
+          "menu_page": true,
+          "type": "html_menu_page"
+        }
+      ],
+      "price_verification": null,
+      "freshness": "unknown",
+      "note": "A menu listing does not confirm today\u2019s availability, price or stock. Branches may differ.",
+      "status": "confirmed_menu_match",
+      "reason": "\u201cBagel\u201d appears on the official menu.",
+      "menu": {
+        "restaurant_id": "osm:node/11762033170",
+        "menu_source": "https://www.zuckersbagels.com/menu/",
+        "source_type": "html_menu_page",
+        "checked_at": "2026-10-24T20:18:29+00:00",
+        "complete": false,
+        "items": [
+          {
+            "name": "Bagel",
+            "category": null,
+            "description": null,
+            "price": null,
+            "currency": null,
+            "dietary_tags": [],
+            "evidence_url": "https://www.zuckersbagels.com/menu/",
+            "verification_status": "verified"
+          }
+        ]
+      }
+    },
+    {
+      "place_id": "osm:node/11762033170",
+      "name": "Zucker's Bagels & Smoked Fish",
+      "requested_item": "cappuccino",
+      "item": "cappuccino",
+      "matched_item": "CAPPUCCINO",
+      "evidence_type": "html_menu_page",
+      "menu_source_url": "https://www.zuckersbagels.com/menu/",
+      "source_url": "https://www.zuckersbagels.com/menu/",
+      "evidence": "EGGS COLOMBE COFFEE BAR REGULAR - CORSICA BLEND DECAF CAFF\u00c9 AMERICANO CAPPUCCINO CAFFE LATTE CAFE AU LAIT DOUBLE ESPRESSO MACCHIATO - DOUBLE HOT DRINK",
+      "menu_date": null,
+      "menu_date_basis": null,
+      "checked_at": "2026-10-24T20:18:33+00:00",
+      "price": null,
+      "currency": null,
+      "pages_checked": [
+        {
+          "url": "https://www.zuckersbagels.com/",
+          "menu_page": false,
+          "type": "website_page"
+        },
+        {
+          "url": "https://www.zuckersbagels.com/menu/",
+          "menu_page": true,
+          "type": "html_menu_page"
+        }
+      ],
+      "price_verification": null,
+      "freshness": "unknown",
+      "note": "A menu listing does not confirm today\u2019s availability, price or stock. Branches may differ.",
+      "status": "confirmed_menu_match",
+      "reason": "\u201cCAPPUCCINO\u201d appears on the official menu.",
+      "menu": {
+        "restaurant_id": "osm:node/11762033170",
+        "menu_source": "https://www.zuckersbagels.com/menu/",
+        "source_type": "html_menu_page",
+        "checked_at": "2026-10-24T20:18:33+00:00",
+        "complete": false,
+        "items": [
+          {
+            "name": "CAPPUCCINO",
+            "category": null,
+            "description": null,
+            "price": null,
+            "currency": null,
+            "dietary_tags": [],
+            "evidence_url": "https://www.zuckersbagels.com/menu/",
+            "verification_status": "verified"
+          }
+        ]
+      }
     }
   ]
 }

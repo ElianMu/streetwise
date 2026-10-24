@@ -37,6 +37,11 @@ SYNONYMS = {'cappuccino': ['cappuccino', 'capuccino', 'cappucino', 'cappuccini']
 class UnsafeURL(ValueError):
     pass
 
+def canonical_item(item):
+    """Only known exact spelling/plural aliases; modifiers such as vegan stay intact."""
+    if not isinstance(item,str):return item
+    text=item.strip().lower()
+    return next((name for name,aliases in SYNONYMS.items() if text==name or text in aliases),text)
 
 class _Sites:
     """place id (any merged provider ID or canonical ID) → (website, menu url) from the discovery index — the only sites this
@@ -292,6 +297,7 @@ def _identity(pid):
 
 
 def cached_evidence(pid, item):
+    item=canonical_item(item)
     entry = CACHE.get((_identity(pid), item.lower()))
     if entry and entry[1].get('status')=='confirmed_menu_match' and 0 <= time.time()-entry[0] < TTL:
         return entry[1]

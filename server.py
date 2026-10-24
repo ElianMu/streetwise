@@ -159,7 +159,7 @@ def validate_journey(j):
            'named_stops': [{'name': s(x.get('name')), 'required': x.get('required') is not False, 'order': x.get('order') if type(x.get('order')) is int else None}
                            for x in (j.get('named_stops') or [])[:8] if isinstance(x, dict) and s(x.get('name'))],
            'food': [{'category': x.get('category') if x.get('category') in ('cafes', 'restaurants', 'bakeries', 'bars') else 'restaurants',
-                     'item': s(x.get('item'), 60), 'cuisine': s(x.get('cuisine'), 40), 'required': x.get('required') is not False}
+                     'item': menu_check.canonical_item(s(x.get('item'), 60)), 'cuisine': s(x.get('cuisine'), 40), 'required': x.get('required') is not False}
                     for x in (j.get('food') or [])[:4] if isinstance(x, dict)],
            'service_scope': j.get('service_scope') if j.get('service_scope') in ('near_hotel', 'along_route', 'near_start') else None,
            'hotel': {'name': s(j['hotel'].get('name')), 'is_mine': j['hotel'].get('is_mine') is True} if isinstance(j.get('hotel'), dict) and s(j['hotel'].get('name')) else None,
