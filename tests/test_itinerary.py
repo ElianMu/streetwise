@@ -298,12 +298,14 @@ class E_DataModel(unittest.TestCase):
 class C_JourneyContract(unittest.TestCase):
     def test_llm_journey_is_names_and_limits_only(self):
         out = server.validate_interpretation({'weights': {}, 'directions': {}, 'constraints': {}, 'journey': {
-            'interests': ['museums', 'teleport'], 'named_stops': [{'name': 'Rockefeller Center', 'required': True}],
+            'interests': ['museums'], 'named_stops': [{'name': 'Rockefeller Center', 'required': True}],
             'food': [{'category': 'cafes', 'item': 'cappuccino'}], 'services': ['pharmacies'], 'hotel': {'name': 'Marriott', 'is_mine': True},
             'end_mode': 'hotel', 'outing_minutes': 150, 'distance_km': 5}})
         j = out['journey']
         self.assertEqual(j['interests'], ['museums']); self.assertEqual(j['end_mode'], 'hotel'); self.assertEqual(j['outing_minutes'], 150)
         self.assertEqual(j['hotel'], {'name': 'Marriott', 'is_mine': True})
+        with self.assertRaises(ValueError):  # unknown interests must fail, not be silently discarded
+            server.validate_interpretation({'journey': {'interests': ['museums', 'teleport']}})
         with self.assertRaises(ValueError):  # coordinates or menus from the model are refused
             server.validate_interpretation({'weights': {}, 'directions': {}, 'constraints': {}, 'journey': {'lat': 40.7}})
 

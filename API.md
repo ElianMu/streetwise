@@ -130,8 +130,14 @@ menu_date_basis, checked_at, price, currency, pages_checked, reason, note}`. Onl
 rate limit 10/min per client (HTTP 429). Itinerary 30/min, routes 60/min.
 
 ### POST /api/interpret (LLM, when configured)
+The provider uses `response_format: json_schema`, `strict: true`. `interpretation_contract.py` defines the closed nested contract and its deterministic wire adapter. The model returns `preferences: [{dimension, weight, direction}]`: dimension is one of the routing engine's 12 names, weight is integer 0–100, direction is high/low. A direction cannot exist without its weight. Duplicate dimensions, unknown fields and malformed nested journey values are rejected. Required wire properties are null/empty when unspecified.
+
+Normalization converts these triples to the existing sparse API `weights` and `directions` maps without inventing values. Nullable unchanged constraints and `more` entries are removed so prior state survives. Public optional fields remain optional; route scoring and the frontend contract are unchanged. Explicit shortest-route requests use existing `avoidDetours=true` and `max_detour_percent=0`. Food/drink needs remain separate in `journey.food`.
+
+One schema correction is bounded by the existing shared provider time budget; no fallback to unstructured JSON is used. Provider refusals and length truncation return distinct failures. `/api/status` exposes the contract ID and Render's `RENDER_GIT_COMMIT` when injected (never credentials).
+
 Failures return a safe `reason` (also logged by the server): `{stage: not_configured | invalid_key_format | upstream_http | upstream_unreachable |
-upstream_bad_response | model_output_invalid_json | model_output_rejected | server_error, http_status, type, code, detail}`.
+upstream_bad_response | model_output_invalid_json | model_output_rejected | model_refused | model_output_incomplete | server_error, http_status, type, code, detail}`.
 `type` / `code` are OpenAI's error identifiers (e.g. 401 `invalid_api_key`, 429 `insufficient_quota`, 404 `model_not_found`);
 the provider's message text is never passed on and anything resembling a key is scrubbed. 503 = missing or malformed key,
 502 = LLM failure, 500 = server error. `invalid_key_format` means internal whitespace or invalid HTTP header characters. The backend trims accidental leading/trailing whitespace in `OPENAI_API_KEY` without changing internal characters. The browser falls back to the labelled local parser and shows the reason.
