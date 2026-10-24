@@ -94,13 +94,14 @@ function constraintSummary(){
 function renderRouteCards(){
  const root=$('routeCards'),routes=state.routes;
  $('routeCount').textContent=`${routes.length} OSM ROUTE${routes.length===1?'':'S'}`;
- if(!routes.length){root.innerHTML=`<div class="empty-route"><strong>${state.routingBusy?'Computing pedestrian routes…':'No routes generated yet'}</strong><p>${state.routingBusy?'Searching the Manhattan OSM pedestrian graph.':'Start with a journey and walking preferences.'}</p></div>`;return}
+ if(!routes.length){root.innerHTML=`<div class="empty-route"><strong>${state.routingBusy?'Computing pedestrian routes…':'No routes generated yet'}</strong><p>${state.routingBusy?'Searching the Manhattan OSM pedestrian graph.':'Start with a journey and walking preferences.'}</p></div>`;if(typeof renderNavStart==='function')renderNavStart();return}
  root.innerHTML=routes.map(x=>{
   const r=x.raw,selected=x.id===state.activeRoute,feasible=r.constraints.feasible;
   const tag=r.recommended?'BEST MATCH':r.objective==='shortest'?'SHORTEST':'ALTERNATIVE';
   return `<button class="route-card ${selected?'selected':''} ${!feasible?'over-budget':''}" type="button" data-route="${esc(x.id)}" aria-pressed="${selected}"><span class="route-icon">${selected?'✓':r.rank}</span><span class="route-names"><span class="route-category">${tag}${!feasible?' · NOT FEASIBLE':''}</span><strong>${esc(r.route_name)}</strong><small>Personalized ${r.personalized_score.utility} · Overall ${scoreText(r.overall_score)} · ${Math.round(r.data_coverage.mean*100)}% data coverage</small><small class="evidence-line">${r.detour_percentage>0?`+${r.detour_percentage}% vs shortest`:'Shortest distance'} · ${r.ordered_edge_ids.length} OSM edges${r.weather&&planner.routeResponse?.weather_routing?.routing?.active?` · ${Math.round(r.weather.heat_exposure_share*100)}% heat-exposed (tree proxy)`:''}</small>${!feasible?`<small>${esc(r.constraints.violations.join('; '))}</small>`:''}</span><span class="route-metrics"><strong>${(r.distance_m/1000).toFixed(2)} km</strong><small>${Math.ceil(r.estimated_duration_min)} min</small></span></button>`;
  }).join('')+`<p class="route-constraints">${esc(constraintSummary())}</p><p class="route-footnote">Routes are computed on the OSM pedestrian graph (${esc(planner.routeResponse?.network_version||'')}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${esc(planner.routeResponse?.score_version||'')}), shared with Explore Urban Data.</p>`;
  root.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',()=>selectRoute(el.dataset.route)));
+ if(typeof renderNavStart==='function')renderNavStart();
 }
 function profileRows(r){
  return DIMENSIONS.map((d,i)=>{const v=r.dimension_scores[d.name],c=r.data_coverage.by_dimension[d.name],pref=planner.origins[d.name]!=='default';

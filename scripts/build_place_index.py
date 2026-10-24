@@ -6,7 +6,8 @@ Only places within 150 m of the routable pedestrian graph are kept, so every can
 routing engine (today: Manhattan). Nothing is invented: every field is copied from its source or left out.
 Run: python3 scripts/build_place_index.py   (about 1 minute; needs network access to the Overpass API)
 """
-import json, math, os, sys, time
+import hashlib, json, math, os, re, sys, time
+from collections import Counter
 from datetime import datetime, timezone
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -129,6 +130,86 @@ def _same_thing(name, label):
     return bool(a and b) and len(a & b) >= max(1, min(len(a), len(b)) // 2)
 
 
+WORD = re.compile(r'[a-z0-9]+')
+STOP = {'the', 'of', 'and', 'new', 'york', 'nyc', 'at', 'building', 'house', 'church', 'hall'}
+
+
+def _norm(name):
+    return ' '.join(WORD.findall(str(name).lower().replace('&', ' and ')))
+
+
+def _addr(a):
+    a = _norm(a or '')
+    for k, v in (('street', 'st'), ('avenue', 'av'), ('ave', 'av'), ('west', 'w'), ('east', 'e'), ('place', 'pl')):
+        a = re.sub(rf'\b{k}\b', v, a)
+    return a or None
+
+
+def _metres(a, b):
+    return math.hypot((a['lon'] - b['lon']) * 84414.3, (a['lat'] - b['lat']) * 111049.7)
+
+
+def resolve_entities(groups, osm_stamp, built):
+    """Entity resolution. Two records are the same place only when their names match AND (their addresses match OR they lie
+    within 60 m); a different name in the same building stays a separate place. NYC LPC landmarks are linked (not merged) to
+    the OpenStreetMap record of the same building when the main name words overlap and they lie within 120 m.
+    Adds the canonical fields to every record and returns per-category quality counts."""
+    quality = {}
+    for cat, recs in groups.items():
+        by_name, out, dups, conflicts = {}, [], 0, 0
+        for r in recs:
+            # same name AND same kind (a bank branch and its ATM are different services)
+            by_name.setdefault(_norm(r['name']) + '|' + str(r.get('sub')) + ('#' + r['id'] if r.get('unnamed') else ''), []).append(r)
+        for name, rs in by_name.items():
+            clusters = []
+            for r in sorted(rs, key=lambda r: (-len(r), r['id'])):   # the most complete record leads its cluster
+                home = next((c for c in clusters if (_addr(r.get('addr')) and _addr(r.get('addr')) == _addr(c[0].get('addr'))) or _metres(r, c[0]) < 60), None)
+                (home.append(r) if home else clusters.append([r]))
+            for c in clusters:
+                lead = dict(c[0])
+                lead['pids'] = [x['id'] for x in c]
+                conf = []
+                for other in c[1:]:
+                    dups += 1
+                    for f in ('web', 'hours', 'addr', 'menu', 'wd'):
+                        if other.get(f) and not lead.get(f):
+                            lead[f] = other[f]
+                        elif other.get(f) and lead.get(f) and other[f] != lead[f] and f not in ('addr',):
+                            conf.append(f)
+                if conf:
+                    lead['conf'] = sorted(set(conf)); conflicts += 1
+                out.append(lead)
+        for r in out:
+            r['cid'] = 'sw:' + hashlib.sha1(r['pids'][0].encode()).hexdigest()[:12]
+            r['status'] = 'listed'
+            r['upd'] = osm_stamp if r.get('src') == 'osm' else r.get('designated') or None
+            r['chk'] = built
+            have = sum(bool(r.get(f)) for f in ('addr', 'web', 'hours'))
+            r['q'] = 'complete' if have == 3 else 'partial' if have else 'minimal'
+            if len(r['pids']) == 1:
+                del r['pids']
+        groups[cat] = out
+        quality[cat] = {'merged_duplicates': dups, 'records_with_conflicts': conflicts,
+                        'missing': {f: sum(1 for r in out if not r.get(f)) for f in ('addr', 'web', 'hours')}}
+    # link LPC landmarks to the OSM record of the same building (kept as two linked records, one canonical ID)
+    osm = [r for c in ('historic', 'attractions', 'museums', 'culture', 'parks', 'shopping', 'hotels') for r in groups[c]]
+    linked = 0
+    for l in groups['historic_lpc']:
+        lw = set(_norm(l['name']).split()) - STOP
+        best = None
+        for r in osm:
+            if abs(r['lat'] - l['lat']) > .0012 or abs(r['lon'] - l['lon']) > .0016:
+                continue
+            rw = set(_norm(r['name']).split()) - STOP
+            if lw and rw and len(lw & rw) >= max(1, min(len(lw), len(rw)) / 2) and _metres(r, l) < 120:
+                if best is None or _metres(r, l) < _metres(best, l):
+                    best = r
+        if best:
+            l['cid'] = best['cid']; best['lpc'] = l['id']; l['osm'] = best['id']; linked += 1
+    quality['historic_lpc']['linked_to_osm'] = linked
+    return quality
+
+
 def main():
     t0 = time.time()
     net = PedestrianNetwork()
@@ -163,14 +244,16 @@ def main():
                'web': t.get('website'), 'menu': t.get('website:menu'), 'hours': t.get('opening_hours'), 'wd': t.get('wikidata'),
                'cuisine': t.get('cuisine'), 'brand': t.get('brand'), 'stars': t.get('stars'), 'wheelchair': t.get('wheelchair'),
                'drink': {k[6:]: v for k, v in t.items() if k.startswith('drink:')} or None,
-               'diet': {k[5:]: v for k, v in t.items() if k.startswith('diet:')} or None}
+               'diet': {k[5:]: v for k, v in t.items() if k.startswith('diet:')} or None, 'snap': round(snap, 1)}
         groups[cat].append({k: v for k, v in rec.items() if v is not None})
     for rec in restroom_records():
-        if routable(rec['lon'], rec['lat']) is not None:
-            groups['restrooms'].append(rec)
+        snap = routable(rec['lon'], rec['lat'])
+        if snap is not None:
+            groups['restrooms'].append({**rec, 'snap': round(snap, 1)})
     for rec in landmark_records():
-        if routable(rec['lon'], rec['lat']) is not None:
-            groups['historic_lpc'].append(rec)
+        snap = routable(rec['lon'], rec['lat'])
+        if snap is not None:
+            groups['historic_lpc'].append({**rec, 'snap': round(snap, 1)})
     notable = ('hotels', 'museums', 'attractions', 'historic', 'parks', 'culture', 'shopping')
     sl = wikidata_sitelinks([r['wd'] for c in notable for r in groups[c] if r.get('wd', '').startswith('Q')])
     from collections import Counter
@@ -180,15 +263,16 @@ def main():
             # an ID on many records names their subject (45 plaques "Broadway" → Q11260), not each place
             if r.get('wd') in sl and shared[r['wd']] <= 3 and _same_thing(r['name'], sl[r['wd']][1]):
                 r['sl'] = sl[r['wd']][0]
-    os.makedirs(OUT, exist_ok=True)
     built = datetime.now(timezone.utc).isoformat(timespec='seconds')
+    quality = resolve_entities(groups, stamp, built)
+    os.makedirs(OUT, exist_ok=True)
     cats = []
     labels = dict((c, l) for c, l, _ in CATEGORIES) | {'historic_lpc': 'NYC designated individual landmarks'}
     for cat, recs in groups.items():
         recs.sort(key=lambda r: (r['name'].lower(), r['id']))
         with open(os.path.join(OUT, cat + '.json'), 'w') as f:
             json.dump({'category': cat, 'records': recs}, f, separators=(',', ':'), ensure_ascii=False)
-        cats.append({'id': cat, 'label': labels[cat], 'count': len(recs)})
+        cats.append({'id': cat, 'label': labels[cat], 'count': len(recs), **quality.get(cat, {})})
     index = {'built_at': built, 'osm_timestamp': stamp, 'coverage': 'Within 150 m of the routable pedestrian graph (' + net.network_version + '): Manhattan',
              'network_version': net.network_version, 'categories': cats,
              'sources': {'osm': 'OpenStreetMap contributors via Overpass API (ODbL); names, tags and hours as mapped, not verified by STREETWISE',
@@ -196,6 +280,9 @@ def main():
                          'nyc_restrooms': 'NYC Open Data Public Restrooms (i7jb-7jku), status as published',
                          'wikidata': 'Wikidata API sitelink counts (CC0)'},
              'fields': {'sub': 'source tag', 'web': 'website', 'menu': 'website:menu (official menu link if mapped)', 'hours': 'opening_hours (OSM syntax)',
+                        'cid': 'canonical place ID (stable across sources)', 'pids': 'provider IDs merged into this record', 'snap': 'metres to the walkable access point on the pedestrian graph',
+                        'q': 'data quality: complete | partial | minimal', 'conf': 'fields that disagree between merged provider records', 'lpc': 'linked NYC LPC landmark ID',
+                        'status': 'operational status as known: listed (in source; not verified open today)', 'upd': 'source data timestamp', 'chk': 'when STREETWISE built this record',
                         'wd': 'Wikidata ID', 'sl': 'Wikidata sitelink count (Wikipedia language editions etc.): notability signal', 'drink': 'drink:* tags (community-mapped, not menu verification)', 'diet': 'diet:* tags'},
              'dropped_outside_routing_coverage': dropped}
     json.dump(index, open(os.path.join(OUT, 'index.json'), 'w'), indent=1)

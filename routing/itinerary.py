@@ -21,6 +21,8 @@ Method (reported in the response, never claimed optimal unless it is):
 import itertools, math, re, time
 
 from .engine import RoutingError, WALK_SPEED_M_PER_MIN, preference_weights
+from . import validation as qa
+from . import maneuvers as mv
 
 MAX_EXACT = 7            # required items up to this many: exact enumeration of orders
 MAX_SLOT_CHOICES = 4     # candidates kept per slot for exact search
@@ -352,6 +354,17 @@ class Planner:
             clock += rec['visit_min']
             prev = k
         walk_min = route['estimated_duration_min']
+        along, stops_mv = 0.0, []
+        for k, s in enumerate(out_stops):
+            along += s['leg_in_m']
+            stops_mv.append({'name': s['name'], 'distance_along_route_m': along, 'required': s['required'], 'final': k == len(out_stops) - 1,
+                             'visit_min': s['visit_min'], 'leg_id': k})
+        route['maneuvers'] = mv.build(route, net, stops_mv)
+        from .engine import route_signature
+        route['route_signature'] = route_signature(route)
+        route['validation'] = qa.validate(route, net, {**cons},
+                                          [{'name': s['name'], 'lat': s['lat'], 'lon': s['lon'], 'required': s['required'] or s['role'] == 'end',
+                                            'snap_distance_m': s['snap_distance_m']} for s in out_stops])
         pool_requested = min(req['pool']['max_stops'], len(pool_items))
         itinerary = {'end_mode': req['end_mode'], 'pool': {'requested': pool_requested, 'added': added_pool}, 'start': {k: points[oi][k] for k in ('id', 'name', 'lat', 'lon')},
                      'stops': out_stops, 'skipped': skipped, 'notes': notes, 'method': method,

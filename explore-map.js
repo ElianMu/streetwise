@@ -30,6 +30,7 @@ async function loadExploreStreets(){
  $('exploreStatus').textContent=`${m.segments.toLocaleString()} Manhattan street segments · retrieved ${m.retrieved_at.slice(0,10)}${m.trees_inventory_updated?` · tree inventory updated ${m.trees_inventory_updated}`:''}. Scores rank segments within Manhattan; they are not calibrated experience scores.`;
  renderExploreThumbs();selectExploreView(exploreMap.view);
  if(state.mapLayersReady)state.map.getSource('manhattan-streets')?.setData(exploreMap.data);
+ if(typeof renderExploreAnalytics==='function')renderExploreAnalytics();
  return exploreMap.data;
 }
 function setupExploreMap(){
@@ -61,6 +62,7 @@ function showExploreTooltip(p,point){
 }
 function selectExploreView(view){
  exploreMap.view=view;const v=exploreView();
+ if(typeof renderExploreAnalytics==='function')renderExploreAnalytics();
  $('exploreTitle').textContent=v.label;
  const meta=exploreMap.data?.metadata;
  $('exploreMetric').textContent=v.dim==null?'Equal-weight mean of the 12 dimension scores available on each segment.':(meta?.indicators[meta.keys[v.dim]]||[]).filter(x=>x.role!=='context').map(x=>x.label+(x.role==='down'?' (lower is better)':'')).join(' · ');
@@ -96,7 +98,9 @@ function renderExploreInspector(){
   body=`<h4>Sub-indicators</h4>${ind.map(x=>`<div class="indicator"><div class="indicator-top"><span>${esc(x.label)}</span><strong>${esc(indicatorValue(p[x.key],x.unit))}</strong></div><div class="indicator-role">${x.role==='context'?'Context only, not in score':x.role==='down'?'In score · lower is better':'In score · higher is better'}</div><p>${esc(x.method)}</p><small>Source: ${esc(meta.source_labels[x.source]||x.source)}</small></div>`).join('')}
    <h4>Score method</h4><p>Mean of the ranked sub-indicators above, each a 0–100 percentile among Manhattan segments. ${score==null?'No ranked sub-indicator is measurable here, so the score is N/A.':''}</p>`;
  }
- box.innerHTML=head+body;box.classList.remove('hidden');
+ const srcs=v.dim==null?[]:[...new Set(meta.indicators[meta.keys[v.dim]].map(x=>x.source))];
+ const prov=`<h4>Data</h4><p>Segment ${esc(p.id)} (NYC LION). Normalization: percentile rank among ${Number(meta.segments).toLocaleString()} Manhattan segments, 0–100. Data ${esc(meta.data_version)} · scores ${esc(meta.score_version)}.${srcs.length?` Sources: ${srcs.map(s=>esc(meta.source_labels?.[s]||s)).join(', ')}.`:''} Values marked N/A were not measurable and are not counted as 0.</p>`;
+ box.innerHTML=head+body+prov;box.classList.remove('hidden');
  $('inspectorClose').addEventListener('click',()=>selectExploreSegment(null));
 }
 function renderExploreChips(){
@@ -127,7 +131,7 @@ function setExploreMode(on){
  document.querySelectorAll('.maplibregl-popup').forEach(p=>p.remove());
  if(typeof closeUrbanInspector==='function')closeUrbanInspector();
  $('explorePanel').classList.toggle('hidden',!on);
- for(const sel of ['.experience-controls','.map-layer-switch','.wx-panel'])document.querySelector(sel).classList.toggle('hidden',on);
+ for(const sel of ['.experience-controls','.map-layer-switch','.wx-panel','.ud-legend'])document.querySelector(sel).classList.toggle('hidden',on);
  document.querySelector('.map-legend').classList.toggle('explore-hidden',on);
  $('selectedRouteSummary').classList.toggle('hidden',on);
  if(!on)$('exploreTooltip').classList.add('hidden');

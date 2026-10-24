@@ -10,8 +10,12 @@ from collections import OrderedDict
 
 try:
     from . import weather as wx
+    from . import validation as qa
+    from . import maneuvers as mv
 except ImportError:  # run as a top-level module (tests import routing.engine; server.py imports routing.engine)
     import weather as wx
+    import validation as qa
+    import maneuvers as mv
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GRAPH = os.path.join(ROOT, 'data', 'pedestrian', 'manhattan-walk-graph.json.gz')
@@ -497,6 +501,11 @@ class RoutePlanner:
                                 'contains_steps': any(e['pedestrian_access']['steps'] for e in r['edges'])}
             self.personalize(r, weights, expressed)
             self.weather_fields(r, wctx, heat)
+            r['maneuvers'] = mv.build(r, net)
+            r['route_signature'] = route_signature(r)
+            r['validation'] = qa.validate(r, net, {'max_minutes': max_minutes, 'max_km': max_km, 'avoid_stairs': avoid_stairs},
+                                          [{'name': 'Destination', 'lat': destination['lat'], 'lon': destination['lon'], 'required': True,
+                                            'snap_distance_m': d['snap_distance_m']}])
         static_key = lambda r: (not r['constraints']['feasible'], -r['personalized_score']['utility'] - r['personalized_score'].get('weather_adjustment', 0), r['distance_m'])
         baseline = min((r for r in routes if r['objective'] != 'weather_heat'), key=static_key, default=None)
         ranked = sorted(routes, key=lambda r: (not r['constraints']['feasible'], -r['personalized_score']['utility'], r['distance_m']))
@@ -597,10 +606,41 @@ class RoutePlanner:
             ps['formula'] += f" − {wx.CONFIG['heat']['rank_points']:g} × heat level × heat-exposed share (weather)"
 
     # --- navigation readiness ------------------------------------------------------------------------------
-    def progress(self, route_id, lon, lat, accuracy_m=None):
-        """Where a reported position sits on a planned route. Pure geometry: no live tracking is claimed."""
+    def route_from_snapshot(self, snap):
+        """Rebuild a route's geometry from this server's own network for a client-held snapshot (ordered edge IDs +
+        network version). A snapshot from another network version is refused: the route must be planned again, never
+        silently replaced by a different path."""
+        if not isinstance(snap, dict) or snap.get('network_version') != self.net.network_version:
+            raise RoutingError('This route was planned on another network version; plan it again.')
+        ids = snap.get('ordered_edge_ids')
+        if not isinstance(ids, list) or not ids or len(ids) > 5000:
+            raise RoutingError('Route snapshot has no edges.')
+        coords, edges, total = [], [], 0.0
+        for eid in ids:
+            i = self.net.by_id.get(str(eid))
+            if i is None:
+                raise RoutingError(f'Edge {eid} is not on network {self.net.network_version}; plan the route again.')
+            g = self.net.coords(i)
+            if coords and coords[-1] == g[0]:
+                g = g[1:]
+            elif coords and math.dist(xy(*coords[-1]), xy(*g[0])) > 1.0:
+                raise RoutingError('Route snapshot edges do not join; plan the route again.')
+            coords += g
+            total += self.net.edges[i][5]
+            edges.append({'edge_id': str(eid), 'traversed_length_m': self.net.edges[i][5]})
+        r = {'route_id': snap.get('route_id') or 'snapshot', 'geometry': {'type': 'LineString', 'coordinates': coords}, 'edges': edges, 'distance_m': total,
+             'network_version': self.net.network_version, 'ordered_edge_ids': [str(x) for x in ids]}
+        if snap.get('route_signature') and snap['route_signature'] != route_signature(r):
+            raise RoutingError('Route snapshot signature does not match its edges.')
+        return r
+
+    def progress(self, route_id, lon, lat, accuracy_m=None, snapshot=None):
+        """Where a reported position sits on a planned route. Pure geometry: no live tracking is claimed. Works from the
+        in-memory route when this process planned it, otherwise from a client snapshot (restart-safe)."""
         with self.lock:
             r = self.routes.get(route_id)
+        if not r and snapshot:
+            r = self.route_from_snapshot(snapshot)
         if not r:
             raise RoutingError('Unknown or expired route_id; plan the route again.')
         p = xy(lon, lat)
@@ -629,6 +669,12 @@ class RoutePlanner:
                 'remaining_m': round(remaining, 1), 'remaining_min': round(remaining / WALK_SPEED_M_PER_MIN, 1),
                 'current_edge_id': current, 'off_route': off, 'reroute_recommended': off,
                 'accuracy_considered': acc_ok, 'reroute_hint': 'POST /api/routes with origin = current position' if off else None}
+
+
+def route_signature(r):
+    """Stable identity of a route's path on a network version (for navigation sessions that survive restarts)."""
+    import hashlib
+    return hashlib.sha1((r['network_version'] + '|' + ','.join(r['ordered_edge_ids'])).encode()).hexdigest()[:16]
 
 
 def weather_effect(ranked, baseline, heat):

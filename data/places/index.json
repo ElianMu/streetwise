@@ -1,98 +1,225 @@
 {
- "built_at": "2026-10-23T23:22:20+00:00",
- "osm_timestamp": "2026-10-23T23:19:36Z",
+ "built_at": "2026-10-24T01:43:24+00:00",
+ "osm_timestamp": "2026-10-24T01:40:11Z",
  "coverage": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
  "network_version": "osm-walk-20261023-99602011",
  "categories": [
   {
    "id": "hotels",
    "label": "Hotels & accommodation",
-   "count": 480
+   "count": 473,
+   "merged_duplicates": 7,
+   "records_with_conflicts": 1,
+   "missing": {
+    "addr": 47,
+    "web": 98,
+    "hours": 452
+   }
   },
   {
    "id": "museums",
    "label": "Museums & galleries",
-   "count": 375
+   "count": 365,
+   "merged_duplicates": 10,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 54,
+    "web": 70,
+    "hours": 133
+   }
   },
   {
    "id": "attractions",
    "label": "Famous attractions & viewpoints",
-   "count": 229
+   "count": 228,
+   "merged_duplicates": 1,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 190,
+    "web": 132,
+    "hours": 213
+   }
   },
   {
    "id": "historic",
    "label": "Historic places",
-   "count": 431
+   "count": 390,
+   "merged_duplicates": 41,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 355,
+    "web": 325,
+    "hours": 387
+   }
   },
   {
    "id": "parks",
    "label": "Parks & gardens",
-   "count": 527
+   "count": 526,
+   "merged_duplicates": 1,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 418,
+    "web": 285,
+    "hours": 471
+   }
   },
   {
    "id": "cafes",
    "label": "Caf\u00e9s & coffee",
-   "count": 1285
+   "count": 1279,
+   "merged_duplicates": 6,
+   "records_with_conflicts": 2,
+   "missing": {
+    "addr": 328,
+    "web": 591,
+    "hours": 551
+   }
   },
   {
    "id": "bakeries",
    "label": "Bakeries & desserts",
-   "count": 405
+   "count": 400,
+   "merged_duplicates": 5,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 97,
+    "web": 205,
+    "hours": 184
+   }
   },
   {
    "id": "restaurants",
    "label": "Restaurants",
-   "count": 5057
+   "count": 5037,
+   "merged_duplicates": 20,
+   "records_with_conflicts": 5,
+   "missing": {
+    "addr": 1150,
+    "web": 2050,
+    "hours": 2106
+   }
   },
   {
    "id": "bars",
    "label": "Bars & pubs",
-   "count": 886
+   "count": 884,
+   "merged_duplicates": 2,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 201,
+    "web": 376,
+    "hours": 406
+   }
   },
   {
    "id": "culture",
    "label": "Theatres, libraries & landmarks of worship",
-   "count": 437
+   "count": 434,
+   "merged_duplicates": 3,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 62,
+    "web": 133,
+    "hours": 380
+   }
   },
   {
    "id": "shopping",
    "label": "Shopping",
-   "count": 282
+   "count": 278,
+   "merged_duplicates": 4,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 89,
+    "web": 153,
+    "hours": 145
+   }
   },
   {
    "id": "pharmacies",
    "label": "Pharmacies",
-   "count": 328
+   "count": 327,
+   "merged_duplicates": 1,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 66,
+    "web": 174,
+    "hours": 113
+   }
   },
   {
    "id": "groceries",
    "label": "Groceries & convenience",
-   "count": 1014
+   "count": 1012,
+   "merged_duplicates": 2,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 207,
+    "web": 775,
+    "hours": 608
+   }
   },
   {
    "id": "health",
    "label": "Hospitals & clinics",
-   "count": 236
+   "count": 231,
+   "merged_duplicates": 5,
+   "records_with_conflicts": 2,
+   "missing": {
+    "addr": 30,
+    "web": 62,
+    "hours": 107
+   }
   },
   {
    "id": "banks",
    "label": "Banks & ATMs",
-   "count": 538
+   "count": 532,
+   "merged_duplicates": 6,
+   "records_with_conflicts": 2,
+   "missing": {
+    "addr": 237,
+    "web": 302,
+    "hours": 200
+   }
   },
   {
    "id": "restrooms",
    "label": "Public restrooms",
-   "count": 422
+   "count": 419,
+   "merged_duplicates": 3,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 407,
+    "web": 368,
+    "hours": 199
+   }
   },
   {
    "id": "luggage",
    "label": "Luggage storage",
-   "count": 1
+   "count": 1,
+   "merged_duplicates": 0,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 0,
+    "web": 0,
+    "hours": 1
+   }
   },
   {
    "id": "historic_lpc",
    "label": "NYC designated individual landmarks",
-   "count": 926
+   "count": 921,
+   "merged_duplicates": 5,
+   "records_with_conflicts": 0,
+   "missing": {
+    "addr": 0,
+    "web": 921,
+    "hours": 921
+   },
+   "linked_to_osm": 217
   }
  ],
  "sources": {
@@ -106,6 +233,15 @@
   "web": "website",
   "menu": "website:menu (official menu link if mapped)",
   "hours": "opening_hours (OSM syntax)",
+  "cid": "canonical place ID (stable across sources)",
+  "pids": "provider IDs merged into this record",
+  "snap": "metres to the walkable access point on the pedestrian graph",
+  "q": "data quality: complete | partial | minimal",
+  "conf": "fields that disagree between merged provider records",
+  "lpc": "linked NYC LPC landmark ID",
+  "status": "operational status as known: listed (in source; not verified open today)",
+  "upd": "source data timestamp",
+  "chk": "when STREETWISE built this record",
   "wd": "Wikidata ID",
   "sl": "Wikidata sitelink count (Wikipedia language editions etc.): notability signal",
   "drink": "drink:* tags (community-mapped, not menu verification)",

@@ -364,7 +364,7 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .cw-stop.end .cw-seq{border-color:#f2a876;color:#f2a876}
 .cw-body{display:flex;flex-direction:column;gap:2px}.cw-body strong{font-size:11px;color:#eef6ea}.cw-body small{font-size:9.5px;color:#8fa6a1;line-height:1.45}
 .cw-warn{color:#f2a99b!important}.cw-ok{color:#9fd3a6!important}
-.cw-menu.verified_on_menu{color:#d8f365!important}.cw-menu.not_found{color:#f2a99b!important}.cw-menu a,.jp a{color:#d8f365}
+.cw-menu.confirmed_menu_match{color:#d8f365!important}.cw-menu.probable_match_review{color:#f8d385!important}.cw-menu.not_found_in_checked_sources{color:#f2a99b!important}.cw-menu a,.jp a{color:#d8f365}
 .cw-alt{align-self:flex-start;border:1px solid #39504e;background:transparent;color:#c9d7d1;border-radius:5px;padding:2px 7px;font-size:9px;margin-top:3px;margin-right:4px;display:inline-block}
 .cw-refine{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}.cw-refine .mini-outline{width:auto;margin:0;padding:5px 8px}
 .cw-method{display:block;margin-top:8px;color:#6f8a86;font-size:9px;line-height:1.5}
@@ -372,6 +372,68 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .jp dl{display:grid;grid-template-columns:auto 1fr;gap:3px 8px;margin:6px 0;font-size:10px}.jp dt{color:#89a5a1}.jp dd{margin:0}
 .jp-actions{display:flex;flex-wrap:wrap;gap:5px}.jp-actions button{border:1px solid #536d52;background:transparent;color:#e2f899;border-radius:5px;padding:4px 7px;font-size:10px}
 .jp-menu{margin-top:6px;font-size:10px;line-height:1.5}
+
+/* Route check (Route Intelligence) */
+.route-validation{margin:10px 0}.route-validation summary{cursor:pointer;font-size:10.5px;color:#c9d7d1;display:flex;gap:8px;align-items:center}
+.rv-badge{font-size:9px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;padding:3px 7px;border-radius:5px;background:#24403f;color:#cfe}
+.rv-badge.pass{background:#2c3b22;color:var(--lime)}.rv-badge.pass_with_warnings{background:#3a3522;color:#f8d385}.rv-badge.fail{background:#3a2622;color:#f2a99b}
+.rv-grid{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:8px 0;font-size:10px}.rv-grid dt{color:#89a5a1}.rv-grid dd{margin:0;color:#e6efe9}
+.rv-grid dd.pass{color:#9fd3a6}.rv-grid dd.fail{color:#f2a99b}.rv-grid dd.pass_with_warnings,.rv-grid dd.warning{color:#f8d385}.rv-grid dd.not_checked{color:#8fa6a1}
+.rv-block{color:#f2a99b;font-size:10px}.rv-warn{margin:4px 0;padding-left:15px;color:#a9bdb7;font-size:9.5px;line-height:1.5}.route-validation small{color:#6f8a86;font-size:9px}
+.nav-start{margin:4px 0 12px}.nav-start[disabled]{opacity:.45;cursor:not-allowed}
+
+/* Live navigation */
+.nav-overlay{position:absolute;inset:0;z-index:20;pointer-events:none;font-family:'DM Sans',sans-serif}
+.nav-overlay>*{pointer-events:auto}
+.nav-top{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:min(560px,calc(100% - 28px));display:flex;gap:16px;align-items:center;
+ padding:16px 18px;border-radius:18px;background:rgba(8,20,22,.88);backdrop-filter:blur(14px);border:1px solid rgba(216,243,101,.18);box-shadow:0 18px 50px rgba(0,0,0,.45);animation:navIn .35s ease}
+@keyframes navIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+.nav-arrow{flex:none;width:64px;height:64px;border-radius:16px;background:var(--lime);color:#0b1418;display:grid;place-items:center}.nav-arrow svg{width:40px;height:40px}
+.nav-main{min-width:0}.nav-dist{font-family:'Space Grotesk';font-size:30px;font-weight:700;color:#f4fbef;letter-spacing:-.8px;line-height:1}
+.nav-instr{font-size:16px;font-weight:700;color:#e9f3ee;margin-top:5px;line-height:1.25}.nav-then{font-size:11.5px;color:#9fb4ae;margin-top:5px}.nav-conf{font-size:10px;color:#f8d385;margin-top:3px}
+.nav-status{position:absolute;top:118px;left:50%;transform:translateX(-50%);padding:7px 14px;border-radius:999px;background:rgba(8,20,22,.9);color:#e9f3ee;font-size:11.5px;font-weight:700;border:1px solid #3d5651;white-space:nowrap}
+.nav-status.gps_weak,.nav-status.possibly_off_route{border-color:#f8d385;color:#f8d385}.nav-status.off_route,.nav-status.rerouting,.nav-status.error{border-color:#f18d83;color:#f6b4ab}
+.nav-status.arrived,.nav-status.arrived_at_stop{border-color:var(--lime);color:var(--lime)}
+#navRetry{position:absolute;top:156px;left:50%;transform:translateX(-50%)}
+.nav-bottom{position:absolute;left:50%;bottom:40px;transform:translateX(-50%);width:min(620px,calc(100% - 28px));padding:12px 14px;border-radius:18px;
+ background:rgba(8,20,22,.9);backdrop-filter:blur(14px);border:1px solid #2c4346;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+.nav-stats{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}.nav-stats strong{font-family:'Space Grotesk';font-size:22px;color:#f4fbef}.nav-stats span{font-size:14px;color:var(--lime);font-weight:700}
+.nav-stats small{font-size:11px;color:#9fb4ae;margin-left:auto}
+.nav-buttons{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.nav-pill{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid #3d5651;background:#132529;color:#e6efe9;font-size:12px;font-weight:700}
+.nav-pill.primary{background:var(--lime);color:#0b1418;border-color:var(--lime)}.nav-pill.danger{border-color:#7a3c36;color:#f6b4ab}
+.nav-pill[aria-pressed=false]{color:#8fa6a1}
+.nav-buttons select{min-height:40px;border-radius:12px;border:1px solid #3d5651;background:#132529;color:#e6efe9;padding:0 8px}
+.nav-note{display:block;margin-top:6px;font-size:9.5px;color:#6f8a86}
+.nav-recenter{position:absolute;right:16px;bottom:190px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--lime);background:rgba(8,20,22,.92);color:var(--lime);font-weight:800;font-size:12px;opacity:0;pointer-events:none;transition:opacity .2s}
+.nav-recenter.show{opacity:1;pointer-events:auto}
+.nav-stop{position:absolute;left:50%;bottom:190px;transform:translateX(-50%);width:min(420px,calc(100% - 28px));padding:14px 16px;border-radius:16px;background:rgba(8,20,22,.94);border:1px solid var(--lime);text-align:center}
+.nav-stop strong{display:block;color:#f4fbef;font-size:15px}.nav-stop small{display:block;color:#9fb4ae;font-size:11px;margin:4px 0 10px}.nav-stop div{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.nav-choice{position:absolute;inset:0;z-index:25;display:grid;place-items:center;background:rgba(4,10,12,.55);backdrop-filter:blur(4px)}
+.nav-choice-card{width:min(400px,calc(100% - 32px));padding:18px;border-radius:16px;background:#0f2124;border:1px solid #3d5651;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+.nav-choice-card strong{color:#f4fbef;font-size:15px}.nav-choice-card p{color:#9fb4ae;font-size:12px;line-height:1.5}.nav-choice-card .mini-outline{width:100%;margin-top:8px}
+/* While navigating: the map leads; planning controls step aside (the user can exit to return to them). */
+body.nav-mode .map-mode-control,body.nav-mode .experience-controls,body.nav-mode .wx-panel,body.nav-mode .map-layer-switch,body.nav-mode .ud-legend,
+body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mode .mobile-bottom{display:none!important}
+@media(max-width:740px){
+ body.nav-mode .left-panel,body.nav-mode .right-panel,body.nav-mode .topbar{display:none!important}
+ body.nav-mode .app-layout{display:block;height:100dvh}body.nav-mode .map-workspace{height:100dvh}
+ .nav-top{top:10px;padding:12px 14px;gap:12px;border-radius:16px}.nav-arrow{width:54px;height:54px}.nav-dist{font-size:26px}.nav-instr{font-size:14.5px}
+ .nav-bottom{bottom:12px;padding:10px 12px}.nav-pill{min-height:44px;padding:0 12px}.nav-status{top:102px}.nav-recenter{bottom:170px}.nav-stop{bottom:170px}
+}
+.nav-more{position:relative}.nav-more summary{list-style:none;display:flex;align-items:center;cursor:pointer}.nav-more summary::-webkit-details-marker{display:none}
+.nav-more-body{position:absolute;bottom:52px;left:0;display:flex;flex-wrap:wrap;gap:6px;width:max-content;max-width:260px;padding:8px;border-radius:14px;background:rgba(8,20,22,.96);border:1px solid #3d5651;box-shadow:0 12px 30px rgba(0,0,0,.5)}
+.nav-buttons .nav-pill.danger{margin-left:auto}
+/* Explore analytics */
+.explore-tools{display:flex;gap:6px;margin:6px 0}.explore-tools input{flex:1;min-width:0;background:#0f2023;border:1px solid #39504e;color:#e6efe9;border-radius:6px;padding:5px 8px;font-size:10.5px}
+.explore-tools .mini-outline{width:auto;margin:0;padding:4px 8px}
+.explore-analytics details{margin-top:8px;border-top:1px solid #2b4143;padding-top:8px}.explore-analytics summary{cursor:pointer;font-size:10.5px;font-weight:700;color:#d6e3dd}
+.ea-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}.ea-grid>div{background:#0f2023;border:1px solid #263b3b;border-radius:7px;padding:6px 8px;display:flex;flex-direction:column;gap:2px}
+.ea-grid span{font-size:8.5px;color:#89a5a1;font-weight:700;letter-spacing:.5px;text-transform:uppercase}.ea-grid strong{font-size:13px;color:#eff8ec}.ea-grid small{font-size:9px;color:#8fa6a1}
+.ea-hist{width:100%;height:54px;display:block;margin:4px 0}.ea-compare{display:flex;align-items:center;gap:6px;font-size:10px;color:#a9bdb7;margin-top:6px}
+.ea-compare select{background:#0f2023;color:#e6efe9;border:1px solid #39504e;border-radius:5px;font-size:10px;padding:2px 4px}
+.ea-note{font-size:9.5px;color:#8fa6a1;line-height:1.5;margin:4px 0}.explore-analytics h4{font-size:9.5px;letter-spacing:.8px;color:#a1b2af;margin:10px 0 4px;text-transform:uppercase}
+.ea-sources{margin:0;padding-left:14px;font-size:9.5px;color:#c6d4cf;line-height:1.5}.ea-sources small{color:#7f9a95}.ea-sources a{color:var(--lime)}
 
 </style>
 </head>
@@ -470,9 +532,11 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
         <div class="explore-head"><div class="explore-heading"><div class="explore-eyebrow">ALL MANHATTAN · STREET SEGMENTS</div><strong id="exploreTitle">Nature</strong></div><button id="exploreThumbsToggle" class="explore-collapse" aria-pressed="false" title="Show all 13 maps side by side" aria-label="Show all 13 small maps">▦</button><button id="exploreCollapse" class="explore-collapse" aria-expanded="true" title="Collapse panel" aria-label="Collapse panel">–</button></div>
         <div class="explore-ramp"><span id="exploreRampLow">0</span><i></i><span id="exploreRampHigh">100</span><span class="ramp-na"><s></s>N/A</span></div>
         <div id="exploreBody" class="explore-body">
+          <div class="explore-tools"><input id="exploreSearch" type="search" placeholder="Search dimensions…" aria-label="Search dimensions"><button type="button" id="exploreReset" class="mini-outline">Reset view</button></div>
           <div id="exploreChips" class="explore-chips" role="radiogroup" aria-label="Map dimension"></div>
           <div id="exploreGrid" class="explore-grid hidden" aria-label="13 maps side by side"></div>
           <p id="exploreMetric" class="explore-metric"></p>
+          <div id="exploreAnalytics" class="explore-analytics"></div>
           <label class="explore-opacity">Line opacity <input id="exploreOpacity" type="range" min="20" max="100" value="90" aria-label="Street line opacity"></label>
           <p id="exploreStatus" class="explore-note" role="status">Loading 12-dimension street data…</p>
         </div>
@@ -495,6 +559,27 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
         </div></details>
       <section id="udLegend" class="ud-legend" aria-label="Map legend"><button type="button" id="udLegendToggle" class="ud-legend-head" aria-expanded="true">Legend</button><div class="lg-body"></div></section>
       <aside id="urbanInspector" class="explore-inspector urban-inspector hidden" aria-label="Urban feature inspector" aria-live="polite"></aside>
+      <section id="navOverlay" class="nav-overlay hidden" aria-label="Live navigation" aria-live="polite">
+        <div class="nav-top">
+          <div class="nav-arrow" id="navArrow"></div>
+          <div class="nav-main"><div class="nav-dist" id="navDist"></div><div class="nav-instr" id="navInstr">Starting…</div><div class="nav-then" id="navThen"></div><div class="nav-conf" id="navConf"></div></div>
+        </div>
+        <div id="navStatus" class="nav-status hidden"></div>
+        <button type="button" id="navRetry" class="nav-pill hidden">Retry</button>
+        <div id="navStopActions" class="nav-stop hidden"><strong id="navStopName"></strong><small id="navStopVisit"></small>
+          <div><button type="button" class="nav-pill primary" id="navContinue">Continue to next stop</button><button type="button" class="nav-pill" id="navSkip">Skip optional stop</button></div></div>
+        <div id="navArrived" class="nav-stop hidden"><strong>You have arrived</strong><small>Walk complete.</small><div><button type="button" class="nav-pill primary" id="navArrivedDone">End navigation</button></div></div>
+        <button type="button" id="navRecenter" class="nav-recenter">◎ Recenter</button>
+        <div class="nav-bottom">
+          <div class="nav-stats"><strong id="navRemain">—</strong><span id="navTime">—</span><small id="navStop"></small></div>
+          <div class="nav-buttons"><button type="button" class="nav-pill" id="navVoice" aria-pressed="true">Voice on</button><button type="button" class="nav-pill" id="navPause">Pause</button>
+            <details class="nav-more"><summary class="nav-pill">More</summary><div class="nav-more-body"><button type="button" class="nav-pill" id="navRepeat">Repeat</button>
+            <select id="navLang" aria-label="Voice language"><option value="en">EN</option><option value="zh">中文</option></select><button type="button" class="nav-pill" id="navUnits">m</button>
+            <button type="button" class="nav-pill" id="navMode">North up</button></div></details><button type="button" class="nav-pill danger" id="navExit">Exit</button></div>
+          <small id="navHeadingNote" class="nav-note"></small>
+        </div>
+      </section>
+      <div id="navChoice" class="nav-choice hidden" role="dialog" aria-modal="true"></div>
       <div class="map-actions"><button id="mapLocate" title="Locate me" aria-label="Locate me">◎</button><button id="toggleLegend" title="Toggle legend" aria-label="Toggle legend" aria-pressed="true">≡</button><button id="mapReset" title="Reset map view" aria-label="Reset map view">⤢</button></div>
       <div id="pickNotice" class="pick-notice hidden">Click anywhere on the map to set a point. <button id="cancelPick">CANCEL</button></div>
       <div class="map-legend"><div class="legend-title"><span id="legendDot" class="legend-dot"></span><span id="legendTitle">MANHATTAN STREET NETWORK</span></div><p id="legendSubtitle">Official NYC centerlines (Manhattan borough filter); walkability not confirmed.</p><div id="legend-scale" class="legend-scale hidden"><span><i style="background:#365c64"></i>Lower</span><span><i style="background:#37bfc8"></i>Mid</span><span><i style="background:#d8f365"></i>Higher</span></div></div>
@@ -512,6 +597,8 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
         <div class="section-row"><div class="section-overline">AI RECOMMENDED ROUTES</div><span class="small-count" id="routeCount">0 LOADED</span></div>
         <p class="soft-copy">Real routes from the STREETWISE engine on the OpenStreetMap pedestrian graph, ranked by your preferences on the same 12 experience scores as Explore.</p>
         <div id="rankingStatus" class="ranking-status">No route data yet.</div>
+        <div id="routeValidation" class="route-validation hidden" aria-live="polite"></div>
+        <button type="button" id="navStart" class="primary-cta nav-start hidden"><span>➤ Start Navigation</span><span class="cta-arrow">↗</span></button>
         <div class="route-cards" id="routeCards"><div class="empty-route"><strong>No routes generated yet</strong><p>Set your journey to compare real pedestrian paths.</p></div></div>
         <div class="subtle-divider"></div>
         <div class="section-overline">✦ WHY THIS ROUTE?</div><div class="why-box" id="whyRoute">Generate routes to see evidence-grounded reasons.</div>
@@ -1385,7 +1472,7 @@ function setupMap(){
       m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#6fd2d8','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
       m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
       m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':7,'circle-stroke-color':'#fff','circle-stroke-width':3}});
-      setupRouteEdgeLayer();setupUrbanMap();if(typeof setupJourneyMap==='function')setupJourneyMap();
+      setupRouteEdgeLayer();setupUrbanMap();if(typeof setupJourneyMap==='function')setupJourneyMap();if(typeof setupNavMap==='function')setupNavMap();
       state.mapLayersReady=true; setupExperienceMap(); syncMapData();updateMapStyles();
       m.on('click','road-highlight',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit',...urbanMapLayerIds()]}).length)return;const feat=e.features?.[0];if(!feat)return;const fid=feat.properties?.FID;const real=state.streetsById.get(String(fid));state.selectedStreet=real||feat;updateSegmentDetails();});
       m.on('click','route-alts',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;  // a click on the selected route's segment opens its evidence instead
@@ -1721,13 +1808,14 @@ function constraintSummary(){
 function renderRouteCards(){
  const root=$('routeCards'),routes=state.routes;
  $('routeCount').textContent=`${routes.length} OSM ROUTE${routes.length===1?'':'S'}`;
- if(!routes.length){root.innerHTML=`<div class="empty-route"><strong>${state.routingBusy?'Computing pedestrian routes…':'No routes generated yet'}</strong><p>${state.routingBusy?'Searching the Manhattan OSM pedestrian graph.':'Start with a journey and walking preferences.'}</p></div>`;return}
+ if(!routes.length){root.innerHTML=`<div class="empty-route"><strong>${state.routingBusy?'Computing pedestrian routes…':'No routes generated yet'}</strong><p>${state.routingBusy?'Searching the Manhattan OSM pedestrian graph.':'Start with a journey and walking preferences.'}</p></div>`;if(typeof renderNavStart==='function')renderNavStart();return}
  root.innerHTML=routes.map(x=>{
   const r=x.raw,selected=x.id===state.activeRoute,feasible=r.constraints.feasible;
   const tag=r.recommended?'BEST MATCH':r.objective==='shortest'?'SHORTEST':'ALTERNATIVE';
   return `<button class="route-card ${selected?'selected':''} ${!feasible?'over-budget':''}" type="button" data-route="${esc(x.id)}" aria-pressed="${selected}"><span class="route-icon">${selected?'✓':r.rank}</span><span class="route-names"><span class="route-category">${tag}${!feasible?' · NOT FEASIBLE':''}</span><strong>${esc(r.route_name)}</strong><small>Personalized ${r.personalized_score.utility} · Overall ${scoreText(r.overall_score)} · ${Math.round(r.data_coverage.mean*100)}% data coverage</small><small class="evidence-line">${r.detour_percentage>0?`+${r.detour_percentage}% vs shortest`:'Shortest distance'} · ${r.ordered_edge_ids.length} OSM edges${r.weather&&planner.routeResponse?.weather_routing?.routing?.active?` · ${Math.round(r.weather.heat_exposure_share*100)}% heat-exposed (tree proxy)`:''}</small>${!feasible?`<small>${esc(r.constraints.violations.join('; '))}</small>`:''}</span><span class="route-metrics"><strong>${(r.distance_m/1000).toFixed(2)} km</strong><small>${Math.ceil(r.estimated_duration_min)} min</small></span></button>`;
  }).join('')+`<p class="route-constraints">${esc(constraintSummary())}</p><p class="route-footnote">Routes are computed on the OSM pedestrian graph (${esc(planner.routeResponse?.network_version||'')}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${esc(planner.routeResponse?.score_version||'')}), shared with Explore Urban Data.</p>`;
  root.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',()=>selectRoute(el.dataset.route)));
+ if(typeof renderNavStart==='function')renderNavStart();
 }
 function profileRows(r){
  return DIMENSIONS.map((d,i)=>{const v=r.dimension_scores[d.name],c=r.data_coverage.by_dimension[d.name],pref=planner.origins[d.name]!=='default';
@@ -1976,7 +2064,8 @@ function poiPlace(r){
  const src=r.src==='lpc'?'NYC Landmarks Preservation Commission':r.src==='nyc_restrooms'?'NYC Open Data Public Restrooms':'OpenStreetMap (Overpass snapshot)';
  return {id:r.id,name:r.name,address:r.addr||null,neighborhood:null,borough:'Manhattan',category:poiCategoryLabel(r),lat:r.lat,lon:r.lon,source:src,
   sourceUrl:r.id.startsWith('osm:')?`https://www.openstreetmap.org/${r.id.slice(4)}`:r.report||null,website:r.web||null,menuUrl:r.menu||null,hours:r.hours||null,
-  wikidata:r.wd||null,cat:r.cat,drink:r.drink||null,cuisine:r.cuisine||null,verification:'Listed by source (not verified by STREETWISE)',raw:r};
+  wikidata:r.wd||null,cat:r.cat,drink:r.drink||null,cuisine:r.cuisine||null,cid:r.cid||r.id,providerIds:r.pids||[r.id],quality:r.q||null,accessM:r.snap??null,
+  operationalStatus:'Listed in source — not verified open today',landmark:r.src==='lpc'||Boolean(r.lpc),verification:'Listed by source (not verified by STREETWISE)',raw:r};
 }
 function poiCategoryLabel(r){
  const s=r.sub||'';const v=s.split('=')[1]||'';
@@ -2010,7 +2099,7 @@ function journeyEndPlace(){
 function relevance(r,{item=null,cuisine=null}={}){
  let s=.3;
  if(r.sl)s+=.55*Math.min(1,Math.log10(1+r.sl)/2.1);else if(r.wd)s+=.05;
- if(r.src==='lpc')s+=.2;if(r.web)s+=.05;if(r.hours)s+=.05;
+ if(r.src==='lpc'||r.lpc)s+=.2;if(r.web)s+=.05;if(r.hours)s+=.05;
  if(item){const d=r.drink||{};if(d[item]==='yes')s+=.3;else if(['cappuccino','latte','espresso','flat white'].includes(item)&&(d.espresso==='yes'||d.coffee==='yes'||/coffee/.test(r.cuisine||'')))s+=.15;}
  if(cuisine&&new RegExp(`(^|;)${cuisine}(;|$)`,'i').test(r.cuisine||''))s+=.3;
  return Math.min(1,s);
@@ -2025,7 +2114,8 @@ async function discoverPlaces(cats,{item=null,cuisine=null,filter=null,limit=8,n
  const seen=new Set(),out=[];
  for(const r of lists.flat()){
   if(journey.removed.has(r.id)||filter&&!filter(r))continue;
-  const key=normName(r.name);if(seen.has(key+Math.round(r.lat*500)+Math.round(r.lon*500)))continue;seen.add(key+Math.round(r.lat*500)+Math.round(r.lon*500));
+  // one canonical place once, however many sources list it (cid from scripts/build_place_index.py entity resolution)
+  const key=normName(r.name);if(seen.has(r.cid||r.id))continue;seen.add(r.cid||r.id);
   const d=distToPathKm(r,path);if(d>radiusKm)continue;
   if(fixedPts.some(f=>kmBetween(f,r)<.15||normName(f.name)===key))continue;
   const rel=relevance(r,{item,cuisine});out.push({r,rel,d,score:rel-.3*d});
@@ -2075,6 +2165,9 @@ function localJourney(q){
  const j={interests:[],named_stops:[],food:[],services:[],service_scope:null,hotel:null,origin:null,destination:null,end_mode:null,walking_minutes:null,outing_minutes:null,distance_km:null,more:{},remove:[]};
  const seqWords=/(then|after that|afterwards|before|first|finally|先|再|然后|接着|之后|最后)/i.test(q);
  for(const [re,v] of INTEREST_RULES)if(re.test(q)&&!j.interests.includes(v))j.interests.push(v);
+ // "interesting architecture" is a walking preference (the Architecture dimension), not a request to visit places:
+ // these interests start discovery only with a visit cue. Museums and famous sights are places by definition.
+ if(!/(visit|see |see$|show me|explore|tour|sightsee|first time|discover|go to|stop at|逛|看看|看一些|参观|游览|第一次|去看|去逛)/i.test(q))j.interests=j.interests.filter(i=>['famous','museums'].includes(i));
  // "one more museum" / "再加一个博物馆" adds to what is already planned
  const more=q.match(/(?:another|one more|add (?:a|one)|再加(?:一个|一家|个)?|再来一个|多加一个)\s*([^,，。.]{0,14})/i);
  if(more){const what=more[1];for(const [re,v] of INTEREST_RULES)if(re.test(what)){j.more[v]=(j.more[v]||0)+1;j.interests=j.interests.filter(x=>x!==v);}}
@@ -2145,7 +2238,8 @@ async function applyJourney(j){
  else if(j.origin){const p=await findNamedPlace(j.origin);if(p){setJourneyPlace('start',p);changes.push(`start: ${p.name}`);}}
  if(j.destination){const p=await findNamedPlace(j.destination);if(p){setJourneyPlace('end',p);setEndMode('fixed');changes.push(`end: ${p.name}`);}}
  if(j.end_mode&&j.end_mode!=='fixed'){setEndMode(j.end_mode);changes.push({hotel:'end: back to my hotel',round:'end: back to start',open:'flexible end'}[j.end_mode]);}
- else if(journey.active&&!j.destination&&journey.endMode==='fixed'&&(j.interests.length||Object.keys(j.more||{}).length)&&!journey.userSetDestination){setEndMode('open');changes.push('flexible end (discover for me)');}
+ // discovery never drops a destination: with one set, discovered stops go along the way
+ else if(journey.active&&!j.destination&&journey.endMode==='fixed'&&(j.interests.length||Object.keys(j.more||{}).length)&&!getPlace('end')){setEndMode('open');changes.push('flexible end (discover for me)');}
  if(j.outing_minutes!=null){state.outingMin=j.outing_minutes;$('outingMin').value=j.outing_minutes;changes.push(`outing ${j.outing_minutes} min (walking + visits)`);
   if(j.outing_minutes>state.budget){setBudget(j.outing_minutes);}}
  if(j.walking_minutes!=null&&setBudget(Math.round(j.walking_minutes)))changes.push(`max ${state.budget} min walking`);
@@ -2237,7 +2331,7 @@ const pick=p=>({id:p.id,name:p.name,lat:p.lat,lon:p.lon,category:p.category||nul
 const slotCand=c=>({...pick(c),score:c.score,evidence:candidateEvidence(c)});
 function foodLabel(f){return f.item?`${titleCase(f.item)} (${f.category==='cafes'?'café':f.category.replace(/s$/,'')})`:f.cuisine?`${titleCase(f.cuisine)} restaurant`:{cafes:'Café',restaurants:'Restaurant',bakeries:'Bakery / dessert',bars:'Bar'}[f.category];}
 function candidateEvidence(c){
- const e=[];if(c.raw?.sl)e.push(`Wikipedia in ${c.raw.sl} editions`);else if(c.wikidata)e.push('Wikidata-listed');if(c.raw?.src==='lpc')e.push('NYC designated landmark');if(c.drink?.espresso==='yes')e.push('OSM tag: serves espresso');if(c.drink?.coffee==='yes')e.push('OSM tag: serves coffee');
+ const e=[];if(c.raw?.sl)e.push(`Wikipedia in ${c.raw.sl} editions`);else if(c.wikidata)e.push('Wikidata-listed');if(c.raw?.src==='lpc'||c.raw?.lpc)e.push('NYC designated landmark');if(c.raw?.snap>80)e.push(`entrance approx. ${Math.round(c.raw.snap)} m from mapped point`);if(c.drink?.espresso==='yes')e.push('OSM tag: serves espresso');if(c.drink?.coffee==='yes')e.push('OSM tag: serves coffee');
  if(c.cuisine)e.push('cuisine: '+c.cuisine.replace(/;/g,', '));if(c.hours)e.push('hours listed');return e.join(' · ')||null;
 }
 function journeyTheme(){
@@ -2297,7 +2391,7 @@ async function placeById(id){
  for(const c of Object.keys(POI_CACHE)){const r=(await POI_CACHE[c]).find(x=>x.id===id);if(r)return poiPlace(r);}
  return null;
 }
-const MENU_LABEL={verified_on_menu:'Verified on menu',unverified:'Unverified',not_found:'Not found in available sources',checking:'Checking official menu…'};
+const MENU_LABEL={confirmed_menu_match:'Confirmed menu match',probable_match_review:'Probable match — review needed',unverified:'Unverified',not_found_in_checked_sources:'Not found in checked sources',checking:'Checking official menu…'};
 
 /* ---------- nearby / along-route search (find, without adding) ---------- */
 async function findServices(type,scope){
@@ -2505,6 +2599,505 @@ function startVoice(target,button){
  button.classList.add('recording');button.setAttribute('aria-pressed','true');$('voiceStatus').textContent=`Listening (${voice.lang==='zh-CN'?'中文':'English'})… tap again to stop.`;
 }
 function stopVoice(){voice.rec?.stop();}
+
+</script>
+<script>
+'use strict';
+/* STREETWISE walking navigation engine (no DOM): map matching, navigation state machine, along-route distances, alerts.
+   Input is the selected STREETWISE Route Object (its geometry, ordered edges and server-built maneuvers); nothing here plans
+   a route or decides a turn. Continuous GPS stays in the browser; only re-routing calls the server.
+
+   Map matching: each fix is projected onto the route only inside a window around the last matched progress
+   (−BACK_M … +forward reach from walking speed, elapsed time and accuracy), scored by perpendicular distance relative to
+   accuracy, backward motion, and heading agreement when a trustworthy heading exists. Progress never jumps ahead of what
+   walking could cover and only moves backwards after several consistent fixes (the user turned around).
+   Off-route: the distance to the route beyond the fix's own uncertainty must exceed OFF_M on OFF_FIXES consecutive fixes
+   spanning OFF_SECONDS with usable accuracy; one bad fix only makes the state POSSIBLY_OFF_ROUTE.
+   Alert distances are initial, configurable values (not validated standards): they grow with GPS uncertainty and shrink
+   when maneuvers are close together. */
+const NAV_CONFIG={
+ walkMaxMps:2.6,          // brisk walking / light jog; faster apparent motion is treated as GPS jump
+ backM:25,                // matching window behind the last progress
+ accuracyGoodM:20,accuracyUsableM:50,
+ staleSeconds:15,         // no fix for this long: GPS_WEAK
+ offM:25,offFixes:3,offSeconds:8,
+ earlyM:90,approachM:30,nowM:8,passM:6,
+ arriveM:15,
+ rerouteMinSeconds:20,
+};
+const NAV_STATES=['IDLE','READY','STARTING','NAVIGATING','GPS_WEAK','POSSIBLY_OFF_ROUTE','OFF_ROUTE','REROUTING','PAUSED','ARRIVED_AT_STOP','ARRIVED','ERROR','STOPPED'];
+// Allowed transitions; anything else is ignored (prevents duplicate starts, double reroutes and repeated arrivals).
+const NAV_TRANSITIONS={
+ IDLE:['READY'],READY:['STARTING','IDLE'],STARTING:['NAVIGATING','ERROR','STOPPED','READY'],
+ NAVIGATING:['GPS_WEAK','POSSIBLY_OFF_ROUTE','PAUSED','ARRIVED_AT_STOP','ARRIVED','STOPPED','ERROR'],
+ GPS_WEAK:['NAVIGATING','POSSIBLY_OFF_ROUTE','PAUSED','STOPPED','ARRIVED_AT_STOP','ARRIVED','ERROR'],
+ POSSIBLY_OFF_ROUTE:['NAVIGATING','OFF_ROUTE','GPS_WEAK','PAUSED','STOPPED'],
+ OFF_ROUTE:['REROUTING','NAVIGATING','PAUSED','STOPPED'],
+ REROUTING:['NAVIGATING','OFF_ROUTE','ERROR','STOPPED'],
+ PAUSED:['NAVIGATING','STOPPED'],ARRIVED_AT_STOP:['NAVIGATING','STOPPED','ARRIVED'],ARRIVED:['STOPPED','IDLE'],
+ ERROR:['READY','STOPPED','REROUTING','NAVIGATING'],STOPPED:['IDLE','READY'],
+};
+const MX_NAV=84414.3,MY_NAV=111049.7;
+const navXY=c=>[c[0]*MX_NAV,c[1]*MY_NAV];
+function navBearing(a,b){return (Math.atan2((b[0]-a[0])*MX_NAV,(b[1]-a[1])*MY_NAV)*180/Math.PI+360)%360;}
+const angDiff=(a,b)=>Math.abs((a-b+540)%360-180);
+
+class NavEngine{
+ constructor(route,opts={}){
+  this.cfg={...NAV_CONFIG,...(opts.config||{})};
+  this.route=route;this.state='IDLE';this.listeners=[];
+  const c=route.geometry.coordinates;this.pts=c.map(navXY);this.cum=[0];
+  for(let i=1;i<c.length;i++)this.cum.push(this.cum[i-1]+Math.hypot(this.pts[i][0]-this.pts[i-1][0],this.pts[i][1]-this.pts[i-1][1]));
+  this.geoLen=this.cum.at(-1)||1;this.netLen=route.distance_m||this.geoLen;this.k=this.netLen/this.geoLen;  // geometry metres → route metres
+  // edge boundaries in route metres (for matched_edge_id)
+  this.edgeEnds=[];let run=0;for(const e of route.edges||[]){run+=e.traversed_length_m;this.edgeEnds.push([run,e.edge_id]);}
+  this.maneuvers=(route.maneuvers||[]).slice().sort((a,b)=>a.distance_along_route_m-b.distance_along_route_m);
+  this.reset(opts.progress_m||0);
+  if(route.validation&&route.validation.navigation_allowed===false){this.blocked=route.validation.blocking_issues||['Route failed validation'];}
+ }
+ reset(progress=0){
+  Object.assign(this,{progress,lastFix:null,lastMatchT:null,offCount:0,offSince:null,backCount:0,alerted:{},arrivedStops:new Set(),
+   next:this.maneuvers.findIndex(m=>m.distance_along_route_m>progress+this.cfg.passM&&m.type!=='depart'),lastOutput:null});
+  if(this.next<0)this.next=this.maneuvers.length-1;
+ }
+ on(fn){this.listeners.push(fn);}
+ emit(ev){for(const fn of this.listeners){try{fn(ev)}catch(e){}}}
+ /** Moves the state machine; returns false (and changes nothing) for a transition the table does not allow. */
+ transition(to,why=''){
+  if(to===this.state)return true;
+  if(!(NAV_TRANSITIONS[this.state]||[]).includes(to))return false;
+  const from=this.state;this.state=to;this.emit({type:'state',from,to,why});return true;
+ }
+ pointAt(s){ // route metres → [lon,lat]
+  const g=Math.max(0,Math.min(this.geoLen,s/this.k));let lo=0,hi=this.cum.length-1;
+  while(lo<hi-1){const m=(lo+hi)>>1;if(this.cum[m]<=g)lo=m;else hi=m;}
+  const seg=this.cum[hi]-this.cum[lo],t=seg?(g-this.cum[lo])/seg:0,a=this.pts[lo],b=this.pts[hi];
+  return [(a[0]+(b[0]-a[0])*t)/MX_NAV,(a[1]+(b[1]-a[1])*t)/MY_NAV];
+ }
+ edgeAt(s){for(const [end,id] of this.edgeEnds)if(s<=end+1e-6)return id;return this.edgeEnds.at(-1)?.[1]||null;}
+ /** Project p onto route segments whose route-metre span intersects [lo,hi]; best by score. */
+ match(p,lo,hi,fix){
+  const sAcc=Math.max(8,Math.min(fix.accuracy??30,80));let best=null;
+  const head=fix.heading!=null&&Number.isFinite(fix.heading)&&(fix.speed??0)>.6?fix.heading:null;
+  for(let i=1;i<this.pts.length;i++){
+   const s0=this.cum[i-1]*this.k,s1=this.cum[i]*this.k;if(s1<lo||s0>hi)continue;
+   const a=this.pts[i-1],b=this.pts[i],ux=b[0]-a[0],uy=b[1]-a[1],l2=ux*ux+uy*uy;
+   let t=l2?((p[0]-a[0])*ux+(p[1]-a[1])*uy)/l2:0;t=Math.max(0,Math.min(1,t));
+   let s=(this.cum[i-1]+t*Math.sqrt(l2))*this.k;s=Math.max(lo,Math.min(hi,s));
+   const q=navXY(this.pointAt(s)),d=Math.hypot(p[0]-q[0],p[1]-q[1]);
+   let score=(d/sAcc)**2;
+   if(s<this.progress-3)score+=((this.progress-s)/15)**2;                     // walking backwards is unlikely
+   if(head!=null&&l2)score+=angDiff(head,navBearing(this.route.geometry.coordinates[i-1],this.route.geometry.coordinates[i]))>100?2:0;
+   if(!best||score<best.score)best={s,d,score};
+  }
+  return best;
+ }
+ /** One GPS fix → navigation output. Fix fields may be missing (accuracy, speed, heading). */
+ update(fix){
+  if(['IDLE','READY','STOPPED','ARRIVED','PAUSED','REROUTING','ERROR'].includes(this.state))return this.lastOutput;
+  if(!fix||!Number.isFinite(fix.lat)||!Number.isFinite(fix.lon))return this.lastOutput;
+  const t=fix.timestamp??Date.now(),acc=Number.isFinite(fix.accuracy)?fix.accuracy:null;
+  const dt=this.lastMatchT!=null?Math.max(.5,(t-this.lastMatchT)/1000):5;
+  const quality=acc==null?'unknown':acc<=this.cfg.accuracyGoodM?'good':acc<=this.cfg.accuracyUsableM?'fair':'poor';
+  if(this.state==='STARTING')this.transition('NAVIGATING','first fix');
+  const p=navXY([fix.lon,fix.lat]);
+  const reach=15+this.cfg.walkMaxMps*dt*1.5+Math.min(acc??30,60);
+  // first fix (or after a reset): find where on the route the walker is; afterwards stay within the walking window
+  let m=this.lastMatchT==null?this.match(p,0,this.netLen,fix):this.match(p,this.progress-this.cfg.backM,this.progress+reach,fix);
+  if(this.lastMatchT==null&&m){
+   // where the route passes near itself, an equally plausible earlier position wins (the walk has just begun)
+   const earlier=m.s>1?this.match(p,0,m.s-1,fix):null;
+   if(earlier&&earlier.d<=m.d+Math.max(5,(acc??20)/2))m=earlier;
+   // standing at the route start (Start Navigation checks this): begin at 0 m
+   const s0=navXY(this.route.geometry.coordinates[0]),d0=Math.hypot(p[0]-s0[0],p[1]-s0[1]);
+   if(this.progress===0&&d0<=Math.max(25,2*(acc??20)))m={s:0,d:d0,score:0};
+   if(m.d<=Math.max(35,2.5*(acc??20)))this.progress=m.s;
+  }
+  // rejoin after a long gap anywhere ahead (never behind) when the windowed match is far away
+  if(m&&m.d>40&&dt>20){const g=this.match(p,this.progress,this.netLen,fix);if(g&&g.d<m.d)m=g;}
+  const out={timestamp:t,accuracy_m:acc,location_quality:quality,raw:[fix.lon,fix.lat]};
+  if(!m){this.lastFix=fix;return this.finish(out);}
+  const unc=Math.max(0,m.d-(acc??20));
+  // An outlier (far beyond its own accuracy) never moves progress; it only counts towards off-route.
+  const outlier=m.d>Math.max(35,2.5*(acc??20));
+  if(!outlier){
+   if(m.s>=this.progress){
+    // forward: a deadband the size of the noise stops progress ratcheting up while standing still
+    const dead=Math.min(10,Math.max(3,.5*(acc??20)));const still=fix.speed!=null&&fix.speed<.3;
+    if(!still&&m.s-dead>this.progress)this.progress=m.s-dead;this.backCount=0;
+   }else if(this.progress-m.s>10&&unc<10){
+    // backwards only when the best forward position is clearly worse, on several consecutive fixes (turned around)
+    const fwd=this.match(p,this.progress,this.progress+reach,fix);
+    if(!fwd||fwd.d>m.d+12){if(++this.backCount>=3)this.progress=m.s;}else this.backCount=0;
+   }
+  }
+  this.lastMatchT=t;
+  out.matched_coordinate=this.pointAt(this.progress);out.matched_edge_id=this.edgeAt(this.progress);out.distance_to_route_m=Math.round(m.d);
+  out.confidence=quality==='poor'?'low':m.d<=(acc??20)+5?'high':m.d<=40?'medium':'low';
+  // states: weak GPS never triggers off-route; off-route needs consecutive fixes over time
+  if(quality==='poor'){this.offCount=0;this.offSince=null;if(['NAVIGATING','POSSIBLY_OFF_ROUTE'].includes(this.state))this.transition('GPS_WEAK','accuracy '+Math.round(acc)+' m');}
+  else if(unc>this.cfg.offM){
+   this.offCount++;this.offSince=this.offSince??t;
+   if(this.state==='GPS_WEAK')this.transition('NAVIGATING','accuracy recovered');
+   if(this.offCount>=this.cfg.offFixes&&(t-this.offSince)/1000>=this.cfg.offSeconds){if(this.state!=='OFF_ROUTE'&&this.transition('OFF_ROUTE',`${Math.round(m.d)} m from route`))this.emit({type:'off_route',distance_m:m.d,at:[fix.lon,fix.lat]});}
+   else if(this.state!=='OFF_ROUTE')this.transition('POSSIBLY_OFF_ROUTE',`${Math.round(m.d)} m from route`);
+  }else{
+   this.offCount=0;this.offSince=null;
+   if(['GPS_WEAK','POSSIBLY_OFF_ROUTE','OFF_ROUTE'].includes(this.state))this.transition('NAVIGATING','back on route');
+  }
+  this.lastFix=fix;
+  return this.finish(out);
+ }
+ /** Advance maneuvers, raise alerts and arrivals from the current progress. */
+ finish(out){
+  const cfg=this.cfg,acc=out.accuracy_m??20,onRoute=['NAVIGATING','GPS_WEAK'].includes(this.state);
+  while(this.next<this.maneuvers.length-1&&this.progress>this.maneuvers[this.next].distance_along_route_m+cfg.passM&&!this.maneuvers[this.next].type.startsWith('arrive'))this.next++;
+  const nm=this.maneuvers[this.next];
+  if(nm){
+   const d=nm.distance_along_route_m-this.progress,prev=this.maneuvers[this.next-1];
+   const gap=prev?nm.distance_along_route_m-prev.distance_along_route_m:Infinity;
+   const early=Math.min(cfg.earlyM+Math.min(acc,40)/2,gap*.8),approach=Math.min(cfg.approachM+Math.min(acc,30)/2,Math.max(12,gap*.5));
+   const key=nm.maneuver_id;this.alerted[key]=this.alerted[key]||{};
+   if(onRoute&&!nm.type.startsWith('arrive')){
+    for(const [lvl,th] of [['now',cfg.nowM+Math.min(acc,20)/4],['approach',approach],['early',early]]){
+     if(d<=th&&!this.alerted[key][lvl]){
+      // a nearer level supersedes farther ones: never "in 90 m" after "turn now"
+      if(lvl!=='early'||!this.alerted[key].approach){this.alerted[key][lvl]=true;if(lvl==='now')this.alerted[key].approach=this.alerted[key].early=true;if(lvl==='approach')this.alerted[key].early=true;
+       this.emit({type:'alert',level:lvl,maneuver:nm,distance_m:Math.max(0,d)});}
+      break;
+     }
+    }
+   }
+   // arrivals: progress reached the stop (with uncertainty) while matched on the route
+   if(onRoute&&nm.type.startsWith('arrive')&&d<=Math.max(cfg.arriveM,Math.min(acc,40))&&!this.arrivedStops.has(key)&&(out.distance_to_route_m??0)<=Math.max(30,acc)){
+    this.arrivedStops.add(key);
+    if(nm.type==='arrive'){this.transition('ARRIVED','destination');this.emit({type:'arrived',maneuver:nm});}
+    else{this.transition('ARRIVED_AT_STOP',nm.stop_name||'stop');this.emit({type:'arrived_stop',maneuver:nm});}
+   }
+   out.next_maneuver=nm;out.distance_to_next_m=Math.max(0,Math.round(d));out.after_next=this.maneuvers[this.next+1]||null;
+  }
+  out.state=this.state;out.progress_m=Math.round(this.progress);out.remaining_m=Math.max(0,Math.round(this.netLen-this.progress));
+  out.remaining_min=Math.round(out.remaining_m/80*10)/10;
+  const stops=this.maneuvers.filter(m=>m.type==='arrive_stop');
+  out.remaining_stops=stops.filter(m=>!this.arrivedStops.has(m.maneuver_id)).map(m=>m.stop_name);
+  out.current_street=this.maneuvers.slice(0,this.next).reverse().find(m=>m.street_name)?.street_name||null;
+  this.lastOutput=out;this.emit({type:'update',output:out});return out;
+ }
+ /** Continue after a stop (the user confirms they are moving on). */
+ continueFromStop(){if(this.state==='ARRIVED_AT_STOP'){this.next=Math.min(this.next+1,this.maneuvers.length-1);this.transition('NAVIGATING','continue');}}
+ skipStop(){if(this.state!=='ARRIVED_AT_STOP'&&this.maneuvers[this.next]?.type==='arrive_stop'&&this.maneuvers[this.next].required===false){this.arrivedStops.add(this.maneuvers[this.next].maneuver_id);this.next++;return true;}return false;}
+ /** Staleness check, called on a timer: no fix for a while means the location shown is not current. */
+ tick(now=Date.now()){
+  if(this.lastFix&&['NAVIGATING','POSSIBLY_OFF_ROUTE'].includes(this.state)&&(now-(this.lastFix.timestamp??now))/1000>this.cfg.staleSeconds)this.transition('GPS_WEAK','no recent GPS fix');
+ }
+ snapshot(){return {route_id:this.route.route_id,route_signature:this.route.route_signature,network_version:this.route.network_version,progress_m:this.progress,
+  next:this.next,arrived:[...this.arrivedStops],state:this.state};}
+}
+/** Distances for the UI, metric or imperial. */
+function formatNavDistance(m,units='metric'){
+ if(m==null||!Number.isFinite(m))return '—';
+ if(units==='imperial'){const ft=m*3.28084;return ft<1000?`${Math.max(10,Math.round(ft/10)*10)} ft`:`${(m/1609.344).toFixed(ft<5280*10?1:0)} mi`;}
+ return m<1000?`${Math.max(5,Math.round(m/5)*5)} m`:`${(m/1000).toFixed(1)} km`;
+}
+/** Spoken instruction from an engine maneuver (never generated by a language model). */
+function spokenInstruction(m,d,lang='en',units='metric'){
+ if(!m)return '';
+ if(lang==='zh'){const dist=d!=null&&d>12?`前方约${units==='imperial'?formatNavDistance(d,units):formatNavDistance(d).replace(' m','米').replace(' km','公里')}，`:'';return dist+(m.instruction_zh||m.instruction_text);}
+ const dist=d!=null&&d>12?`In ${formatNavDistance(d,units).replace(' m',' meters').replace(' km',' kilometers').replace(' ft',' feet').replace(' mi',' miles')}, `:'';
+ const text=m.instruction_text;return dist+(dist?text[0].toLowerCase()+text.slice(1):text);
+}
+if(typeof module!=='undefined')module.exports={NavEngine,NAV_CONFIG,NAV_STATES,NAV_TRANSITIONS,formatNavDistance,spokenInstruction};
+
+</script>
+<script>
+'use strict';
+/* Live walking navigation UI on top of nav-engine.js. The route, its maneuvers and its validation come from the STREETWISE
+   engine; this file only shows them, follows the GPS, speaks the engine's instructions and asks the engine to re-plan.
+   Privacy: positions stay in the browser; the server only receives the current position when a re-route is needed.
+   Session: the route snapshot and progress (no GPS track) are kept in sessionStorage for 6 h to survive a page refresh. */
+const nav={engine:null,watch:null,units:'metric',voice:true,voiceLang:'en',follow:true,headingUp:false,heading:null,headingSrc:null,
+ last:null,queue:[],lastReroute:0,rerouteFails:0,wakeLock:null,lastCam:0,sessionKey:'sw.nav.v1'};
+const NAV_ARROWS={depart:'M12 20V5m0 0-5 5m5-5 5 5',continue:'M12 20V5m0 0-5 5m5-5 5 5',turn_left:'M17 20v-7a4 4 0 0 0-4-4H5m0 0 4-4M5 9l4 4',
+ turn_right:'M7 20v-7a4 4 0 0 1 4-4h8m0 0-4-4m4 4-4 4',slight_left:'M15 20v-6L8 7m0 0v5m0-5h5',slight_right:'M9 20v-6l7-7m0 0v5m0-5h-5',
+ sharp_left:'M16 4v9a3 3 0 0 1-5 2L5 9m0 0v6m0-6h6',sharp_right:'M8 4v9a3 3 0 0 0 5 2l6-6m0 0v6m0-6h-6',keep_left:'M14 20v-5L9 9V4m0 0L6 7m3-3 3 3',
+ keep_right:'M10 20v-5l5-6V4m0 0-3 3m3-3 3 3',u_turn:'M8 20V9a4 4 0 0 1 8 0v4m0 0-3-3m3 3 3-3',cross:'M4 12h16M7 8v8M12 8v8M17 8v8',
+ enter_path:'M12 20V5m0 0-5 5m5-5 5 5',arrive_stop:'M12 21s-6-5.5-6-10a6 6 0 1 1 12 0c0 4.5-6 10-6 10zm0-8a2 2 0 1 0 0-4 2 2 0 0 0 0 4',
+ arrive:'M5 21V4m0 0h11l-2 4 2 4H5',notice:'M12 8v5m0 3h.01M10.3 3.9 2.6 17a2 2 0 0 0 1.7 3h15.4a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z'};
+const navArrow=t=>`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${NAV_ARROWS[t]||NAV_ARROWS.continue}"/></svg>`;
+const STATE_TEXT={GPS_WEAK:'Weak GPS signal — position approximate',POSSIBLY_OFF_ROUTE:'Checking whether you left the route…',OFF_ROUTE:'Off route',
+ REROUTING:'Off route — recalculating on the walking network…',PAUSED:'Paused',ARRIVED_AT_STOP:'Arrived at stop',ARRIVED:'You have arrived',ERROR:'Navigation problem'};
+
+function activeRouteObject(){return state.routes.find(r=>r.id===state.activeRoute)?.raw||null;}
+/** Start Navigation is offered only for a selected route whose validation allows it. */
+function renderNavStart(){
+ const btn=$('navStart'),r=activeRouteObject();if(!btn)return;
+ const v=r?.validation,ok=Boolean(r&&r.maneuvers?.length&&(!v||v.navigation_allowed));
+ btn.classList.toggle('hidden',!r||nav.engine!=null);btn.disabled=!ok;
+ btn.title=!r?'':!r.maneuvers?.length?'This route has no turn instructions (plan it again).':v&&!v.navigation_allowed?`Blocked: ${v.blocking_issues.join(' ')}`:'Start live walking navigation';
+ renderValidation(r);
+}
+const VSTATUS={pass:'Pass',pass_with_warnings:'Pass with warnings',fail:'Fail',not_checked:'Not checked',warning:'Warning'};
+function renderValidation(r){
+ const box=$('routeValidation');if(!box)return;const v=r?.validation;
+ if(!v){box.innerHTML='';box.classList.add('hidden');return;}
+ box.classList.remove('hidden');
+ const rows=[['Geometry',v.geometry_status],['Walking network',v.pedestrian_network_status],['Required stops',v.required_stops_status],['Stop access',v.stop_access_status],
+  ['Time limit',v.time_constraint_status],['Distance limit',v.distance_constraint_status],['Food evidence',foodEvidenceStatus(r)]];
+ box.innerHTML=`<details><summary><span class="rv-badge ${v.status}">${VSTATUS[v.status]}</span> Route check · ${esc(v.validation_version)}</summary>
+  <dl class="rv-grid">${rows.map(([k,s])=>`<dt>${k}</dt><dd class="${s}">${VSTATUS[s]||esc(s)}</dd>`).join('')}</dl>
+  ${v.blocking_issues.length?`<p class="rv-block">${v.blocking_issues.map(esc).join('<br>')}</p>`:''}
+  ${v.warnings.length?`<ul class="rv-warn">${v.warnings.map(w=>`<li>${esc(w)}</li>`).join('')}</ul>`:''}
+  <small>Checked ${esc(v.validation_timestamp)} on ${esc(v.data_coverage.network_version||'')}. Scores: ${esc(v.data_coverage.score_version||'')}; N/A: ${esc(v.data_coverage.not_available.join(', ')||'none')}.</small></details>`;
+}
+/** Food evidence comes from the separate menu check, never assumed. */
+function foodEvidenceStatus(r){
+ if(typeof journey==='undefined'||!journey.plan||r?.objective!=='itinerary')return 'not_checked';
+ const items=journey.plan.stops.map(s=>{const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);return f?journey.menu[s.id+'|'+f.item]:null;}).filter(Boolean);
+ if(!items.length)return 'not_checked';
+ return items.every(m=>m.status==='confirmed_menu_match')?'pass':items.some(m=>m.status==='checking')?'not_checked':'warning';
+}
+
+/* ---------- start ---------- */
+async function startNavigation(){
+ const r=activeRouteObject();if(!r||nav.engine)return;
+ if(r.validation&&!r.validation.navigation_allowed)return toast('This route failed its route check and cannot be navigated.');
+ if(!navigator.geolocation)return toast('Location is not available in this browser.');
+ // iOS asks for compass access only inside a user gesture
+ try{if(typeof DeviceOrientationEvent!=='undefined'&&typeof DeviceOrientationEvent.requestPermission==='function')await DeviceOrientationEvent.requestPermission();}catch(e){}
+ showNavCard({status:'Getting your location…'});
+ const fix=await new Promise(res=>navigator.geolocation.getCurrentPosition(p=>res(p),e=>res({error:e}),{enableHighAccuracy:true,timeout:15000,maximumAge:5000}));
+ if(fix.error){hideNav();return toast({1:'Location permission was denied. Allow location for this site to navigate.',2:'Your position is unavailable (GPS off?).',3:'Locating timed out. Try again outdoors.'}[fix.error.code]||'Location error.');}
+ const here={lon:fix.coords.longitude,lat:fix.coords.latitude},acc=fix.coords.accuracy||50;
+ const start=r.geometry.coordinates[0],away=haversineKm(here,{lon:start[0],lat:start[1]})*1000;
+ if(away>Math.max(60,2*acc)){hideNav();return askStartChoice(r,here,away);}
+ beginNavigation(r);
+}
+function askStartChoice(r,here,away){
+ const box=$('navChoice');box.classList.remove('hidden');
+ box.innerHTML=`<div class="nav-choice-card"><strong>You are ${formatNavDistance(away,nav.units)} from the start of this route.</strong>
+  <p>Choose how to begin. STREETWISE will not pretend you are at the start.</p>
+  <button type="button" class="primary-cta" data-c="to-start">Navigate to start</button><button type="button" class="mini-outline" data-c="replan">Replan from my location</button><button type="button" class="mini-outline" data-c="cancel">Cancel</button></div>`;
+ box.onclick=async e=>{const c=e.target.dataset?.c;if(!c)return;box.classList.add('hidden');
+  if(c==='to-start'){const s=r.geometry.coordinates[0];const leg=await requestRoute(here,{lon:s[0],lat:s[1]});if(leg){nav.queue=[r];beginNavigation(leg,{temporary:true});}}
+  else if(c==='replan'){state.gps={...here,accuracy:null};state.start='gps';$('searchStart').value='My current location';
+   if(typeof journeyMode==='function'&&journeyMode())await planJourney(true);else await generateRoutes(null,true);toast('Re-planned from your location. Tap Start Navigation.');}};
+}
+/** Plain A→B walking route from the engine (used for "navigate to start" and simple re-routes). */
+async function requestRoute(from,to){
+ try{const body={...buildRouteRequest({lat:from.lat,lon:from.lon},{lat:to.lat,lon:to.lon}),weather:null};
+  const res=await streetwiseFetch('/api/routes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),signal:AbortSignal.timeout(30000)});
+  const j=await res.json();if(!res.ok)throw new Error(j.error||`HTTP ${res.status}`);
+  const best=j.routes.find(x=>x.recommended)||j.routes.slice().sort((a,b)=>a.distance_m-b.distance_m)[0];
+  if(best?.validation&&!best.validation.navigation_allowed)throw new Error('the new route failed its route check');
+  return best;
+ }catch(e){toast('Could not plan the walking route: '+e.message);return null;}
+}
+function beginNavigation(route,opts={}){
+ stopWatch();
+ const eng=new NavEngine(route,{progress_m:opts.progress_m||0});
+ if(eng.blocked){toast('Route check failed: '+eng.blocked.join(' '));return;}
+ nav.engine=eng;nav.temporary=Boolean(opts.temporary);nav.route=route;
+ if(opts.restore){eng.next=opts.restore.next;opts.restore.arrived.forEach(a=>eng.arrivedStops.add(a));}
+ eng.on(onNavEvent);eng.transition('READY');eng.transition('STARTING','start');
+ document.body.classList.add('nav-mode');setDataLayersForNav(true);drawNavRoute(route);showNavCard({});
+ nav.follow=true;nav.watch=navigator.geolocation.watchPosition(onFix,onFixError,{enableHighAccuracy:true,maximumAge:1000,timeout:20000});
+ nav.tick=setInterval(()=>{eng.tick();renderNav();},3000);
+ window.addEventListener('deviceorientationabsolute',onOrientation,true);window.addEventListener('deviceorientation',onOrientation,true);
+ requestWakeLock();saveNavSession();renderNavStart();
+ speak(route.maneuvers?.[0]?(nav.voiceLang==='zh'?route.maneuvers[0].instruction_zh:route.maneuvers[0].instruction_text):'');
+}
+/** During navigation the map shows the walk, not the data layers (restored on exit). */
+function setDataLayersForNav(on){
+ if(typeof urbanMapLayerIds!=='function'||!state.mapLayersReady)return;
+ for(const id of urbanMapLayerIds())state.map.setLayoutProperty(id,'visibility',on?'none':'visible');
+ for(const id of ['journey-found','poi-points','route-alts'])if(state.map.getLayer(id))state.map.setLayoutProperty(id,'visibility',on?'none':'visible');
+ if(!on&&typeof applyEnvTheme==='function')applyEnvTheme();
+}
+function stopWatch(){if(nav.watch!=null)navigator.geolocation.clearWatch(nav.watch);nav.watch=null;clearInterval(nav.tick);}
+
+/* ---------- GPS and compass ---------- */
+function onFix(p){
+ const c=p.coords;
+ const fix={lat:c.latitude,lon:c.longitude,accuracy:Number.isFinite(c.accuracy)?c.accuracy:null,timestamp:p.timestamp||Date.now(),
+  speed:Number.isFinite(c.speed)?c.speed:null,heading:Number.isFinite(c.heading)&&(c.speed??0)>.6?c.heading:null};
+ if(fix.heading!=null){nav.heading=fix.heading;nav.headingSrc='GPS course';}
+ nav.last=fix;const out=nav.engine?.update(fix);renderNav(out);updateCamera();
+}
+function onFixError(e){
+ if(!nav.engine)return;
+ if(e.code===1){nav.engine.transition('ERROR','permission revoked');showNavCard({status:'Location permission was turned off. Navigation stopped updating.'});}
+ else nav.engine.transition('GPS_WEAK',e.message);
+ renderNav();
+}
+function onOrientation(e){
+ // absolute compass only (webkitCompassHeading on iOS, absolute alpha elsewhere); otherwise no cone is drawn
+ let h=null;
+ if(Number.isFinite(e.webkitCompassHeading))h=e.webkitCompassHeading;else if(e.absolute&&Number.isFinite(e.alpha))h=(360-e.alpha)%360;
+ if(h==null)return;
+ if(!nav.last||(nav.last.speed??0)<=.6){nav.heading=h;nav.headingSrc='device compass';}
+}
+async function requestWakeLock(){try{nav.wakeLock=await navigator.wakeLock?.request('screen');}catch(e){nav.wakeLock=null;}}
+
+/* ---------- engine events: voice, arrivals, re-routing ---------- */
+function onNavEvent(ev){
+ if(ev.type==='alert'&&nav.engine.state!=='PAUSED'){
+  const m=ev.maneuver,d=ev.level==='now'?null:ev.distance_m;
+  speak(spokenInstruction(m,d,nav.voiceLang,nav.units));
+ }else if(ev.type==='arrived_stop'){
+  speak(nav.voiceLang==='zh'?ev.maneuver.instruction_zh:ev.maneuver.instruction_text);renderNav();
+ }else if(ev.type==='arrived'){
+  speak(nav.voiceLang==='zh'?ev.maneuver.instruction_zh:ev.maneuver.instruction_text);
+  if(nav.temporary&&nav.queue.length){const next=nav.queue.shift();toast('At the start — now following your planned walk.');beginNavigation(next);return;}
+  clearNavSession();renderNav();
+ }else if(ev.type==='off_route'){
+  speak(nav.voiceLang==='zh'?'您已偏离路线，正在重新规划。':'You are off route. Recalculating.');reroute();
+ }else if(ev.type==='state')renderNav();
+}
+async function reroute(manual=false){
+ const eng=nav.engine;if(!eng||!nav.last)return;
+ const since=(Date.now()-nav.lastReroute)/1000;
+ if(!manual&&since<eng.cfg.rerouteMinSeconds){setTimeout(()=>{if(nav.engine?.state==='OFF_ROUTE')reroute();},(eng.cfg.rerouteMinSeconds-since)*1000);return;}
+ if(!eng.transition('REROUTING','off route'))return;
+ nav.lastReroute=Date.now();renderNav();
+ const here={lat:nav.last.lat,lon:nav.last.lon};let newRoute=null,json=null;
+ try{
+  if(nav.route.objective==='itinerary'&&typeof journey!=='undefined'&&journey.plan&&journey.request){
+   // keep every required stop not reached yet, in the same order; the end stays the same
+   const reached=new Set([...eng.arrivedStops].map(id=>eng.maneuvers.find(m=>m.maneuver_id===id)?.stop_name));
+   const remaining=journey.plan.stops.filter(s=>s.role!=='end'&&!reached.has(s.name));
+   const req={...journey.request,origin:{id:'gps',name:'My location',lat:here.lat,lon:here.lon},slots:[],pool:{max_stops:0,candidates:[]},
+    stops:remaining.map((s,i)=>({id:s.id,name:s.name,lat:s.lat,lon:s.lon,required:s.required||true,order:i+1,visit_min:s.visit_min}))};
+   const res=await streetwiseFetch('/api/itinerary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req),signal:AbortSignal.timeout(30000)});
+   json=await res.json();if(!res.ok)throw new Error(json.error||`HTTP ${res.status}`);newRoute=json.routes[0];
+  }else{
+   const end=nav.route.geometry.coordinates.at(-1);newRoute=await requestRoute(here,{lon:end[0],lat:end[1]});
+  }
+  if(!newRoute)throw new Error('no route returned');
+  if(newRoute.validation&&!newRoute.validation.navigation_allowed)throw new Error('the new route failed its route check');
+  nav.rerouteFails=0;
+  if(json){journey.plan=json.itinerary;applyRouteResponse(json);}else{state.routes=[adaptRoute(newRoute)];state.activeRoute=newRoute.route_id;}
+  eng.transition('NAVIGATING','rerouted');stopWatch();nav.engine=null;beginNavigation(newRoute);
+  if(typeof syncMapData==='function')syncMapData();
+ }catch(e){
+  nav.rerouteFails++;eng.transition('OFF_ROUTE','reroute failed');
+  showNavCard({status:`Could not recalculate (${e.message}). Your last route is still shown.`,retry:true});
+ }
+}
+
+/* ---------- map ---------- */
+function setupNavMap(){
+ const m=state.map;
+ for(const id of ['nav-walked','nav-acc','nav-cone','nav-dot','nav-next'])m.addSource(id,{type:'geojson',data:emptyFC()});
+ m.addLayer({id:'nav-walked',type:'line',source:'nav-walked',paint:{'line-color':'#56666a','line-width':['interpolate',['linear'],['zoom'],12,3,16,6,19,9],'line-opacity':.9},layout:{'line-cap':'round','line-join':'round'}});
+ m.addLayer({id:'nav-acc',type:'fill',source:'nav-acc',paint:{'fill-color':'#4aa3ff','fill-opacity':.14,'fill-outline-color':'#4aa3ff'}});
+ m.addLayer({id:'nav-cone',type:'fill',source:'nav-cone',paint:{'fill-color':'#4aa3ff','fill-opacity':.32}});
+ m.addLayer({id:'nav-next',type:'circle',source:'nav-next',paint:{'circle-radius':7,'circle-color':'rgba(0,0,0,0)','circle-stroke-color':'#ffffff','circle-stroke-width':2.5}});
+ m.addLayer({id:'nav-dot',type:'circle',source:'nav-dot',paint:{'circle-radius':8,'circle-color':'#2f8cff','circle-stroke-color':'#ffffff','circle-stroke-width':3}});
+ m.on('dragstart',e=>{if(nav.engine&&e.originalEvent){nav.follow=false;$('navRecenter')?.classList.add('show');}});
+}
+function circlePoly(c,r,n=48){const pts=[];for(let i=0;i<=n;i++){const a=i/n*2*Math.PI;pts.push([c[0]+r*Math.sin(a)/84414.3,c[1]+r*Math.cos(a)/111049.7]);}return pts;}
+function conePoly(c,h,r=28,spread=32){const pts=[c];for(let a=-spread;a<=spread;a+=8){const t=(h+a)*Math.PI/180;pts.push([c[0]+r*Math.sin(t)/84414.3,c[1]+r*Math.cos(t)/111049.7]);}pts.push(c);return pts;}
+const navFC=fs=>({type:'FeatureCollection',features:fs});
+function drawNavRoute(route){state.map?.getSource('nav-walked')?.setData(emptyFC());}
+function drawNavPosition(out){
+ const m=state.map;if(!m?.getSource('nav-dot'))return;
+ if(!out||!nav.last){for(const id of ['nav-dot','nav-acc','nav-cone','nav-next','nav-walked'])m.getSource(id).setData(emptyFC());return;}
+ const weak=['GPS_WEAK','POSSIBLY_OFF_ROUTE','OFF_ROUTE','REROUTING'].includes(out.state)||out.location_quality==='poor';
+ // the dot is the raw GPS position; it snaps to the route only when the match is confident
+ const p=out.matched_coordinate&&out.confidence==='high'&&!weak?out.matched_coordinate:out.raw;
+ m.getSource('nav-dot').setData(navFC([{type:'Feature',properties:{},geometry:{type:'Point',coordinates:p}}]));
+ m.setPaintProperty('nav-dot','circle-color',weak?'#8aa4b8':'#2f8cff');
+ m.getSource('nav-acc').setData(out.accuracy_m?navFC([{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[circlePoly(out.raw,out.accuracy_m)]}}]):emptyFC());
+ m.getSource('nav-cone').setData(nav.heading!=null?navFC([{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[conePoly(p,nav.heading)]}}]):emptyFC());
+ const nm=out.next_maneuver;m.getSource('nav-next').setData(nm?navFC([{type:'Feature',properties:{},geometry:{type:'Point',coordinates:nm.coordinate}}]):emptyFC());
+ const eng=nav.engine,walked=[];for(let s=0;s<=out.progress_m;s+=Math.max(5,out.progress_m/200))walked.push(eng.pointAt(s));walked.push(eng.pointAt(out.progress_m));
+ m.getSource('nav-walked').setData(walked.length>1?navFC([{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:walked}}]):emptyFC());
+}
+function updateCamera(force=false){
+ const m=state.map,out=nav.engine?.lastOutput;if(!m||!out||(!nav.follow&&!force))return;
+ const now=Date.now();if(!force&&now-nav.lastCam<1200)return;nav.lastCam=now;
+ const p=out.matched_coordinate&&out.confidence==='high'?out.matched_coordinate:out.raw;
+ const small=window.innerWidth<=740;
+ m.easeTo({center:p,zoom:Math.max(m.getZoom(),17),bearing:nav.headingUp&&nav.heading!=null?nav.heading:0,pitch:0,
+  padding:{top:small?150:170,bottom:small?170:120,left:20,right:20},duration:force?500:900,essential:true});
+}
+
+/* ---------- panels ---------- */
+function showNavCard(o){$('navOverlay').classList.remove('hidden');if(o.status!=null){$('navStatus').textContent=o.status;$('navStatus').classList.remove('hidden');}$('navRetry').classList.toggle('hidden',!o.retry);}
+function hideNav(){$('navOverlay').classList.add('hidden');document.body.classList.remove('nav-mode');}
+function renderNav(out=nav.engine?.lastOutput){
+ const eng=nav.engine;if(!eng)return;
+ const st=eng.state,nm=out?.next_maneuver||eng.maneuvers[eng.next];
+ const d=out?.distance_to_next_m??(nm?nm.distance_along_route_m-eng.progress:null);
+ $('navArrow').innerHTML=navArrow(nm?.type);
+ $('navDist').textContent=nm&&!nm.type.startsWith('arrive')||d>15?formatNavDistance(d,nav.units):'';
+ $('navInstr').textContent=nm?(nav.voiceLang==='zh'?nm.instruction_zh:nm.instruction_text):'Follow the route';
+ const after=out?.after_next;$('navThen').textContent=after?`Then: ${nav.voiceLang==='zh'?after.instruction_zh:after.instruction_text}`:'';
+ $('navConf').textContent=nm?.confidence==='low'?'Low-confidence instruction — check the map':'';
+ const msg=STATE_TEXT[st]||(st==='STARTING'?'Waiting for GPS…':'');
+ $('navStatus').textContent=msg+(out?.accuracy_m&&['GPS_WEAK'].includes(st)?` (±${Math.round(out.accuracy_m)} m)`:'');$('navStatus').classList.toggle('hidden',!msg);
+ $('navStatus').className='nav-status '+st.toLowerCase();
+ $('navRemain').textContent=out?formatNavDistance(out.remaining_m,nav.units):formatNavDistance(eng.netLen,nav.units);
+ $('navTime').textContent=out?`${Math.max(1,Math.round(out.remaining_min))} min`:`${Math.round(eng.netLen/80)} min`;
+ const stops=out?.remaining_stops||[];$('navStop').textContent=nav.temporary?'To the start of your walk':stops.length?`Next stop: ${stops[0]}${stops.length>1?` · +${stops.length-1}`:''}`:'Destination';
+ $('navStopActions').classList.toggle('hidden',st!=='ARRIVED_AT_STOP');
+ if(st==='ARRIVED_AT_STOP'){const m=eng.maneuvers[eng.next];$('navStopName').textContent=m?.stop_name||'';$('navStopVisit').textContent=m?.visit_min?`Suggested visit ${m.visit_min} min (estimate)`:'';$('navSkip').classList.toggle('hidden',m?.required!==false);}
+ $('navPause').textContent=st==='PAUSED'?'Resume':'Pause';$('navVoice').setAttribute('aria-pressed',String(nav.voice));$('navVoice').textContent=nav.voice?'Voice on':'Voice off';
+ $('navUnits').textContent=nav.units==='metric'?'m':'ft';$('navMode').textContent=nav.headingUp?'Heading up':'North up';
+ $('navHeadingNote').textContent=nav.heading==null?'No direction data — heading cone hidden':`Direction: ${nav.headingSrc}`;
+ $('navArrived').classList.toggle('hidden',st!=='ARRIVED');
+ drawNavPosition(out);if(st!=='ARRIVED')saveNavSession();
+}
+function speak(text){
+ if(!nav.voice||!text||!('speechSynthesis' in window))return;
+ try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=nav.voiceLang==='zh'?'zh-CN':'en-US';
+  const v=speechSynthesis.getVoices().find(v=>v.lang.startsWith(u.lang.slice(0,2)));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){}
+}
+function exitNavigation(){
+ const eng=nav.engine;if(eng){eng.transition('STOPPED','user exit');}
+ stopWatch();try{speechSynthesis.cancel();}catch(e){}nav.wakeLock?.release?.().catch(()=>{});
+ window.removeEventListener('deviceorientationabsolute',onOrientation,true);window.removeEventListener('deviceorientation',onOrientation,true);
+ nav.engine=null;nav.queue=[];nav.last=null;nav.heading=null;drawNavPosition(null);clearNavSession();hideNav();setDataLayersForNav(false);renderNavStart();
+ state.map?.easeTo({bearing:0,duration:400});
+}
+
+/* ---------- session (survives refresh; no GPS history) ---------- */
+function saveNavSession(){
+ const eng=nav.engine;if(!eng||nav.temporary)return;
+ const r=nav.route,slim={route_id:r.route_id,route_name:r.route_name,objective:r.objective,route_signature:r.route_signature,network_version:r.network_version,
+  geometry:r.geometry,distance_m:r.distance_m,maneuvers:r.maneuvers,edges:(r.edges||[]).map(e=>({edge_id:e.edge_id,traversed_length_m:e.traversed_length_m})),
+  ordered_edge_ids:r.ordered_edge_ids,validation:r.validation&&{status:r.validation.status,navigation_allowed:r.validation.navigation_allowed,blocking_issues:r.validation.blocking_issues}};
+ try{sessionStorage.setItem(nav.sessionKey,JSON.stringify({v:1,route:slim,progress:eng.snapshot(),created:nav.created||(nav.created=Date.now()),expires:(nav.created||Date.now())+6*3600e3}));}catch(e){}
+}
+function clearNavSession(){try{sessionStorage.removeItem(nav.sessionKey);}catch(e){}nav.created=null;}
+async function offerNavResume(){
+ let s=null;try{s=JSON.parse(sessionStorage.getItem(nav.sessionKey)||'null');}catch(e){}
+ if(!s)return;if(Date.now()>s.expires){clearNavSession();return;}
+ let netVersion=null;try{netVersion=(await streetwiseJson('/api/routing/status',{signal:AbortSignal.timeout(20000)})).network_version;}catch(e){}
+ if(!netVersion||netVersion!==s.route.network_version){clearNavSession();toast(netVersion?'The walking network was updated since your navigation started — please plan the walk again.':'Navigation could not be restored (routing service unreachable).');return;}
+ const box=$('navChoice');box.classList.remove('hidden');
+ box.innerHTML=`<div class="nav-choice-card"><strong>Resume navigation?</strong><p>${esc(s.route.route_name||'Your walk')} · ${formatNavDistance(s.route.distance_m-s.progress.progress_m,nav.units)} left. The same route is restored (signature ${esc(s.route.route_signature)}).</p>
+  <button type="button" class="primary-cta" data-c="resume">Resume</button><button type="button" class="mini-outline" data-c="discard">Discard</button></div>`;
+ box.onclick=e=>{const c=e.target.dataset?.c;if(!c)return;box.classList.add('hidden');
+  if(c==='resume'){nav.created=s.created;beginNavigation(s.route,{progress_m:s.progress.progress_m,restore:s.progress});}else clearNavSession();};
+}
+function setupNavUI(){
+ $('navStart').addEventListener('click',startNavigation);
+ $('navExit').addEventListener('click',exitNavigation);$('navArrivedDone').addEventListener('click',exitNavigation);
+ $('navRecenter').addEventListener('click',()=>{nav.follow=true;$('navRecenter').classList.remove('show');updateCamera(true);});
+ $('navVoice').addEventListener('click',()=>{nav.voice=!nav.voice;if(!nav.voice)try{speechSynthesis.cancel();}catch(e){}renderNav();});
+ $('navRepeat').addEventListener('click',()=>{const o=nav.engine?.lastOutput;const m=o?.next_maneuver;if(m){const was=nav.voice;nav.voice=true;speak(spokenInstruction(m,o.distance_to_next_m,nav.voiceLang,nav.units));nav.voice=was;}});
+ $('navLang').addEventListener('change',e=>{nav.voiceLang=e.target.value;renderNav();});
+ $('navUnits').addEventListener('click',()=>{nav.units=nav.units==='metric'?'imperial':'metric';renderNav();});
+ $('navMode').addEventListener('click',()=>{nav.headingUp=!nav.headingUp;renderNav();updateCamera(true);});
+ $('navPause').addEventListener('click',()=>{const e=nav.engine;if(!e)return;
+  if(e.state==='PAUSED'){e.transition('NAVIGATING','resume');nav.watch=navigator.geolocation.watchPosition(onFix,onFixError,{enableHighAccuracy:true,maximumAge:1000,timeout:20000});}
+  else if(e.transition('PAUSED','user')){stopWatch();try{speechSynthesis.cancel();}catch(x){}}renderNav();});
+ $('navContinue').addEventListener('click',()=>{nav.engine?.continueFromStop();renderNav();});
+ $('navSkip').addEventListener('click',()=>{const e=nav.engine;if(e?.state==='ARRIVED_AT_STOP'){e.continueFromStop();renderNav();}});
+ $('navRetry').addEventListener('click',()=>reroute(true));
+ offerNavResume();
+}
 
 </script>
 <script>
@@ -3106,6 +3699,7 @@ async function loadExploreStreets(){
  $('exploreStatus').textContent=`${m.segments.toLocaleString()} Manhattan street segments · retrieved ${m.retrieved_at.slice(0,10)}${m.trees_inventory_updated?` · tree inventory updated ${m.trees_inventory_updated}`:''}. Scores rank segments within Manhattan; they are not calibrated experience scores.`;
  renderExploreThumbs();selectExploreView(exploreMap.view);
  if(state.mapLayersReady)state.map.getSource('manhattan-streets')?.setData(exploreMap.data);
+ if(typeof renderExploreAnalytics==='function')renderExploreAnalytics();
  return exploreMap.data;
 }
 function setupExploreMap(){
@@ -3137,6 +3731,7 @@ function showExploreTooltip(p,point){
 }
 function selectExploreView(view){
  exploreMap.view=view;const v=exploreView();
+ if(typeof renderExploreAnalytics==='function')renderExploreAnalytics();
  $('exploreTitle').textContent=v.label;
  const meta=exploreMap.data?.metadata;
  $('exploreMetric').textContent=v.dim==null?'Equal-weight mean of the 12 dimension scores available on each segment.':(meta?.indicators[meta.keys[v.dim]]||[]).filter(x=>x.role!=='context').map(x=>x.label+(x.role==='down'?' (lower is better)':'')).join(' · ');
@@ -3172,7 +3767,9 @@ function renderExploreInspector(){
   body=`<h4>Sub-indicators</h4>${ind.map(x=>`<div class="indicator"><div class="indicator-top"><span>${esc(x.label)}</span><strong>${esc(indicatorValue(p[x.key],x.unit))}</strong></div><div class="indicator-role">${x.role==='context'?'Context only, not in score':x.role==='down'?'In score · lower is better':'In score · higher is better'}</div><p>${esc(x.method)}</p><small>Source: ${esc(meta.source_labels[x.source]||x.source)}</small></div>`).join('')}
    <h4>Score method</h4><p>Mean of the ranked sub-indicators above, each a 0–100 percentile among Manhattan segments. ${score==null?'No ranked sub-indicator is measurable here, so the score is N/A.':''}</p>`;
  }
- box.innerHTML=head+body;box.classList.remove('hidden');
+ const srcs=v.dim==null?[]:[...new Set(meta.indicators[meta.keys[v.dim]].map(x=>x.source))];
+ const prov=`<h4>Data</h4><p>Segment ${esc(p.id)} (NYC LION). Normalization: percentile rank among ${Number(meta.segments).toLocaleString()} Manhattan segments, 0–100. Data ${esc(meta.data_version)} · scores ${esc(meta.score_version)}.${srcs.length?` Sources: ${srcs.map(s=>esc(meta.source_labels?.[s]||s)).join(', ')}.`:''} Values marked N/A were not measurable and are not counted as 0.</p>`;
+ box.innerHTML=head+body+prov;box.classList.remove('hidden');
  $('inspectorClose').addEventListener('click',()=>selectExploreSegment(null));
 }
 function renderExploreChips(){
@@ -3203,7 +3800,7 @@ function setExploreMode(on){
  document.querySelectorAll('.maplibregl-popup').forEach(p=>p.remove());
  if(typeof closeUrbanInspector==='function')closeUrbanInspector();
  $('explorePanel').classList.toggle('hidden',!on);
- for(const sel of ['.experience-controls','.map-layer-switch','.wx-panel'])document.querySelector(sel).classList.toggle('hidden',on);
+ for(const sel of ['.experience-controls','.map-layer-switch','.wx-panel','.ud-legend'])document.querySelector(sel).classList.toggle('hidden',on);
  document.querySelector('.map-legend').classList.toggle('explore-hidden',on);
  $('selectedRouteSummary').classList.toggle('hidden',on);
  if(!on)$('exploreTooltip').classList.add('hidden');
@@ -3229,6 +3826,70 @@ function setupExploreControls(){
  $('exploreThumbsToggle').addEventListener('click',()=>{exploreMap.thumbs=!exploreMap.thumbs;$('exploreThumbsToggle').setAttribute('aria-pressed',String(exploreMap.thumbs));$('exploreGrid').classList.toggle('hidden',!exploreMap.thumbs);$('exploreChips').classList.toggle('hidden',exploreMap.thumbs);$('explorePanel').classList.toggle('wide',exploreMap.thumbs);if(exploreMap.collapsed)$('exploreCollapse').click();renderExploreThumbs();});
  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&exploreMap.selected)selectExploreSegment(null);});
  if(window.innerWidth<=740)$('exploreCollapse').click();
+}
+
+</script>
+<script>
+'use strict';
+/* Explore Urban Data analytics, computed from the same street segments the map draws (data/manhattan-streets.json):
+   distribution of the active view, comparison of two views, and dataset details for the active dimension.
+   Only measured values are counted; N/A segments are reported as missing, never as 0. Scores are relative ranks among
+   Manhattan segments (0–100), not calibrated experience measurements. */
+const exploreStats={compare:1,open:false};
+function viewValues(view){return (exploreMap.data?.features||[]).map(f=>f.properties[view.prop]).filter(v=>v!=null&&Number.isFinite(v));}
+function quantile(sorted,q){if(!sorted.length)return null;const i=(sorted.length-1)*q,lo=Math.floor(i),hi=Math.ceil(i);return sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo);}
+function describe(vals,total){
+ const s=[...vals].sort((a,b)=>a-b),n=s.length;
+ return {n,total,coverage:total?n/total:0,mean:n?s.reduce((a,b)=>a+b,0)/n:null,median:quantile(s,.5),p10:quantile(s,.1),p25:quantile(s,.25),p75:quantile(s,.75),p90:quantile(s,.9)};
+}
+/** Spearman rank correlation over segments where both views are measured. */
+function spearman(a,b){
+ const pairs=(exploreMap.data?.features||[]).map(f=>[f.properties[a.prop],f.properties[b.prop]]).filter(([x,y])=>x!=null&&y!=null);
+ const rank=v=>{const idx=v.map((x,i)=>[x,i]).sort((p,q)=>p[0]-q[0]),r=new Array(v.length);let k=0;
+  while(k<idx.length){let j=k;while(j+1<idx.length&&idx[j+1][0]===idx[k][0])j++;for(let t=k;t<=j;t++)r[idx[t][1]]=(k+j)/2;k=j+1;}return r;};
+ const n=pairs.length;if(n<3)return {n,rho:null};
+ const rx=rank(pairs.map(p=>p[0])),ry=rank(pairs.map(p=>p[1])),mx=(n-1)/2;let num=0,dx=0,dy=0;
+ for(let i=0;i<n;i++){num+=(rx[i]-mx)*(ry[i]-mx);dx+=(rx[i]-mx)**2;dy+=(ry[i]-mx)**2;}
+ return {n,rho:num/Math.sqrt(dx*dy)};
+}
+function histogram(vals,bins=10){const h=new Array(bins).fill(0);for(const v of vals)h[Math.min(bins-1,Math.floor(v/100*bins))]++;return h;}
+function histSvg(h,color,w=230,ht=54){
+ const max=Math.max(1,...h),bw=w/h.length;
+ return `<svg viewBox="0 0 ${w} ${ht}" class="ea-hist" role="img" aria-label="Distribution 0 to 100">${h.map((c,i)=>`<rect x="${i*bw+1}" y="${ht-2-(ht-4)*c/max}" width="${bw-2}" height="${(ht-4)*c/max}" fill="${color}" rx="1.5"><title>${i*10}–${i*10+10}: ${c} segments</title></rect>`).join('')}</svg>`;
+}
+const f1=v=>v==null?'N/A':Math.round(v*10)/10;
+let REGISTRY=null;
+async function loadRegistry(){return REGISTRY||(REGISTRY=streetwiseJson('./data/registry.json').catch(e=>{REGISTRY=null;throw e;}));}
+async function renderExploreAnalytics(){
+ const root=$('exploreAnalytics');if(!root||!exploreMap.data)return;
+ const v=exploreView(),total=exploreMap.data.features.length,d=describe(viewValues(v),total);
+ const other=EXPLORE_VIEWS[exploreStats.compare===exploreMap.view?(exploreMap.view+1)%EXPLORE_VIEWS.length:exploreStats.compare],d2=describe(viewValues(other),total),cor=spearman(v,other);
+ const meta=exploreMap.data.metadata;
+ let datasets='';
+ if(v.dim!=null){
+  const ind=meta.indicators[meta.keys[v.dim]];let reg=null;try{reg=await loadRegistry();}catch(e){}
+  const srcIds=[...new Set(ind.map(x=>x.source))];
+  datasets=srcIds.map(s=>{const label=meta.source_labels?.[s]||s,url=meta.sources?.[s];
+   const row=reg?.datasets.find(r=>r.source_url&&url&&url.includes((r.source_url.split('/resource/')[1]||'~').split('.')[0]))||null;
+   return `<li><strong>${esc(label)}</strong>${url?` · <a href="${esc(url.replace(/\/query$/,''))}" target="_blank" rel="noopener">source</a>`:''}${row?` · ${esc(row.license)} · publisher update ${esc(row.publisher_updated_at||'n/a')}`:''}<br><small>${esc(ind.filter(x=>x.source===s).map(x=>`${x.label}: ${x.method}`).join(' · '))}</small></li>`;}).join('');
+ }
+ root.innerHTML=`<details ${exploreStats.open?'open':''} id="eaDetails"><summary>Analytics · ${esc(v.label)}</summary>
+  <div class="ea-grid"><div><span>Segments with data</span><strong>${d.n.toLocaleString()}</strong><small>of ${total.toLocaleString()} (${Math.round(d.coverage*100)}%)</small></div>
+   <div><span>Mean · median</span><strong>${f1(d.mean)} · ${f1(d.median)}</strong><small>P10 ${f1(d.p10)} · P25 ${f1(d.p25)} · P75 ${f1(d.p75)} · P90 ${f1(d.p90)}</small></div></div>
+  ${histSvg(histogram(viewValues(v)),'#d8f365')}
+  <label class="ea-compare">Compare with <select id="eaCompare">${EXPLORE_VIEWS.map((x,i)=>i===exploreMap.view?'':`<option value="${i}" ${x===other?'selected':''}>${esc(x.label)}</option>`).join('')}</select></label>
+  ${histSvg(histogram(viewValues(other)),'#4aa3ff')}
+  <p class="ea-note">${esc(other.label)}: ${d2.n.toLocaleString()} segments, median ${f1(d2.median)}. Spearman ρ = ${cor.rho==null?'N/A':cor.rho.toFixed(2)} over ${cor.n.toLocaleString()} segments where both are measured.</p>
+  ${datasets?`<h4>Datasets behind ${esc(v.label)}</h4><ul class="ea-sources">${datasets}</ul>`:`<p class="ea-note">Overall = mean of the measured dimensions of each segment (N/A dimensions excluded).</p>`}
+  <p class="ea-note">Scores rank segments within Manhattan (0–100 percentiles of measured indicators); they are not calibrated experience measurements. Data ${esc(meta.data_version)} · ${esc(meta.score_version)}.</p></details>`;
+ $('eaDetails').addEventListener('toggle',e=>{exploreStats.open=e.target.open;});
+ $('eaCompare').addEventListener('change',e=>{exploreStats.compare=+e.target.value;renderExploreAnalytics();});
+}
+function setupExploreAnalytics(){
+ const search=$('exploreSearch');
+ search?.addEventListener('input',()=>{const q=search.value.trim().toLowerCase();
+  document.querySelectorAll('#exploreChips [data-view]').forEach(b=>{b.classList.toggle('hidden',Boolean(q)&&!b.textContent.toLowerCase().includes(q));});});
+ $('exploreReset')?.addEventListener('click',()=>{if(state.mapLayersReady)state.map.fitBounds(MANHATTAN_BOUNDS,{padding:30,duration:600,maxZoom:12});if(typeof selectExploreSegment==='function')selectExploreSegment(null);});
 }
 
 </script>
@@ -3358,7 +4019,7 @@ function setupExperienceControls(){
  renderExperienceLegend();
 }
 function loadSelectedRaw(){const kind=selectedEvidenceKey()==='nature'?'trees':selectedEvidenceKey()==='architecture'?'lpc':null;if(kind&&!state.datasets[kind])loadViewportEvidence(kind);}
-setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupWeatherUI();setupJourneyUI();setupVoice();setupMap();loadData('streets');loadWeather();
+setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupWeatherUI();setupJourneyUI();setupVoice();setupNavUI();setupExploreAnalytics();setupMap();loadData('streets');loadWeather();
 
 </script>
 </body>

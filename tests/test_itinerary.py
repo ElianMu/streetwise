@@ -133,34 +133,166 @@ class A_Itinerary(unittest.TestCase):
 
 
 class B_MenuVerification(unittest.TestCase):
-    def run_with(self, pages, **doc):
+    """Menu evidence grades with HTTP stubbed (no network); the official site comes from the place index only."""
+    SITE = 'https://cafe.test/'
+
+    def run_with(self, pages, menu_url=None, **doc):
         menu.CACHE.clear()
-        with mock.patch.object(menu, '_allowed', return_value=True), mock.patch.object(menu, '_get', side_effect=lambda u: pages[u]):
+        def get(u, max_bytes=menu.MAX_BYTES, hops=3):
+            final, ctype, body = pages[u]
+            return final, ctype, body.encode() if isinstance(body, str) else body, {}
+        with mock.patch.object(menu, 'place_sites', return_value={'osm:node/1': (self.SITE, menu_url)}), \
+             mock.patch.object(menu, '_allowed', return_value=True), mock.patch.object(menu, 'safe_get', side_effect=get):
             return menu.verify({'place_id': 'osm:node/1', 'name': 'Test Café', 'item': 'cappuccino', **doc})
 
-    def test_verified_on_menu_page(self):
-        r = self.run_with({'https://cafe.test/menu': ('https://cafe.test/menu', '<title>Menu</title><li>Cappuccino $5.25</li>')}, menu_url='https://cafe.test/menu')
-        self.assertEqual(r['status'], 'verified_on_menu'); self.assertEqual(r['price'], 5.25); self.assertEqual(r['source_url'], 'https://cafe.test/menu')
+    def test_confirmed_on_menu_page(self):
+        r = self.run_with({'https://cafe.test/menu': ('https://cafe.test/menu', 'text/html', '<title>Menu</title><li>Cappuccino $5.25</li>'),
+                           self.SITE: (self.SITE, 'text/html', '<title>Home</title>')}, menu_url='https://cafe.test/menu')
+        self.assertEqual(r['status'], 'confirmed_menu_match'); self.assertEqual(r['price'], 5.25)
+        self.assertEqual(r['menu_source_url'], 'https://cafe.test/menu'); self.assertEqual(r['matched_item'], 'Cappuccino')
+        for k in ('place_id', 'requested_item', 'matched_item', 'evidence_type', 'menu_source_url', 'evidence', 'menu_date', 'checked_at', 'price'):
+            self.assertIn(k, r)
+
+    def test_probable_variant_needs_review(self):
+        r = self.run_with({'https://cafe.test/menu': ('https://cafe.test/menu', 'text/html', '<title>Menu</title><li>Iced Cappuccinos $6</li>' + 'x' * 300),
+                           self.SITE: (self.SITE, 'text/html', '<title>Home</title>')}, menu_url='https://cafe.test/menu')
+        self.assertEqual(r['status'], 'probable_match_review'); self.assertIsNone(r['price'])
 
     def test_follows_menu_link_and_reports_not_found(self):
-        pages = {'https://cafe.test/': ('https://cafe.test/', '<title>Home</title><a href="/our-menu">Menu</a>'),
-                 'https://cafe.test/our-menu': ('https://cafe.test/our-menu', '<title>Our menu</title><li>Latte</li><li>Espresso</li>')}
-        r = self.run_with(pages, website='https://cafe.test/')
-        self.assertEqual(r['status'], 'not_found'); self.assertIn('cannot be read', r['reason'])
+        r = self.run_with({self.SITE: (self.SITE, 'text/html', '<title>Home</title><a href="/our-menu">Menu</a>'),
+                           'https://cafe.test/our-menu': ('https://cafe.test/our-menu', 'text/html', '<title>Our menu</title><li>Latte</li><li>Espresso</li>' + 'y' * 300)})
+        self.assertEqual(r['status'], 'not_found_in_checked_sources'); self.assertIn('may differ', r['reason'])
 
     def test_mention_outside_menu_is_not_verification(self):
-        r = self.run_with({'https://cafe.test/': ('https://cafe.test/', '<title>Blog</title><p>Our cappuccino story</p>')}, website='https://cafe.test/')
-        self.assertEqual(r['status'], 'unverified')
+        r = self.run_with({self.SITE: (self.SITE, 'text/html', '<title>Blog</title><p>Our cappuccino story</p>')})
+        self.assertEqual(r['status'], 'unverified'); self.assertEqual(r['evidence_type'], 'website_mention')
 
-    def test_no_website(self):
-        r = menu.verify({'place_id': 'x', 'name': 'No Site', 'item': 'cappuccino'})
+    def test_pdf_menu(self):
+        import zlib
+        stream = zlib.compress(b'BT /F1 12 Tf (Espresso 3.50) Tj (Cappuccino $4.75) Tj ET')
+        pdf = b'%PDF-1.4\n1 0 obj<<>>stream\n' + stream + b'\nendstream\nendobj\n%%EOF'
+        r = self.run_with({'https://cafe.test/menu.pdf': ('https://cafe.test/menu.pdf', 'application/pdf', pdf), self.SITE: (self.SITE, 'text/html', '<title>x</title>')},
+                          menu_url='https://cafe.test/menu.pdf')
+        self.assertEqual(r['status'], 'confirmed_menu_match'); self.assertEqual(r['evidence_type'], 'pdf_menu'); self.assertEqual(r['price'], 4.75)
+
+    def test_image_menu_is_unverified(self):
+        r = self.run_with({'https://cafe.test/menu.jpg': ('https://cafe.test/menu.jpg', 'image/jpeg', b'\xff\xd8'), self.SITE: (self.SITE, 'text/html', '<title>x</title>')},
+                          menu_url='https://cafe.test/menu.jpg')
+        self.assertEqual(r['status'], 'unverified'); self.assertIn('image menu', r['reason'])
+
+    def test_no_website_and_client_url_ignored(self):
+        menu.CACHE.clear()
+        with mock.patch.object(menu, 'place_sites', return_value={}), mock.patch.object(menu, 'safe_get', side_effect=AssertionError('must not fetch')):
+            r = menu.verify({'place_id': 'x', 'name': 'No Site', 'item': 'cappuccino', 'website': 'http://169.254.169.254/', 'menu_url': 'http://127.0.0.1/'})
         self.assertEqual(r['status'], 'unverified'); self.assertIn('No official website', r['reason'])
 
     def test_robots_disallow_is_respected(self):
         menu.CACHE.clear()
-        with mock.patch.object(menu, '_allowed', return_value=False), mock.patch.object(menu, '_get', side_effect=AssertionError('must not fetch')):
-            r = menu.verify({'place_id': 'y', 'name': 'Blocked', 'item': 'cappuccino', 'website': 'https://blocked.test/'})
+        with mock.patch.object(menu, 'place_sites', return_value={'y': ('https://blocked.test/', None)}), \
+             mock.patch.object(menu, '_allowed', return_value=False), mock.patch.object(menu, 'safe_get', side_effect=AssertionError('must not fetch')):
+            r = menu.verify({'place_id': 'y', 'name': 'Blocked', 'item': 'cappuccino'})
         self.assertEqual(r['status'], 'unverified'); self.assertIn('robots.txt', r['reason'])
+
+    def test_ssrf_targets_refused(self):
+        for u in ('http://127.0.0.1/', 'http://localhost/', 'http://169.254.169.254/latest/meta-data/', 'http://10.1.2.3/', 'http://192.168.0.1/',
+                  'http://[::1]/', 'file:///etc/passwd', 'gopher://example.com/', 'http://example.com:6379/', 'http://u:p@example.com/'):
+            with self.assertRaises(menu.UnsafeURL, msg=u):
+                menu.check_url(u)
+
+    def test_redirect_to_private_address_refused(self):
+        class Resp:
+            status = 302
+            def getheader(self, k, d=None):
+                return 'http://127.0.0.1/admin' if k == 'Location' else d
+        class Conn:
+            def __init__(self, *a, **k): pass
+            def request(self, *a, **k): pass
+            def getresponse(self): return Resp()
+            def close(self): pass
+        with mock.patch.object(menu, '_check_host', side_effect=lambda h: '93.184.215.14' if h == 'example.com' else menu.ipaddress.ip_address('127.0.0.1') and (_ for _ in ()).throw(menu.UnsafeURL('private'))), \
+             mock.patch.object(menu, '_Pinned', Conn), mock.patch.object(menu, '_PinnedHTTP', Conn):
+            with self.assertRaises(menu.UnsafeURL):
+                menu.safe_get('https://example.com/')
+
+
+class D_RouteValidation(unittest.TestCase):
+    def test_every_route_and_itinerary_is_validated(self):
+        r = P.plan({'lon': -73.9832, 'lat': 40.7536}, {'lon': -73.9787, 'lat': 40.7587}, None, {'max_minutes': 100, 'max_km': 5})
+        for x in r['routes']:
+            v = x['validation']
+            self.assertIn(v['status'], ('pass', 'pass_with_warnings')); self.assertTrue(v['navigation_allowed'])
+            for k in ('geometry_status', 'pedestrian_network_status', 'required_stops_status', 'stop_access_status', 'time_constraint_status',
+                      'distance_constraint_status', 'food_evidence_status', 'data_coverage', 'warnings', 'blocking_issues', 'validation_version', 'validation_timestamp'):
+                self.assertIn(k, v)
+            self.assertEqual(v['food_evidence_status'], 'not_checked')
+            self.assertTrue(any('closures' in w for w in v['warnings']), 'live passability is never claimed')
+        it = plan(stops=[{**ROCK, 'visit_min': 20}])['routes'][0]['validation']
+        self.assertEqual(it['required_stops_status'], 'pass')
+
+    def broken(self, mutate):
+        from routing.validation import validate
+        import copy
+        r = copy.deepcopy(plan(stops=[ROCK])['routes'][0])
+        mutate(r)
+        return validate(r, NET, {'max_minutes': 100}, [{'name': 'Rockefeller Center', 'lat': ROCK['lat'], 'lon': ROCK['lon'], 'required': True, 'snap_distance_m': 4}])
+
+    def test_gap_between_edges_fails(self):
+        def cut(r):
+            del r['edges'][len(r['edges']) // 2]
+        v = self.broken(cut)
+        self.assertEqual(v['status'], 'fail'); self.assertFalse(v['navigation_allowed']); self.assertEqual(v['geometry_status'], 'fail')
+
+    def test_unknown_edge_fails(self):
+        v = self.broken(lambda r: r['edges'][0].update(edge_id='999-999-0'))
+        self.assertEqual(v['pedestrian_network_status'], 'fail'); self.assertFalse(v['navigation_allowed'])
+
+    def test_missed_required_stop_fails(self):
+        def detach(r):
+            r['geometry']['coordinates'] = r['geometry']['coordinates'][:3]
+        v = self.broken(detach)
+        self.assertEqual(v['required_stops_status'], 'fail')
+
+    def test_geometry_outside_nyc_fails(self):
+        v = self.broken(lambda r: r['geometry']['coordinates'].append([-80.0, 25.0]))
+        self.assertEqual(v['geometry_status'], 'fail')
+
+    def test_budget_failure_is_reported_not_blocking(self):
+        r = plan(stops=[{**c, 'required': True, 'visit_min': 60} for c in cands('museums', ROCK, 3)], constraints={'max_outing_minutes': 60})
+        v = r['routes'][0]['validation']
+        self.assertEqual(v['time_constraint_status'], 'fail'); self.assertTrue(v['navigation_allowed'], 'an over-budget walk can still be walked')
+
+
+class E_DataModel(unittest.TestCase):
+    def test_canonical_fields_and_resolution(self):
+        met = next(r for r in PLACES['museums'] if r['name'] == 'The Metropolitan Museum of Art')
+        self.assertTrue(met['cid'].startswith('sw:')); self.assertEqual(met['status'], 'listed'); self.assertIn(met['q'], ('complete', 'partial', 'minimal'))
+        self.assertTrue(met.get('lpc', '').startswith('lpc:'), 'linked to its NYC landmark record')
+        lpc = next(r for r in PLACES['historic_lpc'] if r['id'] == met['lpc'])
+        self.assertEqual(lpc['cid'], met['cid'], 'one canonical place across sources')
+        for cat in PLACES:
+            ids = [r['cid'] for r in PLACES[cat]]
+            self.assertEqual(len(ids), len(set(ids)) if cat != 'historic_lpc' else len(ids))
+            for r in PLACES[cat][:200]:
+                self.assertIsInstance(r['snap'], (int, float)); self.assertLessEqual(r['snap'], 150)
+
+    def test_same_building_different_businesses_kept(self):
+        recs = [r for r in PLACES['cafes']]
+        by_spot = {}
+        for r in recs:
+            by_spot.setdefault((round(r['lat'], 4), round(r['lon'], 4)), set()).add(r['name'])
+        self.assertTrue(any(len(names) > 1 for names in by_spot.values()), 'different cafés at one spot remain separate')
+
+    def test_registry(self):
+        reg = json.loads((ROOT / 'data' / 'registry.json').read_text())
+        rows = {r['dataset_id']: r for r in reg['datasets']}
+        for k in ('street_trees', 'places:cafes', 'pedestrian_network', 'street_segments'):
+            self.assertIn(k, rows)
+        for r in reg['datasets']:
+            for f in ('dataset_id', 'name', 'publisher', 'license', 'retrieved_at', 'coverage_area', 'feature_count', 'integration_status'):
+                self.assertIn(f, r)
+            if r['integration_status'] == 'connected' and r.get('valid_geometry_count') is not None:
+                self.assertLessEqual(r['valid_geometry_count'], r['feature_count'])
+        self.assertEqual(rows['places:cafes']['feature_count'], len(PLACES['cafes']))
 
 
 class C_JourneyContract(unittest.TestCase):
