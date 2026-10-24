@@ -587,19 +587,13 @@ class RoutePlanner:
         }
 
     def remember(self, routes):
-        """Bound the full-route cache by serialized bytes and count; client snapshots survive eviction."""
-        sizes = {r['route_id']: len(json.dumps(r, separators=(',', ':'))) for r in routes}
+        """Only navigation geometry is needed after responding; full scored objects stay with the client."""
         with self.lock:
             for r in routes:
-                self.routes[r['route_id']] = r
-                self.route_sizes[r['route_id']] = sizes[r['route_id']]
                 slim={k:r[k] for k in ('route_id','geometry','distance_m','network_version','ordered_edge_ids')}
                 slim['edges']=[{k:e[k] for k in ('edge_id','traversed_length_m')} for e in r['edges']]
                 self.nav_routes[r['route_id']]=slim
                 self.nav_sizes[r['route_id']]=len(json.dumps(slim,separators=(',',':')))
-            while len(self.routes) > 32 or sum(self.route_sizes.values()) > 8*1024*1024:
-                rid, _ = self.routes.popitem(last=False)
-                self.route_sizes.pop(rid, None)
             while len(self.nav_routes)>200 or sum(self.nav_sizes.values())>4*1024*1024:
                 rid,_=self.nav_routes.popitem(last=False);self.nav_sizes.pop(rid,None)
 

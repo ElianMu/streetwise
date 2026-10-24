@@ -1,6 +1,6 @@
 # Urban data expansion and spatial pipeline audit
 
-Generated 2026-10-24T20:12:32.994492+00:00. Counts below are computed from indexed source snapshots; the existing full inventory remains in DATA_AUDIT_REPORT.md and data/registry.json.
+Generated 2026-10-24T20:42:56.627945+00:00. Counts below are computed from indexed source snapshots; the existing full inventory remains in DATA_AUDIT_REPORT.md and data/registry.json.
 
 | Dataset | Retained records | Source URL | Routing role |
 |---|---:|---|---|
@@ -34,11 +34,11 @@ Existing building footprints, PLUTO land use/building ages and many street-furni
 
 ## Bounded infrastructure
 
-Raw large inventories are streamed offline into SQLite and shipped compressed. Runtime streams decompression to a versioned temporary file, verifies the hash and uses read-only immutable SQLite with 1 MiB page cache and mmap disabled. R*Trees and date/type indexes bound queries; the API never downloads an NYC dataset during routing. Crime edge fields use a four-entry cache and a single-flight build lock. Exact corridor metrics have a separate bounded 64-entry cache keyed by source hash, geometry, distance and all time/type filters; direction is excluded because counts do not depend on preference direction. Map queries sum complete daily cells instead of random source row lookups. Full route objects are bounded to 8 MiB/32 entries; lightweight navigation geometry has a separate 4 MiB/200-entry bound. Segment Inspector uses a small indexed view, while source-hash validation prevents stale derived fields. All indices are derived from real source records.
+Raw large inventories are streamed offline into SQLite and shipped compressed. Runtime streams decompression to a versioned temporary file, verifies the hash and uses read-only immutable SQLite with 1 MiB page cache and mmap disabled. R*Trees and date/type indexes bound queries; the API never downloads an NYC dataset during routing. Crime edge fields use a four-entry cache and a single-flight build lock. Exact corridor metrics have a separate bounded 64-entry cache keyed by source hash, geometry, distance and all time/type filters; direction is excluded because counts do not depend on preference direction. Map queries sum complete daily cells instead of random source row lookups. Full scored route objects are returned to the client and are not retained server-side; only navigation geometry is cached, bounded to 4 MiB/200 entries. Indexed files and the default complaint field are prepared before the service accepts traffic, so source decompression is not charged to the first user route request. Segment Inspector uses a small indexed view, while source-hash validation prevents stale derived fields. All indices are derived from real source records.
 
 ## Menu evidence
 
-Two real first-party menu-verifier receipts (Bagel and Cappuccino at the indexed Bagel Pub) are included with official URL and checked time. They seed evidence for at most 12 hours and never imply current stock, branch availability or verified USD pricing. One verified venue may fulfil both dishes as one waypoint; every required item is checked independently. Unverified extra items fail. Expired corpus entries trigger live verification rather than permanent success.
+Four real first-party menu-verifier receipts (Bagel and Cappuccino at the indexed Bagel Pub and Zucker’s Bagels & Smoked Fish) are included with official URL and checked time. They seed evidence for at most 12 hours and never imply current stock, branch availability or verified USD pricing. One verified venue may fulfil both dishes as one waypoint; every required item is checked independently. Unverified extra items fail. Expired corpus entries trigger live verification rather than permanent success.
 
 ## Research and remaining gaps
 

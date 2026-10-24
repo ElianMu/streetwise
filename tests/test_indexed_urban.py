@@ -79,6 +79,7 @@ class IndexedUrban(unittest.TestCase):
   self.assertIsInstance(server._segments[1],server.IndexedSegments)
  def test_full_route_eviction_retains_lightweight_navigation_geometry(self):
   r=self.p.plan({'lon':-73.9832,'lat':40.7536},{'lon':-73.9787,'lat':40.7587})['routes'][0]
+  self.assertFalse(self.p.routes,'Full scored route objects must not accumulate after a response')
   with self.p.lock:self.p.routes.pop(r['route_id'],None);self.p.route_sizes.pop(r['route_id'],None)
   point=r['geometry']['coordinates'][0];result=self.p.progress(r['route_id'],point[0],point[1],10)
   self.assertLess(result['progress_m'],2)
