@@ -133,8 +133,8 @@ rate limit 10/min per client (HTTP 429). Itinerary 30/min, routes 60/min.
 Failures return a safe `reason` (also logged by the server): `{stage: not_configured | invalid_key_format | upstream_http | upstream_unreachable |
 upstream_bad_response | model_output_invalid_json | model_output_rejected | server_error, http_status, type, code, detail}`.
 `type` / `code` are OpenAI's error identifiers (e.g. 401 `invalid_api_key`, 429 `insufficient_quota`, 404 `model_not_found`);
-the provider's message text is never passed on and anything resembling a key is scrubbed. 503 = no key, 502 = LLM failure,
-500 = server error. 503 = key missing or malformed (invalid_key_format means the key contains internal whitespace or invalid header characters). The backend trims accidental leading/trailing whitespace in OPENAI_API_KEY without changing internal characters. The browser falls back to the labelled local parser and shows the reason.
+the provider's message text is never passed on and anything resembling a key is scrubbed. 503 = missing or malformed key,
+502 = LLM failure, 500 = server error. `invalid_key_format` means internal whitespace or invalid HTTP header characters. The backend trims accidental leading/trailing whitespace in `OPENAI_API_KEY` without changing internal characters. The browser falls back to the labelled local parser and shows the reason.
 
 Adds `journey`: `{interests, named_stops:[{name,required,order}], food:[{category,item,cuisine,required}], services, service_scope,
 hotel:{name,is_mine}, origin, destination, end_mode, walking_minutes, outing_minutes, distance_km, more, remove}` — names, categories and
