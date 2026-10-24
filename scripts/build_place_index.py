@@ -112,8 +112,7 @@ def wikidata_sitelinks(ids):
                 d = None
                 time.sleep(5 * (attempt + 1))
         if not d:
-            print('  wikidata batch skipped after retries')
-            continue
+            raise RuntimeError('Wikidata enrichment failed; preserving the existing place snapshot')
         for qid, ent in d.get('entities', {}).items():
             if 'sitelinks' in ent:
                 site = next((c['mainsnak'].get('datavalue', {}).get('value') for c in ent.get('claims', {}).get('P856', []) if c.get('mainsnak', {}).get('datavalue')), None)
@@ -170,8 +169,7 @@ def link_hotel_lots(groups):
         rows = si.get('https://data.cityofnewyork.us/resource/tjus-cn27.json?' + si.parse.urlencode(
             {'$select': 'bbl,parid,taxyear,bldg_class,latitude,longitude', '$where': "borough in('MANHATTAN','1') and latitude is not null", '$limit': 50000}), timeout=120)
     except RuntimeError as e:
-        print('  hotel lots unavailable:', e)
-        return {'available': False}
+        raise RuntimeError('Hotel-property source unavailable; preserving existing verified source evidence') from e
     lots = {}
     for r in rows:
         key = r.get('bbl') or r.get('parid')
@@ -237,10 +235,20 @@ def link_inspections(groups, routable):
 
 
 def resolve_entities(groups, osm_stamp, built):
-    """Entity resolution. Two records are the same place only when their names match AND (their addresses match OR they lie
-    within 60 m); a different name in the same building stays a separate place. NYC LPC landmarks are linked (not merged) to
+    """Entity resolution. Two records are the same place only when their names match AND their addresses match AND they lie
+    within 60 m (or share an identical provider identity); a different name in the same building stays a separate place. NYC LPC landmarks are linked (not merged) to
     the OpenStreetMap record of the same building when the main name words overlap and they lie within 120 m.
     Adds the canonical fields to every record and returns per-category quality counts."""
+    previous_ids, previous_leads, claimed = {}, {}, set()
+    if os.path.exists(os.path.join(OUT, 'index.json')):
+        previous = json.load(open(os.path.join(OUT, 'index.json')))
+        for category in previous.get('categories', []):
+            path = os.path.join(OUT, category['id'] + '.json')
+            if not os.path.exists(path): continue
+            for old in json.load(open(path)).get('records', []):
+                if old.get('cid'):
+                    for pid in old.get('pids') or [old['id']]:
+                        previous_ids[pid] = old['cid']; previous_leads[pid] = old['id']
     quality = {}
     for cat, recs in groups.items():
         by_name, out, dups, conflicts = {}, [], 0, 0
@@ -250,24 +258,29 @@ def resolve_entities(groups, osm_stamp, built):
         for name, rs in by_name.items():
             clusters = []
             for r in sorted(rs, key=lambda r: (-len(r), r['id'])):   # the most complete record leads its cluster
-                home = next((c for c in clusters if (_addr(r.get('addr')) and _addr(r.get('addr')) == _addr(c[0].get('addr'))) or _metres(r, c[0]) < 60), None)
+                home = next((c for c in clusters if (_addr(r.get('addr')) and _addr(r.get('addr')) == _addr(c[0].get('addr')) and _metres(r, c[0]) < 60) or r['id'] == c[0]['id']), None)
                 (home.append(r) if home else clusters.append([r]))
             for c in clusters:
                 lead = dict(c[0])
                 lead['pids'] = [x['id'] for x in c]
+                lead['field_sources'] = {f: lead['id'] for f in ('name','addr','web','hours','menu','lat','lon') if lead.get(f) is not None}
                 conf = []
+                evidence_conflicts = []
                 for other in c[1:]:
                     dups += 1
                     for f in ('web', 'hours', 'addr', 'menu', 'wd'):
                         if other.get(f) and not lead.get(f):
                             lead[f] = other[f]
+                            lead['field_sources'][f] = other['id']
                         elif other.get(f) and lead.get(f) and other[f] != lead[f] and f not in ('addr',):
                             conf.append(f)
+                            evidence_conflicts.append({'field': f, 'retained': lead[f], 'other': other[f], 'other_provider_id': other['id']})
                 if conf:
-                    lead['conf'] = sorted(set(conf)); conflicts += 1
+                    lead['conf'] = sorted(set(conf)); lead['field_conflicts'] = evidence_conflicts; conflicts += 1
                 out.append(lead)
         for r in out:
-            r['cid'] = 'sw:' + hashlib.sha1(r['pids'][0].encode()).hexdigest()[:12]
+            r['cid'] = next((previous_ids[p] for p in sorted(r['pids']) if p in previous_ids and previous_leads[p] in r['pids'] and previous_ids[p] not in claimed), 'sw:' + hashlib.sha1(min(r['pids']).encode()).hexdigest()[:12])
+            claimed.add(r['cid'])
             r['status'] = 'closed_by_dohmh' if r.get('closed') else 'listed'
             r['upd'] = osm_stamp if r.get('src') == 'osm' else r.get('insp') if r.get('src') == 'dohmh' else r.get('designated') or None
             if r.get('dohmh') and r.get('src') == 'osm':
@@ -367,12 +380,11 @@ def main():
     hotel_lots = link_hotel_lots(groups)
     quality = resolve_entities(groups, stamp, built)
     os.makedirs(OUT, exist_ok=True)
-    cats = []
+    cats, documents = [], {}
     labels = dict((c, l) for c, l, _ in CATEGORIES) | {'historic_lpc': 'NYC designated individual landmarks'}
     for cat, recs in groups.items():
         recs.sort(key=lambda r: (r['name'].lower(), r['id']))
-        with open(os.path.join(OUT, cat + '.json'), 'w') as f:
-            json.dump({'category': cat, 'records': recs}, f, separators=(',', ':'), ensure_ascii=False)
+        documents[cat+'.json'] = {'category': cat, 'records': recs}
         cats.append({'id': cat, 'label': labels[cat], 'count': len(recs), **quality.get(cat, {})})
     index = {'built_at': built, 'osm_timestamp': stamp, 'coverage': 'Within 150 m of the routable pedestrian graph (' + net.network_version + '): Manhattan',
              'network_version': net.network_version, 'categories': cats,
@@ -388,7 +400,9 @@ def main():
                         'status': 'operational status as known: listed (in source; not verified open today)', 'upd': 'source data timestamp', 'chk': 'when STREETWISE built this record',
                         'wd': 'Wikidata ID', 'sl': 'Wikidata sitelink count (Wikipedia language editions etc.): notability signal', 'drink': 'drink:* tags (community-mapped, not menu verification)', 'diet': 'diet:* tags'},
              'dropped_outside_routing_coverage': dropped, 'inspections': inspections, 'hotel_lots': hotel_lots}
-    json.dump(index, open(os.path.join(OUT, 'index.json'), 'w'), indent=1)
+    from snapshot_io import publish
+    documents['index.json'] = index
+    publish(OUT, documents, os.path.join(os.path.dirname(ROOT), 'streetwise-data-history', 'poi-index'))
     print(json.dumps({c['id']: c['count'] for c in cats}), 'dropped', dropped, f'{time.time() - t0:.0f}s')
 
 

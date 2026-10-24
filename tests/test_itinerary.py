@@ -138,7 +138,7 @@ class B_MenuVerification(unittest.TestCase):
 
     def run_with(self, pages, menu_url=None, **doc):
         menu.CACHE.clear()
-        def get(u, max_bytes=menu.MAX_BYTES, hops=3):
+        def get(u, max_bytes=menu.MAX_BYTES, hops=3, deadline=None):
             final, ctype, body = pages[u]
             return final, ctype, body.encode() if isinstance(body, str) else body, {}
         with mock.patch.object(menu, 'place_sites', return_value={'osm:node/1': (self.SITE, menu_url)}), \
@@ -256,10 +256,10 @@ class D_RouteValidation(unittest.TestCase):
         v = self.broken(lambda r: r['geometry']['coordinates'].append([-80.0, 25.0]))
         self.assertEqual(v['geometry_status'], 'fail')
 
-    def test_budget_failure_is_reported_not_blocking(self):
+    def test_budget_failure_blocks_navigation_until_limits_are_changed(self):
         r = plan(stops=[{**c, 'required': True, 'visit_min': 60} for c in cands('museums', ROCK, 3)], constraints={'max_outing_minutes': 60})
         v = r['routes'][0]['validation']
-        self.assertEqual(v['time_constraint_status'], 'fail'); self.assertTrue(v['navigation_allowed'], 'an over-budget walk can still be walked')
+        self.assertEqual(v['time_constraint_status'], 'fail'); self.assertFalse(v['navigation_allowed'], 'change the budget and replan before navigating an infeasible walk')
 
 
 class E_DataModel(unittest.TestCase):

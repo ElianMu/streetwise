@@ -19,7 +19,7 @@ function activeRouteObject(){return state.routes.find(r=>r.id===state.activeRout
 /** Start Navigation is offered only for a selected route whose validation allows it. */
 function renderNavStart(){
  const btn=$('navStart'),r=activeRouteObject();if(!btn)return;
- const v=r?.validation,ok=Boolean(r&&r.maneuvers?.length&&(!v||v.navigation_allowed));
+ const v=r?.validation,ok=Boolean(r&&r.constraints?.feasible!==false&&r.maneuvers?.length&&(!v||v.navigation_allowed));
  btn.classList.toggle('hidden',!r||nav.engine!=null);btn.disabled=!ok;
  btn.title=!r?'':!r.maneuvers?.length?'This route has no turn instructions (plan it again).':v&&!v.navigation_allowed?`Blocked: ${v.blocking_issues.join(' ')}`:'Start live walking navigation';
  renderValidation(r);
@@ -40,7 +40,7 @@ function renderValidation(r){
 /** Food evidence comes from the separate menu check, never assumed. */
 function foodEvidenceStatus(r){
  if(typeof journey==='undefined'||!journey.plan||r?.objective!=='itinerary')return 'not_checked';
- const items=journey.plan.stops.map(s=>{const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);return f?journey.menu[s.id+'|'+f.item]:null;}).filter(Boolean);
+ const items=journey.plan.stops.map(s=>{if(s.required_item)return journey.menu[s.id+'|'+s.required_item];const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);return f?journey.menu[s.id+'|'+f.item]:null;}).filter(Boolean);
  if(!items.length)return 'not_checked';
  return items.every(m=>m.status==='confirmed_menu_match')?'pass':items.some(m=>m.status==='checking')?'not_checked':'warning';
 }
@@ -48,6 +48,7 @@ function foodEvidenceStatus(r){
 /* ---------- start ---------- */
 async function startNavigation(){
  const r=activeRouteObject();if(!r||nav.engine)return;
+ if(r.constraints?.feasible===false)return toast('This walk does not meet required constraints; revise the plan before navigation.');
  if(r.validation&&!r.validation.navigation_allowed)return toast('This route failed its route check and cannot be navigated.');
  if(!navigator.geolocation)return toast('Location is not available in this browser.');
  // iOS asks for compass access only inside a user gesture
@@ -153,8 +154,8 @@ async function reroute(manual=false){
    // keep every required stop not reached yet, in the same order; the end stays the same
    const reached=new Set([...eng.arrivedStops].map(id=>eng.maneuvers.find(m=>m.maneuver_id===id)?.stop_name));
    const remaining=journey.plan.stops.filter(s=>s.role!=='end'&&!reached.has(s.name));
-   const req={...journey.request,origin:{id:'gps',name:'My location',lat:here.lat,lon:here.lon},slots:[],pool:{max_stops:0,candidates:[]},
-    stops:remaining.map((s,i)=>({id:s.id,name:s.name,lat:s.lat,lon:s.lon,required:s.required||true,order:i+1,visit_min:s.visit_min}))};
+   const req={...journey.request,departure:new Date().toISOString(),origin:{id:'gps',name:'My location',lat:here.lat,lon:here.lon},slots:[],pool:{max_stops:0,candidates:[]},
+    stops:remaining.map((s,i)=>({id:s.id,name:s.name,lat:s.lat,lon:s.lon,required:s.required||true,order:i+1,visit_min:s.visit_min,hours:s.hours,required_item:s.required_item}))};
    const res=await streetwiseFetch('/api/itinerary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req),signal:AbortSignal.timeout(30000)});
    json=await res.json();if(!res.ok)throw new Error(json.error||`HTTP ${res.status}`);newRoute=json.routes[0];
   }else{

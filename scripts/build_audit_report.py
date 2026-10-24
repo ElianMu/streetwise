@@ -77,6 +77,19 @@ def main():
                'provider_access': {'google_places': bool(os.environ.get('GOOGLE_PLACES_API_KEY')), 'yelp_fusion': bool(os.environ.get('YELP_API_KEY')),
                                    'foursquare': bool(os.environ.get('FOURSQUARE_API_KEY')), 'booking_demand': bool(os.environ.get('BOOKING_DEMAND_API_KEY')),
                                    'expedia_rapid': bool(os.environ.get('EXPEDIA_RAPID_API_KEY')), 'openai': bool(os.environ.get('OPENAI_API_KEY'))}}
+    # Recompute place metrics rather than trusting index summary counters.
+    ids = Counter(r['id'] for r in allrec)
+    canonical = Counter(r.get('cid') or r['id'] for r in allrec)
+    summary['tourism_quality'] = {
+        'category_records': len(allrec), 'distinct_provider_records': len(ids),
+        'duplicate_provider_record_ids': sum(n-1 for n in ids.values()),
+        'distinct_canonical_ids': len(canonical),
+        'linked_records_sharing_canonical_id': sum(n-1 for n in canonical.values()),
+        'records_with_source_conflicts': sum(bool(r.get('conf')) for r in allrec),
+        'categories': {c['id']: {'records': len(recs), 'invalid_coordinates': sum(not (math.isfinite(r['lat']) and math.isfinite(r['lon']) and 40.4<r['lat']<41 and -74.3<r['lon']< -73.6) for r in recs),
+            'missing_fields': {k: sum(not r.get(k) for r in recs) for k in ('addr','web','hours')},
+            'duplicate_ids': len(recs)-len({r['id'] for r in recs})}
+            for c in idx['categories'] for recs in [json.load(open(D('places',c['id']+'.json')))['records']]}}
     json.dump(summary, open(D('audit.json'), 'w'), indent=1)
     md = [f"# STREETWISE · NYC — Data Audit Report\n\nGenerated {summary['built_at']} by `scripts/build_audit_report.py` from the shipped files (no estimates).\n",
           f"**{summary['datasets']} datasets** ({summary['connected']} connected), **{summary['records']:,} records** in the shipped files. A record count is not a count of places verified open today.\n",
@@ -94,6 +107,23 @@ def main():
     md += ['\n## Agent tools\n', '| Capability | Implementation | Status |', '|---|---|---|'] + [f"| {k} | {v['implementation']} | {v['status']} |" for k, v in summary['agent_tools'].items()]
     md += ['\n## Business-data provider access (this build environment)\n', '| Provider | Key configured |', '|---|---|'] + [f'| {k} | {"yes" if v else "no"} |' for k, v in summary['provider_access'].items()]
     md += ['\nRatings, review counts, review text, hotel room types, live prices and availability need one of these providers; without a key they are reported as **Blocked by Provider Access**, never simulated.\n']
+    q = summary['tourism_quality']
+    md += ['\n## Recomputed tourism identity and missingness\n',
+           f"{q['category_records']} category records; {q['distinct_provider_records']} distinct source record IDs; {q['duplicate_provider_record_ids']} repeated source IDs; {q['distinct_canonical_ids']} distinct canonical IDs. {q['linked_records_sharing_canonical_id']} linked records share a canonical ID (not automatically a duplicate error). {q['records_with_source_conflicts']} records retain conflict flags. Existing historical merges cannot be unmerged without raw source records.\n",
+           '| Category | Records | Missing address | Missing website | Missing hours | Invalid coordinates | Repeated IDs |', '|---|---|---|---|---|---|---|']
+    for name, v in q['categories'].items():
+        md.append(f"| {name} | {v['records']} | {v['missing_fields']['addr']} | {v['missing_fields']['web']} | {v['missing_fields']['hours']} | {v['invalid_coordinates']} | {v['duplicate_ids']} |")
+    city = D('places','citywide.json')
+    if os.path.exists(city):
+        doc = json.load(open(city))
+        md += ['\n## Newly connected official citywide discovery\n',
+               'Citywide park coordinates are derived polygon interior points, not entrances. These new records are search-only until pedestrian access is independently verified. Restroom borough is unknown where the source omits it.\n',
+               '| Publisher dataset | Source rows | Stored places | Rejected incomplete rows | Retrieved | Publisher updated |', '|---|---|---|---|---|---|']
+        for source in doc['metadata']['sources']:
+            md.append(f"| {source['dataset_id']} | {source['source_rows']} | {source['records']} | {source['invalid_or_missing_coordinates_or_identity']} | {source['retrieved_at']} | {source['publisher_updated_at']} |")
+        md += ['\nParks by published borough: ' + json.dumps(dict(Counter(r.get('boro') or 'unknown' for r in doc['records'] if r['cat']=='parks'))) + '. Restrooms: ' + str(sum(r['cat']=='restrooms' for r in doc['records'])) + ' records with borough not supplied.\n']
+    md += ['\n## Interpretation of counts and quality\n',
+           'Registry totals sum dataset rows, including thematic views of the same features; they are not a global count of unique NYC places. A source update timestamp, a retrieval time, a current inspection, and a live business verification are distinct. The placeholder scan is a code-pattern scan, not proof that every source observation is correct. Five-borough food permits already exist; general museum/hotel discovery remains primarily Manhattan.\n']
     open(os.path.join(ROOT, 'DATA_AUDIT_REPORT.md'), 'w').write('\n'.join(md) + '\n')
     print('audit:', summary['datasets'], 'datasets,', len(preset_rows), 'presets,', len(flags), 'placeholder flags,', len(unreferenced), 'unreferenced files')
 

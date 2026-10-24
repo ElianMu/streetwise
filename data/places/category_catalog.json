@@ -1,0 +1,548 @@
+{
+ "categories": [
+  {
+   "id": "famous",
+   "label": "Famous attractions",
+   "parent_categories": [
+    "attractions"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 42,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "historical",
+   "label": "Historical landmarks",
+   "parent_categories": [
+    "historic",
+    "historic_lpc"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 1311,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "historic_districts",
+   "label": "Historic districts",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "Polygon urban layer only; no verified visitor entrance",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "architectural",
+   "label": "Architectural landmarks",
+   "parent_categories": [
+    "historic_lpc"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 921,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "museums",
+   "label": "Museums",
+   "parent_categories": [
+    "museums"
+   ],
+   "source_subtypes": [
+    "tourism=museum"
+   ],
+   "snapshot_records": 87,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "galleries",
+   "label": "Art galleries",
+   "parent_categories": [
+    "museums"
+   ],
+   "source_subtypes": [
+    "tourism=gallery"
+   ],
+   "snapshot_records": 240,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "cultural",
+   "label": "Cultural institutions",
+   "parent_categories": [
+    "culture"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 434,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "theatres",
+   "label": "Theatres",
+   "parent_categories": [
+    "culture"
+   ],
+   "source_subtypes": [
+    "amenity=theatre"
+   ],
+   "snapshot_records": 188,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "public_art",
+   "label": "Public art",
+   "parent_categories": [
+    "attractions"
+   ],
+   "source_subtypes": [
+    "tourism=artwork"
+   ],
+   "snapshot_records": 85,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "viewpoints",
+   "label": "Scenic viewpoints",
+   "parent_categories": [
+    "attractions"
+   ],
+   "source_subtypes": [
+    "tourism=viewpoint"
+   ],
+   "snapshot_records": 20,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "observation_decks",
+   "label": "Observation decks",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "No explicit supported source subtype",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "waterfront",
+   "label": "Waterfront parks",
+   "parent_categories": [
+    "parks"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 178,
+   "implementation_status": "Partial",
+   "limit": "Only official park waterfront flag; not all waterfront attractions",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "parks",
+   "label": "Parks",
+   "parent_categories": [
+    "parks"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 2587,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "gardens",
+   "label": "Gardens",
+   "parent_categories": [
+    "parks"
+   ],
+   "source_subtypes": [
+    "leisure=garden",
+    "Garden"
+   ],
+   "snapshot_records": 511,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "seasonal",
+   "label": "Seasonal attractions",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "No current seasonal schedule provider",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "restaurants",
+   "label": "Restaurants",
+   "parent_categories": [
+    "restaurants"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 10919,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "cafes",
+   "label": "Caf\u00e9s",
+   "parent_categories": [
+    "cafes"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 2001,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "bakeries",
+   "label": "Bakeries",
+   "parent_categories": [
+    "bakeries"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 713,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "desserts",
+   "label": "Dessert shops",
+   "parent_categories": [
+    "bakeries"
+   ],
+   "source_subtypes": [
+    "amenity=ice_cream",
+    "shop=pastry",
+    "shop=confectionery"
+   ],
+   "snapshot_records": 210,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "specialty_coffee",
+   "label": "Specialty coffee",
+   "parent_categories": [
+    "cafes"
+   ],
+   "source_subtypes": [
+    "shop=coffee"
+   ],
+   "snapshot_records": 10,
+   "implementation_status": "Partial",
+   "limit": "Coffee-shop tag only, not independently verified specialty quality",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "local_food",
+   "label": "Local food destinations",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "Local distinction is not established by the source",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "food_markets",
+   "label": "Food markets",
+   "parent_categories": [
+    "groceries"
+   ],
+   "source_subtypes": [
+    "amenity=marketplace"
+   ],
+   "snapshot_records": 30,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "food_halls",
+   "label": "Food halls",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "No explicit supported source subtype",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "casual_dining",
+   "label": "Casual dining",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "No authoritative dining-class field",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "fine_dining",
+   "label": "Fine dining",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "No authoritative dining-class field",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "hotels",
+   "label": "Hotels",
+   "parent_categories": [
+    "hotels"
+   ],
+   "source_subtypes": [
+    "tourism=hotel"
+   ],
+   "snapshot_records": 445,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "boutique_hotels",
+   "label": "Boutique hotels",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "No verified boutique classification",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "hostels",
+   "label": "Hostels",
+   "parent_categories": [
+    "hotels"
+   ],
+   "source_subtypes": [
+    "tourism=hostel"
+   ],
+   "snapshot_records": 12,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "apartments",
+   "label": "Apartment accommodation",
+   "parent_categories": [
+    "hotels"
+   ],
+   "source_subtypes": [
+    "tourism=apartment"
+   ],
+   "snapshot_records": 10,
+   "implementation_status": "Partial",
+   "limit": "OSM listing, not proof of licensed aparthotel status",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "licensed_accommodation",
+   "label": "Other licensed accommodation",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "Tax-lot class is not an accommodation operating licence",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "shopping_streets",
+   "label": "Shopping streets",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "Street geometry is not a verified retail district inventory",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "shopping_centres",
+   "label": "Shopping centres",
+   "parent_categories": [
+    "shopping"
+   ],
+   "source_subtypes": [
+    "shop=mall",
+    "shop=department_store"
+   ],
+   "snapshot_records": 66,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "stores",
+   "label": "Independent stores",
+   "parent_categories": [
+    "shopping"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 278,
+   "implementation_status": "Partial",
+   "limit": "Independence not verified",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "markets",
+   "label": "Markets",
+   "parent_categories": [
+    "groceries"
+   ],
+   "source_subtypes": [
+    "amenity=marketplace"
+   ],
+   "snapshot_records": 30,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "entertainment",
+   "label": "Entertainment venues",
+   "parent_categories": [
+    "culture"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 434,
+   "implementation_status": "Partial",
+   "limit": "Broad culture listing, no event schedules",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "performance",
+   "label": "Live performance venues",
+   "parent_categories": [
+    "culture"
+   ],
+   "source_subtypes": [
+    "amenity=theatre"
+   ],
+   "snapshot_records": 188,
+   "implementation_status": "Partial",
+   "limit": "No live performance schedule",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "restrooms",
+   "label": "Public restrooms",
+   "parent_categories": [
+    "restrooms"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 1482,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "pharmacies",
+   "label": "Pharmacies",
+   "parent_categories": [
+    "pharmacies"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 327,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "supermarkets",
+   "label": "Supermarkets",
+   "parent_categories": [
+    "groceries"
+   ],
+   "source_subtypes": [
+    "shop=supermarket"
+   ],
+   "snapshot_records": 246,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "convenience",
+   "label": "Convenience stores",
+   "parent_categories": [
+    "groceries"
+   ],
+   "source_subtypes": [
+    "shop=convenience"
+   ],
+   "snapshot_records": 597,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "transit",
+   "label": "Transit entrances",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "Urban layer only, not canonical place discovery",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "visitor_centres",
+   "label": "Visitor centres",
+   "parent_categories": [],
+   "source_subtypes": null,
+   "snapshot_records": 0,
+   "implementation_status": "Not Implemented",
+   "limit": "No explicit supported source subtype",
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "luggage",
+   "label": "Luggage storage",
+   "parent_categories": [
+    "luggage"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 1,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  },
+  {
+   "id": "medical",
+   "label": "Medical facilities",
+   "parent_categories": [
+    "health"
+   ],
+   "source_subtypes": null,
+   "snapshot_records": 231,
+   "implementation_status": "Implemented & Tested",
+   "limit": null,
+   "coverage": "Source snapshots; mostly Manhattan, official parks/restrooms NYC citywide. No live completeness guarantee."
+  }
+ ],
+ "note": "Counts are source records, not unique operating businesses or guaranteed visitor-accessible parks. Unconnected categories are not evidence of absence."
+}

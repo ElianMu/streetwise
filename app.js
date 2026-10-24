@@ -491,6 +491,7 @@ async function handlePlan(text,isFollowUp=false){
     if(planner.weatherIntent==='ask'&&state.routes.length){if(weatherContext.status!=='ok')await loadWeather();appendChat('assistant',weatherAnswer());return;}
     if(typeof applyJourney==='function'&&result.journey){
       const jc=await applyJourney(result.journey);
+      if(journey.businessOnly)return;
       if(jc.length)appendChat('assistant',`${planner.interpretation==='llm'?'AI':'Limited local'} journey interpretation: ${jc.join(' · ')}.`);
       // "find" requests (nearby / along the walk) list real places without changing the plan
       const finds=journey.services.filter(s=>!s.addAsStop&&result.journey.services.includes(s.type));
@@ -501,7 +502,7 @@ async function handlePlan(text,isFollowUp=false){
     }
     const changes=result.changes;if(changes.length)appendChat('assistant',`${planner.interpretation==='llm'?'AI interpretation':'Limited local interpretation'}: ${changes.join(' · ')}. Checking feasible pedestrian paths…`);
     else appendChat('assistant',`No explicit preference change recognized${planner.interpretation==='local'?' by limited local preview':''}. I’ll check route options using current settings.`);
-  }catch(err){toast('Unable to interpret preferences: '+err.message)}
+  }catch(err){toast('Unable to interpret preferences: '+err.message);return;}
   finally{planner.parsing=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false}
   if(typeof journeyMode==='function'&&journeyMode())await planJourney(isFollowUp);
   else await generateRoutes(q,isFollowUp);

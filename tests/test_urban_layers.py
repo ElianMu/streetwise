@@ -206,6 +206,7 @@ class StaticServing(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.httpd.shutdown()
+        cls.httpd.server_close()
 
     def test_catalog_and_tile_are_json(self):
         key = next(iter(CAT['tilesets']['street_trees']['tiles']))

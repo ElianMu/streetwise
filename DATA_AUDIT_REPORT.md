@@ -1,8 +1,8 @@
 # STREETWISE · NYC — Data Audit Report
 
-Generated 2026-10-24T03:07:54+00:00 by `scripts/build_audit_report.py` from the shipped files (no estimates).
+Generated 2026-10-24T13:13:15+00:00 by `scripts/build_audit_report.py` from the shipped files (no estimates).
 
-**112 datasets** (84 connected), **919,245 records** in the shipped files. A record count is not a count of places verified open today.
+**114 datasets** (86 connected), **922,369 records** in the shipped files. A record count is not a count of places verified open today.
 
 ## Datasets
 
@@ -108,8 +108,8 @@ Generated 2026-10-24T03:07:54+00:00 by `scripts/build_audit_report.py` from the 
 | Public restrooms (discovery index) | City of New York (NYC Open Data) | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 419 | 0 | addr 97%, web 88%, hours 48% | fair (a field missing in 97%) | connected |
 | Luggage storage (discovery index) | OpenStreetMap contributors | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 1 | 0 | hours 100%, addr 0%, web 0% | fair (a field missing in 100%) | connected |
 | NYC designated individual landmarks (discovery index) | NYC Landmarks Preservation Commission | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 921 | 0 | web 100%, hours 100%, addr 0% | fair (a field missing in 100%) | connected |
-| OSM pedestrian routing graph | OpenStreetMap contributors | static_urban | Manhattan | 122092 | 0 | — | good | connected |
-| 12-dimension scores on routing edges | STREETWISE (derived) | static_urban | Manhattan | 61047 | 0 | — | good | connected |
+| OSM pedestrian routing graph | OpenStreetMap contributors | static_urban | Manhattan | 122092 | 1 | — | good | connected |
+| 12-dimension scores on routing edges | STREETWISE (derived) | static_urban | Manhattan | 61047 | 1 | — | good | connected |
 | Manhattan street segments with 12-dimension scores | STREETWISE (derived from NYC DCP LION and listed sources) | static_urban | Manhattan | 10533 | 1 | — | good | connected |
 | Food establishment permits and inspections (five boroughs) | NYC Department of Health and Mental Hygiene | periodic_poi | NYC five boroughs {"Bronx": 2632, "Manhattan": 12536, "Brooklyn": 7997, "Staten Island": 1114, "Queens": 6989, "0": 101} | 31369 | 0 | coordinates 3% | limited (valid geometry 97.4%) | connected |
 | Hotel-class tax lots (Manhattan) | NYC Department of Finance | periodic_poi | Manhattan | 780 | 0 | — | good | connected |
@@ -120,6 +120,8 @@ Generated 2026-10-24T03:07:54+00:00 by `scripts/build_audit_report.py` from the 
 | Expedia Rapid API | Expedia | realtime_availability | per request | — | — | — | n/a (blocked by provider access) | blocked_by_provider_access |
 | Current weather | Open-Meteo | realtime_availability | NYC | — | — | — | unmeasured | connected |
 | Weather alerts | US National Weather Service | realtime_availability | NYC | — | — | — | unmeasured | connected |
+| Parks Properties | City of New York | periodic_poi | NYC citywide (search only) | 2061 | 8 | hours 100%, web 100%, addr 40% | fair (a field missing in 100%) | connected |
+| Public Restrooms | City of New York | periodic_poi | NYC citywide (search only) | 1063 | 483 | addr 100%, web 100%, boro 100% | fair (a field missing in 100%) | connected |
 
 ## Hard-coded quick-pick places (app.js `PLACES`)
 
@@ -152,7 +154,7 @@ No matches for random values, mock/fake/dummy data or hard-coded ratings.
 
 ## Data files not read by runtime code
 
-route-validation.json, route-verification.json, validation.json
+route-verification.json, validation.json, route-validation.json
 
 ## Agent tools
 
@@ -179,4 +181,46 @@ route-validation.json, route-verification.json, validation.json
 | openai | no |
 
 Ratings, review counts, review text, hotel room types, live prices and availability need one of these providers; without a key they are reported as **Blocked by Provider Access**, never simulated.
+
+
+## Recomputed tourism identity and missingness
+
+20654 category records; 20654 distinct source record IDs; 0 repeated source IDs; 20437 distinct canonical IDs. 217 linked records share a canonical ID (not automatically a duplicate error). 13 records retain conflict flags. Existing historical merges cannot be unmerged without raw source records.
+
+| Category | Records | Missing address | Missing website | Missing hours | Invalid coordinates | Repeated IDs |
+|---|---|---|---|---|---|---|
+| hotels | 473 | 47 | 92 | 452 | 0 | 0 |
+| museums | 365 | 54 | 57 | 133 | 0 | 0 |
+| attractions | 228 | 190 | 120 | 213 | 0 | 0 |
+| historic | 390 | 355 | 319 | 387 | 0 | 0 |
+| parks | 526 | 418 | 281 | 471 | 0 | 0 |
+| cafes | 2001 | 328 | 1294 | 1273 | 0 | 0 |
+| bakeries | 713 | 97 | 511 | 497 | 0 | 0 |
+| restaurants | 10919 | 1150 | 7875 | 7988 | 0 | 0 |
+| bars | 884 | 201 | 363 | 406 | 0 | 0 |
+| culture | 434 | 62 | 85 | 380 | 0 | 0 |
+| shopping | 278 | 89 | 149 | 145 | 0 | 0 |
+| pharmacies | 327 | 66 | 173 | 113 | 0 | 0 |
+| groceries | 1012 | 207 | 772 | 608 | 0 | 0 |
+| health | 231 | 30 | 62 | 107 | 0 | 0 |
+| banks | 532 | 237 | 300 | 200 | 0 | 0 |
+| restrooms | 419 | 407 | 368 | 199 | 0 | 0 |
+| luggage | 1 | 0 | 0 | 1 | 0 | 0 |
+| historic_lpc | 921 | 0 | 921 | 921 | 0 | 0 |
+
+## Newly connected official citywide discovery
+
+Citywide park coordinates are derived polygon interior points, not entrances. These new records are search-only until pedestrian access is independently verified. Restroom borough is unknown where the source omits it.
+
+| Publisher dataset | Source rows | Stored places | Rejected incomplete rows | Retrieved | Publisher updated |
+|---|---|---|---|---|---|
+| enfh-gkve | 2061 | 2061 | 0 | 2026-10-24T12:20:23+00:00 | 2026-10-16T13:05:08+00:00 |
+| i7jb-7jku | 1066 | 1063 | 0 | 2026-10-24T12:20:23+00:00 | 2025-06-27T13:37:10+00:00 |
+
+Parks by published borough: {"Manhattan": 396, "Bronx": 399, "Queens": 478, "Brooklyn": 628, "Staten Island": 160}. Restrooms: 1063 records with borough not supplied.
+
+
+## Interpretation of counts and quality
+
+Registry totals sum dataset rows, including thematic views of the same features; they are not a global count of unique NYC places. A source update timestamp, a retrieval time, a current inspection, and a live business verification are distinct. The placeholder scan is a code-pattern scan, not proof that every source observation is correct. Five-borough food permits already exist; general museum/hotel discovery remains primarily Manhattan.
 

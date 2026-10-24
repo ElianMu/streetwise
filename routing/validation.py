@@ -115,7 +115,7 @@ def validate(route, net, constraints=None, stops=None, now=None):
         elif sd > ACCESS_OK_M and sa == 'pass':
             sa = 'warning'; warnings.append(f'“{s["name"]}” access point approximated ({sd:.0f} m from the mapped location).')
 
-    # opening hours at arrival (non-blocking: the walk can still be walked, but the stop cannot be visited as planned)
+    # Required visit feasibility also gates navigation; geometry alone is insufficient.
     known = [s for s in stops if s.get('open_at_arrival') is not None]
     tw = 'not_checked' if not known else 'pass'
     for s in known:
@@ -125,6 +125,10 @@ def validate(route, net, constraints=None, stops=None, now=None):
             tw = 'warning'; warnings.append(f'“{s["name"]}” closes during the planned visit (OpenStreetMap hours).')
     if tw == 'fail':
         warnings.append('A required stop is closed at its estimated arrival; reorder, replace it or change the start time.')
+
+    if route.get('constraints', {}).get('feasible') is False:
+        blocking.extend(str(v) for v in route['constraints'].get('violations', []) if str(v) not in blocking)
+        if not route['constraints'].get('violations'): blocking.append('Route does not satisfy required constraints')
 
     # constraints ------------------------------------------------------------------------------------------
     viol = route.get('constraints', {}).get('violations', [])

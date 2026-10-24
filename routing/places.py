@@ -24,7 +24,7 @@ ATTRACTION = ('museums', 'attractions', 'historic', 'historic_lpc', 'culture', '
 SERVICE = ('pharmacies', 'groceries', 'health', 'banks', 'restrooms', 'luggage')
 VISIT_MIN = {'museums': 45, 'attractions': 20, 'historic': 10, 'historic_lpc': 10, 'parks': 20, 'culture': 20, 'shopping': 25,
              'cafes': 15, 'bakeries': 10, 'restaurants': 45, 'bars': 30}
-SOURCE_LABEL = {'osm': 'OpenStreetMap (ODbL)', 'lpc': 'NYC Landmarks Preservation Commission', 'nyc_restrooms': 'NYC Open Data Public Restrooms',
+SOURCE_LABEL = {'nyc':'NYC Open Data','nycrr':'NYC Open Data Public Restrooms','osm': 'OpenStreetMap (ODbL)', 'lpc': 'NYC Landmarks Preservation Commission', 'nyc_restrooms': 'NYC Open Data Public Restrooms',
                 'dohmh': 'NYC DOHMH Restaurant Inspection Results'}
 BORO = {'Manhattan': 'Manhattan', 'Brooklyn': 'Brooklyn', 'Queens': 'Queens', 'Bronx': 'Bronx', 'Staten Island': 'Staten Island'}
 
@@ -59,7 +59,7 @@ def _stream(text):
 
 def _decode(text, pool):
     r = json.loads(text)
-    if pool != '_dohmh':
+    if not pool.startswith('_'):
         r['cat'] = pool
     return r
 
@@ -76,7 +76,28 @@ class PlaceStore:
         for cat in self.categories:
             with open(os.path.join(PLACES_DIR, cat + '.json'), encoding='utf-8') as f:
                 self._add(cat, _stream(f.read()), lambda r: [r['id'], r.get('cid'), *(r.get('pids') or [])])
+        citywide = os.path.join(PLACES_DIR, 'citywide.json')
+        self.citywide_meta = None
+        self.official_updates = {}
+        self.inspection_updates = {}
         self._outside_lock, self.dohmh_meta = threading.Lock(), None
+        if os.path.exists(citywide):
+            with open(citywide, encoding='utf-8') as f:
+                document = json.load(f)
+            self.citywide_meta = document['metadata']
+            # Same publisher, exact facility name/operator and exact coordinate identity,
+            # not a nearest-name merge. Retain new operational evidence on existing IDs.
+            identity = lambda r: (r['name'].casefold(),r.get('operator'),round(r['lat'],6),round(r['lon'],6))
+            prior = {identity(r):r for r in self.records('restrooms') if r.get('src')=='nyc_restrooms'}
+            for r in document['records']:
+                old = prior.get(identity(r)) if r['cat']=='restrooms' else None
+                if old:
+                    r['cid'] = old.get('cid') or old['id']
+                    r['pids'] = list(dict.fromkeys([*(old.get('pids') or [old['id']]),r['id']]))
+                    if old.get('snap') is not None:r['search_only']=False;r['snap']=old['snap']
+                    self.official_updates[old['id']] = {k:r[k] for k in ('source_status','source_url','upd','chk','pids') if k in r}
+            self._add('_citywide', ((r, json.dumps(r, separators=(',', ':'))) for r in document['records']), lambda r: [r['id']])
+
 
     def _add(self, pool, items, keys):
         """items: (record, its JSON text). Only the text and coordinates are kept."""
@@ -96,12 +117,19 @@ class PlaceStore:
                     with gzip.open(DOHMH, 'rt', encoding='utf-8') as f:
                         text = f.read()
                     meta = _DEC.raw_decode(text, text.index('"metadata":') + 11)[0]
-                    recs = ({'id': 'dohmh:' + r['camis'], 'name': ' '.join(w.capitalize() for w in r['name'].split()), 'lat': r['lat'], 'lon': r['lon'],
-                             'src': 'dohmh', 'addr': r['addr'].title(), 'phone': r['phone'], 'dcuisine': r['cuisine'], 'dohmh': r['camis'], 'grade': r['grade'],
-                             'gdate': r['grade_date'], 'insp': r['last_inspection'], 'closed': r['closure_date'] if r['closed_by_dohmh'] else None, 'boro': r['boro'],
-                             'cat': 'cafes' if r['cuisine'] == 'Coffee/Tea' else 'bakeries' if r['cuisine'] in ('Bakery Products/Desserts', 'Donuts') else 'restaurants',
-                             'search_only': True}
-                            for r, _ in _stream(text) if r['lat'] and r['boro'] in BORO and r['boro'] != 'Manhattan')
+                    def inspection_rows():
+                        for r, _ in _stream(text):
+                            if r['boro']=='Manhattan' and 'dohmh:'+r['camis'] in self.ref:
+                                self.inspection_updates[r['camis']] = {'grade':r['grade'],'gdate':r['grade_date'],'insp':r['last_inspection'],
+                                    'closed':r['closure_date'] if r['closed_by_dohmh'] else None, 'dcuisine':r['cuisine']}
+                            if not (r.get('name') and r['lat'] and r['lon'] and 40.4<r['lat']<41 and -74.3<r['lon']< -73.6 and r['boro'] in BORO and r['boro']!='Manhattan'): continue
+                            yield {'id':'dohmh:'+r['camis'],'name':' '.join(w.capitalize() for w in str(r['name'] or 'Name unavailable').split()),
+                                'lat':r['lat'],'lon':r['lon'],'src':'dohmh','addr':r['addr'].title(),'phone':r['phone'],'dcuisine':r['cuisine'],
+                                'dohmh':r['camis'],'grade':r['grade'],'gdate':r['grade_date'],'insp':r['last_inspection'],
+                                'closed':r['closure_date'] if r['closed_by_dohmh'] else None,'boro':r['boro'],
+                                'cat':'cafes' if r['cuisine']=='Coffee/Tea' else 'bakeries' if r['cuisine'] in ('Bakery Products/Desserts','Donuts') else 'restaurants',
+                                'search_only':True}
+                    recs = inspection_rows()
                     self._add('_dohmh', ((r, json.dumps(r, separators=(',', ':'))) for r in recs), lambda r: [r['id']])
                     del text
                     self.dohmh_meta = meta
@@ -112,17 +140,21 @@ class PlaceStore:
         if pid not in self.ref and str(pid).startswith('dohmh:'):
             self._outside()
         at = self.ref.get(pid)
-        return _decode(self.rows[at[0]][at[1]], at[0]) if at else None
+        return self._updated(_decode(self.rows[at[0]][at[1]], at[0])) if at else None
+
+    def _updated(self, r):
+        if r.get('dohmh') and self.dohmh_meta is None:self._outside()
+        return {**r, **self.official_updates.get(r['id'], {}), **self.inspection_updates.get(r.get('dohmh'), {})}
 
     def records(self, cat):
-        return (_decode(x, cat) for x in self.rows.get(cat, []))
+        return (self._updated(_decode(x, cat)) for x in self.rows.get(cat, []))
 
     # ---------------------------------------------------------------- canonical model
     def quality(self, r):
         if r.get('closed'):
             return 'closed'
         cat = r.get('cat')
-        if cat in FOOD and r.get('insp') and (_days_since(r['insp']) or 9999) <= 365:
+        if cat in FOOD and r.get('insp') and _days_since(r['insp']) is not None and 0 <= _days_since(r['insp']) <= 365:
             return 'verified'
         if cat in ATTRACTION and (r.get('src') == 'lpc' or r.get('lpc') or (r.get('sl') and r.get('web'))):
             return 'verified'
@@ -136,22 +168,36 @@ class PlaceStore:
         cat = r.get('cat')
         sources = sorted({SOURCE_LABEL.get(p.split(':')[0], p.split(':')[0]) for p in (r.get('pids') or [r['id']])} |
                          ({'Wikidata'} if r.get('sl') or r.get('wdesc') else set()) | ({SOURCE_LABEL['dohmh']} if r.get('dohmh') else set()) |
-                         ({'NYC DOF Hotels Properties Citywide'} if r.get('dof_lot') else set()) | ({SOURCE_LABEL['lpc']} if r.get('lpc') else set()))
+                         ({'NYC DOF Hotels Properties Citywide'} if r.get('dof_lot') else set()) | ({SOURCE_LABEL['lpc']} if r.get('lpc') else set()) | ({r['src']} if r.get('source_url') else set()))
         base = {'place_id': r.get('cid') or r['id'], 'index_id': r['id'], 'provider_ids': {p.split(':')[0]: p.split(':', 1)[1] for p in (r.get('pids') or [r['id']])},
                 'name': r['name'], 'category': cat, 'subcategory': r.get('sub'), 'address': r.get('addr'),
-                'borough': r.get('boro') or 'Manhattan', 'coordinates': {'lat': r['lat'], 'lon': r['lon']},
+                'borough': r.get('boro') or (None if r.get('search_only') else 'Manhattan'), 'coordinates': {'lat': r['lat'], 'lon': r['lon']},
                 'entrance_coordinates': None,   # entrances are not mapped in the sources used; the routing access point is used instead
                 'access_point_distance_m': r.get('snap'), 'official_website': r.get('web'), 'website_source': r.get('web_src') or ('OpenStreetMap' if r.get('web') else None),
                 'opening_hours': r.get('hours'), 'opening_hours_source': 'OpenStreetMap (as mapped, not live)' if r.get('hours') else None,
-                'operational_status': 'closed_by_dohmh' if r.get('closed') else 'listed (not verified open today)',
+                'operational_status': 'closed_by_dohmh' if r.get('closed') else (r.get('source_status') or 'listed (not verified open today)'),
                 'rating_summary': None, 'rating_note': 'Ratings come only from a configured provider (GET /api/places/<id>/ratings); none is stored.',
-                'price_level': None, 'amenities': sorted((r.get('amen') or {}).keys()), 'data_sources': sources,
-                'last_verified_at': r.get('insp') if r.get('dohmh') else r.get('chk'), 'quality_status': self.quality(r),
+                'price_level': None, 'amenities': sorted(k for k, v in (r.get('amen') or {}).items() if v not in ('no', 'unknown', False, None)), 'data_sources': sources,
+                'last_verified_at': r.get('insp') if r.get('dohmh') else None,
+                'retrieved_at': r.get('chk') or self.index.get('built_at'), 'source_updated_at': r.get('upd') if r.get('source_url') else None, 'source_observation_at': r.get('upd'),
+                'field_conflicts': r.get('field_conflicts') or [{'field': f, 'detail': 'Source values disagree; retained source value is not independently verified.'} for f in r.get('conf', [])],
+                'provider_id_aliases': {p: [x.split(':', 1)[1] for x in (r.get('pids') or [r['id']]) if x.split(':')[0] == p] for p in {x.split(':')[0] for x in (r.get('pids') or [r['id']])}},
+                'coordinate_basis': r.get('coordinate_basis') or 'Source point; access point is not a verified visitor entrance',
+                'source_links': [r['source_url']] if r.get('source_url') else [], 'quality_status': self.quality(r),
                 'routing_coverage': 'search_only' if r.get('search_only') else 'manhattan_network', 'phone': r.get('phone')}
+        base['verification_scope'] = 'Identity/source corroboration only; not live opening, menu, ratings, prices or availability.'
+        source_ids = r.get('pids') or [r['id']]
+        base['field_provenance'] = {label: {'source_ids': [r['field_sources'][raw]] if r.get('field_sources',{}).get(raw) else source_ids,
+            'resolution': 'field_source' if r.get('field_sources',{}).get(raw) else 'merged_source_set',
+            'source_updated_at': r.get('upd') if r.get('source_url') else None, 'source_observation_at': r.get('upd'), 'retrieved_at': base['retrieved_at'], 'conflict': raw in (r.get('conf') or []),
+            'verification': 'copied source evidence, not independently reverified'}
+            for label,raw in [('name','name'),('address','addr'),('official_website','web'),('opening_hours','hours'),('coordinates','lat')] if r.get(raw) is not None}
         if cat in FOOD:
             base['restaurant'] = {'cuisine': r.get('cuisine'), 'cuisine_dohmh': r.get('dcuisine'),
                                   'inspection': {'permit': r.get('dohmh'), 'grade': r.get('grade'), 'grade_date': r.get('gdate'), 'last_inspection': r.get('insp'),
                                                  'closed_since': r.get('closed'), 'source': 'NYC DOHMH' if r.get('dohmh') else None,
+                                                 'publisher_updated_at':(self.dohmh_meta or {}).get('publisher_updated_at'),
+                                                 'retrieved_at':(self.dohmh_meta or {}).get('retrieved_at'),
                                                  'meaning': 'Health inspection grade, not a review or a quality rating.'} if r.get('dohmh') else None,
                                   'menu_url': r.get('menu'), 'menu_items': None, 'menu_note': 'Item evidence is checked per request (POST /api/menu/verify).',
                                   'drink_tags_osm': r.get('drink'), 'dietary_osm': r.get('diet'), 'reservation_url': None,
@@ -188,7 +234,9 @@ class PlaceStore:
         q = re.sub(r'[^a-z0-9 ]', '', (query or '').lower()).strip()
         out, seen = [], set()
         pools = [c for c in categories if c in self.rows]
-        if set(categories) & set(FOOD) and not self._in_manhattan(near) and self._outside():
+        if '_citywide' in self.rows:
+            pools.append('_citywide')
+        if set(categories) & set(FOOD) and self._outside():
             pools.append('_dohmh')
         dlat, dlon = radius_m / 111049.7, radius_m / 84414.3
         for pool in pools:
@@ -196,10 +244,12 @@ class PlaceStore:
             for i in range(len(rows)):
                 if abs(la[i] - near['lat']) > dlat or abs(lo[i] - near['lon']) > dlon:
                     continue
-                r = _decode(rows[i], pool)
+                r = self._updated(_decode(rows[i], pool))
                 key = r.get('cid') or r['id']
                 if key in seen or r['cat'] not in categories or (r.get('closed') and not include_closed):
                     continue
+                if r.get('source_url','').endswith('/enfh-gkve') and r.get('sub') in ('Undeveloped','Operations','Lot','Parkway','Strip','Buildings/Institutions','Managed Sites','Cemetery'): continue
+                if not include_closed and str(r.get('source_status') or '').lower() in ('not operational','closed','inactive'): continue
                 if q and q not in r['name'].lower():
                     continue
                 if cuisine and cuisine.lower() not in f"{r.get('cuisine') or ''};{(r.get('dcuisine') or '').lower()}":

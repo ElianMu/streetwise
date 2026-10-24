@@ -1,8 +1,8 @@
 {
- "built_at": "2026-10-24T03:07:54+00:00",
- "datasets": 112,
- "connected": 84,
- "records": 919245,
+ "built_at": "2026-10-24T13:13:15+00:00",
+ "datasets": 114,
+ "connected": 86,
+ "records": 922369,
  "presets": [
   {
    "key": "bryant",
@@ -133,9 +133,9 @@
  ],
  "placeholder_flags": [],
  "unreferenced_data_files": [
-  "route-validation.json",
   "route-verification.json",
-  "validation.json"
+  "validation.json",
+  "route-validation.json"
  ],
  "agent_tools": {
   "search_places / autocomplete": {
@@ -178,5 +178,195 @@
   "booking_demand": false,
   "expedia_rapid": false,
   "openai": false
+ },
+ "tourism_quality": {
+  "category_records": 20654,
+  "distinct_provider_records": 20654,
+  "duplicate_provider_record_ids": 0,
+  "distinct_canonical_ids": 20437,
+  "linked_records_sharing_canonical_id": 217,
+  "records_with_source_conflicts": 13,
+  "categories": {
+   "hotels": {
+    "records": 473,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 47,
+     "web": 92,
+     "hours": 452
+    },
+    "duplicate_ids": 0
+   },
+   "museums": {
+    "records": 365,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 54,
+     "web": 57,
+     "hours": 133
+    },
+    "duplicate_ids": 0
+   },
+   "attractions": {
+    "records": 228,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 190,
+     "web": 120,
+     "hours": 213
+    },
+    "duplicate_ids": 0
+   },
+   "historic": {
+    "records": 390,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 355,
+     "web": 319,
+     "hours": 387
+    },
+    "duplicate_ids": 0
+   },
+   "parks": {
+    "records": 526,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 418,
+     "web": 281,
+     "hours": 471
+    },
+    "duplicate_ids": 0
+   },
+   "cafes": {
+    "records": 2001,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 328,
+     "web": 1294,
+     "hours": 1273
+    },
+    "duplicate_ids": 0
+   },
+   "bakeries": {
+    "records": 713,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 97,
+     "web": 511,
+     "hours": 497
+    },
+    "duplicate_ids": 0
+   },
+   "restaurants": {
+    "records": 10919,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 1150,
+     "web": 7875,
+     "hours": 7988
+    },
+    "duplicate_ids": 0
+   },
+   "bars": {
+    "records": 884,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 201,
+     "web": 363,
+     "hours": 406
+    },
+    "duplicate_ids": 0
+   },
+   "culture": {
+    "records": 434,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 62,
+     "web": 85,
+     "hours": 380
+    },
+    "duplicate_ids": 0
+   },
+   "shopping": {
+    "records": 278,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 89,
+     "web": 149,
+     "hours": 145
+    },
+    "duplicate_ids": 0
+   },
+   "pharmacies": {
+    "records": 327,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 66,
+     "web": 173,
+     "hours": 113
+    },
+    "duplicate_ids": 0
+   },
+   "groceries": {
+    "records": 1012,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 207,
+     "web": 772,
+     "hours": 608
+    },
+    "duplicate_ids": 0
+   },
+   "health": {
+    "records": 231,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 30,
+     "web": 62,
+     "hours": 107
+    },
+    "duplicate_ids": 0
+   },
+   "banks": {
+    "records": 532,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 237,
+     "web": 300,
+     "hours": 200
+    },
+    "duplicate_ids": 0
+   },
+   "restrooms": {
+    "records": 419,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 407,
+     "web": 368,
+     "hours": 199
+    },
+    "duplicate_ids": 0
+   },
+   "luggage": {
+    "records": 1,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 0,
+     "web": 0,
+     "hours": 1
+    },
+    "duplicate_ids": 0
+   },
+   "historic_lpc": {
+    "records": 921,
+    "invalid_coordinates": 0,
+    "missing_fields": {
+     "addr": 0,
+     "web": 921,
+     "hours": 921
+    },
+    "duplicate_ids": 0
+   }
+  }
  }
 }

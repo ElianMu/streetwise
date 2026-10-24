@@ -6,7 +6,7 @@ re-opened). This is official licensing / inspection evidence — not reviews, no
 Output: data/inspections/dohmh.json.gz (server-side; too large for the browser) + metadata.
 Run: python3 scripts/build_inspections.py   (about 30 s; network)
 """
-import gzip, json, os, sys, time
+import gzip, json, os, sys, time, tempfile, hashlib, shutil
 from datetime import datetime, timezone
 from urllib import parse, request
 
@@ -44,6 +44,7 @@ def main():
                   '$group': 'camis,dba,boro,building,street,zipcode,phone,cuisine_description,latitude,longitude,bbl', '$order': 'camis'})
     grades = paged({'$select': 'camis,grade,max(grade_date) as gd', '$where': "grade in ('A','B','C')", '$group': 'camis,grade'})
     actions = paged({'$select': 'camis,action,max(inspection_date) as d', '$where': "action like 'Establishment%'", '$group': 'camis,action'})
+    if not base or not grades or not actions: raise ValueError('Incomplete inspection source response; retaining previous snapshot')
     latest_grade = {}
     for g in grades:
         if g.get('gd') and (g['camis'] not in latest_grade or g['gd'] > latest_grade[g['camis']][1]):
@@ -82,8 +83,20 @@ def main():
             'note': 'Permits and inspections, not reviews. "closed_by_dohmh" = the latest closure action has no later re-opening action.'}
     for r in recs:
         meta['by_borough'][r['boro']] = meta['by_borough'].get(r['boro'], 0) + 1
-    with gzip.open(os.path.join(OUT, 'dohmh.json.gz'), 'wt', encoding='utf-8') as f:
-        json.dump({'metadata': meta, 'records': recs}, f, separators=(',', ':'))
+    if not recs: raise ValueError('Empty refresh; retaining current inspection snapshot')
+    destination = os.path.join(OUT, 'dohmh.json.gz')
+    if os.path.exists(destination):
+        archive = os.path.join(os.path.dirname(ROOT), 'streetwise-data-history', 'inspections')
+        os.makedirs(archive,exist_ok=True)
+        with open(destination,'rb') as f: version=hashlib.sha256(f.read()).hexdigest()
+        shutil.copy2(destination,os.path.join(archive,version+'.json.gz'))
+    with tempfile.NamedTemporaryFile(dir=OUT,delete=False) as f: staging=f.name
+    try:
+        with gzip.open(staging, 'wt', encoding='utf-8') as f:
+            json.dump({'metadata': meta, 'records': recs}, f, separators=(',', ':'))
+        os.replace(staging,destination)
+    finally:
+        if os.path.exists(staging): os.unlink(staging)
     print(json.dumps({k: meta[k] for k in ('records', 'with_coordinates', 'by_borough', 'publisher_updated_at')}), f'{time.time() - t0:.0f}s')
 
 

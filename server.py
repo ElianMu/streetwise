@@ -72,6 +72,8 @@ For an explicitly shortest route set constraints.avoidDetours=true and max_detou
    "walking_minutes": walking-time limit or null, "outing_minutes": total time incl. visits ("I have two hours" = 120) or null,
    "distance_km": walking-distance limit in km or null, "more": object with schema category keys, count to add or null for unchanged categories, for "add another museum", "remove": [names] }}
   For any explicit food/drink OR POI-category request (including restaurants or cafes without naming a dish), journey must be non-null and food must preserve it, even in a simple walking-preference sentence. Coffee is category cafes, item coffee; parks also belong in journey.interests. Food & Retail weight alone never satisfies a requested POI. Example: "Recommend a waterfront walk with restaurants and cultural attractions" requires Scenic & Visual and Culture preferences AND journey.food containing category restaurants, item null, cuisine null, required true. A restaurant-category request is not only a streetscape preference; do not omit that food entry.
+  "counts": null or schema interest-key object for explicit TOTAL visits (e.g. two landmarks = interests [famous], counts.famous=2). more is only an incremental follow-up, not a total. Unspecified counts are null; requests above five of one category require clarification, never silently truncate.
+  "requirements": null or the schema object for explicit business requirements: must_be_open when the user requires entry/open at arrival; ratings_required for good reviews/highly rated; minimum_rating only if numeric on a 5-point scale is explicitly requested; restaurant_budget_usd, ticket_budget_usd, total_budget_usd, hotel_budget_per_night_usd, checkin/checkout, guests/beds. Keep unmentioned fields null. For any place/food/service search near a named landmark, preserve the landmark name in requirements.search_anchor; do not change the chosen origin merely to express search proximity. For generic hotel search, use hotel=null and preserve search_anchor, beds, price and dates in requirements. These describe user requirements, never supply fetched ratings, prices or availability.
   Never output coordinates, addresses, menus, prices or opening hours: places are looked up by STREETWISE tools.
 "clarification": null unless user intent is materially ambiguous or contradictory (for example asks for both a strict 10-minute cap and a 30-minute minimum, or asks for inaccessible route when step-free is required). If ambiguous, write one short question here, do not infer changes.
 Preserve current state: omit unmentioned dimensions from preferences; set unmentioned constraint values to null. Time and accessibility are hard constraints, not dimension scores. Do not claim quiet or step-free conditions are validated.
@@ -128,7 +130,7 @@ def validate_journey(j):
         return None
     validate_contract(j, JOURNEY, 'journey', required=False)
     if not isinstance(j, dict) or set(j) - {'interests', 'named_stops', 'food', 'services', 'service_scope', 'hotel', 'origin', 'destination',
-                                              'end_mode', 'walking_minutes', 'outing_minutes', 'distance_km', 'more', 'remove'}:
+                                              'end_mode', 'walking_minutes', 'outing_minutes', 'distance_km', 'more', 'remove', 'requirements', 'counts'}:
         raise ValueError('Invalid journey object')
     s = lambda v, n=160: v[:n] if isinstance(v, str) and v.strip() else None
     num = lambda v, lo, hi: v if type(v) in (int, float) and lo <= v <= hi else None
@@ -147,11 +149,12 @@ def validate_journey(j):
            'distance_km': num(j.get('distance_km'), .1, 100),
            'more': {k: int(v) for k, v in (j.get('more') or {}).items() if k in JOURNEY_ENUMS['interests'] | {'cafes', 'restaurants'} and type(v) is int and 0 < v <= 5}
                    if isinstance(j.get('more'), dict) else {},
-           'remove': [s(x) for x in (j.get('remove') or [])[:5] if s(x)]}
+           'remove': [s(x) for x in (j.get('remove') or [])[:5] if s(x)],
+           'requirements': j.get('requirements'), 'counts': j.get('counts') or {}}
     return out
 
 # Per-client rate limits (requests per rolling minute). Render puts the client address in X-Forwarded-For.
-RATE_LIMITS = {'menu': 10, 'itinerary': 30, 'routes': 60, 'recommend': 6, 'places': 60, 'ratings': 20}
+RATE_LIMITS = {'interpret': 12, 'menu': 10, 'itinerary': 30, 'routes': 60, 'recommend': 6, 'places': 60, 'ratings': 20}
 _rate, _rate_lock = {}, threading.Lock()
 
 
@@ -281,6 +284,13 @@ class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
+    def send_head(self):
+        path = Path(self.translate_path(self.path))
+        rel = path.relative_to(ROOT) if path.is_relative_to(ROOT) else None
+        if rel is None or any(part.startswith('.') for part in rel.parts) or path.suffix in ('.py', '.pyc') or path.is_dir() and not (path/'index.html').exists():
+            self.send_error(404, 'Not found'); return None
+        return super().send_head()
+
     def end_headers(self):
         # Allow the STREETWISE GitHub Pages frontend to access the API.
         if self.path.startswith('/api/'):
@@ -315,11 +325,12 @@ class Handler(SimpleHTTPRequestHandler):
             key_ready = openai_key_problem(KEY) is None
             self.send_json(200, {'llm': key_ready, 'model': MODEL if key_ready else None,
                                  'deployment_commit': os.environ.get('RENDER_GIT_COMMIT'),
-                                 'interpretation_contract': 'strict-paired-v1',
+                                 'interpretation_contract': 'strict-paired-v2',
                                  'features': {'itinerary': True, 'menu_verify': 'official website only (no menu API connected)',
                                               'routing_coverage': 'Manhattan OSM pedestrian graph',
-                                              'place_search': 'Manhattan discovery index + NYC DOHMH food permits (five boroughs, search only outside Manhattan)',
-                                              'food_recommendations': True},
+                                              'place_search': 'Manhattan discovery + NYC DOHMH food permits + NYC Parks and public restrooms (citywide discovery; new unsnapped points are search only)',
+                                              'food_recommendations': True, 'menu_ocr_available': bool(menu_check.shutil.which('tesseract')),
+                                              'citywide_official_discovery': True},
                                  'providers': providers.configured()})
             return
         if self.path.startswith(('/api/places', '/api/hotels/')):
@@ -358,6 +369,8 @@ class Handler(SimpleHTTPRequestHandler):
             self.send_json(429, {'error': f'Too many requests; limit {RATE_LIMITS[bucket]} per minute.'}); return
         S = place_store()
         try:
+            if parts == ['places','categories']:
+                self.send_json(200, json.loads((ROOT/'data/places/category_catalog.json').read_text())); return
             if parts[:2] == ['places', 'search']:
                 near = {'lat': float(qs['lat']), 'lon': float(qs['lon'])}
                 if not (40.4 < near['lat'] < 41.0 and -74.3 < near['lon'] < -73.6):
@@ -370,6 +383,18 @@ class Handler(SimpleHTTPRequestHandler):
                                cuisine=(qs.get('cuisine') or '')[:40] or None, include_closed=qs.get('include_closed') == '1')
                 self.send_json(200, {'results': res, 'count': len(res), 'radius_m': radius, 'categories': cats,
                                      'note': 'Straight-line pre-selection; walking distance comes from the router. Outside Manhattan results are search only.'})
+                return
+            if parts == ['hotels', 'search']:
+                near = {'lat': float(qs['lat']), 'lon': float(qs['lon'])}
+                if not (40.4 < near['lat'] < 41 and -74.3 < near['lon'] < -73.6): raise ValueError('Search point outside NYC')
+                guests = int(qs.get('guests') or 2)
+                if not 1 <= guests <= 12: raise ValueError('guests must be 1-12')
+                criteria = providers.validate_stay(qs.get('checkin'),qs.get('checkout'),guests,int(qs['beds']) if qs.get('beds') else None,float(qs['max_price']) if qs.get('max_price') else None)
+                candidates = S.search(near, ['hotels'], radius_m=3000, limit=10)
+                self.send_json(200, {'status': 'blocked_by_provider_access' if not any(providers.configured()[p] for p in ('booking_demand','expedia_rapid')) else 'not_implemented',
+                    'candidates': candidates, 'rooms': [], 'price_matches': [],
+                    'requirements': criteria,
+                    'reason': 'Static hotel discovery only. Bed types, date-specific prices, availability and cancellations cannot be verified without an implemented authorized lodging provider.'})
                 return
             pid = '/'.join(parts[1:-1]) if parts[-1] in ('ratings', 'rooms') else '/'.join(parts[1:])
             place = S.get(pid)
@@ -384,7 +409,7 @@ class Handler(SimpleHTTPRequestHandler):
                 for k in ('checkin', 'checkout'):
                     if qs.get(k) and not re.fullmatch(r'\d{4}-\d{2}-\d{2}', qs[k]):
                         raise ValueError(f'{k} must be YYYY-MM-DD')
-                self.send_json(200, providers.hotel_rooms(place, qs.get('checkin'), qs.get('checkout'), guests))
+                self.send_json(200, providers.hotel_rooms(place, qs.get('checkin'), qs.get('checkout'), guests,int(qs['beds']) if qs.get('beds') else None,float(qs['max_price']) if qs.get('max_price') else None))
                 return
             if parts[-1] == 'ratings':
                 self.send_json(200, providers.ratings({'place_id': place['place_id'], 'name': place['name'], 'address': place['address'], **place['coordinates']}))
@@ -400,7 +425,7 @@ class Handler(SimpleHTTPRequestHandler):
         path = Path(self.translate_path(self.path))
         if path.is_dir():
             path = path / 'index.html'
-        if path.suffix not in GZIP_TYPES or not path.is_file():
+        if any(p.startswith('.') for p in path.relative_to(ROOT).parts) or path.suffix not in GZIP_TYPES or not path.is_file():
             return False
         stat = path.stat()
         key = (str(path), stat.st_mtime_ns, stat.st_size)
@@ -420,7 +445,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         bucket = {'/api/menu/verify': 'menu', '/api/itinerary': 'itinerary', '/api/routes': 'routes', '/api/detours': 'itinerary',
-                  '/api/recommend/food': 'recommend'}.get(self.path)
+                  '/api/interpret': 'interpret', '/api/recommend/food': 'recommend'}.get(self.path)
         if bucket and not rate_ok(self, bucket):
             self.send_json(429, {'error': f'Too many requests; limit {RATE_LIMITS[bucket]} per minute.'})
             return

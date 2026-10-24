@@ -49,6 +49,14 @@ JOURNEY = obj({
     'outing_minutes': nullable(number(10, 1440)), 'distance_km': nullable(number(.1, 100)),
     'more': obj({k: nullable(number(1, 5, True)) for k in INTERESTS + ['cafes', 'restaurants']}),
     'remove': array(TEXT, 5),
+    'counts': nullable(obj({k: nullable(number(1,5,True)) for k in INTERESTS})),
+    'requirements': nullable(obj({
+        'search_anchor': nullable(TEXT), 'must_be_open': nullable(BOOL), 'ratings_required': nullable(BOOL), 'minimum_rating': nullable(number(0, 5)),
+        'restaurant_budget_usd': nullable(number(0)), 'ticket_budget_usd': nullable(number(0)),
+        'total_budget_usd': nullable(number(0)), 'hotel_budget_per_night_usd': nullable(number(0)),
+        'checkin': nullable(TEXT), 'checkout': nullable(TEXT),
+        'guests': nullable(number(1, 12, True)), 'beds': nullable(number(1, 6, True)),
+    })),
 })
 COMMON = {
     'time_minutes': nullable(number(MIN_WALK_MINUTES, integer=True)),
@@ -119,5 +127,7 @@ def normalize_wire(output):
     result['constraints'] = {k: v for k, v in result['constraints'].items() if v is not None}
     if result['journey'] is not None:
         result['journey'] = dict(result['journey'])
+        if result['journey'].get('counts') is not None:
+            result['journey']['counts'] = {k:v for k,v in result['journey']['counts'].items() if v is not None}
         result['journey']['more'] = {k: v for k, v in result['journey']['more'].items() if v is not None}
     return result
