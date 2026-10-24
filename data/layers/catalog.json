@@ -6524,7 +6524,7 @@
    ],
    "scoring": [],
    "used_in_scoring": false,
-   "independent_metric": false,
+   "independent_metric": true,
    "default_visible": false,
    "layer_type": "indexed_query",
    "min_zoom_view": 12,
