@@ -23,6 +23,7 @@ from routing import menu as menu_check
 from routing import providers
 from routing.places import store as place_store
 from routing.recommend import recommend_food
+from interpretation_contract import RESPONSE_FORMAT, JOURNEY, validate as validate_contract, normalize_wire
 
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
@@ -48,20 +49,16 @@ STREETS_DATA = ROOT / 'data' / 'manhattan-streets.json'
 REFRESH_DAYS = float(os.environ.get('STREETWISE_REFRESH_DAYS', '30'))
 GZIP_TYPES = ('.json', '.js', '.css', '.html')
 _gzip_cache = {}
-DIMENSIONS = [
-    'Architecture', 'Nature', 'Culture', 'Quiet & Relax', 'Spatial Comfort',
-    'Urban Vibrancy', 'Food & Retail', 'Scenic & Visual', 'Walkability',
-    'Access & Safety', 'Environment', 'Transit Connectivity'
-]
+DIMENSIONS = list(ROUTE_DIMENSIONS)
 
 SYSTEM = f"""You are STREETWISE's structured walking-preference interpreter. Never invent route geometry, verified spatial indicators, observations, or street-level environmental evidence.
-Return one JSON object ONLY with keys:
-"weights": object mapping ONLY mentioned dimensions (exactly these 12 names: {json.dumps(DIMENSIONS)}) to independent IMPORTANCE integers 0..100. 0 means ignore, not an inverse objective. A clear request such as 'more greenery', 'less traffic', or 'quieter streets' gives high importance about 85-95.
-"directions": object mapping ONLY the same mentioned dimensions to either 'high' or 'low': desired greater or lesser measured exposure. 'Less crowded' = Urban Vibrancy weight 90 direction low. 'Quieter' = Quiet & Relax weight 90 direction high (quiet is desired high). Do not use low weights to represent a negative preference. Every directions key must also exist in weights. Use canonical API names, never UI abbreviations: Comfort = Spatial Comfort; Vibrancy = Urban Vibrancy; Scenic = Scenic & Visual; Safety = Access & Safety; Transit = Transit Connectivity. Parks maps to Nature; coffee is a journey.food requirement, not a dimension named Coffee.
+Return one JSON object matching the supplied strict schema. All schema properties must exist: use null for unspecified nullable values, empty arrays for no requests, and null in constraints/more entries to preserve unchanged state. Keys:
+"preferences": array of unique mentioned dimensions, each an object with "dimension" (exactly one of {json.dumps(DIMENSIONS)}), "weight" (integer 0..100), and "direction" (high or low). Weight is importance, not a street score. For example less crowded means Urban Vibrancy with high importance and direction low; quieter means Quiet & Relax direction high. Omit unmentioned dimensions from the array. Never return separate weights/directions maps; the backend derives them from these pairs. Use full canonical names, not UI abbreviations.
 "time_minutes": absolute walking hard cap in whole minutes (at least 10; no upper limit), if explicitly given; otherwise null.
 "time_delta_minutes": signed integer modification to existing walking cap, if user explicitly says 'five more minutes'; otherwise null. Never return both time_minutes and time_delta_minutes non-null.
+For an explicitly shortest route set constraints.avoidDetours=true and max_detour_percent=0. Historic landmarks map to Architecture and/or Culture; waterfront scenery maps to Scenic & Visual, not a new dimension.
 "max_detour_percent": optional integer from 0 to 100 if explicitly specified (extra distance over the shortest candidate route distance), otherwise null.
-"constraints": object containing ONLY changed boolean entries from 'avoidDetours', 'stepFree', 'avoidStairs'. Keep unmentioned prior constraints.
+"constraints": object with schema keys; changed values are boolean and unchanged values are null, for 'avoidDetours', 'stepFree', 'avoidStairs'. Null preserves prior constraints.
 "weather": "ask" if the user asks whether the walk or route is comfortable in the current weather (answered from data, no re-routing); "cooler" if they want a cooler, shadier or less sun-exposed walk because of heat; "consider" if they ask to take today's weather into account; otherwise null. Weather is a separate context, not a dimension: "shade" may also raise Nature, but never invent temperatures, shade, rain cover or wind shelter. The current forecast is given in the state as "weather" (null when unavailable).
 "journey": null, or an object for tourist / multi-stop requests, every unknown field null (never guess):
   {{"interests": subset of ["famous","museums","historic","parks","shopping","culture"],
@@ -73,11 +70,11 @@ Return one JSON object ONLY with keys:
    "origin": "gps"|"hotel"|a place name|null, "destination": a place name|null,
    "end_mode": "fixed"|"round"|"hotel"|"open"|null,
    "walking_minutes": walking-time limit or null, "outing_minutes": total time incl. visits ("I have two hours" = 120) or null,
-   "distance_km": walking-distance limit in km or null, "more": {{"category": count to add}} for "add another museum", "remove": [names] }}
+   "distance_km": walking-distance limit in km or null, "more": object with schema category keys, count to add or null for unchanged categories, for "add another museum", "remove": [names] }}
   For any explicit food or drink request, journey must be non-null and food must preserve it, even in a simple walking-preference sentence. Coffee is category cafes, item coffee; parks also belong in journey.interests. Food & Retail weight alone never satisfies a requested POI.
   Never output coordinates, addresses, menus, prices or opening hours: places are looked up by STREETWISE tools.
 "clarification": null unless user intent is materially ambiguous or contradictory (for example asks for both a strict 10-minute cap and a 30-minute minimum, or asks for inaccessible route when step-free is required). If ambiguous, write one short question here, do not infer changes.
-Preserve current state by omitting every unmentioned dimension/constraint. Time and accessibility are hard constraints, not dimension scores. Do not claim quiet or step-free conditions are validated.
+Preserve current state: omit unmentioned dimensions from preferences; set unmentioned constraint values to null. Time and accessibility are hard constraints, not dimension scores. Do not claim quiet or step-free conditions are validated.
 """
 
 def validate_interpretation(doc):
@@ -129,6 +126,7 @@ def validate_journey(j):
     """Structured tourist intent from the LLM: names and categories only, never coordinates or menus."""
     if j is None:
         return None
+    validate_contract(j, JOURNEY, 'journey', required=False)
     if not isinstance(j, dict) or set(j) - {'interests', 'named_stops', 'food', 'services', 'service_scope', 'hotel', 'origin', 'destination',
                                               'end_mode', 'walking_minutes', 'outing_minutes', 'distance_km', 'more', 'remove'}:
         raise ValueError('Invalid journey object')
@@ -316,6 +314,8 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == '/api/status':
             key_ready = openai_key_problem(KEY) is None
             self.send_json(200, {'llm': key_ready, 'model': MODEL if key_ready else None,
+                                 'deployment_commit': os.environ.get('RENDER_GIT_COMMIT'),
+                                 'interpretation_contract': 'strict-paired-v1',
                                  'features': {'itinerary': True, 'menu_verify': 'official website only (no menu API connected)',
                                               'routing_coverage': 'Manhattan OSM pedestrian graph',
                                               'place_search': 'Manhattan discovery index + NYC DOHMH food permits (five boroughs, search only outside Manhattan)',
@@ -534,7 +534,12 @@ def call_llm(payload, timeout=26):
     except (error.URLError, TimeoutError, OSError) as e:
         raise LLMFailure('upstream_unreachable', detail=type(getattr(e, 'reason', e)).__name__)
     try:
-        content = json.loads(raw)['choices'][0]['message']['content']
+        choice = json.loads(raw)['choices'][0]
+        if choice.get('finish_reason') == 'length':
+            raise LLMFailure('model_output_incomplete')
+        if choice['message'].get('refusal'):
+            raise LLMFailure('model_refused')
+        content = choice['message']['content']
     except (ValueError, KeyError, IndexError, TypeError):
         raise LLMFailure('upstream_bad_response', detail='no choices[0].message.content in the provider response')
     try:
@@ -564,7 +569,7 @@ def interpret(doc):
     payload = {
         'model': MODEL,
         'temperature': 0,
-        'response_format': {'type': 'json_object'},
+        'response_format': RESPONSE_FORMAT,
         'messages': [
             {'role': 'system', 'content': SYSTEM},
             {'role': 'user', 'content': 'Current state: '+json.dumps(context, ensure_ascii=False)+'\nRecent conversation: '+json.dumps(history[-8:], ensure_ascii=False)+'\nLatest instruction: '+message}
@@ -578,7 +583,7 @@ def interpret(doc):
                 raise LLMFailure('upstream_unreachable', detail='TimeoutError')
             output = call_llm(payload, timeout=remaining)
             try:
-                return 200, validate_interpretation(output)
+                return 200, validate_interpretation(normalize_wire(output))
             except ValueError as e:
                 failure = LLMFailure('model_output_rejected', detail=f'{e}; keys: {sorted(output)[:12] if isinstance(output, dict) else type(output).__name__}')
                 if attempt:
@@ -590,9 +595,8 @@ def interpret(doc):
                     {'role': 'assistant', 'content': json.dumps(output, ensure_ascii=False)},
                     {'role': 'user', 'content':
                      'Your JSON failed validation: ' + str(e) + '. Return a corrected JSON object for the ORIGINAL request. '
-                     'Use only canonical dimension names. Every directions key must have a corresponding integer weight '
-                     'in weights. Omit both fields for dimensions not requested; do not add arbitrary weights merely to '
-                     'satisfy validation. Preserve explicit POI requirements in journey.food and preserve all other intent.'}
+                     'Use the strict schema preferences array with unique dimension/weight/direction triples. '
+                     'Omit unrequested dimensions from that array; never invent weights to satisfy validation. Preserve explicit POI requirements in journey.food and preserve all other intent.'}
                 ])
     except LLMFailure as f:
         print('interpret failure', json.dumps(f.reason), flush=True)

@@ -32,7 +32,38 @@ def http_error(code, body):
     return error.HTTPError('https://api.openai.com/v1/chat/completions', code, 'err', {}, io.BytesIO(json.dumps(body).encode()))
 
 
+def wire(doc):
+    """Test fixture encoder: mocks the new provider wire format, not production AI."""
+    from interpretation_contract import WIRE_SCHEMA
+    def fill(value, schema):
+        if 'anyOf' in schema:
+            return None if value is None else fill(value, schema['anyOf'][0])
+        if schema['type'] == 'object' and isinstance(value, dict):
+            out = dict(value)
+            for k, spec in schema['properties'].items():
+                default = None if 'anyOf' in spec else [] if spec['type'] == 'array' else {} if spec['type'] == 'object' else True
+                out[k] = fill(out.get(k, default), spec)
+            return out
+        if schema['type'] == 'array' and isinstance(value, list):
+            return [fill(x, schema['items']) for x in value]
+        return value
+    out = {k: v for k, v in doc.items() if k not in ('weights', 'directions')}
+    out['preferences'] = []
+    for d in dict.fromkeys([*doc.get('weights', {}), *doc.get('directions', {})]):
+        record = {'dimension': d, 'direction': doc.get('directions', {}).get(d, 'high')}
+        if d in doc.get('weights', {}):
+            record['weight'] = doc['weights'][d]
+        out['preferences'].append(record)
+    # Do not fill missing weight: the orphan-direction fixtures must stay invalid.
+    saved = out['preferences']
+    result = fill(out, WIRE_SCHEMA)
+    result['preferences'] = saved
+    return result
+
+
 def completion(content):
+    if isinstance(content, dict):
+        content = wire(content)
     return Resp({'choices': [{'message': {'content': content if isinstance(content, str) else json.dumps(content)}}]})
 
 
@@ -106,7 +137,7 @@ class InterpretFailures(unittest.TestCase):
     def test_model_output_rejected_names_the_problem(self):
         status, body, log = self.run_with(completion({'weights': {'Greenery': 90}, 'directions': {}, 'constraints': {}}))
         r = body['reason']
-        self.assertEqual(r['stage'], 'model_output_rejected'); self.assertIn('Invalid dimension name', r['detail']); self.assertIn("keys: ['constraints', 'directions', 'weights']", r['detail'])
+        self.assertEqual(r['stage'], 'model_output_rejected'); self.assertIn('preferences[].dimension', r['detail'])
         self.assertIn('model_output_rejected', log)
 
     def test_dimension_failure_diagnostics_are_distinct(self):
@@ -115,10 +146,9 @@ class InterpretFailures(unittest.TestCase):
                  ({'weights': {}, 'directions': {'Nature': 'high'}}, 'no corresponding weight')]
         for output, detail in cases:
             with self.subTest(detail=detail):
-                status, body, _ = self.run_with(completion(output))
-                self.assertEqual(status, 502)
-                self.assertEqual(body['reason']['stage'], 'model_output_rejected')
-                self.assertIn(detail, body['reason']['detail'])
+                with self.assertRaisesRegex(ValueError, detail):
+                    server.validate_interpretation(output)
+
 
     def test_success_unchanged(self):
         status, body, _ = self.run_with(completion({'weights': {'Nature': 90}, 'directions': {'Nature': 'high'}, 'constraints': {}}))
@@ -165,8 +195,10 @@ class InterpretFailures(unittest.TestCase):
         self.assertEqual(body['journey']['food'][0]['item'], 'coffee')
         self.assertEqual(call.call_count, 2)
         second = json.loads(call.call_args_list[1].args[0].data)
-        self.assertIn('Direction has no corresponding weight', second['messages'][-1]['content'])
-        self.assertEqual(json.loads(second['messages'][-2]['content']), invalid)
+        self.assertIn('missing fields', second['messages'][-1]['content'])
+        self.assertEqual(json.loads(second['messages'][-2]['content']), wire(invalid))
+        self.assertEqual(second['response_format']['type'], 'json_schema')
+        self.assertTrue(second['response_format']['json_schema']['strict'])
         self.assertLessEqual(call.call_args_list[1].kwargs['timeout'], call.call_args_list[0].kwargs['timeout'])
 
     def test_repeated_invalid_result_still_fails(self):
@@ -193,6 +225,14 @@ class InterpretFailures(unittest.TestCase):
         self.assertEqual(status, 502)
         self.assertEqual(body['reason']['code'], 'invalid_api_key')
         self.assertEqual(call.call_count, 1)
+
+    def test_provider_refusal_and_truncation_are_distinct(self):
+        for choice, stage in [({'message': {'refusal': 'refused', 'content': None}}, 'model_refused'),
+                              ({'finish_reason': 'length', 'message': {'content': '{'}}, 'model_output_incomplete')]:
+            with self.subTest(stage=stage):
+                status, body, _ = self.run_with(Resp({'choices': [choice]}))
+                self.assertEqual(status, 502)
+                self.assertEqual(body['reason']['stage'], stage)
 
     def test_scrub(self):
         with mock.patch.object(server, 'KEY', FAKE_KEY):
