@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=21" />
+  <link rel="stylesheet" href="./styles.css?v=28" />
 </head>
 <body>
 <div class="site-shell">
@@ -107,9 +107,11 @@
         <div class="explore-head"><div class="explore-heading"><div class="explore-eyebrow">ALL MANHATTAN · STREET SEGMENTS</div><strong id="exploreTitle">Nature</strong></div><button id="exploreThumbsToggle" class="explore-collapse" aria-pressed="false" title="Show all 13 maps side by side" aria-label="Show all 13 small maps">▦</button><button id="exploreCollapse" class="explore-collapse" aria-expanded="true" title="Collapse panel" aria-label="Collapse panel">–</button></div>
         <div class="explore-ramp"><span id="exploreRampLow">0</span><i></i><span id="exploreRampHigh">100</span><span class="ramp-na"><s></s>N/A</span></div>
         <div id="exploreBody" class="explore-body">
+          <div class="explore-tools"><input id="exploreSearch" type="search" placeholder="Search dimensions…" aria-label="Search dimensions"><button type="button" id="exploreReset" class="mini-outline">Reset view</button></div>
           <div id="exploreChips" class="explore-chips" role="radiogroup" aria-label="Map dimension"></div>
           <div id="exploreGrid" class="explore-grid hidden" aria-label="13 maps side by side"></div>
           <p id="exploreMetric" class="explore-metric"></p>
+          <div id="exploreAnalytics" class="explore-analytics"></div>
           <label class="explore-opacity">Line opacity <input id="exploreOpacity" type="range" min="20" max="100" value="90" aria-label="Street line opacity"></label>
           <p id="exploreStatus" class="explore-note" role="status">Loading 12-dimension street data…</p>
         </div>
@@ -132,6 +134,27 @@
         </div></details>
       <section id="udLegend" class="ud-legend" aria-label="Map legend"><button type="button" id="udLegendToggle" class="ud-legend-head" aria-expanded="true">Legend</button><div class="lg-body"></div></section>
       <aside id="urbanInspector" class="explore-inspector urban-inspector hidden" aria-label="Urban feature inspector" aria-live="polite"></aside>
+      <section id="navOverlay" class="nav-overlay hidden" aria-label="Live navigation" aria-live="polite">
+        <div class="nav-top">
+          <div class="nav-arrow" id="navArrow"></div>
+          <div class="nav-main"><div class="nav-dist" id="navDist"></div><div class="nav-instr" id="navInstr">Starting…</div><div class="nav-then" id="navThen"></div><div class="nav-conf" id="navConf"></div></div>
+        </div>
+        <div id="navStatus" class="nav-status hidden"></div>
+        <button type="button" id="navRetry" class="nav-pill hidden">Retry</button>
+        <div id="navStopActions" class="nav-stop hidden"><strong id="navStopName"></strong><small id="navStopVisit"></small>
+          <div><button type="button" class="nav-pill primary" id="navContinue">Continue to next stop</button><button type="button" class="nav-pill" id="navSkip">Skip optional stop</button></div></div>
+        <div id="navArrived" class="nav-stop hidden"><strong>You have arrived</strong><small>Walk complete.</small><div><button type="button" class="nav-pill primary" id="navArrivedDone">End navigation</button></div></div>
+        <button type="button" id="navRecenter" class="nav-recenter">◎ Recenter</button>
+        <div class="nav-bottom">
+          <div class="nav-stats"><strong id="navRemain">—</strong><span id="navTime">—</span><small id="navStop"></small></div>
+          <div class="nav-buttons"><button type="button" class="nav-pill" id="navVoice" aria-pressed="true">Voice on</button><button type="button" class="nav-pill" id="navPause">Pause</button>
+            <details class="nav-more"><summary class="nav-pill">More</summary><div class="nav-more-body"><button type="button" class="nav-pill" id="navRepeat">Repeat</button>
+            <select id="navLang" aria-label="Voice language"><option value="en">EN</option><option value="zh">中文</option></select><button type="button" class="nav-pill" id="navUnits">m</button>
+            <button type="button" class="nav-pill" id="navMode">North up</button></div></details><button type="button" class="nav-pill danger" id="navExit">Exit</button></div>
+          <small id="navHeadingNote" class="nav-note"></small>
+        </div>
+      </section>
+      <div id="navChoice" class="nav-choice hidden" role="dialog" aria-modal="true"></div>
       <div class="map-actions"><button id="mapLocate" title="Locate me" aria-label="Locate me">◎</button><button id="toggleLegend" title="Toggle legend" aria-label="Toggle legend" aria-pressed="true">≡</button><button id="mapReset" title="Reset map view" aria-label="Reset map view">⤢</button></div>
       <div id="pickNotice" class="pick-notice hidden">Click anywhere on the map to set a point. <button id="cancelPick">CANCEL</button></div>
       <div class="map-legend"><div class="legend-title"><span id="legendDot" class="legend-dot"></span><span id="legendTitle">MANHATTAN STREET NETWORK</span></div><p id="legendSubtitle">Official NYC centerlines (Manhattan borough filter); walkability not confirmed.</p><div id="legend-scale" class="legend-scale hidden"><span><i style="background:#365c64"></i>Lower</span><span><i style="background:#37bfc8"></i>Mid</span><span><i style="background:#d8f365"></i>Higher</span></div></div>
@@ -149,6 +172,8 @@
         <div class="section-row"><div class="section-overline">AI RECOMMENDED ROUTES</div><span class="small-count" id="routeCount">0 LOADED</span></div>
         <p class="soft-copy">Real routes from the STREETWISE engine on the OpenStreetMap pedestrian graph, ranked by your preferences on the same 12 experience scores as Explore.</p>
         <div id="rankingStatus" class="ranking-status">No route data yet.</div>
+        <div id="routeValidation" class="route-validation hidden" aria-live="polite"></div>
+        <button type="button" id="navStart" class="primary-cta nav-start hidden"><span>➤ Start Navigation</span><span class="cta-arrow">↗</span></button>
         <div class="route-cards" id="routeCards"><div class="empty-route"><strong>No routes generated yet</strong><p>Set your journey to compare real pedestrian paths.</p></div></div>
         <div class="subtle-divider"></div>
         <div class="section-overline">✦ WHY THIS ROUTE?</div><div class="why-box" id="whyRoute">Generate routes to see evidence-grounded reasons.</div>
@@ -187,21 +212,24 @@
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <div id="modalOverlay" class="modal-overlay hidden"><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button id="closeModal" class="modal-close" title="Close">✕</button><div class="section-overline">PROJECT NOTES / TRANSPARENCY</div><h2 id="modalTitle">What is real, and what's next.</h2><div id="modalContent"></div></div></div>
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<script src="./experience-core.js?v=21"></script>
-<script src="./api-config.js?v=21"></script>
-<script src="./weather.js?v=21"></script>
-<script src="./places.js?v=21"></script>
-<script src="./opening-hours.js?v=21"></script>
-<script src="./app.js?v=21"></script>
-<script src="./route-client.js?v=21"></script>
-<script src="./weather-ui.js?v=21"></script>
-<script src="./journey.js?v=21"></script>
-<script src="./journey-ui.js?v=21"></script>
-<script src="./voice.js?v=21"></script>
-<script src="./urban-geo.js?v=21"></script>
-<script src="./urban-style.js?v=21"></script>
-<script src="./urban-layers.js?v=21"></script>
-<script src="./explore-map.js?v=21"></script>
-<script src="./center-map.js?v=21"></script>
+<script src="./experience-core.js?v=28"></script>
+<script src="./api-config.js?v=28"></script>
+<script src="./weather.js?v=28"></script>
+<script src="./places.js?v=28"></script>
+<script src="./opening-hours.js?v=28"></script>
+<script src="./app.js?v=28"></script>
+<script src="./route-client.js?v=28"></script>
+<script src="./weather-ui.js?v=28"></script>
+<script src="./journey.js?v=28"></script>
+<script src="./journey-ui.js?v=28"></script>
+<script src="./voice.js?v=28"></script>
+<script src="./nav-engine.js?v=28"></script>
+<script src="./nav-ui.js?v=28"></script>
+<script src="./urban-geo.js?v=28"></script>
+<script src="./urban-style.js?v=28"></script>
+<script src="./urban-layers.js?v=28"></script>
+<script src="./explore-map.js?v=28"></script>
+<script src="./explore-analytics.js?v=28"></script>
+<script src="./center-map.js?v=28"></script>
 </body>
 </html>

@@ -126,6 +126,30 @@ def validate_journey(j):
            'remove': [s(x) for x in (j.get('remove') or [])[:5] if s(x)]}
     return out
 
+# Per-client rate limits (requests per rolling minute). Render puts the client address in X-Forwarded-For.
+RATE_LIMITS = {'menu': 10, 'itinerary': 30, 'routes': 60}
+_rate, _rate_lock = {}, threading.Lock()
+
+
+def client_ip(handler):
+    fwd = handler.headers.get('X-Forwarded-For', '')
+    return (fwd.split(',')[0].strip() or handler.client_address[0])[:64]
+
+
+def rate_ok(handler, bucket):
+    key, now = (client_ip(handler), bucket), time.time()
+    with _rate_lock:
+        hits = [t for t in _rate.get(key, []) if now - t < 60]
+        if len(hits) >= RATE_LIMITS[bucket]:
+            _rate[key] = hits
+            return False
+        hits.append(now)
+        _rate[key] = hits
+        if len(_rate) > 5000:
+            _rate.clear()
+    return True
+
+
 def read_json(handler, limit):
     n = int(handler.headers.get('Content-Length', 0))
     if n <= 0 or n > limit:
@@ -316,6 +340,10 @@ class Handler(SimpleHTTPRequestHandler):
         return True
 
     def do_POST(self):
+        bucket = {'/api/menu/verify': 'menu', '/api/itinerary': 'itinerary', '/api/routes': 'routes', '/api/detours': 'itinerary'}.get(self.path)
+        if bucket and not rate_ok(self, bucket):
+            self.send_json(429, {'error': f'Too many requests; limit {RATE_LIMITS[bucket]} per minute.'})
+            return
         if self.path == '/api/itinerary':
             try:
                 doc = read_json(self, 120000)
@@ -334,7 +362,10 @@ class Handler(SimpleHTTPRequestHandler):
             return
         if self.path == '/api/menu/verify':
             try:
-                self.send_json(200, menu_check.verify(read_json(self, 4000)))
+                result = menu_check.verify(read_json(self, 4000))
+                if any('refused' in p for p in [result.get('reason') or '']):
+                    print('menu-verify refused URL', client_ip(self), result.get('place_id'), flush=True)  # security log
+                self.send_json(200, result)
             except (ValueError, TypeError, json.JSONDecodeError) as e:
                 self.send_json(400, {'error': str(e)})
             return
@@ -347,7 +378,8 @@ class Handler(SimpleHTTPRequestHandler):
                 else:
                     p = validate_point(doc, 'position')
                     acc = doc.get('accuracy_m')
-                    self.send_json(200, planner.progress(str(doc.get('route_id', '')), p['lon'], p['lat'], acc if type(acc) in (int, float) else None))
+                    self.send_json(200, planner.progress(str(doc.get('route_id', '')), p['lon'], p['lat'], acc if type(acc) in (int, float) else None,
+                                                         doc.get('route_snapshot')))
             except (ValueError, TypeError, json.JSONDecodeError) as e:  # RoutingError is a ValueError
                 self.send_json(422 if isinstance(e, RoutingError) else 400, {'error': str(e)})
             except RuntimeError as e:

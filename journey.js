@@ -47,7 +47,8 @@ function poiPlace(r){
  const src=r.src==='lpc'?'NYC Landmarks Preservation Commission':r.src==='nyc_restrooms'?'NYC Open Data Public Restrooms':'OpenStreetMap (Overpass snapshot)';
  return {id:r.id,name:r.name,address:r.addr||null,neighborhood:null,borough:'Manhattan',category:poiCategoryLabel(r),lat:r.lat,lon:r.lon,source:src,
   sourceUrl:r.id.startsWith('osm:')?`https://www.openstreetmap.org/${r.id.slice(4)}`:r.report||null,website:r.web||null,menuUrl:r.menu||null,hours:r.hours||null,
-  wikidata:r.wd||null,cat:r.cat,drink:r.drink||null,cuisine:r.cuisine||null,verification:'Listed by source (not verified by STREETWISE)',raw:r};
+  wikidata:r.wd||null,cat:r.cat,drink:r.drink||null,cuisine:r.cuisine||null,cid:r.cid||r.id,providerIds:r.pids||[r.id],quality:r.q||null,accessM:r.snap??null,
+  operationalStatus:'Listed in source — not verified open today',landmark:r.src==='lpc'||Boolean(r.lpc),verification:'Listed by source (not verified by STREETWISE)',raw:r};
 }
 function poiCategoryLabel(r){
  const s=r.sub||'';const v=s.split('=')[1]||'';
@@ -81,7 +82,7 @@ function journeyEndPlace(){
 function relevance(r,{item=null,cuisine=null}={}){
  let s=.3;
  if(r.sl)s+=.55*Math.min(1,Math.log10(1+r.sl)/2.1);else if(r.wd)s+=.05;
- if(r.src==='lpc')s+=.2;if(r.web)s+=.05;if(r.hours)s+=.05;
+ if(r.src==='lpc'||r.lpc)s+=.2;if(r.web)s+=.05;if(r.hours)s+=.05;
  if(item){const d=r.drink||{};if(d[item]==='yes')s+=.3;else if(['cappuccino','latte','espresso','flat white'].includes(item)&&(d.espresso==='yes'||d.coffee==='yes'||/coffee/.test(r.cuisine||'')))s+=.15;}
  if(cuisine&&new RegExp(`(^|;)${cuisine}(;|$)`,'i').test(r.cuisine||''))s+=.3;
  return Math.min(1,s);
@@ -96,7 +97,8 @@ async function discoverPlaces(cats,{item=null,cuisine=null,filter=null,limit=8,n
  const seen=new Set(),out=[];
  for(const r of lists.flat()){
   if(journey.removed.has(r.id)||filter&&!filter(r))continue;
-  const key=normName(r.name);if(seen.has(key+Math.round(r.lat*500)+Math.round(r.lon*500)))continue;seen.add(key+Math.round(r.lat*500)+Math.round(r.lon*500));
+  // one canonical place once, however many sources list it (cid from scripts/build_place_index.py entity resolution)
+  const key=normName(r.name);if(seen.has(r.cid||r.id))continue;seen.add(r.cid||r.id);
   const d=distToPathKm(r,path);if(d>radiusKm)continue;
   if(fixedPts.some(f=>kmBetween(f,r)<.15||normName(f.name)===key))continue;
   const rel=relevance(r,{item,cuisine});out.push({r,rel,d,score:rel-.3*d});
@@ -146,6 +148,9 @@ function localJourney(q){
  const j={interests:[],named_stops:[],food:[],services:[],service_scope:null,hotel:null,origin:null,destination:null,end_mode:null,walking_minutes:null,outing_minutes:null,distance_km:null,more:{},remove:[]};
  const seqWords=/(then|after that|afterwards|before|first|finally|先|再|然后|接着|之后|最后)/i.test(q);
  for(const [re,v] of INTEREST_RULES)if(re.test(q)&&!j.interests.includes(v))j.interests.push(v);
+ // "interesting architecture" is a walking preference (the Architecture dimension), not a request to visit places:
+ // these interests start discovery only with a visit cue. Museums and famous sights are places by definition.
+ if(!/(visit|see |see$|show me|explore|tour|sightsee|first time|discover|go to|stop at|逛|看看|看一些|参观|游览|第一次|去看|去逛)/i.test(q))j.interests=j.interests.filter(i=>['famous','museums'].includes(i));
  // "one more museum" / "再加一个博物馆" adds to what is already planned
  const more=q.match(/(?:another|one more|add (?:a|one)|再加(?:一个|一家|个)?|再来一个|多加一个)\s*([^,，。.]{0,14})/i);
  if(more){const what=more[1];for(const [re,v] of INTEREST_RULES)if(re.test(what)){j.more[v]=(j.more[v]||0)+1;j.interests=j.interests.filter(x=>x!==v);}}
@@ -216,7 +221,8 @@ async function applyJourney(j){
  else if(j.origin){const p=await findNamedPlace(j.origin);if(p){setJourneyPlace('start',p);changes.push(`start: ${p.name}`);}}
  if(j.destination){const p=await findNamedPlace(j.destination);if(p){setJourneyPlace('end',p);setEndMode('fixed');changes.push(`end: ${p.name}`);}}
  if(j.end_mode&&j.end_mode!=='fixed'){setEndMode(j.end_mode);changes.push({hotel:'end: back to my hotel',round:'end: back to start',open:'flexible end'}[j.end_mode]);}
- else if(journey.active&&!j.destination&&journey.endMode==='fixed'&&(j.interests.length||Object.keys(j.more||{}).length)&&!journey.userSetDestination){setEndMode('open');changes.push('flexible end (discover for me)');}
+ // discovery never drops a destination: with one set, discovered stops go along the way
+ else if(journey.active&&!j.destination&&journey.endMode==='fixed'&&(j.interests.length||Object.keys(j.more||{}).length)&&!getPlace('end')){setEndMode('open');changes.push('flexible end (discover for me)');}
  if(j.outing_minutes!=null){state.outingMin=j.outing_minutes;$('outingMin').value=j.outing_minutes;changes.push(`outing ${j.outing_minutes} min (walking + visits)`);
   if(j.outing_minutes>state.budget){setBudget(j.outing_minutes);}}
  if(j.walking_minutes!=null&&setBudget(Math.round(j.walking_minutes)))changes.push(`max ${state.budget} min walking`);
@@ -308,7 +314,7 @@ const pick=p=>({id:p.id,name:p.name,lat:p.lat,lon:p.lon,category:p.category||nul
 const slotCand=c=>({...pick(c),score:c.score,evidence:candidateEvidence(c)});
 function foodLabel(f){return f.item?`${titleCase(f.item)} (${f.category==='cafes'?'café':f.category.replace(/s$/,'')})`:f.cuisine?`${titleCase(f.cuisine)} restaurant`:{cafes:'Café',restaurants:'Restaurant',bakeries:'Bakery / dessert',bars:'Bar'}[f.category];}
 function candidateEvidence(c){
- const e=[];if(c.raw?.sl)e.push(`Wikipedia in ${c.raw.sl} editions`);else if(c.wikidata)e.push('Wikidata-listed');if(c.raw?.src==='lpc')e.push('NYC designated landmark');if(c.drink?.espresso==='yes')e.push('OSM tag: serves espresso');if(c.drink?.coffee==='yes')e.push('OSM tag: serves coffee');
+ const e=[];if(c.raw?.sl)e.push(`Wikipedia in ${c.raw.sl} editions`);else if(c.wikidata)e.push('Wikidata-listed');if(c.raw?.src==='lpc'||c.raw?.lpc)e.push('NYC designated landmark');if(c.raw?.snap>80)e.push(`entrance approx. ${Math.round(c.raw.snap)} m from mapped point`);if(c.drink?.espresso==='yes')e.push('OSM tag: serves espresso');if(c.drink?.coffee==='yes')e.push('OSM tag: serves coffee');
  if(c.cuisine)e.push('cuisine: '+c.cuisine.replace(/;/g,', '));if(c.hours)e.push('hours listed');return e.join(' · ')||null;
 }
 function journeyTheme(){
@@ -368,7 +374,7 @@ async function placeById(id){
  for(const c of Object.keys(POI_CACHE)){const r=(await POI_CACHE[c]).find(x=>x.id===id);if(r)return poiPlace(r);}
  return null;
 }
-const MENU_LABEL={verified_on_menu:'Verified on menu',unverified:'Unverified',not_found:'Not found in available sources',checking:'Checking official menu…'};
+const MENU_LABEL={confirmed_menu_match:'Confirmed menu match',probable_match_review:'Probable match — review needed',unverified:'Unverified',not_found_in_checked_sources:'Not found in checked sources',checking:'Checking official menu…'};
 
 /* ---------- nearby / along-route search (find, without adding) ---------- */
 async function findServices(type,scope){

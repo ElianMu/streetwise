@@ -123,4 +123,4 @@ function setupExperienceControls(){
  renderExperienceLegend();
 }
 function loadSelectedRaw(){const kind=selectedEvidenceKey()==='nature'?'trees':selectedEvidenceKey()==='architecture'?'lpc':null;if(kind&&!state.datasets[kind])loadViewportEvidence(kind);}
-setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupWeatherUI();setupJourneyUI();setupVoice();setupMap();loadData('streets');loadWeather();
+setupControls();setupExperienceControls();setupExploreControls();setupUrbanControls();setupWeatherUI();setupJourneyUI();setupVoice();setupNavUI();setupExploreAnalytics();setupMap();loadData('streets');loadWeather();

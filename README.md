@@ -55,6 +55,24 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 - **动态图例**（可折叠，手机上默认收起）：只显示当前地图上真正可见的符号，并说明聚合、概括化和当前主题。
 - 点击：路线路段优先（Street Segment Evidence），其次是最上层的数据要素（Urban Feature Inspector）；聚合环点击后放大展开。
 
+## Live navigation, route QA and data registry / 实时导航、路线质检与数据登记
+
+| 功能 | 状态 |
+|---|---|
+| 数据集登记表 `data/registry.json`（`scripts/build_registry.py`：103 个数据集，记录数、有效几何、重复、缺失字段、许可、发布方更新时间、新鲜度、接入状态，全部从实际文件统计） | Implemented & Tested |
+| 规范地点模型与实体消解（`build_place_index.py`：canonical ID、provider IDs、步行接入距离、数据质量、冲突字段、LPC 地标与 OSM 关联；同名且同地址或 60 m 内才合并，同楼不同商家保留） | Implemented & Tested |
+| 菜品证据四级：Confirmed Menu Match / Probable Match — Review Needed / Unverified / Not Found in Checked Sources；HTML 与 PDF 菜单，图片菜单不做 OCR（Unverified） | Implemented & Tested |
+| 菜单抓取 SSRF 防护：只读地点索引中的官方网站；仅 http/https 和标准端口；DNS 解析后必须是公网地址并固定连接该 IP；每次重定向重新校验；大小、页数、超时限制；robots.txt；每客户端限流（菜单 10 次/分钟） | Implemented & Tested |
+| 路线质检：每条路线和行程返回 `validation`（几何、步行网络、必经站点、站点入口、时间、距离、菜品证据、数据覆盖、警告、阻断问题、版本、时间），有阻断问题时禁止开始导航 | Implemented & Tested |
+| 逐转弯指令 `routing/maneuvers.py`：只基于所选路线的有向边和路网拓扑；无其他可走方向的弯道不播报；人行横道直行不播报；名称来自 OSM、LION（标注为推导）或路的类型；近距离转弯合并；数据断裂给出低置信度提示而不是猜测 | Implemented & Tested |
+| 可恢复的导航会话：`route_signature` + 有序边 ID；服务器重启后可用快照重建，版本不一致时拒绝并要求重新规划；浏览器 sessionStorage 仅保存路线和进度（6 小时，不保存 GPS 轨迹） | Implemented & Tested（浏览器刷新恢复：Implemented, Not Device-Tested） |
+| 实时导航 `nav-engine.js`：13 个状态的状态机、窗口化地图匹配（精度、步行速度、方向、防跳点、防倒退）、沿路线的转弯距离、去重的提前/接近/立即提醒、多信号偏航判断、站点到达需用户确认 | Implemented & Tested（14 个可重放 GPS 场景） |
+| 导航界面 `nav-ui.js`：大号转弯卡片、蓝色定位点、精度圆、仅在有可信方向时显示的方向扇形、北向/航向向上、拖动后暂停跟随并可 Recenter、剩余距离/时间/站点、语音（中/英）、暂停/退出、偏航重算（保留剩余必经站点，限频，失败保留原路线并可重试）、Navigate to Start / 从当前位置重新规划 | Implemented, Not Device-Tested（浏览器内用模拟 GPS 测试） |
+| Explore 分析：分布统计、两个维度对比（Spearman ρ）、维度背后的数据集、维度搜索、重置视图；检查器显示归一化方法、数据版本和来源 | Implemented & Tested |
+| Explore 中显示城市数据图层（目前只在 Navigate 中） | Partial |
+
+**真实设备测试计划（Not Tested — 需要实体设备和户外步行）：** iPhone Safari、Android Chrome、桌面 Chrome。逐项检查：定位权限、方向权限（iOS 需点击后授权）、精度圆、方向扇形、地图跟随、转弯指令、语音、锁屏和后台（浏览器可能暂停定位，属于平台限制）、断网、Recenter、暂停/继续、到达。屏幕常亮使用 Wake Lock API（支持的浏览器才有效）。本项目不具备 Google Maps 等级的可靠性，也不知道实时施工或封路。
+
 ## AI Discover My Walk / 城市漫步发现与多站点路线
 
 游客不需要知道目的地，只要说出想看什么、想吃什么、住在哪里、有多少时间、能走多远。
@@ -97,6 +115,7 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 - `explore-map.js`: Explore Urban Data (13 maps, segment inspector). `app.js`, `center-map.js`: existing shell, preferences, map, Street evidence panel.
 - `scripts/streetwise_indicators.py`: shared indicator definitions and measurement. `build_manhattan_streets.py`: LION scores. `build_pedestrian_network.py`: OSM graph. `match_lion_osm.py`: matching + edge scores.
 - `data/manhattan-streets.json`, `data/pedestrian/`: built data. `data/cache/`: raw downloads (safe to delete).
+- `nav-engine.js`: navigation engine (map matching, state machine, alerts). `nav-ui.js`: live navigation UI, voice, re-routing, session. `explore-analytics.js`: Explore distribution / comparison / dataset details. `routing/validation.py`: route QA. `routing/maneuvers.py`: turn-by-turn maneuvers. `scripts/build_registry.py` → `data/registry.json`.
 - `places.js`: NYC-wide place search (Photon + NYC GeoSearch + optional Mapbox) and the shared autocomplete. `journey.js`: AI Discover My Walk state, agent tools, local journey parser, itinerary planning client. `journey-ui.js`: journey panel, My Hotel, map waypoints, Your City Walk. `voice.js`: Web Speech input. `opening-hours.js`: OSM hours check. `routing/itinerary.py`: multi-stop planner + detours. `routing/menu.py`: official-website menu verification. `scripts/build_place_index.py` → `data/places/`.
 - `weather.js`: shared weather context (Open-Meteo + NWS, walk window, routing snapshot). `weather-ui.js`: Navigate weather status, Route Intelligence weather section, weather chat answers. `routing/weather.py`: weather assessment, coefficients, tree-cover exposure.
 - `urban-style.js`: cartographic design tokens (colours, zoom tiers, point/line/building/environment styles). `urban-layers.js`: dataset catalog panel, composition into grouped map layers, themes, dynamic legend, static tile loading, map layers, Urban Feature Inspector, Street Segment Evidence, Route Urban Data. `urban-geo.js`: shared geometry (projection, corridor, nearest, coverage). `api-config.js`: API base + `streetwiseJson`. `routing/layers.py`: reference implementation for tests. `scripts/build_urban_layers.py`: datasets → catalog + tiles.
@@ -112,6 +131,7 @@ node tests/urban-style.test.cjs
 node tests/weather.test.cjs
 node tests/places.test.cjs          # LIVE=1 node tests/places.test.cjs calls the real providers
 node tests/opening-hours.test.cjs
+node tests/nav-gps.test.cjs          # 14 replayable GPS tracks on a real route
 python3 -m unittest discover -s tests -p 'test_*.py'   # includes the routing engine end-to-end tests
 # Install jsdom separately for DOM integration tests:
 npm install --prefix /tmp/streetwise-test jsdom

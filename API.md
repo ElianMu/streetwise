@@ -84,6 +84,23 @@ in order, first/last may be `partial`], `distance_m`, `estimated_duration_min` (
 
 `ordered_edge_ids` is the single source of the route: geometry, distance and scores are all derived from it.
 
+### Route QA, maneuvers and navigation fields (every route from /api/routes and /api/itinerary)
+- `validation`: `{geometry_status, pedestrian_network_status, required_stops_status, stop_access_status, time_constraint_status,
+  distance_constraint_status, food_evidence_status, status: pass | pass_with_warnings | fail | not_checked, navigation_allowed,
+  data_coverage:{mean, low_coverage_dimensions, not_available, score_version, network_version}, warnings, blocking_issues,
+  validation_version, validation_timestamp}`. Blocking issues (edges that do not join, unknown edge IDs, closed edges,
+  stairs when avoided, a required stop not reached, geometry outside NYC) set `navigation_allowed: false`.
+- `maneuvers`: `[{maneuver_id, route_id, leg_id, type: depart | continue | slight_left | turn_left | sharp_left | slight_right |
+  turn_right | sharp_right | keep_left | keep_right | u_turn | enter_path | cross | arrive_stop | arrive | notice, street_name,
+  coordinate, distance_along_route_m, bearing_before, bearing_after, turn_angle, node_id, instruction_text, instruction_zh,
+  confidence: high | medium | low, data_source, then?, stop_name?, required?, visit_min?}]`.
+- `route_signature`: sha1(network_version | ordered edge IDs), 16 hex.
+
+### POST /api/navigation/progress
+Adds `route_snapshot: {network_version, ordered_edge_ids, route_signature}` for when this server process no longer holds the
+route (restart): geometry is rebuilt from the server's own network; another network version or a wrong signature is refused
+(plan again). Live navigation itself runs in the browser (`nav-engine.js`) and does not send positions to the server.
+
 ### POST /api/itinerary
 
 Multi-stop city walk on the pedestrian graph. Places come from the client (search providers or `data/places`); the server never invents one.
@@ -106,8 +123,11 @@ matrix:{points,seconds,basis}, coverage}`. Places off the routable graph raise 4
 (detour = d(a,c) + d(c,b) − d(a,b) at the best insertion, network metres).
 
 ### POST /api/menu/verify
-`{"place_id","name","item","website","menu_url"}` → `{status: verified_on_menu | unverified | not_found, item, source_url, evidence, price, currency, checked_at, reason, note}`.
-Only the business's official website is read (robots.txt respected, ≤ 3 pages, 20 s, cached 12 h).
+`{"place_id","name","item"}` → `{status: confirmed_menu_match | probable_match_review | unverified | not_found_in_checked_sources, place_id,
+requested_item, matched_item, evidence_type: html_menu_page | pdf_menu | website_page | website_mention, menu_source_url, evidence, menu_date,
+menu_date_basis, checked_at, price, currency, pages_checked, reason, note}`. Only the official website recorded for `place_id` in
+`data/places` is read (a client URL is ignored unless on that site); SSRF-safe fetching; robots.txt; ≤ 3 pages, 1.5 MB, 20 s; cached 12 h;
+rate limit 10/min per client (HTTP 429). Itinerary 30/min, routes 60/min.
 
 ### POST /api/interpret (LLM, when configured)
 Adds `journey`: `{interests, named_stops:[{name,required,order}], food:[{category,item,cuisine,required}], services, service_scope,

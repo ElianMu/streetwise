@@ -4,7 +4,7 @@ const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.
 const dom=new JSDOM(html,{runScripts:'outside-only',url:'http://localhost:8080'}),w=dom.window;
 w.fetch=async()=>{throw new Error('Network intentionally blocked in DOM test')};w.HTMLElement.prototype.scrollIntoView=function(){};w.AbortSignal.timeout=()=>new w.AbortController().signal;
 const vm=require('vm'),context=dom.getInternalVMContext();
-for(const file of ['experience-core.js','api-config.js','weather.js','places.js','opening-hours.js','app.js','route-client.js','weather-ui.js','journey.js','journey-ui.js','voice.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
+for(const file of ['experience-core.js','api-config.js','weather.js','places.js','opening-hours.js','app.js','route-client.js','weather-ui.js','journey.js','journey-ui.js','voice.js','nav-engine.js','nav-ui.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','explore-analytics.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
 const run=s=>vm.runInContext(s,context);
 (async()=>{
  assert.equal(w.document.querySelectorAll('#experienceDimension option').length,12);
@@ -178,6 +178,8 @@ const run=s=>vm.runInContext(s,context);
  assert.equal(run("localWeatherIntent('Keep my destination, but find a more shaded route.')"),'cooler');
  assert.equal(run("localWeatherIntent('Make it quieter')"),null);
  assert.deepEqual(Object.keys(run("localInterpret('consider today\\'s weather on this street')").weights),[]);
+ assert.equal(run("JSON.stringify(localJourney('I\\'d like a greener, quieter walk with interesting architecture.').interests)"),'[]','a preference is not a visit request');
+ assert.equal(run("JSON.stringify(localJourney('I want to explore historic architecture').interests)"),'["historic"]');
  // A real engine response for a hot afternoon (tests/fixtures/route-response-hot.json): the UI reports exactly the engine record.
  const hot=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/route-response-hot.json')));const eff=hot.weather_routing.routing.effect;
  w.HOT=hot;run('applyRouteResponse(HOT);renderRouteCards();updateWhyRoute()');
@@ -191,6 +193,7 @@ const run=s=>vm.runInContext(s,context);
  await run('warmNameIndex()');
  const hotel=JSON.parse(fs.readFileSync(path.join(root,'data/places/hotels.json'))).records.find(r=>r.name==='Hilton New York Midtown');w.HOTEL=hotel;run('setMyHotel(poiPlace(HOTEL));setJourneyPlace("start",journey.hotel)');
  const turn=async q=>run(`applyJourney(localJourney(${JSON.stringify(q)}))`),jr=x=>JSON.parse(run(`JSON.stringify(${x})`));
+ run('state.end=null;state.customEnd=null');  // a first-time visitor with no destination
  await turn('我想逛纽约著名景点。');assert.deepEqual(jr('journey.interests'),['famous']);assert.equal(run('journey.endMode'),'open','no destination needed');
  await turn('再加一个博物馆。');assert.deepEqual(jr('journey.extra'),{museums:1});
  await turn('顺路喝一杯卡布奇诺。');assert.equal(run('journey.food[0].item'),'cappuccino');
@@ -216,5 +219,12 @@ const run=s=>vm.runInContext(s,context);
  // "find" services do not add stops; hotel ambiguity asks instead of guessing
  const fr=await run("findServices('pharmacies','near_hotel')");assert(fr.places.length>0&&fr.places.every(p=>p.category&&p.source));assert.equal(run('journey.named.length'),1);
  await turn("I'm staying at a Marriott near Times Square");assert(w.document.querySelectorAll('.chat-choices [data-choice]').length>1,'several Marriotts: the user chooses');assert.equal(run('journey.hotel.name'),'Hilton New York Midtown','not changed until chosen');
- console.log('DOM PASS: AI Discover My Walk (multi-turn state kept, real POI index, itinerary request + rendering, menu status honest, find vs add, hotel confirmation), weather offline → weather:null + honest status, weather intents, engine weather record shown as computed, walking-time default/sync/validation/API, urban data catalog (10 dataset categories, statuses, search), along-route counts = brute-force reference, route switch keeps layers, route urban data summary, feature inspector, segment evidence (matched/unmatched), static JSON errors, mode, 13 explore views, segment inspector (single + overall, N/A), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
+ // Start Navigation is gated by the route check and needs engine maneuvers.
+ const navRoute=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/nav-route.json')));
+ w.NAVR=navRoute;run("applyRouteResponse({routes:[{...NAVR,route_name:'Test',objective:'itinerary',recommended:true,constraints:{feasible:true,violations:[]},personalized_score:{utility:50},estimated_duration_min:14,dimension_scores:{},data_coverage:{by_dimension:{},mean:1,low_coverage_dimensions:[]}}],constraints_used:{},feasible_count:1});renderNavStart()");
+ const ns=w.document.querySelector('#navStart');assert(!ns.classList.contains('hidden')&&!ns.disabled,'validated route with maneuvers can start');
+ assert(w.document.querySelector('#routeValidation').textContent.includes('Route check'));
+ run("state.routes[0].raw.validation={...state.routes[0].raw.validation,navigation_allowed:false,status:'fail',blocking_issues:['gap between edges']};renderNavStart()");assert(ns.disabled&&ns.title.includes('gap between edges'),'failed route check blocks navigation');
+ run("delete state.routes[0].raw.maneuvers;state.routes[0].raw.validation.navigation_allowed=true;renderNavStart()");assert(ns.disabled,'no maneuvers, no navigation');
+ console.log('DOM PASS: navigation gate (route check + maneuvers), AI Discover My Walk (multi-turn state kept, real POI index, itinerary request + rendering, menu status honest, find vs add, hotel confirmation), weather offline → weather:null + honest status, weather intents, engine weather record shown as computed, walking-time default/sync/validation/API, urban data catalog (10 dataset categories, statuses, search), along-route counts = brute-force reference, route switch keeps layers, route urban data summary, feature inspector, segment evidence (matched/unmatched), static JSON errors, mode, 13 explore views, segment inspector (single + overall, N/A), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});

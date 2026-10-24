@@ -424,7 +424,7 @@ function setupMap(){
       m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#6fd2d8','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
       m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
       m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':7,'circle-stroke-color':'#fff','circle-stroke-width':3}});
-      setupRouteEdgeLayer();setupUrbanMap();if(typeof setupJourneyMap==='function')setupJourneyMap();
+      setupRouteEdgeLayer();setupUrbanMap();if(typeof setupJourneyMap==='function')setupJourneyMap();if(typeof setupNavMap==='function')setupNavMap();
       state.mapLayersReady=true; setupExperienceMap(); syncMapData();updateMapStyles();
       m.on('click','road-highlight',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit',...urbanMapLayerIds()]}).length)return;const feat=e.features?.[0];if(!feat)return;const fid=feat.properties?.FID;const real=state.streetsById.get(String(fid));state.selectedStreet=real||feat;updateSegmentDetails();});
       m.on('click','route-alts',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;  // a click on the selected route's segment opens its evidence instead
