@@ -40,7 +40,7 @@ function renderValidation(r){
 /** Food evidence comes from the separate menu check, never assumed. */
 function foodEvidenceStatus(r){
  if(typeof journey==='undefined'||!journey.plan||r?.objective!=='itinerary')return 'not_checked';
- const items=journey.plan.stops.flatMap(s=>{if(s.required_items?.length)return s.required_items.map(item=>journey.menu[s.id+'|'+item]);if(s.required_item)return journey.menu[s.id+'|'+s.required_item];const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);return f?journey.menu[s.id+'|'+f.item]:null;}).filter(Boolean);
+ const items=journey.plan.stops.flatMap(s=>stopMenuItems(s).map(item=>journey.menu[s.id+'|'+item]||{status:'not_checked'}));
  if(!items.length)return 'not_checked';
  return items.every(m=>m.status==='confirmed_menu_match')?'pass':items.some(m=>m.status==='checking')?'not_checked':'warning';
 }

@@ -36,11 +36,15 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
       - name: Query official public MTA sources on the ETL runner
-        run: python scripts/probe_mta_sources.py
+        run: |
+          python scripts/probe_mta_sources.py
+          python -c "import json; [print('::notice::MTA source research: '+json.dumps(r)) for r in json.load(open('/tmp/streetwise-mta-research/receipts.json'))]"
       - uses: actions/upload-artifact@v4
         with:
           name: official-mta-source-research
@@ -58,5 +62,8 @@ jobs:
           git add data/urban/transit-source-research/
           if ! git diff --cached --quiet; then
             git commit -m 'Record official public MTA source research for review'
-            git push origin "HEAD:$REVIEW_BRANCH"
+            if ! git push origin "HEAD:$REVIEW_BRANCH" > /tmp/research-push.log 2>&1; then
+              python -c "import pathlib,re; s=pathlib.Path('/tmp/research-push.log').read_text(); print('::error::Source receipt publication: '+re.sub(r'https://[^ ]+', '[repository URL]', s).replace(chr(10),' ')[:1000])"
+              exit 1
+            fi
           fi

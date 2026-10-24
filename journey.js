@@ -437,6 +437,10 @@ async function placeRatings(id){
 }
 
 /* ---------- menu verification ---------- */
+function stopMenuItems(stop){
+ const f=journey.food.find(f=>stop.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);
+ return [...new Set([...(stop.required_items||[]),stop.required_item,f?.item].filter(Boolean))];
+}
 async function verifyMenuItem(place,item){
  const key=place.id+'|'+item;if(journey.menu[key]?.status&&journey.menu[key].status!=='checking')return journey.menu[key];
  journey.menu[key]={status:'checking'};renderCityWalk();
@@ -448,8 +452,10 @@ async function verifyMenuItem(place,item){
 }
 async function autoVerifyMenus(){
  if(!journey.plan)return;
- for(const s of journey.plan.stops){const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);
-  if(f){const p=await placeById(s.id);if(p)verifyMenuItem(p,f.item);}}
+ for(const s of journey.plan.stops){
+  const items=stopMenuItems(s);if(!items.length)continue;
+  const p=await placeById(s.id);if(p)for(const item of items)verifyMenuItem(p,item);
+ }
 }
 async function placeById(id){
  for(const c of Object.keys(POI_CACHE)){const r=(await POI_CACHE[c]).find(x=>x.id===id);if(r)return poiPlace(r);}

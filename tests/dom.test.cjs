@@ -247,6 +247,16 @@ const run=s=>vm.runInContext(s,context);
  // "find" services do not add stops; hotel ambiguity asks instead of guessing
  const fr=await run("findServices('pharmacies','near_hotel')");assert(fr.places.length>0&&fr.places.every(p=>p.category&&p.source));assert.equal(run('journey.named.length'),1);
  await turn("I'm staying at a Marriott near Times Square");assert(w.document.querySelectorAll('.chat-choices [data-choice]').length>1,'several Marriotts: the user chooses');assert.equal(run('journey.hotel.name'),'Hilton New York Midtown','not changed until chosen');
+ // A shared food venue must expose both evidence records; one missing result cannot pass.
+ const originalFoodPlan=run('journey.plan'),originalFoodMenu=run('journey.menu');
+ run("journey.plan={...journey.plan,stops:[{...journey.plan.stops[0],id:'fixture-shared-menu',required_items:['bagel','cappuccino']}]};journey.menu={'fixture-shared-menu|bagel':{status:'confirmed_menu_match',menu_source_url:'https://fixture.invalid/menu'}};renderCityWalk()");
+ assert.equal(run("foodEvidenceStatus({objective:'itinerary'})"),'warning');
+ assert(w.document.querySelector('#cityWalk').textContent.includes('cappuccino: not checked'));
+ run("journey.menu['fixture-shared-menu|cappuccino']={status:'confirmed_menu_match',menu_source_url:'https://fixture.invalid/menu'};renderCityWalk()");
+ assert.equal(run("foodEvidenceStatus({objective:'itinerary'})"),'pass');
+ assert.equal(w.document.querySelectorAll('#cityWalk .cw-menu').length,2);
+ w.ORIGINAL_FOOD_PLAN=originalFoodPlan;w.ORIGINAL_FOOD_MENU=originalFoodMenu;
+ run('journey.plan=ORIGINAL_FOOD_PLAN;journey.menu=ORIGINAL_FOOD_MENU;renderCityWalk()');
  // Start Navigation is gated by the route check and needs engine maneuvers.
  const navRoute=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/nav-route.json')));
  w.NAVR=navRoute;run("applyRouteResponse({routes:[{...NAVR,route_name:'Test',objective:'itinerary',recommended:true,constraints:{feasible:true,violations:[]},personalized_score:{utility:50},estimated_duration_min:14,dimension_scores:{},data_coverage:{by_dimension:{},mean:1,low_coverage_dimensions:[]}}],constraints_used:{},feasible_count:1});renderNavStart()");

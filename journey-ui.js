@@ -85,14 +85,17 @@ function renderCityWalk(){
  if(!it){root.innerHTML=`<div class="section-row"><div class="section-overline">YOUR CITY WALK</div></div><p class="soft-copy">Describe what you want to see, eat or do — or add stops — then Plan My Walk.</p>`;return;}
  const t=it.totals,c=it.constraints,route=state.routes[0]?.raw;
  const stopRows=it.stops.map(s=>{
-  const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);const m=f?journey.menu[s.id+'|'+f.item]:null;
+  const menuRows=stopMenuItems(s).map(item=>{
+   const m=journey.menu[s.id+'|'+item],url=m?.menu_source_url||m?.source_url;
+   return `<small class="cw-menu ${m?.status||''}">${esc(item)}: ${esc(MENU_LABEL[m?.status]||'not checked')}${m?.price?` · $${m.price.toFixed(2)} as listed`:''}${url?` · <a href="${esc(url)}" target="_blank" rel="noopener">source</a>`:''}${m?.reason?` — ${esc(m.reason)}`:''}</small>`;
+  }).join('');
   const p=placeCache[s.id],hrs=p?.hours||s.hours;const open=s.open_at_arrival!=null?s.open_at_arrival:hrs?isOpenAt(hrs,new Date(Date.now()+s.arrival_min*60000)):null;
   return `<li class="cw-stop ${s.role==='end'?'end':''}"><span class="cw-seq">${s.role==='end'?'■':s.seq}</span><span class="cw-body"><strong>${esc(s.name)}</strong>
    <small>${esc([s.category,s.address].filter(Boolean).join(' · '))}</small>
    <small>Arrive ~${clockAt(s.arrival_min)} · +${(s.leg_in_m/1000).toFixed(2)} km / ${Math.round(s.leg_in_min)} min walk${s.visit_min?` · stay ${s.visit_min} min (est.)`:''}${s.slot_label?` · for “${esc(s.slot_label)}”`:''}${s.required?'':' · optional'}</small>
    ${open===false?'<small class="cw-warn">Opening hours (OSM) say closed at arrival time</small>':open===true?'<small class="cw-ok">Open at arrival per OSM hours</small>':hrs?'<small>Hours listed but not machine-readable</small>':'<small>Hours not listed</small>'}${s.closes_during_visit?'<small class="cw-warn">Closes during the planned visit (OSM hours)</small>':''}
-   ${f?`<small class="cw-menu ${m?.status||''}">${esc(f.item)}: ${esc(MENU_LABEL[m?.status]||'not checked')}${m?.price?` · $${m.price.toFixed(2)} as listed`:''}${m?.source_url?` · <a href="${esc(m.source_url)}" target="_blank" rel="noopener">source</a>`:''}${m?.reason?` — ${esc(m.reason)}`:''}</small>`:''}
-   ${f&&journey.recs[s.id+'|'+f.item]?recExplain(journey.recs[s.id+'|'+f.item]):s.evidence?`<small>${esc(s.evidence)}</small>`:''}
+   ${menuRows}
+   ${stopMenuItems(s).some(item=>journey.recs[s.id+'|'+item])?stopMenuItems(s).map(item=>journey.recs[s.id+'|'+item]?recExplain(journey.recs[s.id+'|'+item]):'').join(''):s.evidence?`<small>${esc(s.evidence)}</small>`:''}
    ${s.alternatives?.length?`<button type="button" class="cw-alt" data-cw-replace="${esc(s.slot_id)}" data-cw-id="${esc(s.id)}">Replace</button>`:''}${s.role!=='end'?`<button type="button" class="cw-alt" data-cw-remove="${esc(s.id)}">Remove</button>`:''}</span></li>`;}).join('');
  root.innerHTML=`<div class="section-row"><div class="section-overline">YOUR CITY WALK</div><span class="small-count">${c.feasible?'WITHIN LIMITS':'NOT FEASIBLE'}</span></div>
   <div class="cw-theme">${esc(route?.route_name||'City walk')}</div>
