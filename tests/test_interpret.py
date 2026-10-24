@@ -46,6 +46,13 @@ class InterpretFailures(unittest.TestCase):
         self.assertNotIn('SECRET', text)
         return status, body, log.getvalue()
 
+    def test_embedded_newline_key_is_rejected_without_network(self):
+        with mock.patch.object(server, 'KEY', 'sk-test\ninvalid'), mock.patch.object(server.request, 'urlopen') as call:
+            status, body = server.interpret(dict(DOC))
+        self.assertEqual(status, 502)
+        self.assertEqual(body['reason']['stage'], 'invalid_configuration')
+        call.assert_not_called()
+
     def test_not_configured(self):
         with mock.patch.object(server, 'KEY', ''):
             status, body = server.interpret(dict(DOC))

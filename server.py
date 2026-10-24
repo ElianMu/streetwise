@@ -26,7 +26,7 @@ from routing.recommend import recommend_food
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
 MODEL = os.environ.get('OPENAI_MODEL', 'gpt-4o-mini')
-KEY = os.environ.get('OPENAI_API_KEY', '')
+KEY = os.environ.get('OPENAI_API_KEY', '').strip()
 STREETS_DATA = ROOT / 'data' / 'manhattan-streets.json'
 REFRESH_DAYS = float(os.environ.get('STREETWISE_REFRESH_DAYS', '30'))
 GZIP_TYPES = ('.json', '.js', '.css', '.html')
@@ -496,6 +496,9 @@ def scrub(text):
 
 
 def call_llm(payload):
+    # Reject embedded whitespace/control bytes before constructing an HTTP header.
+    if not KEY.isascii() or any(ord(c) <= 32 or ord(c) == 127 for c in KEY):
+        raise LLMFailure('invalid_configuration', detail='OPENAI_API_KEY contains invalid characters')
     req = request.Request('https://api.openai.com/v1/chat/completions', json.dumps(payload).encode('utf-8'),
                           headers={'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json'}, method='POST')
     try:
