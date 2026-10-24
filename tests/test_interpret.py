@@ -1,0 +1,97 @@
+"""/api/interpret failure reporting with the OpenAI call mocked (no network, no real key): every failure returns a safe
+`reason` (stage, HTTP status, provider error type/code, our validator's message) and the key never appears in the response
+or the log. Run: python3 -m unittest tests.test_interpret
+"""
+import contextlib, io, json, pathlib, sys, unittest
+from unittest import mock
+from urllib import error
+
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+import server  # noqa: E402
+
+FAKE_KEY = 'sk-test-SECRET1234567890abcdef'
+DOC = {'message': 'I want a greener walk'}
+
+
+class Resp:
+    def __init__(self, body):
+        self.body = json.dumps(body).encode() if not isinstance(body, bytes) else body
+
+    def read(self):
+        return self.body
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+
+def http_error(code, body):
+    return error.HTTPError('https://api.openai.com/v1/chat/completions', code, 'err', {}, io.BytesIO(json.dumps(body).encode()))
+
+
+def completion(content):
+    return Resp({'choices': [{'message': {'content': content if isinstance(content, str) else json.dumps(content)}}]})
+
+
+class InterpretFailures(unittest.TestCase):
+    def run_with(self, effect):
+        log = io.StringIO()
+        with mock.patch.object(server, 'KEY', FAKE_KEY), mock.patch.object(server.request, 'urlopen', **({'side_effect': effect} if isinstance(effect, BaseException) else {'return_value': effect})), contextlib.redirect_stdout(log):
+            status, body = server.interpret(dict(DOC))
+        text = json.dumps(body) + log.getvalue()
+        self.assertNotIn(FAKE_KEY, text, 'the key never leaks')
+        self.assertNotIn('SECRET', text)
+        return status, body, log.getvalue()
+
+    def test_not_configured(self):
+        with mock.patch.object(server, 'KEY', ''):
+            status, body = server.interpret(dict(DOC))
+        self.assertEqual(status, 503); self.assertEqual(body['reason']['stage'], 'not_configured')
+
+    def test_invalid_key(self):
+        status, body, log = self.run_with(http_error(401, {'error': {'message': f'Incorrect API key provided: {FAKE_KEY[:8]}***cdef', 'type': 'invalid_request_error', 'code': 'invalid_api_key'}}))
+        self.assertEqual(status, 502)
+        self.assertEqual(body['reason'], {'stage': 'upstream_http', 'http_status': 401, 'type': 'invalid_request_error', 'code': 'invalid_api_key', 'detail': None})
+        self.assertIn('invalid_api_key', log)
+        self.assertNotIn('Incorrect API key', json.dumps(body), 'the provider message (which echoes key fragments) is not passed on')
+
+    def test_no_quota(self):
+        status, body, _ = self.run_with(http_error(429, {'error': {'message': 'You exceeded your current quota', 'type': 'insufficient_quota', 'code': 'insufficient_quota'}}))
+        self.assertEqual((body['reason']['http_status'], body['reason']['code']), (429, 'insufficient_quota'))
+
+    def test_model_not_available(self):
+        status, body, _ = self.run_with(http_error(404, {'error': {'type': 'invalid_request_error', 'code': 'model_not_found'}}))
+        self.assertEqual(body['reason']['code'], 'model_not_found')
+
+    def test_unreachable(self):
+        status, body, _ = self.run_with(error.URLError(TimeoutError('timed out')))
+        self.assertEqual(body['reason']['stage'], 'upstream_unreachable'); self.assertEqual(body['reason']['detail'], 'TimeoutError')
+
+    def test_bad_provider_response(self):
+        status, body, _ = self.run_with(Resp({'object': 'error'}))
+        self.assertEqual(body['reason']['stage'], 'upstream_bad_response')
+
+    def test_model_output_not_json(self):
+        status, body, _ = self.run_with(completion('Sure! Here is your plan: greener streets.'))
+        self.assertEqual(body['reason']['stage'], 'model_output_invalid_json')
+
+    def test_model_output_rejected_names_the_problem(self):
+        status, body, log = self.run_with(completion({'weights': {'Greenery': 90}, 'directions': {}, 'constraints': {}}))
+        r = body['reason']
+        self.assertEqual(r['stage'], 'model_output_rejected'); self.assertIn('Invalid dimension name', r['detail']); self.assertIn("keys: ['constraints', 'directions', 'weights']", r['detail'])
+        self.assertIn('model_output_rejected', log)
+
+    def test_success_unchanged(self):
+        status, body, _ = self.run_with(completion({'weights': {'Nature': 90}, 'directions': {'Nature': 'high'}, 'constraints': {}}))
+        self.assertEqual(status, 200); self.assertEqual(body['weights'], {'Nature': 90}); self.assertNotIn('reason', body)
+
+    def test_scrub(self):
+        with mock.patch.object(server, 'KEY', FAKE_KEY):
+            self.assertEqual(server.scrub(f'value {FAKE_KEY} and sk-proj-abcdEFGH1234 end'), 'value [key] and [key] end')
+
+
+if __name__ == '__main__':
+    unittest.main()
