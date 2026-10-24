@@ -349,6 +349,13 @@ def _remember(key,entry):
             if time.time()-checked >= (TTL if result.get('status')=='confirmed_menu_match' else 300):CACHE.pop(k,None)
         while len(CACHE)>CACHE_LIMIT:CACHE.popitem(last=False)
 
+
+def cache_status():
+    with _CACHE_LOCK:
+        return {'item_entries':len(CACHE), 'item_limit':CACHE_LIMIT,
+                'document_entries':len(DOCUMENTS), 'document_bytes':DOCUMENT_BYTES,
+                'document_limit':32, 'document_byte_limit':DOCUMENT_LIMIT}
+
 def candidate_venues(item):
     """Known menu locations are discovery hints, including expired receipts; they are never success evidence by themselves."""
     item=canonical_item(item);ids=set()
@@ -497,9 +504,9 @@ def verify(doc, now=None, deadline=None):
                 out.update(status='unverified', price=None, currency=None, price_verification=None,
                            reason='Dated menu evidence is stale or future-dated; current item availability and price are unverified.')
         except ValueError: pass
-    out = menu_profile(out)
     evidence_page=next((p for p in pages if p['url']==out.get('source_url')),None)
     checked_at=evidence_page['read_at'] if evidence_page else time.time()
     if evidence_page:out['checked_at']=datetime.fromtimestamp(checked_at,timezone.utc).isoformat(timespec='seconds')
+    out = menu_profile(out)
     _remember(key,(checked_at,out))
     return out

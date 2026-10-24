@@ -237,7 +237,7 @@ async function interpretIntent(q){
   // proof that AI is disabled. Attempt the real parse when configuration is unknown.
   if(location.protocol!=='file:' && planner.llmConfigured!==false){
     try{
-      const r=await streetwiseFetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,crime:planner.crime||null,waterfront:planner.waterfront||null,weather:weatherWindow(state.budget),history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(32000)});
+      const r=await streetwiseFetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,crime:planner.crime||null,waterfront:planner.waterfront||null,weather:weatherWindow(state.budget),history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(planner.llmConfigured===null?65000:32000)});
       if(!r.ok){const j=await r.json().catch(()=>({}));const why=j.reason?[j.reason.stage,j.reason.http_status,j.reason.type,j.reason.code].filter(Boolean).join(' · '):'';
         console.warn('LLM response rejected:',j.reason||{status:r.status});
         throw new Error(`LLM service ${r.status}${why?` (${why})`:''}`);}

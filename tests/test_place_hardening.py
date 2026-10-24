@@ -63,12 +63,16 @@ class PlaceHardening(unittest.TestCase):
         html=b'<title>Menu</title><main>Cappuccino $5. Plain bagel $3. Coffee.</main>'
         url='https://multi-item-fixture.invalid/menu'
         with mock.patch.object(menu,'place_sites',return_value={'test:document':(url,url)}),mock.patch.object(menu,'_allowed',return_value=True),mock.patch.object(menu,'safe_get',return_value=(url,'text/html',html,{})) as read:
-            first=menu.verify({'place_id':'test:document','item':'cappuccino'})
-            second=menu.verify({'place_id':'test:document','item':'bagel'})
+            checked=time.time()
+            with mock.patch.object(menu.time,'time',return_value=checked):
+                first=menu.verify({'place_id':'test:document','item':'cappuccino'})
+            with mock.patch.object(menu.time,'time',return_value=checked+30):
+                second=menu.verify({'place_id':'test:document','item':'bagel'})
         self.assertEqual(first['status'],'confirmed_menu_match')
         self.assertEqual(second['status'],'confirmed_menu_match')
         self.assertEqual(read.call_count,1)
         self.assertEqual(first['checked_at'],second['checked_at'])
+        self.assertEqual(second['menu']['checked_at'],second['checked_at'])
         self.assertLessEqual(menu.DOCUMENT_BYTES,menu.DOCUMENT_LIMIT)
 
     def test_deadline_prevents_starting_another_website_check(self):

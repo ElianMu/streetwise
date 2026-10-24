@@ -450,7 +450,7 @@ class Handler(SimpleHTTPRequestHandler):
                                  'process_memory':memory,
                                  'process_started_at':PROCESS_STARTED_AT,'uptime_seconds':round(time.time()-PROCESS_STARTED_AT,1),
                                  'cgroup_memory':cgroup,
-                                 'diagnostics':{'route_cache':cache,'crime_query_counters':dict(crime_module.STATS), 'capacity': HEAVY_REQUESTS.status(),
+                                 'diagnostics':{'route_cache':cache,'crime_query_counters':dict(crime_module.STATS), 'capacity': HEAVY_REQUESTS.status(), 'menu_cache': menu_check.cache_status(),
                                                 'geometry': {'packed_bytes': loaded.net.geoms.packed_bytes, 'wgs_cache': loaded.net.geoms.cache_status(), 'xy_cache': loaded.net.gxy.cache_status()} if loaded else {}},
                                  'deployment_commit': os.environ.get('RENDER_GIT_COMMIT'),
                                  'interpretation_contract': 'strict-paired-v3-independent',
