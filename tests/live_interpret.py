@@ -25,6 +25,7 @@ def post(path, body):
 def run():
     for label, text in CASES:
         p = post('/api/interpret', {'message': text})
+        print(json.dumps({'case': label, 'stage': 'interpretation_received', 'interpretation': p}), flush=True)
         validate_interpretation(p)
         w, d, j = p['weights'], p['directions'], p.get('journey') or {}
         if label == 'A':
