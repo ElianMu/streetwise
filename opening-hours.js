@@ -22,8 +22,17 @@ function isOpenAt(hours,date){
  if(!hours||typeof hours!=='string')return null;const h=hours.trim();
  if(h==='24/7')return true;
  const {day,min}=ohNyParts(date);let verdict=null,anyRule=false;
+ const nyDate=new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',month:'numeric',day:'numeric'}).formatToParts(date).reduce((o,x)=>(o[x.type]=+x.value,o),{});
  for(const raw of h.split(';')){
   const r=raw.trim();if(!r)continue;if(/^PH\b/.test(r))continue;
+  // date exceptions ('Dec 25 off', 'Nov Th[4] off') apply on their date only; other dated rules this month are unknown
+  const mm=r.match(/^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b\s*(.*)$/);
+  if(mm){const mon=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'].indexOf(mm[1])+1,rest=mm[2].trim();
+   if(nyDate.month!==mon)continue;
+   const d1=rest.match(/^0?(\d{1,2})\s+(off|closed)$/),nth=rest.match(/^(Mo|Tu|We|Th|Fr|Sa|Su)\[(\d)\]\s+(off|closed)$/);
+   if(d1){if(nyDate.day===+d1[1])return false;continue;}
+   if(nth){if(day===OH_DAYS.indexOf(nth[1])&&Math.floor((nyDate.day-1)/7)+1===+nth[2])return false;continue;}
+   return null;}
   const m=r.match(/^((?:(?:Mo|Tu|We|Th|Fr|Sa|Su)(?:-(?:Mo|Tu|We|Th|Fr|Sa|Su))?)(?:,(?:Mo|Tu|We|Th|Fr|Sa|Su)(?:-(?:Mo|Tu|We|Th|Fr|Sa|Su))?)*)?\s*(.*)$/);
   if(!m)return null;
   const days=m[1]?ohDays(m[1]):new Set([0,1,2,3,4,5,6]),rest=m[2].trim();if(!days)return null;anyRule=true;

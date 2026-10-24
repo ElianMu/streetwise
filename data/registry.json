@@ -1,5 +1,5 @@
 {
- "built_at": "2026-10-24T01:44:41+00:00",
+ "built_at": "2026-10-24T03:07:49+00:00",
  "datasets": [
   {
    "dataset_id": "lion_centerline",
@@ -23,7 +23,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": "Road centrelines \u2014 the geometry street scores are measured on. Not the walkable network."
+   "note": "Road centrelines \u2014 the geometry street scores are measured on. Not the walkable network.",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "Road centrelines \u2014 the geometry street scores are measured on. Not the walkable network."
   },
   {
    "dataset_id": "osm_sidewalks",
@@ -50,7 +53,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": "Edges of the routing graph that routes are computed on."
+   "note": "Edges of the routing graph that routes are computed on.",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "Edges of the routing graph that routes are computed on."
   },
   {
    "dataset_id": "osm_crosswalks",
@@ -76,7 +82,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "osm_paths",
@@ -103,7 +112,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "sidewalk_surface",
@@ -127,7 +139,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "pedestrian_ramps",
@@ -154,7 +169,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "intersections",
@@ -178,7 +196,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "traffic_signals",
@@ -205,7 +226,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "pedestrian_plazas",
@@ -231,7 +255,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "bike_routes",
@@ -258,7 +285,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "benches",
@@ -286,7 +316,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "drinking_fountains",
@@ -312,7 +345,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "public_restrooms",
@@ -343,7 +379,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "street_trees",
@@ -373,7 +412,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "parks",
@@ -400,7 +442,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "natural_areas",
@@ -426,7 +471,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "waterfront_parks",
@@ -452,7 +500,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "community_gardens",
@@ -480,7 +531,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "building_footprints",
@@ -509,7 +563,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "building_heights",
@@ -536,7 +593,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "building_age",
@@ -563,7 +623,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "land_use",
@@ -595,7 +658,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": "Shown as lot centroid points: MapPLUTO lot polygons are not connected."
+   "note": "Shown as lot centroid points: MapPLUTO lot polygons are not connected.",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "Shown as lot centroid points: MapPLUTO lot polygons are not connected."
   },
   {
    "dataset_id": "pops",
@@ -624,7 +690,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "landmarks",
@@ -648,7 +717,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": "Landmark tax lots (polygons)."
+   "note": "Landmark tax lots (polygons).",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "Landmark tax lots (polygons)."
   },
   {
    "dataset_id": "historic_districts",
@@ -674,7 +746,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": "District boundaries; reprojected from NY State Plane (EPSG:2263)."
+   "note": "District boundaries; reprojected from NY State Plane (EPSG:2263).",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "District boundaries; reprojected from NY State Plane (EPSG:2263)."
   },
   {
    "dataset_id": "museums",
@@ -706,7 +781,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "galleries",
@@ -738,7 +816,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "theaters",
@@ -770,7 +851,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "cinemas",
@@ -801,7 +885,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "libraries",
@@ -832,7 +919,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "public_art",
@@ -860,7 +950,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "monuments",
@@ -886,7 +979,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "restaurants",
@@ -918,7 +1014,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "cafes",
@@ -950,7 +1049,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "bars",
@@ -982,7 +1084,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "bakeries",
@@ -1014,7 +1119,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "grocery",
@@ -1046,7 +1154,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "retail",
@@ -1078,7 +1189,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "markets",
@@ -1110,7 +1224,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "entertainment",
@@ -1142,7 +1259,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "recreation",
@@ -1174,7 +1294,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "activity_places",
@@ -1205,7 +1328,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "pedestrian_crashes",
@@ -1234,7 +1360,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": true,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "cyclist_crashes",
@@ -1262,7 +1391,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": true,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "speed_limits",
@@ -1286,7 +1418,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "noise_complaints",
@@ -1313,7 +1448,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": true,
-   "note": "Reports by residents, not sound-level measurements."
+   "note": "Reports by residents, not sound-level measurements.",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "Reports by residents, not sound-level measurements."
   },
   {
    "dataset_id": "expressways",
@@ -1337,7 +1475,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "subway_stations",
@@ -1361,7 +1502,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "subway_entrances",
@@ -1385,7 +1529,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "accessible_entrances",
@@ -1409,7 +1556,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": "Elevator entrances only; elevator outages are not shown."
+   "note": "Elevator entrances only; elevator outages are not shown.",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "Elevator entrances only; elevator outages are not shown."
   },
   {
    "dataset_id": "bus_stops",
@@ -1440,7 +1590,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": "OSM-mapped stops, not the MTA GTFS feed."
+   "note": "OSM-mapped stops, not the MTA GTFS feed.",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "OSM-mapped stops, not the MTA GTFS feed."
   },
   {
    "dataset_id": "bike_share",
@@ -1464,7 +1617,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "ferry_terminals",
@@ -1491,7 +1647,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "hospitals_clinics",
@@ -1520,7 +1679,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "pharmacies",
@@ -1549,7 +1711,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "schools",
@@ -1578,7 +1743,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "linknyc",
@@ -1605,7 +1773,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "viewpoints",
@@ -1631,7 +1802,10 @@
    "integration_status": "connected",
    "used_in_scoring": true,
    "historical": false,
-   "note": "Mapped viewpoints only; no view-shed analysis."
+   "note": "Mapped viewpoints only; no view-shed analysis.",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "Mapped viewpoints only; no view-shed analysis."
   },
   {
    "dataset_id": "pedestrian_bridges",
@@ -1657,7 +1831,10 @@
    "integration_status": "connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "restaurant_inspections",
@@ -1678,10 +1855,13 @@
    "duplicate_records": null,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
-   "integration_status": "available, not connected",
+   "integration_status": "connected (server-side, not a map layer)",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": "Used through dohmh_inspections for place status, grades and closures.",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "Used through dohmh_inspections for place status, grades and closures."
   },
   {
    "dataset_id": "tree_canopy",
@@ -1705,7 +1885,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "green_infrastructure",
@@ -1729,7 +1912,10 @@
    "integration_status": "no dataset",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "water_bodies",
@@ -1753,7 +1939,10 @@
    "integration_status": "no dataset",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "zoning",
@@ -1777,7 +1966,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "street_wall",
@@ -1801,7 +1993,10 @@
    "integration_status": "no dataset",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "building_entrances",
@@ -1825,7 +2020,10 @@
    "integration_status": "no dataset",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "all_collisions",
@@ -1849,7 +2047,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "traffic_volume",
@@ -1873,7 +2074,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "safety_improvements",
@@ -1897,7 +2101,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "street_closures",
@@ -1921,7 +2128,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "air_quality",
@@ -1945,7 +2155,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "urban_heat",
@@ -1969,7 +2182,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "surface_temperature",
@@ -1993,7 +2209,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "shade",
@@ -2017,7 +2236,10 @@
    "integration_status": "no dataset",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "flood_risk",
@@ -2041,7 +2263,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "air_monitors",
@@ -2065,7 +2290,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "subway_lines",
@@ -2089,7 +2317,10 @@
    "integration_status": "no dataset",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "bus_routes",
@@ -2113,7 +2344,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "transit_status",
@@ -2137,7 +2371,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "waterfront_access",
@@ -2161,7 +2398,10 @@
    "integration_status": "available, not connected",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "shorelines",
@@ -2185,7 +2425,10 @@
    "integration_status": "no dataset",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "waterfront_walkways",
@@ -2209,7 +2452,10 @@
    "integration_status": "no dataset",
    "used_in_scoring": false,
    "historical": false,
-   "note": null
+   "note": null,
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "dataset_id": "places:hotels",
@@ -2220,8 +2466,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 473,
@@ -2230,12 +2476,15 @@
    "records_with_conflicts": 1,
    "missing_fields": {
     "addr": 0.099,
-    "web": 0.207,
+    "web": 0.195,
     "hours": 0.956
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:museums",
@@ -2246,8 +2495,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 365,
@@ -2256,12 +2505,15 @@
    "records_with_conflicts": 0,
    "missing_fields": {
     "addr": 0.148,
-    "web": 0.192,
+    "web": 0.156,
     "hours": 0.364
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:attractions",
@@ -2272,8 +2524,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 228,
@@ -2282,12 +2534,15 @@
    "records_with_conflicts": 0,
    "missing_fields": {
     "addr": 0.833,
-    "web": 0.579,
+    "web": 0.526,
     "hours": 0.934
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:historic",
@@ -2298,8 +2553,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 390,
@@ -2308,12 +2563,15 @@
    "records_with_conflicts": 0,
    "missing_fields": {
     "addr": 0.91,
-    "web": 0.833,
+    "web": 0.818,
     "hours": 0.992
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:parks",
@@ -2324,8 +2582,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 526,
@@ -2334,90 +2592,102 @@
    "records_with_conflicts": 0,
    "missing_fields": {
     "addr": 0.795,
-    "web": 0.542,
+    "web": 0.534,
     "hours": 0.895
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:cafes",
    "name": "Caf\u00e9s & coffee (discovery index)",
    "group": "tourism_discovery",
    "publisher": "OpenStreetMap contributors",
-   "source": "osm (1279)",
+   "source": "dohmh (722), osm (1279)",
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
-   "feature_count": 1279,
-   "valid_geometry_count": 1279,
-   "duplicate_records": 6,
+   "feature_count": 2001,
+   "valid_geometry_count": 2001,
+   "duplicate_records": 9,
    "records_with_conflicts": 2,
    "missing_fields": {
-    "addr": 0.256,
-    "web": 0.462,
-    "hours": 0.431
+    "addr": 0.164,
+    "web": 0.647,
+    "hours": 0.636
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:bakeries",
    "name": "Bakeries & desserts (discovery index)",
    "group": "tourism_discovery",
    "publisher": "OpenStreetMap contributors",
-   "source": "osm (400)",
+   "source": "dohmh (313), osm (400)",
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
-   "feature_count": 400,
-   "valid_geometry_count": 400,
-   "duplicate_records": 5,
+   "feature_count": 713,
+   "valid_geometry_count": 713,
+   "duplicate_records": 6,
    "records_with_conflicts": 0,
    "missing_fields": {
-    "addr": 0.242,
-    "web": 0.512,
-    "hours": 0.46
+    "addr": 0.136,
+    "web": 0.717,
+    "hours": 0.697
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:restaurants",
    "name": "Restaurants (discovery index)",
    "group": "tourism_discovery",
    "publisher": "OpenStreetMap contributors",
-   "source": "osm (5037)",
+   "source": "osm (5037), dohmh (5882)",
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
-   "feature_count": 5037,
-   "valid_geometry_count": 5037,
-   "duplicate_records": 20,
+   "feature_count": 10919,
+   "valid_geometry_count": 10919,
+   "duplicate_records": 117,
    "records_with_conflicts": 5,
    "missing_fields": {
-    "addr": 0.228,
-    "web": 0.407,
-    "hours": 0.418
+    "addr": 0.105,
+    "web": 0.721,
+    "hours": 0.732
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:bars",
@@ -2428,8 +2698,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 884,
@@ -2438,12 +2708,15 @@
    "records_with_conflicts": 0,
    "missing_fields": {
     "addr": 0.227,
-    "web": 0.425,
+    "web": 0.411,
     "hours": 0.459
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:culture",
@@ -2454,22 +2727,25 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 434,
    "valid_geometry_count": 434,
    "duplicate_records": 3,
-   "records_with_conflicts": 0,
+   "records_with_conflicts": 1,
    "missing_fields": {
     "addr": 0.143,
-    "web": 0.306,
+    "web": 0.196,
     "hours": 0.876
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:shopping",
@@ -2480,8 +2756,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 278,
@@ -2490,12 +2766,15 @@
    "records_with_conflicts": 0,
    "missing_fields": {
     "addr": 0.32,
-    "web": 0.55,
+    "web": 0.536,
     "hours": 0.522
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:pharmacies",
@@ -2506,8 +2785,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 327,
@@ -2516,12 +2795,15 @@
    "records_with_conflicts": 0,
    "missing_fields": {
     "addr": 0.202,
-    "web": 0.532,
+    "web": 0.529,
     "hours": 0.346
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:groceries",
@@ -2532,8 +2814,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 1012,
@@ -2542,12 +2824,15 @@
    "records_with_conflicts": 0,
    "missing_fields": {
     "addr": 0.205,
-    "web": 0.766,
+    "web": 0.763,
     "hours": 0.601
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:health",
@@ -2558,8 +2843,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 231,
@@ -2573,7 +2858,10 @@
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:banks",
@@ -2584,8 +2872,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 532,
@@ -2594,12 +2882,15 @@
    "records_with_conflicts": 2,
    "missing_fields": {
     "addr": 0.445,
-    "web": 0.568,
+    "web": 0.564,
     "hours": 0.376
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:restrooms",
@@ -2610,8 +2901,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "NYC Open Data Terms of Use",
    "license_url": "https://www.nyc.gov/home/terms-of-use.page",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 419,
@@ -2625,7 +2916,10 @@
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:luggage",
@@ -2636,8 +2930,8 @@
    "source_url": "https://overpass-api.de/",
    "license": "ODbL 1.0",
    "license_url": "https://www.openstreetmap.org/copyright",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 1,
@@ -2651,7 +2945,10 @@
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "dataset_id": "places:historic_lpc",
@@ -2662,8 +2959,8 @@
    "source_url": null,
    "license": "NYC Open Data Terms of Use",
    "license_url": "https://www.nyc.gov/home/terms-of-use.page",
-   "retrieved_at": "2026-10-24T01:43:24+00:00",
-   "publisher_updated_at": "2026-10-24T01:40:11Z",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "publisher_updated_at": "2026-10-24T02:49:35Z",
    "freshness_days": 0,
    "coverage_area": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
    "feature_count": 921,
@@ -2677,7 +2974,10 @@
    },
    "update_method": "scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)",
    "integration_status": "connected",
-   "note": "Listed places; operating status today is not verified."
+   "note": "Listed places; operating status today is not verified.",
+   "data_class": "periodic_poi",
+   "update_frequency": "weekly to monthly snapshot",
+   "known_limitations": "Volunteer-mapped; opening hours and websites may be outdated; Manhattan only."
   },
   {
    "group": "routing_and_scoring",
@@ -2692,7 +2992,10 @@
    "coverage_area": "Manhattan",
    "feature_count": 122092,
    "version": "osm-walk-20261023-99602011",
-   "update_method": "scripts/build_pedestrian_network.py (OSMnx)"
+   "update_method": "scripts/build_pedestrian_network.py (OSMnx)",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "group": "routing_and_scoring",
@@ -2720,7 +3023,10 @@
     "environment": 0.988,
     "transit_connectivity": 0.988
    },
-   "update_method": "scripts/match_lion_osm.py"
+   "update_method": "scripts/match_lion_osm.py",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
   },
   {
    "group": "routing_and_scoring",
@@ -2735,7 +3041,171 @@
    "coverage_area": "Manhattan",
    "feature_count": 10533,
    "version": "sw-score-46f39c1c97",
-   "update_method": "scripts/build_manhattan_streets.py"
+   "update_method": "scripts/build_manhattan_streets.py",
+   "data_class": "static_urban",
+   "update_frequency": "monthly to yearly",
+   "known_limitations": "See source documentation."
+  },
+  {
+   "dataset_id": "dohmh_inspections",
+   "name": "Food establishment permits and inspections (five boroughs)",
+   "group": "business_evidence",
+   "publisher": "NYC Department of Health and Mental Hygiene",
+   "source": "NYC DOHMH Restaurant Inspection Results (NYC Open Data 43nn-pn8j)",
+   "source_url": "https://data.cityofnewyork.us/d/43nn-pn8j",
+   "license": "NYC Open Data Terms of Use",
+   "license_url": "https://www.nyc.gov/home/terms-of-use.page",
+   "retrieved_at": "2026-10-24T02:44:44+00:00",
+   "publisher_updated_at": "2026-10-23T22:05:41+00:00",
+   "freshness_days": 0,
+   "coverage_area": "NYC five boroughs {\"Bronx\": 2632, \"Manhattan\": 12536, \"Brooklyn\": 7997, \"Staten Island\": 1114, \"Queens\": 6989, \"0\": 101}",
+   "feature_count": 31369,
+   "valid_geometry_count": 30557,
+   "duplicate_records": 0,
+   "missing_fields": {
+    "coordinates": 0.026
+   },
+   "update_method": "scripts/build_inspections.py (Socrata API)",
+   "integration_status": "connected",
+   "note": "Permits and inspections, not reviews. \"closed_by_dohmh\" = the latest closure action has no later re-opening action.",
+   "data_class": "periodic_poi",
+   "update_frequency": "daily at the publisher; rebuilt on demand",
+   "known_limitations": "Licensing / inspection evidence, not reviews or live opening status."
+  },
+  {
+   "dataset_id": "dof_hotel_lots",
+   "name": "Hotel-class tax lots (Manhattan)",
+   "group": "business_evidence",
+   "publisher": "NYC Department of Finance",
+   "source": "NYC DOF Hotels Properties Citywide (tjus-cn27)",
+   "source_url": "https://data.cityofnewyork.us/d/tjus-cn27",
+   "license": "NYC Open Data Terms of Use",
+   "license_url": "https://www.nyc.gov/home/terms-of-use.page",
+   "retrieved_at": "2026-10-24T02:52:24+00:00",
+   "freshness_days": 0,
+   "coverage_area": "Manhattan",
+   "feature_count": 780,
+   "linked_records": 273,
+   "update_method": "scripts/build_place_index.py",
+   "integration_status": "connected",
+   "note": "Confirms a hotel-class building at the mapped point; says nothing about rooms, prices or ratings.",
+   "data_class": "periodic_poi",
+   "update_frequency": "daily at the publisher; rebuilt on demand",
+   "known_limitations": "Tax-lot evidence only."
+  },
+  {
+   "dataset_id": "provider:google_places",
+   "name": "Google Places API (New)",
+   "group": "on_demand_providers",
+   "publisher": "Google",
+   "license": "provider terms (no long-term storage)",
+   "retrieved_at": null,
+   "coverage_area": "per request",
+   "feature_count": null,
+   "integration_status": "blocked_by_provider_access",
+   "update_method": "live per request, 15-min memory cache (env GOOGLE_PLACES_API_KEY on the backend)",
+   "note": "Provides ratings, review counts, price level, hours. Nothing is stored or shown without the key.",
+   "data_class": "on_demand_business",
+   "update_frequency": "per request (cached 15 min in memory)",
+   "known_limitations": "Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match."
+  },
+  {
+   "dataset_id": "provider:yelp_fusion",
+   "name": "Yelp Fusion API",
+   "group": "on_demand_providers",
+   "publisher": "Yelp",
+   "license": "provider terms (no long-term storage)",
+   "retrieved_at": null,
+   "coverage_area": "per request",
+   "feature_count": null,
+   "integration_status": "blocked_by_provider_access",
+   "update_method": "live per request, 15-min memory cache (env YELP_API_KEY on the backend)",
+   "note": "Provides ratings, review counts, price. Nothing is stored or shown without the key.",
+   "data_class": "on_demand_business",
+   "update_frequency": "per request (cached 15 min in memory)",
+   "known_limitations": "Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match."
+  },
+  {
+   "dataset_id": "provider:foursquare",
+   "name": "Foursquare Places API",
+   "group": "on_demand_providers",
+   "publisher": "Foursquare",
+   "license": "provider terms (no long-term storage)",
+   "retrieved_at": null,
+   "coverage_area": "per request",
+   "feature_count": null,
+   "integration_status": "blocked_by_provider_access",
+   "update_method": "live per request, 15-min memory cache (env FOURSQUARE_API_KEY on the backend)",
+   "note": "Provides ratings (0-10), rating counts, price. Nothing is stored or shown without the key.",
+   "data_class": "on_demand_business",
+   "update_frequency": "per request (cached 15 min in memory)",
+   "known_limitations": "Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match."
+  },
+  {
+   "dataset_id": "provider:booking_demand",
+   "name": "Booking.com Demand API",
+   "group": "on_demand_providers",
+   "publisher": "Booking.com",
+   "license": "provider terms (no long-term storage)",
+   "retrieved_at": null,
+   "coverage_area": "per request",
+   "feature_count": null,
+   "integration_status": "blocked_by_provider_access",
+   "update_method": "live per request, 15-min memory cache (env BOOKING_DEMAND_API_KEY on the backend)",
+   "note": "Provides hotel room types, rates, availability. Nothing is stored or shown without the key.",
+   "data_class": "realtime_availability",
+   "update_frequency": "per request (cached 15 min in memory)",
+   "known_limitations": "Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match."
+  },
+  {
+   "dataset_id": "provider:expedia_rapid",
+   "name": "Expedia Rapid API",
+   "group": "on_demand_providers",
+   "publisher": "Expedia",
+   "license": "provider terms (no long-term storage)",
+   "retrieved_at": null,
+   "coverage_area": "per request",
+   "feature_count": null,
+   "integration_status": "blocked_by_provider_access",
+   "update_method": "live per request, 15-min memory cache (env EXPEDIA_RAPID_API_KEY on the backend)",
+   "note": "Provides hotel room types, rates, availability. Nothing is stored or shown without the key.",
+   "data_class": "realtime_availability",
+   "update_frequency": "per request (cached 15 min in memory)",
+   "known_limitations": "Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match."
+  },
+  {
+   "dataset_id": "open_meteo",
+   "name": "Current weather",
+   "group": "realtime",
+   "publisher": "Open-Meteo",
+   "source_url": "https://open-meteo.com/",
+   "license": "CC BY 4.0",
+   "retrieved_at": null,
+   "coverage_area": "NYC",
+   "feature_count": null,
+   "integration_status": "connected",
+   "update_method": "live in the browser (weather.js)",
+   "note": "temperature, wind, precipitation (model, not station)",
+   "data_class": "realtime_availability",
+   "update_frequency": "live (minutes)",
+   "known_limitations": "Not stored; unavailable when the provider is down."
+  },
+  {
+   "dataset_id": "nws_alerts",
+   "name": "Weather alerts",
+   "group": "realtime",
+   "publisher": "US National Weather Service",
+   "source_url": "https://api.weather.gov/",
+   "license": "US public domain",
+   "retrieved_at": null,
+   "coverage_area": "NYC",
+   "feature_count": null,
+   "integration_status": "connected",
+   "update_method": "live in the browser (weather.js)",
+   "note": "active alerts for the map area",
+   "data_class": "realtime_availability",
+   "update_frequency": "live (minutes)",
+   "known_limitations": "Not stored; unavailable when the provider is down."
   }
  ],
  "notes": [

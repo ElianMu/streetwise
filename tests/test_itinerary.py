@@ -312,7 +312,7 @@ class C_JourneyContract(unittest.TestCase):
         self.assertIn('Manhattan', idx['coverage']); self.assertTrue(idx['osm_timestamp'])
         for cat in ('hotels', 'cafes', 'museums'):
             for r in PLACES[cat][:50]:
-                self.assertTrue(r['id'].startswith(('osm:', 'lpc:', 'nycrr:'))); self.assertTrue(r['name'])
+                self.assertTrue(r['id'].startswith(('osm:', 'lpc:', 'nycrr:', 'dohmh:'))); self.assertTrue(r['name'])
                 NET.snap(r['lon'], r['lat'], r['name'])  # every indexed place is routable
 
 

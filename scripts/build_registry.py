@@ -78,6 +78,24 @@ def tileset_stats(tileset, flt, attributes):
             'missing_fields': {a: round(missing[a] / n, 3) for a in attributes if n and missing[a]}}
 
 
+def classify(r):
+    """Data class, expected update frequency and known limitations (the registry's update policy)."""
+    g, i = r['group'], r['dataset_id']
+    if g == 'realtime':
+        return {'data_class': 'realtime_availability', 'update_frequency': 'live (minutes)', 'known_limitations': 'Not stored; unavailable when the provider is down.'}
+    if g == 'on_demand_providers':
+        return {'data_class': 'realtime_availability' if i in ('provider:booking_demand', 'provider:expedia_rapid') else 'on_demand_business',
+                'update_frequency': 'per request (cached 15 min in memory)',
+                'known_limitations': 'Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match.'}
+    if g == 'business_evidence':
+        return {'data_class': 'periodic_poi', 'update_frequency': 'daily at the publisher; rebuilt on demand',
+                'known_limitations': 'Licensing / inspection evidence, not reviews or live opening status.' if i == 'dohmh_inspections' else 'Tax-lot evidence only.'}
+    if g == 'tourism_discovery':
+        return {'data_class': 'periodic_poi', 'update_frequency': 'weekly to monthly snapshot',
+                'known_limitations': 'Volunteer-mapped; opening hours and websites may be outdated; Manhattan only.'}
+    return {'data_class': 'static_urban', 'update_frequency': 'monthly to yearly', 'known_limitations': r.get('note') or 'See source documentation.'}
+
+
 def main():
     now = datetime.now(timezone.utc)
     cat = json.load(open(D('layers', 'catalog.json')))
@@ -122,6 +140,41 @@ def main():
                  'license': 'derived', 'retrieved_at': st.get('retrieved_at'), 'publisher_updated_at': st.get('data_version'), 'coverage_area': 'Manhattan',
                  'feature_count': st.get('segments'), 'version': st.get('score_version'), 'update_method': 'scripts/build_manhattan_streets.py'}):
         rows.append({'group': 'routing_and_scoring', 'integration_status': 'connected', 'freshness_days': age_days(row.get('publisher_updated_at') or row.get('retrieved_at'), now), **row})
+    # business evidence (server-side files) and on-demand / real-time providers
+    insp = D('inspections', 'dohmh.json.gz')
+    if os.path.exists(insp):
+        m = json.load(gzip.open(insp, 'rt'))['metadata']
+        rows.append({'dataset_id': 'dohmh_inspections', 'name': 'Food establishment permits and inspections (five boroughs)', 'group': 'business_evidence',
+                     'publisher': 'NYC Department of Health and Mental Hygiene', 'source': m['source'], 'source_url': m['source_url'], 'license': m['license'],
+                     'license_url': 'https://www.nyc.gov/home/terms-of-use.page', 'retrieved_at': m['retrieved_at'], 'publisher_updated_at': m['publisher_updated_at'],
+                     'freshness_days': age_days(m['publisher_updated_at'] or m['retrieved_at'], now), 'coverage_area': 'NYC five boroughs ' + json.dumps(m['by_borough']),
+                     'feature_count': m['records'], 'valid_geometry_count': m['with_coordinates'], 'duplicate_records': 0,
+                     'missing_fields': {'coordinates': round(1 - m['with_coordinates'] / max(1, m['records']), 3)},
+                     'update_method': 'scripts/build_inspections.py (Socrata API)', 'integration_status': 'connected', 'note': m['note']})
+        for r in rows:
+            if r['dataset_id'] == 'restaurant_inspections':
+                r.update(integration_status='connected (server-side, not a map layer)', note='Used through dohmh_inspections for place status, grades and closures.')
+    hl = idx.get('hotel_lots') or {}
+    if hl.get('available'):
+        rows.append({'dataset_id': 'dof_hotel_lots', 'name': 'Hotel-class tax lots (Manhattan)', 'group': 'business_evidence', 'publisher': 'NYC Department of Finance',
+                     'source': 'NYC DOF Hotels Properties Citywide (tjus-cn27)', 'source_url': 'https://data.cityofnewyork.us/d/tjus-cn27', 'license': 'NYC Open Data Terms of Use',
+                     'license_url': 'https://www.nyc.gov/home/terms-of-use.page', 'retrieved_at': idx['built_at'], 'freshness_days': age_days(idx['built_at'], now),
+                     'coverage_area': 'Manhattan', 'feature_count': hl['lots'], 'linked_records': hl['hotels_matched'], 'update_method': 'scripts/build_place_index.py',
+                     'integration_status': 'connected', 'note': 'Confirms a hotel-class building at the mapped point; says nothing about rooms, prices or ratings.'})
+    for pid, name, env, what in (('google_places', 'Google Places API (New)', 'GOOGLE_PLACES_API_KEY', 'ratings, review counts, price level, hours'),
+                                 ('yelp_fusion', 'Yelp Fusion API', 'YELP_API_KEY', 'ratings, review counts, price'),
+                                 ('foursquare', 'Foursquare Places API', 'FOURSQUARE_API_KEY', 'ratings (0-10), rating counts, price'),
+                                 ('booking_demand', 'Booking.com Demand API', 'BOOKING_DEMAND_API_KEY', 'hotel room types, rates, availability'),
+                                 ('expedia_rapid', 'Expedia Rapid API', 'EXPEDIA_RAPID_API_KEY', 'hotel room types, rates, availability')):
+        rows.append({'dataset_id': 'provider:' + pid, 'name': name, 'group': 'on_demand_providers', 'publisher': name.split()[0], 'license': 'provider terms (no long-term storage)', 'retrieved_at': None,
+                     'coverage_area': 'per request', 'feature_count': None, 'integration_status': 'connected' if os.environ.get(env, '').strip() else 'blocked_by_provider_access',
+                     'update_method': f'live per request, 15-min memory cache (env {env} on the backend)', 'note': f'Provides {what}. Nothing is stored or shown without the key.'})
+    for rid, name, pub, url, what in (('open_meteo', 'Current weather', 'Open-Meteo', 'https://open-meteo.com/', 'temperature, wind, precipitation (model, not station)'),
+                                      ('nws_alerts', 'Weather alerts', 'US National Weather Service', 'https://api.weather.gov/', 'active alerts for the map area')):
+        rows.append({'dataset_id': rid, 'name': name, 'group': 'realtime', 'publisher': pub, 'source_url': url, 'license': 'CC BY 4.0' if rid == 'open_meteo' else 'US public domain', 'retrieved_at': None,
+                     'coverage_area': 'NYC', 'feature_count': None, 'integration_status': 'connected', 'update_method': 'live in the browser (weather.js)', 'note': what})
+    for r in rows:
+        r.update(classify(r))
     out = {'built_at': now.isoformat(timespec='seconds'), 'datasets': rows,
            'notes': ['feature_count is records in the shipped files; it is not a count of places verified as currently open.',
                      'Search covers five boroughs through external providers (places.js); routing, scoring and discovery cover Manhattan.']}

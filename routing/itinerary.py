@@ -22,6 +22,8 @@ import itertools, math, re, time
 
 from .engine import RoutingError, WALK_SPEED_M_PER_MIN, preference_weights
 from . import validation as qa
+from . import hours as oh
+from datetime import datetime, timedelta, timezone
 from . import maneuvers as mv
 
 MAX_EXACT = 7            # required items up to this many: exact enumeration of orders
@@ -35,7 +37,7 @@ def _pt(doc, what):
         raise ValueError(f'{what} needs numeric lat/lon')
     return {'id': str(doc.get('id') or what)[:120], 'name': str(doc.get('name') or what)[:160], 'lat': float(doc['lat']), 'lon': float(doc['lon']),
             'category': str(doc.get('category') or '')[:60] or None, 'address': str(doc.get('address') or '')[:200] or None,
-            'source': str(doc.get('source') or '')[:80] or None}
+            'source': str(doc.get('source') or '')[:80] or None, 'hours': str(doc.get('hours'))[:300] if doc.get('hours') else None}
 
 
 def _norm(name):
@@ -87,7 +89,14 @@ def validate_request(doc):
             cons[k] = float(v)
     cons['avoid_stairs'] = c.get('avoid_stairs') is True
     prefs = doc.get('preferences') or {}
-    return {'origin': origin, 'end_mode': mode, 'end_place': end_place, 'stops': stops, 'slots': slots,
+    dep = doc.get('departure')
+    try:
+        departure = datetime.fromisoformat(dep) if isinstance(dep, str) else None
+        if departure and departure.tzinfo is None:
+            departure = departure.replace(tzinfo=oh.NY)
+    except ValueError:
+        raise ValueError('departure must be an ISO 8601 date-time')
+    return {'departure': departure,'origin': origin, 'end_mode': mode, 'end_place': end_place, 'stops': stops, 'slots': slots,
             'pool': {'label': str(pool.get('label') or 'Discovered places')[:80], 'max_stops': max(0, min(8, max_pool)), 'candidates': pool_c},
             'constraints': cons, 'preferences': prefs if isinstance(prefs, dict) else {}, 'theme': str(doc.get('theme') or '')[:120] or None}
 
@@ -182,6 +191,24 @@ class Planner:
                 v.append(f"walking + visits {walk_min + visit:.0f} min exceeds the {cons['max_outing_minutes']:g}-minute outing")
             return v
 
+        departure = req.get('departure')
+        visit_of = {}
+        for it in required + optional + pool_items:
+            for k in it['idx']:
+                visit_of[k] = it['visit']
+
+        def closed_count(seq):
+            """Stops whose mapped hours say closed at the estimated arrival along seq (0 when no departure or hours)."""
+            if not departure:
+                return 0
+            clock, n = 0.0, 0
+            for a, b in zip(seq, seq[1:]):
+                clock += dist(a, b) / WALK_SPEED_M_PER_MIN
+                if b in visit_of and oh.is_open_at(points[b].get('hours'), departure + timedelta(minutes=clock)) is False:
+                    n += 1
+                clock += visit_of.get(b, 0)
+            return n
+
         # 3. required items: choose slot candidates and order ------------------------------------------------
         def tour(inner):
             return [oi] + inner + ([ei] if ei is not None else [])
@@ -208,7 +235,8 @@ class Planner:
                     if not order_ok(items):
                         continue
                     seq = tour([picks[k] for k in perm])
-                    m = walk_m(seq) - SCORE_M * sum(points[k].get('score', 0) for k in picks)
+                    # an order that reaches a place while it is closed loses to any order that does not
+                    m = walk_m(seq) - SCORE_M * sum(points[k].get('score', 0) for k in picks) + 1e7 * closed_count(seq)
                     if best is None or m < best[0]:
                         best = (m, [picks[k] for k in perm], items)
             method.append(f'exact enumeration of {n_req} required stop(s) and slot choices (network walk minus {SCORE_M} m per unit of relevance)')
@@ -224,7 +252,8 @@ class Planner:
                         trial_items = items[:pos] + [it] + items[pos:]
                         if not order_ok(trial_items):
                             continue
-                        m = walk_m(tour(inner[:pos] + [k] + inner[pos:])) - SCORE_M * points[k].get('score', 0)
+                        trial = tour(inner[:pos] + [k] + inner[pos:])
+                        m = walk_m(trial) - SCORE_M * points[k].get('score', 0) + 1e7 * closed_count(trial)
                         if cand is None or m < cand[0]:
                             cand = (m, pos, k)
                 if cand is None:  # every candidate already used by another need: keep the required item with its first choice
@@ -263,8 +292,8 @@ class Planner:
                             continue
                         new_inner = inner[:pos] + [k] + inner[pos:]
                         m = walk_m(tour(new_inner))
-                        if m == math.inf or within(m, visit_total(chosen) + it['visit']):
-                            continue
+                        if m == math.inf or within(m, visit_total(chosen) + it['visit']) or closed_count(tour(new_inner)) > closed_count(tour(inner)):
+                            continue   # over budget, or it (or a later stop) would be reached while closed
                         added_min = (m - base_m) / WALK_SPEED_M_PER_MIN + it['visit']
                         value = 1.0 + it.get('score', points[k].get('score', 0) or 0)
                         ratio = value / max(added_min, 1.0)
@@ -333,7 +362,7 @@ class Planner:
         leg_m = {}
         for a, b, st in legs:
             leg_m[(a, b)] = sum(s[2] - s[1] for s in st)
-        clock, out_stops = 0.0, []
+        clock, out_stops, time_issues, time_warnings = 0.0, [], [], []
         by_point = {}
         for it in items:
             for k in it['idx']:
@@ -350,10 +379,22 @@ class Planner:
                    'visit_min': it['visit'] if it else 0, 'snap_distance_m': p['snap']['snap_distance_m'], 'evidence': p.get('evidence')}
             if it and it['type'] == 'slot':
                 rec.update(slot_id=it['slot_id'], slot_label=it['label'], alternatives=[points[j]['id'] for j in it['idx'] if j != k][:5])
+            if departure and it:
+                at = departure + timedelta(minutes=clock)
+                rec.update(arrival_time=at.astimezone(oh.NY).isoformat(timespec='minutes'), hours=p.get('hours'),
+                           open_at_arrival=oh.is_open_at(p.get('hours'), at), closes_during_visit=oh.closes_within(p.get('hours'), at, rec['visit_min']))
+                if rec['open_at_arrival'] is False:
+                    time_issues.append(f"{p['name']} is closed at the estimated arrival {at.astimezone(oh.NY).strftime('%H:%M')} (OpenStreetMap hours)")
+                elif rec['closes_during_visit']:
+                    time_warnings.append(f"{p['name']} closes during the planned {rec['visit_min']:.0f}-minute visit")
             out_stops.append(rec)
             clock += rec['visit_min']
             prev = k
         walk_min = route['estimated_duration_min']
+        if time_issues:
+            violations = violations + time_issues
+            route['constraints'] = {**route['constraints'], 'feasible': False, 'violations': violations}
+            route['recommended'] = False
         along, stops_mv = 0.0, []
         for k, s in enumerate(out_stops):
             along += s['leg_in_m']
@@ -364,13 +405,15 @@ class Planner:
         route['route_signature'] = route_signature(route)
         route['validation'] = qa.validate(route, net, {**cons},
                                           [{'name': s['name'], 'lat': s['lat'], 'lon': s['lon'], 'required': s['required'] or s['role'] == 'end',
-                                            'snap_distance_m': s['snap_distance_m']} for s in out_stops])
+                                            'snap_distance_m': s['snap_distance_m'], 'open_at_arrival': s.get('open_at_arrival'),
+                                            'closes_during_visit': s.get('closes_during_visit')} for s in out_stops])
         pool_requested = min(req['pool']['max_stops'], len(pool_items))
         itinerary = {'end_mode': req['end_mode'], 'pool': {'requested': pool_requested, 'added': added_pool}, 'start': {k: points[oi][k] for k in ('id', 'name', 'lat', 'lon')},
                      'stops': out_stops, 'skipped': skipped, 'notes': notes, 'method': method,
                      'totals': {'walk_m': route['distance_m'], 'walk_min': walk_min, 'visit_min': visit_total(chosen),
                                 'outing_min': round(walk_min + visit_total(chosen), 1), 'stops': len(inner)},
                      'constraints': {**cons, 'feasible': not violations, 'violations': violations},
+                     'departure': departure.astimezone(oh.NY).isoformat(timespec='minutes') if departure else None, 'time_warnings': time_warnings,
                      'matrix': {'points': len(points), 'seconds': matrix_s, 'basis': 'network shortest-path metres (Dijkstra on the OSM pedestrian graph)'},
                      'coverage': 'Walking routes use the Manhattan OSM pedestrian graph; places elsewhere can be searched but not routed.'}
         return {'network_version': net.network_version, 'score_version': net.score_version, 'routes': [route], 'itinerary': itinerary,

@@ -19,6 +19,9 @@ from routing.engine import get_planner, reset_planner, RoutingError, DIMENSIONS 
 from routing.weather import validate_snapshot as validate_weather
 from routing.itinerary import Planner as ItineraryPlanner, validate_request as validate_itinerary
 from routing import menu as menu_check
+from routing import providers
+from routing.places import store as place_store
+from routing.recommend import recommend_food
 
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
@@ -128,7 +131,7 @@ def validate_journey(j):
     return out
 
 # Per-client rate limits (requests per rolling minute). Render puts the client address in X-Forwarded-For.
-RATE_LIMITS = {'menu': 10, 'itinerary': 30, 'routes': 60}
+RATE_LIMITS = {'menu': 10, 'itinerary': 30, 'routes': 60, 'recommend': 6, 'places': 60, 'ratings': 20}
 _rate, _rate_lock = {}, threading.Lock()
 
 
@@ -291,7 +294,13 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path == '/api/status':
             self.send_json(200, {'llm': bool(KEY), 'model': MODEL if KEY else None,
                                  'features': {'itinerary': True, 'menu_verify': 'official website only (no menu API connected)',
-                                              'routing_coverage': 'Manhattan OSM pedestrian graph'}})
+                                              'routing_coverage': 'Manhattan OSM pedestrian graph',
+                                              'place_search': 'Manhattan discovery index + NYC DOHMH food permits (five boroughs, search only outside Manhattan)',
+                                              'food_recommendations': True},
+                                 'providers': providers.configured()})
+            return
+        if self.path.startswith(('/api/places', '/api/hotels/')):
+            self.places_get()
             return
         if self.path == '/api/routing/status':
             try:
@@ -314,6 +323,52 @@ class Handler(SimpleHTTPRequestHandler):
         if self.send_gzipped():
             return
         return super().do_GET()
+
+    def places_get(self):
+        """GET /api/places/search?lat&lon&categories&radius_m&q&cuisine · /api/places/<id> · /api/places/<id>/ratings ·
+        /api/hotels/<id>/rooms?checkin&checkout&guests. Ids are canonical place ids (e.g. osm:node/123, dohmh:50012345)."""
+        u = urlsplit(self.path)
+        qs = {k: v[0] for k, v in parse_qs(u.query).items()}
+        parts = [unquote(x) for x in u.path.split('/')[2:]]   # ['places', ...] or ['hotels', ...]
+        bucket = 'ratings' if parts[-1] in ('ratings', 'rooms') else 'places'
+        if not rate_ok(self, bucket):
+            self.send_json(429, {'error': f'Too many requests; limit {RATE_LIMITS[bucket]} per minute.'}); return
+        S = place_store()
+        try:
+            if parts[:2] == ['places', 'search']:
+                near = {'lat': float(qs['lat']), 'lon': float(qs['lon'])}
+                if not (40.4 < near['lat'] < 41.0 and -74.3 < near['lon'] < -73.6):
+                    raise ValueError('lat/lon must be in New York City')
+                cats = [c for c in (qs.get('categories') or 'restaurants').split(',') if c in S.by_cat or c in ('restaurants', 'cafes', 'bakeries')][:8]
+                if not cats:
+                    raise ValueError('unknown categories')
+                radius = max(50, min(3000, int(qs.get('radius_m') or 800)))
+                res = S.search(near, cats, radius_m=radius, limit=max(1, min(50, int(qs.get('limit') or 20))), query=(qs.get('q') or '')[:60] or None,
+                               cuisine=(qs.get('cuisine') or '')[:40] or None, include_closed=qs.get('include_closed') == '1')
+                self.send_json(200, {'results': res, 'count': len(res), 'radius_m': radius, 'categories': cats,
+                                     'note': 'Straight-line pre-selection; walking distance comes from the router. Outside Manhattan results are search only.'})
+                return
+            pid = '/'.join(parts[1:-1]) if parts[-1] in ('ratings', 'rooms') else '/'.join(parts[1:])
+            place = S.get(pid)
+            if not place:
+                self.send_json(404, {'error': 'Unknown place id'}); return
+            if parts[0] == 'hotels':
+                if parts[-1] != 'rooms' or place['category'] != 'hotels':
+                    self.send_json(404, {'error': 'Use /api/hotels/<hotel id>/rooms'}); return
+                guests = int(qs.get('guests') or 2)
+                if not (1 <= guests <= 12):
+                    raise ValueError('guests must be 1-12')
+                for k in ('checkin', 'checkout'):
+                    if qs.get(k) and not re.fullmatch(r'\d{4}-\d{2}-\d{2}', qs[k]):
+                        raise ValueError(f'{k} must be YYYY-MM-DD')
+                self.send_json(200, providers.hotel_rooms(place, qs.get('checkin'), qs.get('checkout'), guests))
+                return
+            if parts[-1] == 'ratings':
+                self.send_json(200, providers.ratings({'place_id': place['place_id'], 'name': place['name'], 'address': place['address'], **place['coordinates']}))
+                return
+            self.send_json(200, place)
+        except (KeyError, ValueError) as e:
+            self.send_json(400, {'error': f'Invalid request: {e}' if isinstance(e, ValueError) else 'lat and lon are required'})
 
     def send_gzipped(self):
         """Serve text assets gzip-compressed (the 12-dimension street file shrinks ~5x)."""
@@ -341,7 +396,8 @@ class Handler(SimpleHTTPRequestHandler):
         return True
 
     def do_POST(self):
-        bucket = {'/api/menu/verify': 'menu', '/api/itinerary': 'itinerary', '/api/routes': 'routes', '/api/detours': 'itinerary'}.get(self.path)
+        bucket = {'/api/menu/verify': 'menu', '/api/itinerary': 'itinerary', '/api/routes': 'routes', '/api/detours': 'itinerary',
+                  '/api/recommend/food': 'recommend'}.get(self.path)
         if bucket and not rate_ok(self, bucket):
             self.send_json(429, {'error': f'Too many requests; limit {RATE_LIMITS[bucket]} per minute.'})
             return
@@ -360,6 +416,14 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(200, detours(get_planner(), read_json(self, 30000)))
             except (ValueError, TypeError, json.JSONDecodeError) as e:
                 self.send_json(422 if isinstance(e, RoutingError) else 400, {'error': str(e)})
+            return
+        if self.path == '/api/recommend/food':
+            try:
+                self.send_json(200, recommend_food(get_planner(), read_json(self, 8000)))
+            except (ValueError, TypeError, json.JSONDecodeError) as e:
+                self.send_json(422 if isinstance(e, RoutingError) else 400, {'error': str(e)})
+            except RuntimeError as e:
+                self.send_json(503, {'error': str(e)})
             return
         if self.path == '/api/menu/verify':
             try:

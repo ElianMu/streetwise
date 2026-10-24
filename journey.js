@@ -9,6 +9,8 @@
                                               data/places/*.json — OpenStreetMap + NYC LPC + NYC restrooms snapshot,
                                               limited to the walking-route coverage (Manhattan)
      verify_menu_item                         POST /api/menu/verify (official website only)
+     recommend_food                           POST /api/recommend/food (hard filters → menu evidence → detour → explanation)
+     get_place_details / get_place_ratings    GET /api/places/<id>, /api/places/<id>/ratings (per provider; blocked without keys)
      find_along_route                         POST /api/detours (real network detours)
      plan_itinerary                           POST /api/itinerary (network matrix, ordering, experience-aware legs)
      get_current_location / get_weather_context   existing GPS and weather.js
@@ -24,7 +26,7 @@ const journey={
  extra:{},                 // "one more museum": extra pool places per interest
  removed:new Set(),        // place ids the user removed
  replaced:{},              // slot id -> place chosen by the user
- plan:null,lastFound:null,menu:{},pending:false,active:false,
+ plan:null,lastFound:null,menu:{},recs:{},pending:false,active:false,
 };
 const POI_CACHE={};
 // Typical short-visit estimates (minutes); always shown as estimates and editable per stop.
@@ -294,8 +296,10 @@ async function itineraryRequest(){
  for(const f of journey.food){
   const cats=f.item==='cheesecake'?['bakeries','restaurants']:[f.category];
   const filt=f.cuisine?(r=>new RegExp(`(^|;)${f.cuisine}(;|$)`,'i').test(r.cuisine||'')):f.category==='cafes'&&f.item?(r=>r.cat==='cafes'):null;
-  const cands=await discoverPlaces(cats,{item:f.item,cuisine:f.cuisine,filter:filt,limit:6,radiusKm:1.2});
   const id='food:'+f.category+':'+(f.item||f.cuisine||'');const fixed=journey.replaced[id];
+  // a requested item: server-side recommendation (menu evidence first, closed / unreachable excluded); local discovery otherwise or as fallback
+  const rec=f.item&&!fixed?await recommendFood(f,cats,start,end):null;
+  const cands=rec?.length?rec:await discoverPlaces(cats,{item:f.item,cuisine:f.cuisine,filter:filt,limit:6,radiusKm:1.2});
   if(fixed)stops.push({...pick(fixed),required:true,order:null,visit_min:VISIT_MIN[fixed.cat]??20});
   else if(cands.length)slots.push({slot_id:id,label:foodLabel(f),required:f.required!==false,visit_min:VISIT_MIN[f.category]??20,candidates:cands.map(slotCand),order:ordered?++order:null});
  }
@@ -306,12 +310,12 @@ async function itineraryRequest(){
  const outing=state.outingMin;
  // extra discoveries scale with the time available (walking budget, or the total outing when set)
  const base=outing||state.budget,maxPool=Math.max(0,Object.values(journey.extra).reduce((a,b)=>a+b,0)+(journey.interests.length?Math.max(1,Math.min(4,Math.round((base-30)/40))):0));
- return {origin:pick(start),end:{mode:journey.endMode,place:end?pick(end):null},stops,slots,pool:{label:'Discovered places',max_stops:maxPool,candidates:poolCands.slice(0,16)},
+ return {departure:new Date().toISOString(),origin:pick(start),end:{mode:journey.endMode,place:end?pick(end):null},stops,slots,pool:{label:'Discovered places',max_stops:maxPool,candidates:poolCands.slice(0,16)},
   constraints:{max_minutes:state.budget,max_km:state.maxKm,max_outing_minutes:outing,avoid_stairs:planner.constraints.avoidStairs},
   preferences:buildRouteRequest(start,end||start).preferences,theme:journeyTheme()};
 }
-const pick=p=>({id:p.id,name:p.name,lat:p.lat,lon:p.lon,category:p.category||null,address:p.address||null,source:p.source||null});
-const slotCand=c=>({...pick(c),score:c.score,evidence:candidateEvidence(c)});
+const pick=p=>({id:p.id,name:p.name,lat:p.lat,lon:p.lon,category:p.category||null,address:p.address||null,source:p.source||null,hours:p.hours||p.raw?.hours||null});
+const slotCand=c=>({...pick(c),score:c.score,evidence:typeof c.evidence==='string'?c.evidence:candidateEvidence(c)});
 function foodLabel(f){return f.item?`${titleCase(f.item)} (${f.category==='cafes'?'café':f.category.replace(/s$/,'')})`:f.cuisine?`${titleCase(f.cuisine)} restaurant`:{cafes:'Café',restaurants:'Restaurant',bakeries:'Bakery / dessert',bars:'Bar'}[f.category];}
 function candidateEvidence(c){
  const e=[];if(c.raw?.sl)e.push(`Wikipedia in ${c.raw.sl} editions`);else if(c.wikidata)e.push('Wikidata-listed');if(c.raw?.src==='lpc'||c.raw?.lpc)e.push('NYC designated landmark');if(c.raw?.snap>80)e.push(`entrance approx. ${Math.round(c.raw.snap)} m from mapped point`);if(c.drink?.espresso==='yes')e.push('OSM tag: serves espresso');if(c.drink?.coffee==='yes')e.push('OSM tag: serves coffee');
@@ -352,7 +356,33 @@ function itinerarySummaryText(it){
  const pool=it.pool&&it.pool.requested>it.pool.added?` ${it.pool.requested-it.pool.added} more discovered place(s) did not fit the ${c.max_outing_minutes?`${c.max_outing_minutes}-minute outing`:'budget'}; extend the time to add them.`:'';
  return pool+`${c.feasible?'Planned':'Not feasible'}: ${t.stops} stop(s)${stops?` — ${stops}`:''}${it.end_mode==='round'?' → back to start':it.end_mode==='hotel'?' → back to my hotel':''}. `+
   `${(t.walk_m/1000).toFixed(2)} km, ${Math.round(t.walk_min)} min walking + ${Math.round(t.visit_min)} min visits (estimated) = ${Math.round(t.outing_min)} min.`+
-  (c.violations.length?` ${c.violations.join('; ')}.`:'')+(it.skipped.length?` Skipped: ${it.skipped.map(s=>`${s.name} (${s.reason})`).join('; ')}.`:'');
+  (c.violations.length?` ${c.violations.join('; ')}.`:'')+(it.skipped.length?` Skipped: ${it.skipped.map(s=>`${s.name} (${s.reason})`).join('; ')}.`:'')+
+  it.stops.map(s=>{const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item),r=f&&journey.recs[s.id+'|'+f.item];
+   return r&&r.classification!=='meets_request'?` ${titleCase(f.item)} is not confirmed on ${s.name}’s official menu (${r.classification==='needs_review'?'possible match, review the evidence':'no confirming source'}).`:'';}).join('');
+}
+
+/* ---------- food recommendations (server) ---------- */
+async function recommendFood(f,cats,start,end){
+ try{
+  const r=await streetwiseFetch('/api/recommend/food',{method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(35000),
+   body:JSON.stringify({item:f.item,cuisine:f.cuisine||null,categories:cats,sequence:[start,end].filter(Boolean).map(pick),radius_m:1000,max_detour_min:15,departure:new Date().toISOString()})});
+  const d=await r.json();if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);
+  const keep=d.candidates.filter(c=>c.classification!=='excluded').slice(0,6);
+  for(const c of keep){const id=c.place.index_id||c.place.place_id;journey.recs[id+'|'+f.item]=c;if(c.menu&&c.menu.status!=='not_checked')journey.menu[id+'|'+f.item]=c.menu;}
+  return keep.map(c=>({id:c.place.index_id||c.place.place_id,name:c.place.name,lat:c.place.coordinates.lat,lon:c.place.coordinates.lon,category:c.place.category,
+   address:c.place.address,hours:c.place.opening_hours,source:c.place.data_sources.join(' + '),score:{meets_request:1,needs_review:.6,not_confirmed:.2}[c.classification],
+   evidence:[c.explanation.interpretation,...c.explanation.verified_facts].join(' · ')}));
+ }catch(e){console.warn('food recommendation unavailable',e.message);return null;}
+}
+
+/* ---------- typed place details (server) ---------- */
+const QUALITY_LABEL={verified:'Verified by an authority',unverified:'Listed, not verified',limited_data:'Limited data',closed:'Closed (NYC DOHMH)'};
+async function placeDetails(id){
+ try{const r=await streetwiseFetch('/api/places/'+id.split('/').map(encodeURIComponent).join('/'),{signal:AbortSignal.timeout(10000)});return r.ok?await r.json():null;}catch{return null;}
+}
+async function placeRatings(id){
+ const r=await streetwiseFetch('/api/places/'+id.split('/').map(encodeURIComponent).join('/')+'/ratings',{signal:AbortSignal.timeout(30000)});
+ const d=await r.json();if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);return d;
 }
 
 /* ---------- menu verification ---------- */
