@@ -1,6 +1,6 @@
 # Urban data expansion and spatial pipeline audit
 
-Generated 2026-10-24T20:42:56.627945+00:00. Counts below are computed from indexed source snapshots; the existing full inventory remains in DATA_AUDIT_REPORT.md and data/registry.json.
+Generated 2026-10-24T21:34:10.734306+00:00. Counts below are computed from indexed source snapshots; the existing full inventory remains in DATA_AUDIT_REPORT.md and data/registry.json.
 
 | Dataset | Retained records | Source URL | Routing role |
 |---|---:|---|---|
@@ -38,7 +38,7 @@ Raw large inventories are streamed offline into SQLite and shipped compressed. R
 
 ## Menu evidence
 
-Four real first-party menu-verifier receipts (Bagel and Cappuccino at the indexed Bagel Pub and Zucker’s Bagels & Smoked Fish) are included with official URL and checked time. They seed evidence for at most 12 hours and never imply current stock, branch availability or verified USD pricing. One verified venue may fulfil both dishes as one waypoint; every required item is checked independently. Unverified extra items fail. Expired corpus entries trigger live verification rather than permanent success.
+Real first-party menu-verifier receipts for Bagel/Cappuccino at the indexed Bagel Pub and Zucker’s Bagels & Smoked Fish, plus Coffee at Zucker’s, are included with official URL and checked time. The exact receipt list and timestamps are in data/menus/verified-items.json. They seed evidence for at most 12 hours and never imply current stock, branch availability or verified USD pricing. One verified venue may fulfil both dishes as one waypoint; every required item is checked independently. Unverified extra items fail. Expired corpus entries trigger live verification rather than permanent success.
 
 ## Research and remaining gaps
 
