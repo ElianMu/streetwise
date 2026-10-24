@@ -72,6 +72,7 @@ class ContractTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Explicit total'):
                 server.validate_intent_bindings({'journey':journey},'Start from my hotel, visit two landmarks and return to my hotel.')
         server.validate_intent_bindings({'journey':{'interests':['famous'],'counts':{'famous':2}}},'Visit two landmarks')
+        server.validate_intent_bindings({'journey':{'interests':['historic'],'counts':{'historic':2}}},'Visit two landmarks')
 
     def test_counts_must_name_requested_interests(self):
         with self.assertRaisesRegex(ValueError, 'belong to interests'):
@@ -100,6 +101,20 @@ class ContractTests(unittest.TestCase):
             code,result=server.interpret({'message':'Start from my hotel, visit two landmarks and return to my hotel.'})
         self.assertEqual(code,200);self.assertEqual(llm.call_count,2)
         self.assertEqual(result['journey']['counts'],{'famous':2});self.assertEqual(result['journey']['named_stops'],[])
+
+    def test_good_bakery_requires_review_evidence(self):
+        with self.assertRaisesRegex(ValueError,'ratings_required'):
+            server.validate_intent_bindings({'journey':{'food':[{'category':'bakeries'}]}},'Plan a walk with a good bakery')
+        server.validate_intent_bindings({'journey':{'requirements':{'ratings_required':True}}},'Plan a walk with a good bakery')
+
+    def test_count_prompt_example_is_valid_wire_and_not_a_fallback(self):
+        sample=server.count_contract_example()
+        r=server.validate_interpretation(normalize_wire(sample))
+        self.assertEqual(r['journey']['counts'],{'famous':2})
+        self.assertEqual(r['journey']['more'],{});self.assertEqual(r['journey']['named_stops'],[])
+        with mock.patch.object(server,'KEY','unit-test-only-key'),mock.patch.object(server,'call_llm',side_effect=server.LLMFailure('upstream_unreachable')):
+            code,result=server.interpret({'message':'Visit two landmarks'})
+        self.assertEqual(code,502);self.assertNotIn('journey',result)
 
     def test_scoring_really_changes_on_same_real_route(self):
         from routing.engine import get_planner, preference_weights
