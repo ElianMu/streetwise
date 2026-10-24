@@ -18,6 +18,14 @@ const run=s=>vm.runInContext(s,context);
  run(`selectExploreSegment(${JSON.stringify(seg.id)})`);const insp=()=>w.document.querySelector('#exploreInspector');
  assert(!insp().classList.contains('hidden'));assert(insp().textContent.includes(seg.id));assert(insp().textContent.includes('Segment Length'));
  assert(insp().textContent.includes('Overall Experience Score'));assert.equal(insp().querySelectorAll('.explore-row').length,12);assert(insp().textContent.includes('Comfort: N/A')||insp().textContent.includes('Comfort'));assert(insp().textContent.includes(`${seg.coverage} of 12 dimensions`));
+ // Every view must bind the intended real-data score property and update the inspector.
+ for(let i=0;i<13;i++){
+  run(`selectExploreView(${i})`);
+  const view=run('exploreView()');
+  assert.equal(view.prop,i===0?'overall':`d${i-1}`);
+  assert.equal(w.document.querySelector('#exploreTitle').textContent,view.label);
+  assert(insp().textContent.includes(seg.id));
+ }
  w.document.querySelector('#exploreChips [data-view="2"]').click();assert.equal(w.document.querySelector('#exploreTitle').textContent,'Nature');
  assert(insp().textContent.includes('Living street trees per km'));assert(insp().textContent.includes('NYC Parks Forestry Tree Points'));assert.equal(insp().querySelectorAll('.explore-row').length,0);assert(!insp().textContent.includes('Walkability'));
  w.document.querySelector('#exploreChips [data-view="5"]').click();assert(insp().textContent.includes('Comfort · Experience Score'));assert(insp().querySelector('.inspector-score strong').textContent==='N/A');assert(insp().textContent.includes('N/A'));
@@ -226,5 +234,23 @@ const run=s=>vm.runInContext(s,context);
  assert(w.document.querySelector('#routeValidation').textContent.includes('Route check'));
  run("state.routes[0].raw.validation={...state.routes[0].raw.validation,navigation_allowed:false,status:'fail',blocking_issues:['gap between edges']};renderNavStart()");assert(ns.disabled&&ns.title.includes('gap between edges'),'failed route check blocks navigation');
  run("delete state.routes[0].raw.maneuvers;state.routes[0].raw.validation.navigation_allowed=true;renderNavStart()");assert(ns.disabled,'no maneuvers, no navigation');
+ // Mock AI transport only; never claim this as a real OpenAI call.
+ const initialFetch=w.fetch;
+ run('planner.llmConnected=true');
+ w.fetch=async(url)=>String(url).endsWith('/api/interpret')?({ok:true,json:async()=>({weights:{'Scenic & Visual':90,Architecture:85,Nature:85},constraints:{},journey:{food:[{category:'cafes',item:'coffee',required:true}],interests:['parks']}})}):initialFetch(url);
+ const ai=await run("interpretIntent('I want a scenic walk with architecture, parks, and good coffee.')");
+ assert.equal(run('planner.interpretation'),'llm');
+ assert.equal(run("planner.weights['Scenic & Visual']"),90);
+ assert.equal(ai.journey.food[0].item,'coffee');
+ run('planner.llmConnected=true');
+ w.fetch=async(url)=>String(url).endsWith('/api/interpret')?({ok:false,status:502,json:async()=>({reason:{stage:'upstream_http',code:'invalid_api_key'}})}):initialFetch(url);
+ await run("interpretIntent('greener walk')");
+ assert.equal(run('planner.interpretation'),'local');
+ assert(w.document.querySelector('#toast').textContent.includes('invalid_api_key'));
+ run('planner.llmConnected=false');w.fetch=initialFetch;
+
+ // Drain route-summary and menu continuations before destroying their document.
+ await run('renderRouteUrbanData()');
+ await new Promise(resolve=>setImmediate(resolve));
  console.log('DOM PASS: navigation gate (route check + maneuvers), AI Discover My Walk (multi-turn state kept, real POI index, itinerary request + rendering, menu status honest, find vs add, hotel confirmation), weather offline → weather:null + honest status, weather intents, engine weather record shown as computed, walking-time default/sync/validation/API, urban data catalog (10 dataset categories, statuses, search), along-route counts = brute-force reference, route switch keeps layers, route urban data summary, feature inspector, segment evidence (matched/unmatched), static JSON errors, mode, 13 explore views, segment inspector (single + overall, N/A), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});

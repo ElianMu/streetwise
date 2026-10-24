@@ -13,18 +13,21 @@ async def main():
         await page.set_content(html)
         await page.add_style_tag(content=(root/'styles.css').read_text())
         await page.add_script_tag(content=(root/'experience-core.js').read_text())
-        for name in ('app.js','route-client.js','explore-map.js','center-map.js'):
+        for name in ('api-config.js','weather.js','places.js','opening-hours.js','app.js','route-client.js','weather-ui.js','journey.js','journey-ui.js','voice.js','nav-engine.js','nav-ui.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','explore-analytics.js','center-map.js'):
             await page.add_script_tag(content=(root/name).read_text())
         # Serve the routing engine's recorded response in place of the server; record what the page asked for.
         fixture=(root/'tests'/'fixtures'/'route-response.json').read_text()
         await page.evaluate('''(fixture) => {
           window.routeRequests=[];
           window.fetch=async (url,opts)=>{
-            if(String(url).endsWith('/api/routes')){window.routeRequests.push(JSON.parse(opts.body));return {ok:true,json:async()=>JSON.parse(fixture)};}
-            if(String(url).endsWith('/api/pois'))return {ok:true,json:async()=>({pois:[]})};
+            if(String(url).endsWith('/api/routes')){window.routeRequests.push(JSON.parse(opts.body));return new Response(fixture,{headers:{'Content-Type':'application/json'}});}
+            if(String(url).endsWith('/api/pois'))return new Response(JSON.stringify({pois:[]}),{headers:{'Content-Type':'application/json'}});
             throw new Error('blocked in test');
           };
         }''',fixture)
+        # Set the scenario's 30-minute cap explicitly; do not depend on UI defaults.
+        await page.locator('#customTime').fill('30')
+        await page.locator('#customTime').dispatch_event('change')
         await page.locator('#generateRoutes').click()
         await page.wait_for_function('!state.routingBusy && !planner.parsing && state.routes.length>0',timeout=18000)
         result=await page.evaluate('''() => ({n:state.routes.length,best:state.activeRoute,weights:planner.weights,origins:planner.origins,budget:state.budget,poisons:planner.routePois.length,chat:planner.conversations.length})''')

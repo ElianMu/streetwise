@@ -13,6 +13,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 from urllib import request, error
 from urllib.parse import unquote, urlsplit, parse_qs
 from routing.engine import get_planner, reset_planner, RoutingError, DIMENSIONS as ROUTE_DIMENSIONS, MIN_WALK_MINUTES
@@ -56,7 +57,7 @@ DIMENSIONS = [
 SYSTEM = f"""You are STREETWISE's structured walking-preference interpreter. Never invent route geometry, verified spatial indicators, observations, or street-level environmental evidence.
 Return one JSON object ONLY with keys:
 "weights": object mapping ONLY mentioned dimensions (exactly these 12 names: {json.dumps(DIMENSIONS)}) to independent IMPORTANCE integers 0..100. 0 means ignore, not an inverse objective. A clear request such as 'more greenery', 'less traffic', or 'quieter streets' gives high importance about 85-95.
-"directions": object mapping ONLY the same mentioned dimensions to either 'high' or 'low': desired greater or lesser measured exposure. 'Less crowded' = Urban Vibrancy weight 90 direction low. 'Quieter' = Quiet & Relax weight 90 direction high (quiet is desired high). Do not use low weights to represent a negative preference.
+"directions": object mapping ONLY the same mentioned dimensions to either 'high' or 'low': desired greater or lesser measured exposure. 'Less crowded' = Urban Vibrancy weight 90 direction low. 'Quieter' = Quiet & Relax weight 90 direction high (quiet is desired high). Do not use low weights to represent a negative preference. Every directions key must also exist in weights. Use canonical API names, never UI abbreviations: Comfort = Spatial Comfort; Vibrancy = Urban Vibrancy; Scenic = Scenic & Visual; Safety = Access & Safety; Transit = Transit Connectivity. Parks maps to Nature; coffee is a journey.food requirement, not a dimension named Coffee.
 "time_minutes": absolute walking hard cap in whole minutes (at least 10; no upper limit), if explicitly given; otherwise null.
 "time_delta_minutes": signed integer modification to existing walking cap, if user explicitly says 'five more minutes'; otherwise null. Never return both time_minutes and time_delta_minutes non-null.
 "max_detour_percent": optional integer from 0 to 100 if explicitly specified (extra distance over the shortest candidate route distance), otherwise null.
@@ -73,6 +74,7 @@ Return one JSON object ONLY with keys:
    "end_mode": "fixed"|"round"|"hotel"|"open"|null,
    "walking_minutes": walking-time limit or null, "outing_minutes": total time incl. visits ("I have two hours" = 120) or null,
    "distance_km": walking-distance limit in km or null, "more": {{"category": count to add}} for "add another museum", "remove": [names] }}
+  For any explicit food or drink request, journey must be non-null and food must preserve it, even in a simple walking-preference sentence. Coffee is category cafes, item coffee; parks also belong in journey.interests. Food & Retail weight alone never satisfies a requested POI.
   Never output coordinates, addresses, menus, prices or opening hours: places are looked up by STREETWISE tools.
 "clarification": null unless user intent is materially ambiguous or contradictory (for example asks for both a strict 10-minute cap and a 30-minute minimum, or asks for inaccessible route when step-free is required). If ambiguous, write one short question here, do not infer changes.
 Preserve current state by omitting every unmentioned dimension/constraint. Time and accessibility are hard constraints, not dimension scores. Do not claim quiet or step-free conditions are validated.
@@ -89,8 +91,12 @@ def validate_interpretation(doc):
     constraints = doc.get('constraints', {})
     if not all(isinstance(x, dict) for x in (weights, dirs, constraints)):
         raise ValueError('Invalid object fields')
-    if set(weights) - set(DIMENSIONS) or set(dirs) - set(weights):
-        raise ValueError('Invalid dimension name')
+    if set(weights) - set(DIMENSIONS):
+        raise ValueError('Invalid dimension name in weights (use canonical dimension names)')
+    if set(dirs) - set(DIMENSIONS):
+        raise ValueError('Invalid dimension name in directions (use canonical dimension names)')
+    if set(dirs) - set(weights):
+        raise ValueError('Direction has no corresponding weight')
     if any(type(v) is not int or not 0 <= v <= 100 for v in weights.values()):
         raise ValueError('Preference must be integer 0..100')
     if any(v not in ('high', 'low') for v in dirs.values()):
@@ -551,6 +557,9 @@ def interpret(doc):
     message = doc.get('message', '')
     if not isinstance(message, str) or not message.strip() or len(message) > 2000:
         return 400, {'error': 'Invalid message'}
+    history = doc.get('history', [])
+    if not isinstance(history, list):
+        return 400, {'error': 'history must be an array'}
     context = {k: doc.get(k) for k in ('weights', 'budget', 'constraints', 'weather')}
     payload = {
         'model': MODEL,
@@ -558,7 +567,7 @@ def interpret(doc):
         'response_format': {'type': 'json_object'},
         'messages': [
             {'role': 'system', 'content': SYSTEM},
-            {'role': 'user', 'content': 'Current state: '+json.dumps(context, ensure_ascii=False)+'\nRecent conversation: '+json.dumps(doc.get('history', [])[-8:], ensure_ascii=False)+'\nLatest instruction: '+message}
+            {'role': 'user', 'content': 'Current state: '+json.dumps(context, ensure_ascii=False)+'\nRecent conversation: '+json.dumps(history[-8:], ensure_ascii=False)+'\nLatest instruction: '+message}
         ]
     }
     try:
@@ -572,7 +581,10 @@ def interpret(doc):
         return 502, {'error': 'LLM request failed; local preview can be used.', 'reason': f.reason}
     except Exception as e:
         reason = {'stage': 'server_error', 'detail': type(e).__name__}
-        print('interpret failure', json.dumps(reason), flush=True)
+        # Frame locations only: exception messages and locals can contain credentials.
+        frames = [{'file': Path(f.filename).name, 'line': f.lineno, 'function': f.name}
+                  for f in traceback.extract_tb(e.__traceback__)]
+        print('interpret failure', json.dumps({**reason, 'frames': frames}), flush=True)
         return 500, {'error': 'Server interpretation error', 'reason': reason}
 
 def refresh_street_data_if_stale():
