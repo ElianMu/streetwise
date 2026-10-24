@@ -60,21 +60,22 @@ For an explicitly shortest route set constraints.avoidDetours=true and max_detou
 "max_detour_percent": optional integer from 0 to 100 if explicitly specified (extra distance over the shortest candidate route distance), otherwise null.
 "constraints": object with schema keys; changed values are boolean and unchanged values are null, for 'avoidDetours', 'stepFree', 'avoidStairs'. Null preserves prior constraints.
 "weather": "ask" if the user asks whether the walk or route is comfortable in the current weather (answered from data, no re-routing); "cooler" if they want a cooler, shadier or less sun-exposed walk because of heat; "consider" if they ask to take today's weather into account; otherwise null. Weather is a separate context, not a dimension: "shade" may also raise Nature, but never invent temperatures, shade, rain cover or wind shelter. The current forecast is given in the state as "weather" (null when unavailable).
-"journey": null, or an object for tourist / multi-stop requests, every unknown field null (never guess):
-  {{"interests": subset of ["famous","museums","historic","parks","shopping","culture"],
-   "named_stops": [{{"name": place name as the user said it, in English if it is a well-known NYC place, "required": true|false, "order": integer position if the user fixed the order, else null}}],
-   "food": [{{"category": "cafes"|"restaurants"|"bakeries"|"bars", "item": specific dish or drink in English (e.g. "cappuccino") or null, "cuisine": OSM cuisine value (e.g. "italian") or null, "required": true|false}}],
-   "services": subset of ["pharmacies","groceries","health","banks","restrooms","luggage"],
-   "service_scope": "near_hotel"|"along_route"|"near_start"|null,
-   "hotel": {{"name": as said, "is_mine": true if the user says they stay there, false if they are looking for hotels}} or null,
-   "origin": "gps"|"hotel"|a place name|null, "destination": a place name|null,
-   "end_mode": "fixed"|"round"|"hotel"|"open"|null,
-   "walking_minutes": walking-time limit or null, "outing_minutes": total time incl. visits ("I have two hours" = 120) or null,
-   "distance_km": walking-distance limit in km or null, "more": object with schema category keys, count to add or null for unchanged categories, for "add another museum", "remove": [names] }}
-  For any explicit food/drink OR POI-category request (including restaurants or cafes without naming a dish), journey must be non-null and food must preserve it, even in a simple walking-preference sentence. Coffee is category cafes, item coffee; parks also belong in journey.interests. Food & Retail weight alone never satisfies a requested POI. Example: "Recommend a waterfront walk with restaurants and cultural attractions" requires Scenic & Visual and Culture preferences AND journey.food containing category restaurants, item null, cuisine null, required true. A restaurant-category request is not only a streetscape preference; do not omit that food entry.
-  "counts": null or schema interest-key object for explicit TOTAL visits (e.g. two landmarks = interests [famous], counts.famous=2). more is only an incremental follow-up, not a total. Unspecified counts are null; requests above five of one category require clarification, never silently truncate.
-  "requirements": null or the schema object for explicit business requirements: must_be_open when the user requires entry/open at arrival; ratings_required for good reviews/highly rated; minimum_rating only if numeric on a 5-point scale is explicitly requested; restaurant_budget_usd, ticket_budget_usd, total_budget_usd, hotel_budget_per_night_usd, checkin/checkout, guests/beds. Keep unmentioned fields null. For any place/food/service search near a named landmark, preserve the landmark name in requirements.search_anchor; do not change the chosen origin merely to express search proximity. For generic hotel search, use hotel=null and preserve search_anchor, beds, price and dates in requirements. These describe user requirements, never supply fetched ratings, prices or availability.
-  Never output coordinates, addresses, menus, prices or opening hours: places are looked up by STREETWISE tools.
+"journey": null unless the user explicitly requests places, visits, food, services, hotels or a trip endpoint change. Use only the supplied schema, with every property present. Unrequested arrays are empty; unrequested nullable fields are null. Do not turn preferences into extra visits.
+  interests contains ONLY requested visit categories: famous, museums, historic, parks, shopping, culture. Architecture as a streetscape preference needs only a preference pair; a museum visit also needs interests=[museums]. Cafes/restaurants/bakeries belong ONLY in food, never shopping or culture unless those visits are separately requested.
+  named_stops contains ONLY actual place names supplied by the user (translated to a known English NYC name if needed). Never invent names or placeholders such as landmark 1, landmark 2, museum 1. Generic categories belong in interests. Each named stop has name, required, and order (null unless an order is requested).
+  For any explicit food/drink or food-category request, food must preserve it, including restaurants or cafes without naming a dish. Fields: category cafes/restaurants/bakeries/bars, item the specific dish/drink or null, cuisine an OSM cuisine value or null, required boolean. Coffee means item coffee. Raising Food & Retail never fulfils a POI requirement. Example: waterfront walk with restaurants and cultural attractions needs Scenic & Visual and Culture preferences, food category restaurants, and interest culture.
+  services contains only explicitly requested service types. service_scope is null unless services is nonempty.
+  origin and destination change ONLY for explicit start/from/end/finish instructions. "Near Central Park" is a search area, NOT a new origin. end_mode is null unless the user requests a fixed/flexible end, return to start (round), or return to hotel (hotel). "From my hotel" means origin=hotel.
+  hotel is null for generic hotel searches; a named landmark near a hotel is not the hotel's name. Only use a hotel object for an actual named hotel, with is_mine reflecting whether the user stays there.
+  counts is null unless explicit TOTAL visit counts are given. "visit two landmarks" means interests=[famous], counts.famous=2, named_stops=[], and every more entry null. "Add two more landmarks" instead means more.famous=2. Never use more for a total. Count keys must belong to interests. Requests above five of one category require clarification.
+  requirements is null unless explicit business conditions or a search area exist. Preserve search_anchor for search proximity independently from the route origin; must_be_open for entry/open at arrival; ratings_required for good/highly rated venues or reviews; minimum_rating only for an explicit numeric 5-point threshold. Monetary fields restaurant_budget_usd, ticket_budget_usd, total_budget_usd, hotel_budget_per_night_usd require an explicit money amount/currency in the user's instructions. The current state's budget is WALKING MINUTES, never dollars. "Within my walking budget" must not become restaurant_budget_usd. Dates checkin/checkout, guests and beds are user requirements, never fetched facts. Keep unmentioned fields null.
+  walking_minutes is a walking cap; outing_minutes is total time including visits; distance_km is a walking distance. more is incremental requested additions; remove contains explicitly removed names.
+  Intent binding examples (fragments only; still return the FULL schema):
+  - Find a highly rated cafe serving cappuccino near Central Park: interests=[], named_stops=[], food=[category cafes,item cappuccino,required true], origin=null, end_mode=null; requirements search_anchor=Central Park, ratings_required=true.
+  - Start from my hotel, visit two landmarks and return to my hotel: interests=[famous], named_stops=[], origin=hotel, end_mode=hotel, counts.famous=2, all more entries null.
+  - Find a hotel near Central Park with two beds and a budget of $250 per night: hotel=null, origin=null, interests=[], requirements search_anchor=Central Park,beds=2,hotel_budget_per_night_usd=250.
+  - Recommend tiramisu with good reviews within my walking budget: interests=[], food=[category restaurants,item tiramisu,required true], requirements ratings_required=true, every monetary field null.
+  Never output coordinates, addresses, menus, fetched prices, ratings or opening hours. STREETWISE data tools provide those facts.
 "clarification": null unless user intent is materially ambiguous or contradictory (for example asks for both a strict 10-minute cap and a 30-minute minimum, or asks for inaccessible route when step-free is required). If ambiguous, write one short question here, do not infer changes.
 Preserve current state: omit unmentioned dimensions from preferences; set unmentioned constraint values to null. Time and accessibility are hard constraints, not dimension scores. Do not claim quiet or step-free conditions are validated.
 """
@@ -573,6 +574,34 @@ def call_llm(payload, timeout=26):
         raise LLMFailure('model_output_invalid_json')
 
 
+
+def validate_intent_bindings(result, message, history=()):
+    """Reject known invented bindings; ask the model to repair, never manufacture intent."""
+    j = result.get('journey') or {}
+    if result.get('clarification'): return
+    text = message.lower()
+    for stop in j.get('named_stops', []):
+        name = stop['name'].lower().strip()
+        if re.fullmatch(r'(?:landmark|museum|cafe|restaurant|hotel|park|attraction|stop)[ _-]*(?:[0-9]+|one|two|three)', name) and name not in text:
+            raise ValueError('Generic numbered visits are not named places; use interests and total counts, not invented named_stops')
+    counts = j.get('counts') or {}
+    if set(counts) - set(j.get('interests', [])):
+        raise ValueError('Total visit count keys must belong to interests')
+    total = re.search(r'\b(?:visit|see|explore)\s+(one|two|three|four|five|[1-5])\s+(landmarks?|museums?|parks?)\b', text)
+    if total:
+        value = int(total[1]) if total[1].isdigit() else ['one','two','three','four','five'].index(total[1])+1
+        category = 'famous' if total[2].startswith('landmark') else 'museums' if total[2].startswith('museum') else 'parks'
+        if counts.get(category) != value or category in (j.get('more') or {}):
+            raise ValueError('Explicit total visits require counts.' + category + '=' + str(value) + '; more is incremental only')
+    req = j.get('requirements') or {}
+    user_text = text + ' ' + ' '.join(str(h.get('content') or '').lower() for h in history[-8:] if isinstance(h,dict) and h.get('role')=='user')
+    if any(req.get(k) is not None for k in ('restaurant_budget_usd','ticket_budget_usd','total_budget_usd','hotel_budget_per_night_usd')) and not re.search(r'[$]|\b(?:usd|dollars?)\b|美元', user_text):
+        raise ValueError('Monetary requirements need explicit user currency; current-state budget is walking minutes, not dollars')
+    anchor = req.get('search_anchor')
+    if anchor and j.get('origin') == anchor and not re.search(r'\b(?:start|from|begin|leave)\b|出发|起点|从',text):
+        raise ValueError('Search proximity is not a route origin change; preserve search_anchor and leave origin null')
+
+
 def interpret(doc):
     """POST /api/interpret → (HTTP status, body). Failures carry a safe `reason` and are logged without secrets."""
     key_problem = openai_key_problem(KEY)
@@ -590,7 +619,8 @@ def interpret(doc):
     history = doc.get('history', [])
     if not isinstance(history, list):
         return 400, {'error': 'history must be an array'}
-    context = {k: doc.get(k) for k in ('weights', 'budget', 'constraints', 'weather')}
+    context = {k: doc.get(k) for k in ('weights', 'constraints', 'weather')}
+    context['walking_budget_minutes'] = doc.get('budget')
     payload = {
         'model': MODEL,
         'temperature': 0,
@@ -608,7 +638,9 @@ def interpret(doc):
                 raise LLMFailure('upstream_unreachable', detail='TimeoutError')
             output = call_llm(payload, timeout=remaining)
             try:
-                return 200, validate_interpretation(normalize_wire(output))
+                result = validate_interpretation(normalize_wire(output))
+                validate_intent_bindings(result, message, history)
+                return 200, result
             except ValueError as e:
                 failure = LLMFailure('model_output_rejected', detail=f'{e}; keys: {sorted(output)[:12] if isinstance(output, dict) else type(output).__name__}')
                 if attempt:

@@ -1,7 +1,8 @@
 """Provider wire contract tests. No real OpenAI traffic."""
 import copy, json, pathlib, sys, unittest
+from unittest import mock
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
-from interpretation_contract import WIRE_SCHEMA, normalize_wire, validate, DIMENSIONS
+from interpretation_contract import WIRE_SCHEMA, JOURNEY, normalize_wire, validate, DIMENSIONS
 import server
 
 
@@ -61,6 +62,44 @@ class ContractTests(unittest.TestCase):
         r = server.validate_interpretation({'weights': {'Nature': 90}})
         self.assertEqual(r['directions'], {'Nature': 'high'})
         self.assertIsNone(r['journey'])
+
+    def test_numbered_placeholder_visits_are_not_named_places(self):
+        with self.assertRaisesRegex(ValueError, 'Generic numbered'):
+            server.validate_intent_bindings({'journey':{'named_stops':[{'name':'landmark 1'}]}},'Visit two landmarks')
+
+    def test_explicit_total_is_not_incremental_more(self):
+        for journey in [{'interests':['famous'],'more':{'famous':2}}, {'interests':['famous'],'counts':{'famous':1}}]:
+            with self.assertRaisesRegex(ValueError, 'Explicit total'):
+                server.validate_intent_bindings({'journey':journey},'Start from my hotel, visit two landmarks and return to my hotel.')
+        server.validate_intent_bindings({'journey':{'interests':['famous'],'counts':{'famous':2}}},'Visit two landmarks')
+
+    def test_counts_must_name_requested_interests(self):
+        with self.assertRaisesRegex(ValueError, 'belong to interests'):
+            server.validate_intent_bindings({'journey':{'interests':['parks'],'counts':{'famous':2}}},'A walk')
+
+    def test_walking_minutes_cannot_become_a_monetary_budget(self):
+        r={'journey':{'requirements':{'restaurant_budget_usd':100}}}
+        with self.assertRaisesRegex(ValueError, 'walking minutes'):
+            server.validate_intent_bindings(r,'Tiramisu within my walking budget')
+        server.validate_intent_bindings(r,'Tiramisu with a $100 budget')
+        server.validate_intent_bindings(r,'Tiramisu', [{'role':'user','content':'Restaurant budget is 100 dollars'}])
+
+    def test_search_area_is_not_an_origin_change(self):
+        r={'journey':{'origin':'Central Park','requirements':{'search_anchor':'Central Park'}}}
+        with self.assertRaisesRegex(ValueError, 'Search proximity'):
+            server.validate_intent_bindings(r,'Find a cafe near Central Park')
+        server.validate_intent_bindings(r,'Start from Central Park and find a cafe nearby')
+
+    def test_semantic_failure_asks_model_to_repair_without_fake_place(self):
+        good=self.fixture();good['journey']=empty(JOURNEY)
+        good['journey'].update(interests=['famous'],origin='hotel',end_mode='hotel')
+        good['journey']['counts']=empty(JOURNEY['properties']['counts']['anyOf'][0])
+        good['journey']['counts']['famous']=2
+        bad=copy.deepcopy(good);bad['journey']['named_stops']=[{'name':'landmark 1','required':True,'order':1}]
+        with mock.patch.object(server,'KEY','unit-test-only-key'),mock.patch.object(server,'call_llm',side_effect=[bad,good]) as llm:
+            code,result=server.interpret({'message':'Start from my hotel, visit two landmarks and return to my hotel.'})
+        self.assertEqual(code,200);self.assertEqual(llm.call_count,2)
+        self.assertEqual(result['journey']['counts'],{'famous':2});self.assertEqual(result['journey']['named_stops'],[])
 
     def test_scoring_really_changes_on_same_real_route(self):
         from routing.engine import get_planner, preference_weights
