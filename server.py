@@ -590,16 +590,33 @@ def validate_intent_bindings(result, message, history=()):
     total = re.search(r'\b(?:visit|see|explore)\s+(one|two|three|four|five|[1-5])\s+(landmarks?|museums?|parks?)\b', text)
     if total:
         value = int(total[1]) if total[1].isdigit() else ['one','two','three','four','five'].index(total[1])+1
-        category = 'famous' if total[2].startswith('landmark') else 'museums' if total[2].startswith('museum') else 'parks'
-        if counts.get(category) != value or category in (j.get('more') or {}):
-            raise ValueError('Explicit total visits require counts.' + category + '=' + str(value) + '; more is incremental only')
+        categories = ['famous','historic'] if total[2].startswith('landmark') else ['museums'] if total[2].startswith('museum') else ['parks']
+        if sum(counts.get(k,0) for k in categories) != value or any(k in (j.get('more') or {}) for k in categories):
+            raise ValueError('Explicit total visits need total counts, not increments. counts='+str(counts)+'; more='+str(j.get('more') or {}))
     req = j.get('requirements') or {}
+    if re.search(r'\bgood\s+(?:bakery|bakery shop|caf[eé]|restaurant)\b',text) and req.get('ratings_required') is not True:
+        raise ValueError('Requested good venue needs ratings_required=true; generic category discovery cannot verify quality')
     user_text = text + ' ' + ' '.join(str(h.get('content') or '').lower() for h in history[-8:] if isinstance(h,dict) and h.get('role')=='user')
     if any(req.get(k) is not None for k in ('restaurant_budget_usd','ticket_budget_usd','total_budget_usd','hotel_budget_per_night_usd')) and not re.search(r'[$]|\b(?:usd|dollars?)\b|美元', user_text):
         raise ValueError('Monetary requirements need explicit user currency; current-state budget is walking minutes, not dollars')
     anchor = req.get('search_anchor')
     if anchor and j.get('origin') == anchor and not re.search(r'\b(?:start|from|begin|leave)\b|出发|起点|从',text):
         raise ValueError('Search proximity is not a route origin change; preserve search_anchor and leave origin null')
+
+
+def count_contract_example():
+    """A prompt demonstration of the same wire schema, never an API fallback."""
+    from interpretation_contract import WIRE_SCHEMA
+    def blank(schema):
+        if 'anyOf' in schema: return None
+        if schema['type']=='object': return {k:blank(v) for k,v in schema['properties'].items()}
+        return [] if schema['type']=='array' else None
+    sample=blank(WIRE_SCHEMA)
+    j=blank(JOURNEY)
+    j.update(interests=['famous'],origin='hotel',end_mode='hotel')
+    j['counts']=blank(JOURNEY['properties']['counts']['anyOf'][0]);j['counts']['famous']=2
+    sample['journey']=j
+    return sample
 
 
 def interpret(doc):
@@ -627,6 +644,8 @@ def interpret(doc):
         'response_format': RESPONSE_FORMAT,
         'messages': [
             {'role': 'system', 'content': SYSTEM},
+            {'role': 'user', 'content': 'Start from my hotel, visit two landmarks and return to my hotel.'},
+            {'role': 'assistant', 'content': json.dumps(count_contract_example())},
             {'role': 'user', 'content': 'Current state: '+json.dumps(context, ensure_ascii=False)+'\nRecent conversation: '+json.dumps(history[-8:], ensure_ascii=False)+'\nLatest instruction: '+message}
         ]
     }
