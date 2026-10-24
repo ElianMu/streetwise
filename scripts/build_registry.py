@@ -60,21 +60,29 @@ def age_days(date, now):
 def tileset_stats(tileset, flt, attributes):
     base = D('layers', 'tiles', tileset)
     seen, n, valid, dup, missing = set(), 0, 0, 0, Counter()
+    repeats, missing_ids = 0, 0
     if not os.path.isdir(base):
         return None
     for fn in os.listdir(base):
+        in_tile = set()
         for f in json.load(open(os.path.join(base, fn)))['features']:
             p = f['properties']
             if flt and not all(p.get(k) in v for k, v in flt.items()):
                 continue
             fid = p.get('feature_id')
+            if fid is None:
+                missing_ids += 1
+                fid = 'missing:' + json.dumps(f, sort_keys=True)
+            if fid in in_tile: dup += 1
+            in_tile.add(fid)
             if fid in seen:
+                repeats += 1
                 continue  # the same feature is repeated in every tile it crosses: not a duplicate record
             seen.add(fid); n += 1
             valid += valid_geom(f.get('geometry'))
             for a in attributes:
                 missing[a] += p.get(a) in (None, '')
-    return {'feature_count': n, 'valid_geometry_count': valid, 'duplicate_records': dup,
+    return {'feature_count': n, 'valid_geometry_count': valid, 'duplicate_records': dup, 'cross_tile_repetitions': repeats, 'missing_feature_ids': missing_ids,
             'missing_fields': {a: round(missing[a] / n, 3) for a in attributes if n and missing[a]}}
 
 
@@ -85,14 +93,16 @@ def classify(r):
         return {'data_class': 'realtime_availability', 'update_frequency': 'live (minutes)', 'known_limitations': 'Not stored; unavailable when the provider is down.'}
     if g == 'on_demand_providers':
         return {'data_class': 'realtime_availability' if i in ('provider:booking_demand', 'provider:expedia_rapid') else 'on_demand_business',
-                'update_frequency': 'per request (cached 15 min in memory)',
+                'update_frequency': 'per request (no default content cache)',
                 'known_limitations': 'Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match.'}
     if g == 'business_evidence':
         return {'data_class': 'periodic_poi', 'update_frequency': 'daily at the publisher; rebuilt on demand',
                 'known_limitations': 'Licensing / inspection evidence, not reviews or live opening status.' if i == 'dohmh_inspections' else 'Tax-lot evidence only.'}
+    if i.startswith('citywide:'):
+        return {'data_class':'periodic_poi','update_frequency':'daily audit target; download only if publisher version changes','known_limitations':r.get('note') or 'Source snapshot, not live opening status'}
     if g == 'tourism_discovery':
         return {'data_class': 'periodic_poi', 'update_frequency': 'weekly to monthly snapshot',
-                'known_limitations': 'Volunteer-mapped; opening hours and websites may be outdated; Manhattan only.'}
+                'known_limitations': r.get('note') if r['dataset_id'].startswith('citywide:') else 'Volunteer-mapped; opening hours and websites may be outdated; Manhattan only.'}
     return {'data_class': 'static_urban', 'update_frequency': 'monthly to yearly', 'known_limitations': r.get('note') or 'See source documentation.'}
 
 
@@ -167,12 +177,26 @@ def main():
                                  ('booking_demand', 'Booking.com Demand API', 'BOOKING_DEMAND_API_KEY', 'hotel room types, rates, availability'),
                                  ('expedia_rapid', 'Expedia Rapid API', 'EXPEDIA_RAPID_API_KEY', 'hotel room types, rates, availability')):
         rows.append({'dataset_id': 'provider:' + pid, 'name': name, 'group': 'on_demand_providers', 'publisher': name.split()[0], 'license': 'provider terms (no long-term storage)', 'retrieved_at': None,
-                     'coverage_area': 'per request', 'feature_count': None, 'integration_status': 'connected' if os.environ.get(env, '').strip() else 'blocked_by_provider_access',
-                     'update_method': f'live per request, 15-min memory cache (env {env} on the backend)', 'note': f'Provides {what}. Nothing is stored or shown without the key.'})
+                     'coverage_area': 'per request', 'feature_count': None, 'integration_status': ('not_implemented' if pid in ('booking_demand', 'expedia_rapid') else 'configured_not_verified') if os.environ.get(env, '').strip() else 'blocked_by_provider_access',
+                     'update_method': f'live per request, no default content cache (env {env} on the backend)', 'note': f'Provides {what}. Nothing is stored or shown without the key.'})
     for rid, name, pub, url, what in (('open_meteo', 'Current weather', 'Open-Meteo', 'https://open-meteo.com/', 'temperature, wind, precipitation (model, not station)'),
                                       ('nws_alerts', 'Weather alerts', 'US National Weather Service', 'https://api.weather.gov/', 'active alerts for the map area')):
         rows.append({'dataset_id': rid, 'name': name, 'group': 'realtime', 'publisher': pub, 'source_url': url, 'license': 'CC BY 4.0' if rid == 'open_meteo' else 'US public domain', 'retrieved_at': None,
                      'coverage_area': 'NYC', 'feature_count': None, 'integration_status': 'connected', 'update_method': 'live in the browser (weather.js)', 'note': what})
+    citywide = D('places', 'citywide.json')
+    if os.path.exists(citywide):
+        document = json.load(open(citywide))
+        for source in document['metadata']['sources']:
+            records = [r for r in document['records'] if source['dataset_id'] in r['id']]
+            rows.append({'dataset_id': 'citywide:' + source['dataset_id'], 'name': source['name'], 'group': 'tourism_discovery',
+                         'publisher': source['publisher'], 'source_url': source['source_url'], 'license': source['license'],
+                         'retrieved_at': source['retrieved_at'], 'publisher_updated_at': source['publisher_updated_at'],
+                         'freshness_days': age_days(source['publisher_updated_at'], now), 'feature_count': len(records),
+                         'valid_geometry_count': sum(NYC[0]<=r['lon']<=NYC[2] and NYC[1]<=r['lat']<=NYC[3] for r in records),
+                         'duplicate_records': len(records)-len({r['id'] for r in records}), 'coverage_area': 'NYC citywide (search only)',
+                         'geometry_type': 'Point (not a verified entrance)', 'integration_status': 'connected',
+                         'missing_fields': {k: sum(not r.get(k) for r in records)/len(records) for k in ['addr','hours','web','boro']},
+                         'note': source['known_limitations']})
     for r in rows:
         r.update(classify(r))
     out = {'built_at': now.isoformat(timespec='seconds'), 'datasets': rows,

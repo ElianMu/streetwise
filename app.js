@@ -491,6 +491,7 @@ async function handlePlan(text,isFollowUp=false){
     if(planner.weatherIntent==='ask'&&state.routes.length){if(weatherContext.status!=='ok')await loadWeather();appendChat('assistant',weatherAnswer());return;}
     if(typeof applyJourney==='function'&&result.journey){
       const jc=await applyJourney(result.journey);
+      if(journey.businessOnly)return;
       if(jc.length)appendChat('assistant',`${planner.interpretation==='llm'?'AI':'Limited local'} journey interpretation: ${jc.join(' · ')}.`);
       // "find" requests (nearby / along the walk) list real places without changing the plan
       const finds=journey.services.filter(s=>!s.addAsStop&&result.journey.services.includes(s.type));

@@ -10,7 +10,8 @@ function setupJourneyUI(){
   placeInputs[kind]=attachPlaceSearch($(kind==='start'?'searchStart':'searchEnd'),{
    placeholder:'Search any NYC address, place or business',
    onSelect:p=>{setJourneyPlace(kind,p);resetRoutes();syncMapData();
-    if(!inRoutingCoverage(p))toast(`${p.name} is in ${p.borough||'NYC'}: place search covers all five boroughs, but walking routes cover Manhattan only.`);
+    if(p.routing_coverage==='search_only')return toast('This source point has no verified walking access; discovery only.');
+ if(!inRoutingCoverage(p))return toast(`${p.name} is in ${p.borough||'NYC'}: place search covers all five boroughs, but walking routes cover Manhattan only.`);
     if(state.mapReady)state.map.flyTo({center:[p.lon,p.lat],zoom:15,duration:450});},
    onClear:()=>{state[kind]=null;state[kind==='start'?'customStart':'customEnd']=null;resetRoutes();syncMapData();}});
  }
@@ -30,7 +31,8 @@ function setupJourneyUI(){
 }
 function addNamedStop(p,required=true){
  if(journey.named.some(n=>n.place.id===p.id))return toast(`${p.name} is already a stop.`);
- if(!inRoutingCoverage(p))toast(`${p.name} is outside walking-route coverage (Manhattan); it cannot be routed.`);
+ if(p.routing_coverage==='search_only')return toast('This source point has no verified walking access; discovery only.');
+ if(!inRoutingCoverage(p))return toast(`${p.name} is outside walking-route coverage (Manhattan); it cannot be routed.`);
  journey.removed.delete(p.id);journey.named.push({place:p,required,order:null,visitMin:VISIT_MIN[p.cat]??20,visitEstimated:true});journey.active=true;
  if(journey.endMode==='fixed'&&!getPlace('end'))setEndMode('open');
  renderJourneyPanel();syncMapData();toast(`Added ${p.name}. Plan My Walk to route it.`);
@@ -149,6 +151,7 @@ function updateJourneyMap(){
  m.getSource('journey-hotel').setData(fc(journey.hotel?[pt(journey.hotel,{id:journey.hotel.id,name:journey.hotel.name,hotel:true})]:[]));
  m.getSource('journey-found').setData(fc((journey.lastFound?.places||[]).map((p,i)=>pt(p,{id:p.id,name:p.name,i,found:true}))));
 }
+function tourismHref(value){try{const u=new URL(value);return ['https:','http:'].includes(u.protocol)?u.href:'#';}catch{return '#';}}
 async function journeyPopup(f,lngLat){
  const pr=f.properties;
  const p=pr.found?journey.lastFound.places[pr.i]:pr.hotel?journey.hotel:(await placeById(pr.id))||journey.named.find(n=>n.place.id===pr.id)?.place||{name:pr.name,id:pr.id};
@@ -156,20 +159,20 @@ async function journeyPopup(f,lngLat){
  const isHotel=/hotel|hostel|guest/i.test(p.category||'')||p.cat==='hotels';
  const cafe=p.cat==='cafes'||/caf/i.test(p.category||'');
  const div=document.createElement('div');div.className='jp';
- div.innerHTML=`<strong>${esc(p.name)}</strong><dl>${[['Category',p.category],['Address',p.address],['Hours (OSM)',p.hours],['Website',p.website?`<a href="${esc(p.website)}" target="_blank" rel="noopener">${esc(p.website.replace(/^https?:\/\//,'').slice(0,40))}</a>`:null],['Source',p.source]].filter(x=>x[1]).map(([k,v])=>`<dt>${k}</dt><dd>${k==='Website'?v:esc(v)}</dd>`).join('')}</dl>
+ div.innerHTML=`<strong>${esc(p.name)}</strong><dl>${[['Category',p.category],['Address',p.address],['Hours (OSM)',p.hours],['Website',p.website?`<a href="${esc(tourismHref(p.website))}" target="_blank" rel="noopener">${esc(p.website.replace(/^https?:\/\//,'').slice(0,40))}</a>`:null],['Source',p.source]].filter(x=>x[1]).map(([k,v])=>`<dt>${k}</dt><dd>${k==='Website'?v:esc(v)}</dd>`).join('')}</dl>
   ${d?typedCard(d):''}
-  <div class="jp-actions">${!pr.planned?'<button type="button" data-a="add">Add stop</button>':''}${isHotel?'<button type="button" data-a="hotel">Set as My Hotel</button>':''}${cafe?'<button type="button" data-a="menu">Check cappuccino on menu</button>':''}${d&&d.category!=='hotels'?'<button type="button" data-a="ratings">Ratings</button>':''}${d?.category==='hotels'?'<button type="button" data-a="rooms">Rooms &amp; prices</button>':''}</div><div class="jp-menu"></div>`;
+  <div class="jp-actions">${!pr.planned?'<button type="button" data-a="add">Add stop</button>':''}${isHotel?'<button type="button" data-a="hotel">Set as My Hotel</button>':''}${d?.restaurant?`<input data-menu-item aria-label="Dish or drink to verify" placeholder="Dish / drink" value="${esc(journey.food.find(x=>x.item)?.item||'')}"><button type="button" data-a="menu">Verify menu item</button>`:''}${d?'<button type="button" data-a="ratings">Ratings</button>':''}${d?.category==='hotels'?`<label>Check-in <input type="date" data-stay="in" aria-label="Check-in date" value="${esc(journey.requirements.checkin||'')}"></label><label>Check-out <input type="date" data-stay="out" aria-label="Check-out date" value="${esc(journey.requirements.checkout||'')}"></label><label>Guests <input type="number" min="1" max="12" data-stay="guests" value="${journey.requirements.guests||2}"></label><button type="button" data-a="rooms">Rooms &amp; prices</button>`:''}</div><div class="jp-menu"></div>`;
  div.querySelector('[data-a="ratings"]')?.addEventListener('click',async()=>{const out=div.querySelector('.jp-menu');out.textContent='Asking rating providers…';
-  try{const r=await placeRatings(d.place_id);out.innerHTML=r.ratings.length?r.ratings.map(x=>`<div><strong>${esc(x.provider)}</strong> ${esc(x.rating)}/${x.rating_scale} · ${esc(x.review_count)} reviews${x.url?` · <a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.attribution)}</a>`:''}</div>`).join('')+'<small>Shown per provider; never combined.</small>'
+  try{const r=await placeRatings(d.place_id);out.innerHTML=r.ratings.length?r.ratings.map(x=>`<div><strong>${esc(x.provider)}</strong> ${esc(x.rating??'Not Available')}/${x.rating_scale} · ${esc(x.review_count??'count unavailable')} reviews${x.url?` · <a href="${esc(tourismHref(x.url))}" target="_blank" rel="noopener">${esc(x.attribution)}</a>`:''}</div>`).join('')+'<small>Shown per provider; never combined.</small>'
    :`<strong>${r.status==='blocked_by_provider_access'?'Blocked by provider access':'Unavailable'}</strong> ${esc(r.status==='blocked_by_provider_access'?'No rating provider (Google Places, Yelp, Foursquare) is configured on the server, so no rating is shown.':r.errors.map(x=>x.provider+': '+x.error).join('; '))}`;}
   catch(e){out.textContent=`Ratings unavailable (${e.message}).`;}});
  div.querySelector('[data-a="rooms"]')?.addEventListener('click',async()=>{const out=div.querySelector('.jp-menu');out.textContent='Checking lodging providers…';
-  try{const r=await streetwiseFetch('/api/hotels/'+d.place_id.split('/').map(encodeURIComponent).join('/')+'/rooms?guests=2',{signal:AbortSignal.timeout(15000)});const x=await r.json();
+  try{const r=await streetwiseFetch('/api/hotels/'+d.place_id.split('/').map(encodeURIComponent).join('/')+'/rooms?'+new URLSearchParams(Object.fromEntries(Object.entries({beds:journey.requirements.beds,max_price:journey.requirements.hotel_budget_per_night_usd,guests:div.querySelector('[data-stay="guests"]').value||2,checkin:div.querySelector('[data-stay="in"]').value||null,checkout:div.querySelector('[data-stay="out"]').value||null}).filter(([,v])=>v!=null))),{signal:AbortSignal.timeout(15000)});const x=await r.json();
    out.innerHTML=`<strong>${x.status==='blocked_by_provider_access'?'Blocked by provider access':esc(x.status||'Unavailable')}</strong> ${esc(x.reason||x.error||'')}`;}catch(e){out.textContent=`Room check unavailable (${e.message}).`;}});
  div.querySelector('[data-a="add"]')?.addEventListener('click',()=>addNamedStop(p));
  div.querySelector('[data-a="hotel"]')?.addEventListener('click',()=>{setMyHotel(p);toast(`My hotel: ${p.name}`);});
- div.querySelector('[data-a="menu"]')?.addEventListener('click',async()=>{const out=div.querySelector('.jp-menu');out.textContent='Checking the official menu…';const r=await verifyMenuItem(p,'cappuccino');
-  out.innerHTML=`<strong>${esc(MENU_LABEL[r.status]||r.status)}</strong> ${esc(r.reason||'')}${r.source_url?` <a href="${esc(r.source_url)}" target="_blank" rel="noopener">source</a>`:''}`;});
+ div.querySelector('[data-a="menu"]')?.addEventListener('click',async()=>{const out=div.querySelector('.jp-menu');out.textContent='Checking the official menu…';const item=div.querySelector('[data-menu-item]').value.trim();if(!item){out.textContent='Enter a dish or drink to verify.';return;}const r=await verifyMenuItem(p,item);
+  out.innerHTML=`<strong>${esc(MENU_LABEL[r.status]||r.status)}</strong> ${esc(r.reason||'')}${r.source_url?` <a href="${esc(tourismHref(r.source_url))}" target="_blank" rel="noopener">source</a>`:''}`;});
  new maplibregl.Popup({maxWidth:'300px'}).setLngLat(lngLat).setDOMContent(div).addTo(state.map);
 }
 
@@ -179,13 +182,13 @@ function typedCard(d){
  let rows='';
  if(d.restaurant){const r=d.restaurant,i=r.inspection;
   rows+=row('Cuisine',(r.cuisine||r.cuisine_dohmh||'').replace(/;/g,', ')||null)+row('Health grade',i?.grade?`${i.grade} (${i.grade_date}) — NYC DOHMH inspection, not a review`:i?'No letter grade on file':null)+
-   row('Last inspected',i?.last_inspection)+row('Services (OSM)',r.services_osm?Object.entries(r.services_osm).map(([k,v])=>`${k.replace('_',' ')}: ${v}`).join(', '):null)+row('Menu',r.menu_url?'official menu link mapped':'checked per request on the official website');}
+   row('Last inspected',i?.last_inspection)+row('Services (OSM)',r.services_osm?Object.entries(r.services_osm).map(([k,v])=>`${k.replace('_',' ')}: ${v}`).join(', '):null)+row('Menu',r.menu_url?'official menu link mapped':'checked per request on the official website')+row('Item prices','Not Available until verified from an associated menu item')+row('Reviews','Provider query required; no default rating');}
  if(d.hotel){const h=d.hotel;
   rows+=row('Stars',h.star_rating?`${h.star_rating} (${h.star_rating_source})`:'not mapped')+row('Guest rating','only from a configured provider; never mixed with stars')+
-   row('Wi-Fi (OSM)',h.internet_access)+row('Check-in / out',h.check_in||h.check_out?`${h.check_in||'?'} / ${h.check_out||'?'}`:null)+row('NYC DOF lot',h.dof_hotel_lot?`${h.dof_hotel_lot.bbl} · class ${h.dof_hotel_lot.building_class}`:null)+row('Rooms & prices','Blocked by provider access');}
+   row('Wi-Fi (OSM)',h.internet_access)+row('Check-in / out',h.check_in||h.check_out?`${h.check_in||'?'} / ${h.check_out||'?'}`:null)+row('NYC DOF lot',h.dof_hotel_lot?`${h.dof_hotel_lot.bbl} · class ${h.dof_hotel_lot.building_class}`:null)+row('Amenities (source)',(d.amenities||[]).join(', ')||'Not Available')+row('Rooms & prices','Unavailable until an authorized provider responds for your dates and party');}
  if(d.attraction){const a=d.attraction;
   rows+=row('About',a.description&&`${a.description} (${a.description_source})`)+row('Admission',a.admission?`${a.admission} (${a.admission_source})`:'unknown')+row('Reservation',a.reservation)+
    row('Typical visit',`${a.recommended_visit_min} min — ${a.visit_duration_basis}`)+row('Landmark',a.designated_landmark?'NYC designated (LPC)':null);}
- rows+=row('Coverage',d.routing_coverage==='search_only'?'search only — outside the walking network':null)+row('Sources',d.data_sources.join(', '));
- return `<span class="jp-q ${esc(d.quality_status)}">${esc(QUALITY_LABEL[d.quality_status]||d.quality_status)}</span><dl>${rows}</dl>`;
+ const provenance=row('Updated at source',d.source_updated_at||'Unknown')+row('Retrieved',d.retrieved_at||'Unknown')+row('Last verified',d.last_verified_at||'Not independently verified')+row('Conflicts',d.field_conflicts?.length?d.field_conflicts.map(x=>x.field).join(', '):null)+row('Coverage',d.routing_coverage==='search_only'?'search only — walking access unverified':null)+row('Sources',d.data_sources.join(', '));
+ return `<span class="jp-q ${esc(d.quality_status)}">${esc(QUALITY_LABEL[d.quality_status]||d.quality_status)}</span><dl>${rows}</dl><details><summary>Evidence &amp; sources</summary><dl>${provenance}</dl><small>${esc(d.verification_scope||'Source evidence only; current business facts may be unavailable.')}</small>${d.official_website?`<p><a href="${esc(tourismHref(d.official_website))}" target="_blank" rel="noopener">Official website (source)</a></p>`:''}</details>`;
 }

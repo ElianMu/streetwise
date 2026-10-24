@@ -8,6 +8,11 @@ for(const file of ['experience-core.js','api-config.js','weather.js','places.js'
 const run=s=>vm.runInContext(s,context);
 (async()=>{
  assert.equal(w.document.querySelectorAll('#experienceDimension option').length,12);
+ assert.equal(run("localJourney('I want tiramisu at an Italian restaurant with good reviews').food[0].item"),'tiramisu');
+ assert.equal(run("localJourney('I want tiramisu at an Italian restaurant with good reviews').food[0].cuisine"),'italian');
+ assert.equal(run("localJourney('Find a hotel with two beds and a budget of $250 per night').requirements.hotel_budget_per_night_usd"),250);
+ assert.equal(run("localJourney('Visit two landmarks').counts.famous"),2);
+
  w.STREETWISE_STREETS=JSON.parse(fs.readFileSync(path.join(root,'data/manhattan-streets.json')));
  w.document.querySelector('#modeExplore').click();assert.equal(run('mapExperience.mode'),'explore');
  await run('loadExploreStreets()');assert(!w.document.querySelector('#explorePanel').classList.contains('hidden'));
@@ -61,8 +66,11 @@ const run=s=>vm.runInContext(s,context);
  const fixture=JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/route-response.json')));
  // Response-like stub: JSON bodies with headers, and the real static catalog/tiles read from disk.
  const resp=(obj,status=200,type='application/json')=>({ok:status<400,status,headers:{get:k=>k.toLowerCase()==='content-type'?type:null},json:async()=>typeof obj==='string'?JSON.parse(obj):JSON.parse(JSON.stringify(obj)),text:async()=>typeof obj==='string'?obj:JSON.stringify(obj)});
+ let menuFixtureConfirmed=true;
+ const menuFixturePlace=JSON.parse(fs.readFileSync(path.join(root,'data/places/cafes.json'))).records.find(r=>r.id.startsWith('osm:'));
  const calls=[];w.fetch=async(url,opts={})=>{url=String(url);calls.push({url,body:opts.body&&JSON.parse(opts.body)});
   if(url.endsWith('/api/routes'))return resp(fixture);
+  if(url.endsWith('/api/recommend/food'))return resp({status:menuFixtureConfirmed?'ok':'no_confirmed_match',candidates:[{classification:menuFixtureConfirmed?'meets_request':'not_confirmed',place:{place_id:menuFixturePlace.cid,index_id:menuFixturePlace.id,name:menuFixturePlace.name,category:'cafes',coordinates:{lat:menuFixturePlace.lat,lon:menuFixturePlace.lon},address:menuFixturePlace.addr,data_sources:['Test-only recorded place']},menu:{status:menuFixtureConfirmed?'confirmed_menu_match':'unverified',source_url:'https://fixture.invalid/menu'},explanation:{interpretation:'Test-only verified-menu response',verified_facts:[]}}]});
   if(url.endsWith('/api/itinerary'))return resp(JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/itinerary-response.json'))));
   if(url.endsWith('/api/menu/verify'))return resp({status:'unverified',item:'cappuccino',reason:'No readable menu page was found on the official website.',checked_at:'2026-10-23T00:00:00Z'});
   if(url.startsWith('./data/layers/')||url.startsWith('./data/places/')){const f=path.join(root,url.slice(2));return fs.existsSync(f)?resp(fs.readFileSync(f,'utf8')):resp('<!DOCTYPE html><title>404</title>',404,'text/html');}
@@ -128,7 +136,8 @@ const run=s=>vm.runInContext(s,context);
  assert.equal(w.document.querySelector('#urbanActiveTitle').textContent,`ACTIVE DATASETS: 3 of ${connected}`);
  const natureCat=w.document.querySelector('[data-ud-cat="nature"]');assert(natureCat.indeterminate&&natureCat.dataset.state==='some','category with some datasets on is indeterminate');
  // Dynamic legend: only symbols that are on the map; one building theme at a time.
- const legend=()=>w.document.querySelector('#udLegend .lg-body').textContent;assert(legend().includes('Street trees')&&!legend().includes('Places & facilities'));
+ run('renderUrbanLegend()');
+ const legend=()=>w.document.querySelector('#udLegend .lg-body').textContent;assert(legend().includes('Street trees')&&!legend().includes('Places & facilities'),JSON.stringify({legend:legend(),zoom:run('state.map?.getZoom()'),drawn:run('[...urbanData.drawn].map(([k,v])=>[k,v.size])')}));
  // Thematic selectors: four building themes (one fill at a time); environment themes without data are listed but disabled.
  assert.deepEqual([...w.document.querySelectorAll('#buildingTheme option')].map(o=>o.value),['neutral','height','age','landuse']);
  const env=[...w.document.querySelectorAll('#envTheme option')];assert(env.find(o=>o.value==='noise')&&!env.find(o=>o.value==='noise').disabled);assert(env.filter(o=>o.disabled).length>=3&&env.filter(o=>o.disabled).every(o=>o.textContent.includes('not connected')));
@@ -211,10 +220,16 @@ const run=s=>vm.runInContext(s,context);
  await turn('时间可以延长到 150 分钟。');assert.equal(run('state.outingMin'),150);
  // everything settled earlier is still there
  assert.deepEqual(jr('journey.interests'),['famous','museums']);assert.equal(run('journey.food.length'),1);assert.equal(run('journey.named.length'),1);assert.equal(run('journey.endMode'),'hotel');assert.equal(run('getPlace("start").name'),'Hilton New York Midtown');assert.equal(run('state.maxKm'),5);
+ menuFixtureConfirmed=false;
+ await assert.rejects(run('itineraryRequest()'),/Cannot verify the required/);
+ menuFixtureConfirmed=true;
  const jreq=await run('itineraryRequest()');
  assert.equal(jreq.end.mode,'hotel');assert.equal(jreq.end.place.name,'Hilton New York Midtown');assert.equal(jreq.constraints.max_km,5);assert.equal(jreq.constraints.max_outing_minutes,150);
  assert(jreq.stops.some(s=>s.name==='Rockefeller Center'&&s.required));
  const cs=jreq.slots.find(x=>x.slot_id==='food:cafes:cappuccino');assert(cs&&cs.candidates.length>0);for(const c of cs.candidates)assert(c.id.startsWith('osm:')&&Number.isFinite(c.lat));
+ const priorExtra=jr('journey.extra');run('journey.counts={famous:2};journey.extra={}');
+ const counted=await run('itineraryRequest()');assert.equal(counted.slots.filter(s=>s.slot_id.startsWith('interest:famous:')).length,2);assert.equal(counted.pool.max_stops,0,'an explicit count must not acquire automatic extra visits');
+ run(`journey.counts={};journey.extra=${JSON.stringify(priorExtra)}`);
  assert(jreq.slots.some(x=>x.slot_id==='interest:famous'));assert(jreq.slots.some(x=>x.slot_id==='interest:museums'));
  assert(!jreq.slots.flatMap(x=>x.candidates).some(c=>c.name==='Hilton New York Midtown'),'the hotel itself is never discovered as a stop');
  calls.length=0;await run('planJourney()');
@@ -223,7 +238,7 @@ const run=s=>vm.runInContext(s,context);
  const cw=w.document.querySelector('#cityWalk').textContent;assert(cw.includes('YOUR CITY WALK'));for(const s of itfx.stops)assert(cw.includes(s.name),`stop ${s.name} shown`);
  assert(cw.includes(`${(itfx.totals.walk_m/1000).toFixed(2)} km`));assert(cw.includes('(est.)'),'visit times are labelled as estimates');
  assert.equal(run('state.routes.length'),1);assert.equal(run('state.activeRoute'),JSON.parse(fs.readFileSync(path.join(root,'tests/fixtures/itinerary-response.json'))).routes[0].route_id);
- await new Promise(r=>setTimeout(r,50));assert(['unverified','checking'].includes(run("journey.menu[Object.keys(journey.menu)[0]]?.status")),'menu status is never assumed verified');
+ await new Promise(r=>setTimeout(r,50));assert.equal(run("journey.menu[Object.keys(journey.menu)[0]]?.status"),'confirmed_menu_match');assert.equal(run("journey.menu[Object.keys(journey.menu)[0]]?.source_url"),'https://fixture.invalid/menu','verification comes only from the explicit test provider response');
  // "find" services do not add stops; hotel ambiguity asks instead of guessing
  const fr=await run("findServices('pharmacies','near_hotel')");assert(fr.places.length>0&&fr.places.every(p=>p.category&&p.source));assert.equal(run('journey.named.length'),1);
  await turn("I'm staying at a Marriott near Times Square");assert(w.document.querySelectorAll('.chat-choices [data-choice]').length>1,'several Marriotts: the user chooses');assert.equal(run('journey.hotel.name'),'Hilton New York Midtown','not changed until chosen');

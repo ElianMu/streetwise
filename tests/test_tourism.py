@@ -156,8 +156,8 @@ class D_Providers(unittest.TestCase):
         self.assertEqual(rooms['status'], 'blocked_by_provider_access'); self.assertEqual(rooms['rooms'], [])
 
     def test_ratings_kept_per_provider_and_matched_by_place(self):
-        google = {'places': [{'id': 'g1', 'displayName': {'text': 'Joe Coffee Company'}, 'location': {'latitude': 40.7501, 'longitude': -73.9801}, 'rating': 4.5, 'userRatingCount': 900}]}
-        yelp = {'businesses': [{'id': 'y1', 'name': 'Joe Coffee', 'coordinates': {'latitude': 40.7502, 'longitude': -73.98}, 'rating': 4.0, 'review_count': 300, 'url': 'https://yelp.test/joe'}]}
+        google = {'places': [{'id': 'g1', 'formattedAddress':'1 Test St, New York', 'displayName': {'text': 'Joe Coffee Company'}, 'location': {'latitude': 40.7501, 'longitude': -73.9801}, 'rating': 4.5, 'userRatingCount': 900}]}
+        yelp = {'businesses': [{'id': 'y1', 'location':{'display_address':['1 Test St, New York']}, 'name': 'Joe Coffee', 'coordinates': {'latitude': 40.7502, 'longitude': -73.98}, 'rating': 4.0, 'review_count': 300, 'url': 'https://yelp.test/joe'}]}
         env = {**NO_KEYS, 'GOOGLE_PLACES_API_KEY': 'k', 'YELP_API_KEY': 'k'}
         with mock.patch.dict(os.environ, env), mock.patch.object(providers, '_http', side_effect=lambda url, *a, **k: google if 'googleapis' in url else yelp):
             r = providers.ratings(self.PLACE)
@@ -250,7 +250,7 @@ class F_TimeAwareItinerary(unittest.TestCase):
         self.assertTrue(any('closed at the estimated arrival' in v for v in it['constraints']['violations']))
         v = r['routes'][0]['validation']
         self.assertEqual(v['opening_hours_status'], 'fail')
-        self.assertTrue(v['navigation_allowed'])   # a closed venue is reported, never a reason to block walking
+        self.assertFalse(v['navigation_allowed'])   # required visit failure must block Start Navigation
 
     def test_open_stop_has_no_time_violation(self):
         stop = {'id': 'v', 'name': 'Open venue', 'lat': 40.7735, 'lon': -73.9845, 'hours': 'Mo-Su 09:00-22:00', 'visit_min': 20}
@@ -269,7 +269,7 @@ class G_Endpoints(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        cls.httpd.shutdown(); cls.env.stop()
+        cls.httpd.shutdown(); cls.httpd.server_close(); cls.env.stop()
 
     def get(self, path):
         try:

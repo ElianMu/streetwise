@@ -35,6 +35,8 @@ SCORE_M = 1500           # a slot candidate's relevance 0..1 is worth up to this
 def _pt(doc, what):
     if not isinstance(doc, dict) or type(doc.get('lat')) not in (int, float) or type(doc.get('lon')) not in (int, float):
         raise ValueError(f'{what} needs numeric lat/lon')
+    if not (math.isfinite(doc['lat']) and math.isfinite(doc['lon']) and -90<=doc['lat']<=90 and -180<=doc['lon']<=180):
+        raise ValueError(f'{what} needs finite geographic coordinates')
     return {'id': str(doc.get('id') or what)[:120], 'name': str(doc.get('name') or what)[:160], 'lat': float(doc['lat']), 'lon': float(doc['lon']),
             'category': str(doc.get('category') or '')[:60] or None, 'address': str(doc.get('address') or '')[:200] or None,
             'source': str(doc.get('source') or '')[:80] or None, 'hours': str(doc.get('hours'))[:300] if doc.get('hours') else None}
@@ -56,7 +58,11 @@ def _visit(doc, default=0):
 def validate_request(doc):
     if not isinstance(doc, dict):
         raise ValueError('Expected a JSON object')
+    if len(doc.get('stops') or []) > 12 or len(doc.get('slots') or []) > 6:
+        raise RoutingError('Too many required stops/discovery groups; split the walk instead of dropping requirements')
     origin = _pt(doc.get('origin'), 'origin')
+    if (doc.get('constraints') or {}).get('step_free'):
+        raise RoutingError('Verified step-free access is unavailable; no route can be recommended')
     end = doc.get('end') or {'mode': 'open'}
     mode = end.get('mode') if end.get('mode') in ('fixed', 'round', 'hotel', 'open') else None
     if not mode:
@@ -65,15 +71,25 @@ def validate_request(doc):
     stops = []
     for k, s in enumerate((doc.get('stops') or [])[:12]):
         p = _pt(s, f'stop {k + 1}')
+        if s.get('required_item'):
+            from .menu import cached_evidence
+            evidence = cached_evidence(p['id'], str(s['required_item']))
+            if not evidence or evidence['status'] != 'confirmed_menu_match':
+                raise RoutingError('Required menu item is not verified for chosen place; check the official menu first')
         order = s.get('order')
         stops.append({**p, 'required': s.get('required', True) is not False, 'order': order if type(order) is int else None,
-                      'visit_min': _visit(s), 'visit_estimated': bool(s.get('visit_estimated', True)), 'kind': 'stop'})
+                      'required_item':s.get('required_item'), 'visit_min': _visit(s), 'visit_estimated': bool(s.get('visit_estimated', True)), 'kind': 'stop'})
     slots = []
     for k, sl in enumerate((doc.get('slots') or [])[:6]):
         cands = [{**_pt(c, 'candidate'), 'score': float(c.get('score') or 0), 'evidence': c.get('evidence')} for c in (sl.get('candidates') or [])[:8]]
+        if sl.get('required_item'):
+            from .menu import cached_evidence
+            cands = [c for c in cands if (cached_evidence(c['id'], str(sl['required_item'])) or {}).get('status') == 'confirmed_menu_match']
+        if not cands and sl.get('required', True) is not False:
+            raise RoutingError('Required place has no candidates: ' + str(sl.get('label') or sl.get('slot_id') or 'stop'))
         if cands:
             slots.append({'slot_id': str(sl.get('slot_id') or f'slot{k}')[:40], 'label': str(sl.get('label') or 'Stop')[:80],
-                          'required': sl.get('required', True) is not False, 'visit_min': _visit(sl, 15), 'candidates': cands,
+                          'required': sl.get('required', True) is not False, 'required_item':sl.get('required_item'), 'visit_min': _visit(sl, 15), 'candidates': cands,
                           'order': sl.get('order') if type(sl.get('order')) is int else None})
     pool = doc.get('pool') or {}
     pool_c = [{**_pt(c, 'candidate'), 'score': float(c.get('score') or 0), 'visit_min': _visit(c, 20), 'evidence': c.get('evidence'),
@@ -87,6 +103,7 @@ def validate_request(doc):
             if type(v) not in (int, float) or not math.isfinite(v) or v < lo:
                 raise ValueError(f'constraints.{k} must be a number ≥ {lo}')
             cons[k] = float(v)
+    cons['require_open'] = c.get('require_open') is True
     cons['avoid_stairs'] = c.get('avoid_stairs') is True
     prefs = doc.get('preferences') or {}
     dep = doc.get('departure')
@@ -96,6 +113,7 @@ def validate_request(doc):
             departure = departure.replace(tzinfo=oh.NY)
     except ValueError:
         raise ValueError('departure must be an ISO 8601 date-time')
+    if cons.get('require_open') and departure is None: raise ValueError('departure is required to verify opening hours')
     return {'departure': departure,'origin': origin, 'end_mode': mode, 'end_place': end_place, 'stops': stops, 'slots': slots,
             'pool': {'label': str(pool.get('label') or 'Discovered places')[:80], 'max_stops': max(0, min(8, max_pool)), 'candidates': pool_c},
             'constraints': cons, 'preferences': prefs if isinstance(prefs, dict) else {}, 'theme': str(doc.get('theme') or '')[:120] or None}
@@ -116,6 +134,12 @@ class Planner:
         points = []  # each: dict(place, snap, role, ...)
 
         def add(place, role, **extra):
+            from .places import store
+            known = store().get(place['id'])
+            if known and _near_m(place,{'lat':known['coordinates']['lat'],'lon':known['coordinates']['lon']}) > 30:
+                return None, 'place ID and coordinates disagree with the canonical source; refresh the selection'
+            if known and (known['quality_status']=='closed' or str(known.get('operational_status') or '').lower() in ('not operational','closed','inactive')):
+                return None, 'source reports this place unavailable; refresh evidence before visiting'
             try:
                 sn = net.snap(place['lon'], place['lat'], place['name'])
             except RoutingError as e:
@@ -145,9 +169,11 @@ class Planner:
         for sl in req['slots']:
             idxs = []
             for c in sorted(sl['candidates'], key=lambda c: -c['score']):
-                k, err = add(c, 'candidate', slot=sl['slot_id'])
+                k, err = add(c, 'candidate', slot=sl['slot_id'], required_item=sl.get('required_item'))
                 if k is not None:
                     idxs.append(k)
+            if not idxs and sl['required']:
+                raise RoutingError('Required place has no reachable candidate: ' + sl['label'])
             if not idxs:
                 (notes if not sl['required'] else skipped).append(f"No reachable candidate for {sl['label']}." if not sl['required'] else
                                                                    {'id': sl['slot_id'], 'name': sl['label'], 'reason': 'No candidate within walking-route coverage'})
@@ -192,6 +218,7 @@ class Planner:
             return v
 
         departure = req.get('departure')
+        if cons.get('require_open'): notes.append('Opening checks use mapped source hours, not live admission or reservation availability.')
         visit_of = {}
         for it in required + optional + pool_items:
             for k in it['idx']:
@@ -204,8 +231,11 @@ class Planner:
             clock, n = 0.0, 0
             for a, b in zip(seq, seq[1:]):
                 clock += dist(a, b) / WALK_SPEED_M_PER_MIN
-                if b in visit_of and oh.is_open_at(points[b].get('hours'), departure + timedelta(minutes=clock)) is False:
-                    n += 1
+                if b in visit_of:
+                    at=departure+timedelta(minutes=clock)
+                    opened=oh.is_open_at(points[b].get('hours'),at)
+                    if opened is False or (cons.get('require_open') and opened is None) or oh.closes_within(points[b].get('hours'),at,visit_of[b]):
+                        n += 1
                 clock += visit_of.get(b, 0)
             return n
 
@@ -256,8 +286,8 @@ class Planner:
                         m = walk_m(trial) - SCORE_M * points[k].get('score', 0) + 1e7 * closed_count(trial)
                         if cand is None or m < cand[0]:
                             cand = (m, pos, k)
-                if cand is None:  # every candidate already used by another need: keep the required item with its first choice
-                    cand = (0, len(inner), it['idx'][0])
+                if cand is None:
+                    raise RoutingError('Required discovery groups cannot be satisfied by distinct places')
                 inner.insert(cand[1], cand[2]); items.insert(cand[1], it)
             improved = True
             while improved:  # 2-opt on segments without explicit order
@@ -376,7 +406,7 @@ class Planner:
             rec = {'seq': n, 'id': p['id'], 'name': p['name'], 'lat': p['lat'], 'lon': p['lon'], 'category': p.get('category'), 'address': p.get('address'),
                    'source': p.get('source'), 'role': 'end' if is_end and not it else p['role'], 'required': bool(it) and it in required,
                    'arrival_min': round(clock, 1), 'leg_in_m': round(m, 1), 'leg_in_min': round(m / WALK_SPEED_M_PER_MIN, 1),
-                   'visit_min': it['visit'] if it else 0, 'snap_distance_m': p['snap']['snap_distance_m'], 'evidence': p.get('evidence')}
+                   'hours':p.get('hours'), 'required_item':p.get('required_item'), 'visit_min': it['visit'] if it else 0, 'snap_distance_m': p['snap']['snap_distance_m'], 'evidence': p.get('evidence')}
             if it and it['type'] == 'slot':
                 rec.update(slot_id=it['slot_id'], slot_label=it['label'], alternatives=[points[j]['id'] for j in it['idx'] if j != k][:5])
             if departure and it:
@@ -385,8 +415,10 @@ class Planner:
                            open_at_arrival=oh.is_open_at(p.get('hours'), at), closes_during_visit=oh.closes_within(p.get('hours'), at, rec['visit_min']))
                 if rec['open_at_arrival'] is False:
                     time_issues.append(f"{p['name']} is closed at the estimated arrival {at.astimezone(oh.NY).strftime('%H:%M')} (OpenStreetMap hours)")
+                elif rec['open_at_arrival'] is None and cons.get('require_open') and rec['required']:
+                    time_issues.append(f"Opening hours cannot be verified for required {p['name']}")
                 elif rec['closes_during_visit']:
-                    time_warnings.append(f"{p['name']} closes during the planned {rec['visit_min']:.0f}-minute visit")
+                    time_issues.append(f"{p['name']} closes during the planned {rec['visit_min']:.0f}-minute visit")
             out_stops.append(rec)
             clock += rec['visit_min']
             prev = k

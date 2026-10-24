@@ -30,6 +30,13 @@ def _pt(d, name):
 
 def recommend_food(planner, doc):
     t0 = time.time()
+    ratings_required = doc.get('ratings_required') is True
+    min_rating = doc.get('minimum_rating')
+    max_price = doc.get('max_item_price_usd')
+    for label, value, upper in [('minimum_rating', min_rating, 5), ('max_item_price_usd', max_price, 10000)]:
+        if value is not None and (type(value) not in (int,float) or not math.isfinite(value) or not 0 <= value <= upper):
+            raise ValueError(label + ' must be a non-negative numeric limit')
+    ratings_required = ratings_required or min_rating is not None
     item = (doc.get('item') or '').strip()[:60] or None
     cuisine = (doc.get('cuisine') or '').strip()[:40] or None
     cats = [c for c in (doc.get('categories') or [doc.get('category') or 'restaurants']) if c in ('restaurants', 'cafes', 'bakeries', 'bars')] or ['restaurants']
@@ -42,7 +49,8 @@ def recommend_food(planner, doc):
         raise ValueError('departure must be ISO 8601')
     S = store()
     found = {}
-    for p in seq:
+    search_points=[_pt(doc['search_near'],'search_near')] if doc.get('search_near') else seq
+    for p in search_points:
         for c in S.search(p, cats, radius_m=int(doc.get('radius_m') or 700), limit=30, cuisine=cuisine):
             found.setdefault(c['place_id'], c)
     cands = list(found.values())
@@ -75,8 +83,15 @@ def recommend_food(planner, doc):
             walk = {i: (d, 0) for i, d in zip(ids, net.distances(src, snaps)) if d is not None}
         except RoutingError:
             walk = {}
+    rating_results = {}
+    rating_ready = any(providers.configured()[k] for k in ('google_places','yelp_fusion','foursquare'))
+    if rating_ready:
+        def rate(c):
+            return c['place_id'], providers.ratings({'place_id': c['place_id'], 'name': c['name'], 'address': c['address'], **c['coordinates']})
+        with cf.ThreadPoolExecutor(max_workers=4) as executor:
+            rating_results.update(executor.map(rate, cands[:4]))
     # item evidence for the best few with an official website (parallel, bounded)
-    to_check = [c for c in cands if c.get('official_website')][:CHECK_LIMIT] if item else []
+    to_check = [c for c in cands if c.get('official_website')][:CHECK_LIMIT] if item and (not ratings_required or rating_ready) else []
     menus = {}
     if to_check:
         with cf.ThreadPoolExecutor(max_workers=WORKERS) as ex:
@@ -103,6 +118,16 @@ def recommend_food(planner, doc):
                  else f'Not checked: only the {CHECK_LIMIT} nearest places with an official website are checked per request.'}
         status = m['status'] if m else None
         excluded = []
+        if c['routing_coverage'] != 'manhattan_network': excluded.append('Discovery only: outside verified walking-route coverage')
+        ratings = rating_results.get(c['place_id'], {'status': 'blocked_by_provider_access' if not rating_ready else 'not_checked', 'ratings': []})
+        rating_matches = [r for r in ratings['ratings'] if type(r.get('rating')) in (int,float) and r.get('rating_scale')]
+        if ratings_required and not rating_matches: excluded.append('requested review evidence unavailable (not a low rating)')
+        if min_rating is not None and rating_matches and not any(r['rating']/r['rating_scale']*5 >= min_rating for r in rating_matches):
+            excluded.append('verified provider rating does not meet the requested minimum')
+        if max_price is not None:
+            if not m or m.get('price') is None or m.get('currency') != 'USD' or m.get('price_verification') != 'structured_source':
+                excluded.append('budget cannot be verified: no directly associated verified USD item price')
+            elif m['price'] > max_price: excluded.append('verified item price exceeds budget')
         if c['quality_status'] == 'closed':
             excluded.append('closed by NYC DOHMH')
         if open_eta is False:
@@ -123,8 +148,7 @@ def recommend_food(planner, doc):
                         'insert_after_index': w[1] if w else None, 'classification': 'excluded' if excluded else meets, 'excluded_because': excluded})
     # ratings only for those still in the running (provider calls are limited and not stored)
     for r in results:
-        r['ratings'] = providers.ratings({'place_id': r['place']['place_id'], 'name': r['place']['name'], 'address': r['place']['address'], **r['place']['coordinates']}) \
-            if r['classification'] != 'excluded' else None
+        r['ratings'] = None if r['classification']=='excluded' else rating_results.get(r['place']['place_id'], {'status': 'blocked_by_provider_access' if not rating_ready else 'not_checked', 'ratings': []})
     order = {'meets_request': 0, 'needs_review': 1, 'not_confirmed': 2, 'excluded': 3}
     grade = {'A': 0, 'B': 1, 'C': 2}
     results.sort(key=lambda r: (order[r['classification']], EVIDENCE_RANK.get(r['item_status'], 2), r['detour_m'] if r['detour_m'] is not None else 1e9,
@@ -133,7 +157,7 @@ def recommend_food(planner, doc):
         r['rank'] = n
         r['explanation'] = explain(r, item)
     return {'item': item, 'cuisine': cuisine, 'categories': cats, 'departure': departure.astimezone(oh.NY).isoformat(timespec='minutes'),
-            'status': 'ok' if any(r['classification'] == 'meets_request' for r in results) else 'no_confirmed_match' if item else 'ok',
+            'status': 'blocked_by_provider_access' if ratings_required and not rating_ready else 'ok' if any(r['classification'] == 'meets_request' for r in results) else 'no_confirmed_match' if item else 'ok',
             'candidates': results, 'checked_menus': sum(1 for m in menus.values() if m['status'] != 'not_checked'), 'providers_configured': providers.configured(), 'compute_seconds': round(time.time() - t0, 2),
             'method': 'Hard filters first (DOHMH closure, closed at arrival, detour limit, reachability); then requested-item evidence, '
                       'walking detour on the network, health-inspection grade as a tie-break. Ratings are shown per provider and not blended.'}

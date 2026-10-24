@@ -1,5 +1,5 @@
 {
- "built_at": "2026-10-24T03:07:49+00:00",
+ "built_at": "2026-10-24T13:13:06+00:00",
  "datasets": [
   {
    "dataset_id": "lion_centerline",
@@ -17,7 +17,9 @@
    "time_range": "Current edition",
    "feature_count": 13297,
    "valid_geometry_count": 13297,
-   "duplicate_records": 0,
+   "duplicate_records": 6,
+   "cross_tile_repetitions": 2006,
+   "missing_feature_ids": 0,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
    "integration_status": "connected",
@@ -45,6 +47,8 @@
    "feature_count": 26604,
    "valid_geometry_count": 26604,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 2015,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.949,
     "surface": 0.291
@@ -75,6 +79,8 @@
    "feature_count": 8019,
    "valid_geometry_count": 8019,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 170,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "surface": 0.467
    },
@@ -104,6 +110,8 @@
    "feature_count": 16675,
    "valid_geometry_count": 16675,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 600,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.902,
     "surface": 0.336
@@ -134,6 +142,8 @@
    "feature_count": 5461,
    "valid_geometry_count": 5461,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 1343,
+   "missing_feature_ids": 0,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
    "integration_status": "connected",
@@ -161,6 +171,8 @@
    "feature_count": 23668,
    "valid_geometry_count": 23668,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "stname1": 0.0,
     "stname2": 0.01
@@ -191,6 +203,8 @@
    "feature_count": 5040,
    "valid_geometry_count": 5040,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
    "integration_status": "connected",
@@ -218,6 +232,8 @@
    "feature_count": 3945,
    "valid_geometry_count": 3945,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "crossing": 0.986,
     "traffic_signals": 0.496
@@ -248,6 +264,8 @@
    "feature_count": 36,
    "valid_geometry_count": 36,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 6,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "tostreet": 0.056
    },
@@ -277,6 +295,8 @@
    "feature_count": 7898,
    "valid_geometry_count": 7898,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 684,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "fromstreet": 0.001,
     "tostreet": 0.001
@@ -307,6 +327,8 @@
    "feature_count": 7280,
    "valid_geometry_count": 7280,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "amenity": 0.054,
     "leisure": 0.945,
@@ -338,6 +360,8 @@
    "feature_count": 909,
    "valid_geometry_count": 909,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "position": 0.061
    },
@@ -367,6 +391,8 @@
    "feature_count": 237,
    "valid_geometry_count": 237,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "open": 0.089,
     "hours_of_operation": 0.114,
@@ -401,6 +427,8 @@
    "feature_count": 99873,
    "valid_geometry_count": 99873,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "genusspecies": 0.0,
     "dbh": 0.0,
@@ -434,6 +462,8 @@
    "feature_count": 396,
    "valid_geometry_count": 396,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 233,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "subcategory": 0.096,
     "address": 0.301
@@ -464,6 +494,8 @@
    "feature_count": 2,
    "valid_geometry_count": 2,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 1,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "address": 1.0
    },
@@ -493,6 +525,8 @@
    "feature_count": 6,
    "valid_geometry_count": 6,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 12,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "address": 0.5
    },
@@ -522,6 +556,8 @@
    "feature_count": 163,
    "valid_geometry_count": 163,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 14,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "openhrsm": 0.466,
     "openhrssa": 0.313,
@@ -553,6 +589,8 @@
    "feature_count": 45178,
    "valid_geometry_count": 45178,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 2536,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.98,
     "construction_year": 0.018,
@@ -585,6 +623,8 @@
    "feature_count": 45178,
    "valid_geometry_count": 45178,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 2536,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.98,
     "construction_year": 0.018
@@ -615,6 +655,8 @@
    "feature_count": 45178,
    "valid_geometry_count": 45178,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 2536,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.98,
     "construction_year": 0.018
@@ -645,6 +687,8 @@
    "feature_count": 42106,
    "valid_geometry_count": 42106,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "address": 0.001,
     "landuse_name": 0.004,
@@ -680,6 +724,8 @@
    "feature_count": 366,
    "valid_geometry_count": 366,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "building_name": 0.322,
     "year_completed": 0.063,
@@ -711,7 +757,9 @@
    "time_range": "Designations to date",
    "feature_count": 943,
    "valid_geometry_count": 943,
-   "duplicate_records": 0,
+   "duplicate_records": 37,
+   "cross_tile_repetitions": 147,
+   "missing_feature_ids": 0,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
    "integration_status": "connected",
@@ -739,6 +787,8 @@
    "feature_count": 70,
    "valid_geometry_count": 70,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 69,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "calendared": 0.643
    },
@@ -768,6 +818,8 @@
    "feature_count": 86,
    "valid_geometry_count": 86,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.012,
     "amenity": 0.977,
@@ -803,6 +855,8 @@
    "feature_count": 252,
    "valid_geometry_count": 252,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.012,
     "amenity": 0.98,
@@ -838,6 +892,8 @@
    "feature_count": 242,
    "valid_geometry_count": 242,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.025,
     "tourism": 0.975,
@@ -873,6 +929,8 @@
    "feature_count": 33,
    "valid_geometry_count": 33,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "tourism": 0.97,
     "website": 0.182,
@@ -907,6 +965,8 @@
    "feature_count": 64,
    "valid_geometry_count": 64,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "tourism": 0.969,
     "website": 0.125,
@@ -941,6 +1001,8 @@
    "feature_count": 431,
    "valid_geometry_count": 431,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.36,
     "artwork_type": 0.074,
@@ -972,6 +1034,8 @@
    "feature_count": 495,
    "valid_geometry_count": 495,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.366
    },
@@ -1001,6 +1065,8 @@
    "feature_count": 5113,
    "valid_geometry_count": 5113,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.007,
     "shop": 0.994,
@@ -1036,6 +1102,8 @@
    "feature_count": 1390,
    "valid_geometry_count": 1390,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.006,
     "shop": 0.965,
@@ -1071,6 +1139,8 @@
    "feature_count": 887,
    "valid_geometry_count": 887,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.006,
     "shop": 0.994,
@@ -1106,6 +1176,8 @@
    "feature_count": 282,
    "valid_geometry_count": 282,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.011,
     "amenity": 0.862,
@@ -1141,6 +1213,8 @@
    "feature_count": 1064,
    "valid_geometry_count": 1064,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.029,
     "amenity": 0.976,
@@ -1176,6 +1250,8 @@
    "feature_count": 6072,
    "valid_geometry_count": 6072,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.085,
     "amenity": 0.981,
@@ -1211,6 +1287,8 @@
    "feature_count": 30,
    "valid_geometry_count": 30,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.033,
     "shop": 1.0,
@@ -1246,6 +1324,8 @@
    "feature_count": 45,
    "valid_geometry_count": 45,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "amenity": 0.156,
     "shop": 1.0,
@@ -1281,6 +1361,8 @@
    "feature_count": 1851,
    "valid_geometry_count": 1851,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.692,
     "amenity": 0.998,
@@ -1316,6 +1398,8 @@
    "feature_count": 45618,
    "valid_geometry_count": 45618,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.528,
     "amenity": 0.383,
@@ -1350,6 +1434,8 @@
    "feature_count": 4204,
    "valid_geometry_count": 4204,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "on_street_name": 0.26,
     "cross_street_name": 0.74,
@@ -1382,6 +1468,8 @@
    "feature_count": 3668,
    "valid_geometry_count": 3668,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "on_street_name": 0.308,
     "cross_street_name": 0.692,
@@ -1413,6 +1501,8 @@
    "feature_count": 17118,
    "valid_geometry_count": 17118,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 1500,
+   "missing_feature_ids": 0,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
    "integration_status": "connected",
@@ -1440,6 +1530,8 @@
    "feature_count": 177477,
    "valid_geometry_count": 177477,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "location_type": 0.09,
     "incident_address": 0.011
@@ -1470,6 +1562,8 @@
    "feature_count": 1414,
    "valid_geometry_count": 1414,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 217,
+   "missing_feature_ids": 0,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
    "integration_status": "connected",
@@ -1497,6 +1591,8 @@
    "feature_count": 153,
    "valid_geometry_count": 153,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
    "integration_status": "connected",
@@ -1524,6 +1620,8 @@
    "feature_count": 868,
    "valid_geometry_count": 868,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
    "integration_status": "connected",
@@ -1551,6 +1649,8 @@
    "feature_count": 39,
    "valid_geometry_count": 39,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
    "integration_status": "connected",
@@ -1578,6 +1678,8 @@
    "feature_count": 1682,
    "valid_geometry_count": 1682,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.043,
     "route_ref": 0.257,
@@ -1612,6 +1714,8 @@
    "feature_count": 696,
    "valid_geometry_count": 696,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {},
    "update_method": "scripts/build_urban_layers.py (rebuilt with street data refresh)",
    "integration_status": "connected",
@@ -1639,6 +1743,8 @@
    "feature_count": 23,
    "valid_geometry_count": 23,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.043,
     "operator": 0.652
@@ -1669,6 +1775,8 @@
    "feature_count": 326,
    "valid_geometry_count": 326,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.018,
     "operator": 0.537,
@@ -1701,6 +1809,8 @@
    "feature_count": 300,
    "valid_geometry_count": 300,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.02,
     "opening_hours": 0.35,
@@ -1733,6 +1843,8 @@
    "feature_count": 526,
    "valid_geometry_count": 526,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.036,
     "operator": 0.899,
@@ -1765,6 +1877,8 @@
    "feature_count": 1225,
    "valid_geometry_count": 1225,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "cross_street_1": 0.003,
     "cross_street_2": 0.003
@@ -1795,6 +1909,8 @@
    "feature_count": 96,
    "valid_geometry_count": 96,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 0,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.781
    },
@@ -1824,6 +1940,8 @@
    "feature_count": 472,
    "valid_geometry_count": 472,
    "duplicate_records": 0,
+   "cross_tile_repetitions": 76,
+   "missing_feature_ids": 0,
    "missing_fields": {
     "name": 0.697
    },
@@ -2982,7 +3100,7 @@
   {
    "group": "routing_and_scoring",
    "integration_status": "connected",
-   "freshness_days": 0,
+   "freshness_days": 1,
    "dataset_id": "pedestrian_network",
    "name": "OSM pedestrian routing graph",
    "publisher": "OpenStreetMap contributors",
@@ -3000,7 +3118,7 @@
   {
    "group": "routing_and_scoring",
    "integration_status": "connected",
-   "freshness_days": 0,
+   "freshness_days": 1,
    "dataset_id": "edge_scores",
    "name": "12-dimension scores on routing edges",
    "publisher": "STREETWISE (derived)",
@@ -3103,10 +3221,10 @@
    "coverage_area": "per request",
    "feature_count": null,
    "integration_status": "blocked_by_provider_access",
-   "update_method": "live per request, 15-min memory cache (env GOOGLE_PLACES_API_KEY on the backend)",
+   "update_method": "live per request, no default content cache (env GOOGLE_PLACES_API_KEY on the backend)",
    "note": "Provides ratings, review counts, price level, hours. Nothing is stored or shown without the key.",
    "data_class": "on_demand_business",
-   "update_frequency": "per request (cached 15 min in memory)",
+   "update_frequency": "per request (no default content cache)",
    "known_limitations": "Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match."
   },
   {
@@ -3119,10 +3237,10 @@
    "coverage_area": "per request",
    "feature_count": null,
    "integration_status": "blocked_by_provider_access",
-   "update_method": "live per request, 15-min memory cache (env YELP_API_KEY on the backend)",
+   "update_method": "live per request, no default content cache (env YELP_API_KEY on the backend)",
    "note": "Provides ratings, review counts, price. Nothing is stored or shown without the key.",
    "data_class": "on_demand_business",
-   "update_frequency": "per request (cached 15 min in memory)",
+   "update_frequency": "per request (no default content cache)",
    "known_limitations": "Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match."
   },
   {
@@ -3135,10 +3253,10 @@
    "coverage_area": "per request",
    "feature_count": null,
    "integration_status": "blocked_by_provider_access",
-   "update_method": "live per request, 15-min memory cache (env FOURSQUARE_API_KEY on the backend)",
+   "update_method": "live per request, no default content cache (env FOURSQUARE_API_KEY on the backend)",
    "note": "Provides ratings (0-10), rating counts, price. Nothing is stored or shown without the key.",
    "data_class": "on_demand_business",
-   "update_frequency": "per request (cached 15 min in memory)",
+   "update_frequency": "per request (no default content cache)",
    "known_limitations": "Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match."
   },
   {
@@ -3151,10 +3269,10 @@
    "coverage_area": "per request",
    "feature_count": null,
    "integration_status": "blocked_by_provider_access",
-   "update_method": "live per request, 15-min memory cache (env BOOKING_DEMAND_API_KEY on the backend)",
+   "update_method": "live per request, no default content cache (env BOOKING_DEMAND_API_KEY on the backend)",
    "note": "Provides hotel room types, rates, availability. Nothing is stored or shown without the key.",
    "data_class": "realtime_availability",
-   "update_frequency": "per request (cached 15 min in memory)",
+   "update_frequency": "per request (no default content cache)",
    "known_limitations": "Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match."
   },
   {
@@ -3167,10 +3285,10 @@
    "coverage_area": "per request",
    "feature_count": null,
    "integration_status": "blocked_by_provider_access",
-   "update_method": "live per request, 15-min memory cache (env EXPEDIA_RAPID_API_KEY on the backend)",
+   "update_method": "live per request, no default content cache (env EXPEDIA_RAPID_API_KEY on the backend)",
    "note": "Provides hotel room types, rates, availability. Nothing is stored or shown without the key.",
    "data_class": "realtime_availability",
-   "update_frequency": "per request (cached 15 min in memory)",
+   "update_frequency": "per request (no default content cache)",
    "known_limitations": "Requires a backend key and the provider terms; results are matched by name and distance and may find no confident match."
   },
   {
@@ -3206,6 +3324,60 @@
    "data_class": "realtime_availability",
    "update_frequency": "live (minutes)",
    "known_limitations": "Not stored; unavailable when the provider is down."
+  },
+  {
+   "dataset_id": "citywide:enfh-gkve",
+   "name": "Parks Properties",
+   "group": "tourism_discovery",
+   "publisher": "City of New York",
+   "source_url": "https://data.cityofnewyork.us/d/enfh-gkve",
+   "license": "NYC Open Data Terms of Use",
+   "retrieved_at": "2026-10-24T12:20:23+00:00",
+   "publisher_updated_at": "2026-10-16T13:05:08+00:00",
+   "freshness_days": 8,
+   "feature_count": 2061,
+   "valid_geometry_count": 2061,
+   "duplicate_records": 0,
+   "coverage_area": "NYC citywide (search only)",
+   "geometry_type": "Point (not a verified entrance)",
+   "integration_status": "connected",
+   "missing_fields": {
+    "addr": 0.39980591945657445,
+    "hours": 1.0,
+    "web": 1.0,
+    "boro": 0.0
+   },
+   "note": "Search only; no live opening or entrance verification. Restroom borough is unavailable in this source snapshot.",
+   "data_class": "periodic_poi",
+   "update_frequency": "daily audit target; download only if publisher version changes",
+   "known_limitations": "Search only; no live opening or entrance verification. Restroom borough is unavailable in this source snapshot."
+  },
+  {
+   "dataset_id": "citywide:i7jb-7jku",
+   "name": "Public Restrooms",
+   "group": "tourism_discovery",
+   "publisher": "City of New York",
+   "source_url": "https://data.cityofnewyork.us/d/i7jb-7jku",
+   "license": "NYC Open Data Terms of Use",
+   "retrieved_at": "2026-10-24T12:20:23+00:00",
+   "publisher_updated_at": "2025-06-27T13:37:10+00:00",
+   "freshness_days": 483,
+   "feature_count": 1063,
+   "valid_geometry_count": 1063,
+   "duplicate_records": 0,
+   "coverage_area": "NYC citywide (search only)",
+   "geometry_type": "Point (not a verified entrance)",
+   "integration_status": "connected",
+   "missing_fields": {
+    "addr": 1.0,
+    "hours": 0.08654750705550329,
+    "web": 1.0,
+    "boro": 1.0
+   },
+   "note": "Search only; no live opening or entrance verification. Restroom borough is unavailable in this source snapshot.",
+   "data_class": "periodic_poi",
+   "update_frequency": "daily audit target; download only if publisher version changes",
+   "known_limitations": "Search only; no live opening or entrance verification. Restroom borough is unavailable in this source snapshot."
   }
  ],
  "notes": [
