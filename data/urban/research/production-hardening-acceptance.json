@@ -1,0 +1,479 @@
+{
+  "status": "PASS",
+  "started_at": 1792880909.653146,
+  "live_ai_requested": true,
+  "physical_gps": {
+    "status": "BLOCKED",
+    "reason": "No physical mobile device or walking field test in this cloud environment"
+  },
+  "before": {
+    "llm": true,
+    "model": "gpt-4o-mini",
+    "runtime": {
+      "python": "3.14.8"
+    },
+    "process_memory": {
+      "VmHWM_kib": 331384,
+      "VmRSS_kib": 331384
+    },
+    "process_started_at": 1792880815.075569,
+    "uptime_seconds": 94.8,
+    "cgroup_memory": {
+      "current_bytes": 536748032,
+      "peak_bytes": 536870912,
+      "max_bytes": 536870912,
+      "events": {
+        "low": 0,
+        "high": 0,
+        "max": 267,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "composition_bytes": {
+        "anon": 326770688,
+        "file": 191082496,
+        "kernel": 18370560,
+        "slab_reclaimable": 17372360
+      }
+    },
+    "diagnostics": {
+      "route_cache": {
+        "full_routes": 0,
+        "full_serialized_bytes": 0,
+        "navigation_routes": 0,
+        "navigation_serialized_bytes": 0
+      },
+      "crime_query_counters": {
+        "edge_cache_hits": 0,
+        "edge_cache_misses": 1,
+        "sql_queries": 1
+      },
+      "capacity": {
+        "active": 0,
+        "queued": 0,
+        "rejected": 0,
+        "peak_active": 0,
+        "active_limit": 2,
+        "queue_limit": 3
+      },
+      "geometry": {
+        "packed_bytes": 3578640,
+        "wgs_cache": {
+          "lines": 256,
+          "vertices": 969,
+          "max_lines": 256,
+          "max_vertices": 8192
+        },
+        "xy_cache": {
+          "lines": 256,
+          "vertices": 969,
+          "max_lines": 256,
+          "max_vertices": 8192
+        }
+      }
+    },
+    "deployment_commit": "c02fb2a0b5f0cf24aeebf949db87609a91d4db40",
+    "interpretation_contract": "strict-paired-v3-independent",
+    "features": {
+      "itinerary": true,
+      "menu_verify": "official website only (no menu API connected)",
+      "routing_coverage": "Manhattan OSM pedestrian graph",
+      "place_search": "Manhattan discovery + NYC DOHMH food permits + NYC Parks and public restrooms (citywide discovery; new unsnapped points are search only)",
+      "food_recommendations": true,
+      "menu_ocr_available": false,
+      "citywide_official_discovery": true
+    },
+    "providers": {
+      "google_places": false,
+      "yelp_fusion": false,
+      "foursquare": false,
+      "booking_demand": false,
+      "expedia_rapid": false
+    }
+  },
+  "frontend_commit_verified": {
+    "commit": "c02fb2a0b5f0cf24aeebf949db87609a91d4db40",
+    "file_sha256": {
+      "app.js": "fc4aaf284dc60d8513cb8e7f00d40faaf76e0e60ecb093e9122e8a1ed1995118",
+      "journey.js": "df02af381a829942c000106d0b8eb05311c1c6656834ca2af695f6d97aacadcb",
+      "journey-ui.js": "62642957db1681e4af76110ecbb6c381f63090ebbe9469f2d9be6588dd61064b"
+    }
+  },
+  "desktop": {
+    "status": "PASS",
+    "scope": "actual Chromium browser and public production sources",
+    "map_loaded": true,
+    "basemap": "actual CARTO/protomaps vector features rendered",
+    "drag": true,
+    "zoom": true,
+    "horizontal_overflow": false,
+    "real_ai_route": {
+      "status": "PASS",
+      "weights": {
+        "Architecture": 50,
+        "Nature": 85,
+        "Culture": 50,
+        "Quiet & Relax": 90,
+        "Spatial Comfort": 50,
+        "Urban Vibrancy": 90,
+        "Food & Retail": 50,
+        "Scenic & Visual": 50,
+        "Walkability": 50,
+        "Access & Safety": 50,
+        "Environment": 50,
+        "Transit Connectivity": 50
+      },
+      "directions": {
+        "Architecture": "high",
+        "Nature": "high",
+        "Culture": "high",
+        "Quiet & Relax": "high",
+        "Spatial Comfort": "high",
+        "Urban Vibrancy": "low",
+        "Food & Retail": "high",
+        "Scenic & Visual": "high",
+        "Walkability": "high",
+        "Access & Safety": "high",
+        "Environment": "high",
+        "Transit Connectivity": "high"
+      },
+      "preferences_used": {
+        "Nature": {
+          "weight": 85,
+          "direction": "high"
+        },
+        "Quiet & Relax": {
+          "weight": 90,
+          "direction": "high"
+        },
+        "Urban Vibrancy": {
+          "weight": 90,
+          "direction": "low"
+        }
+      },
+      "distance_m": 931.4,
+      "geometry_sha256": "546c3bd2ea417ccae2228b5ae9b0f7b376767e9b5b2a158cfb7f0266209487e2"
+    },
+    "gps_permission_denied_browser": "PASS",
+    "experience_maps_and_inspector": 13,
+    "nearby_food_search": {
+      "status": "PASS",
+      "returned": 50,
+      "full_restaurant_downloads": 0
+    },
+    "source_cards": "PASS",
+    "refresh": true,
+    "offline_rejected": true,
+    "recovered": true,
+    "page_errors": [],
+    "api_responses": [
+      {
+        "path": "status",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-74.08171766693077%2C40.67645187956393%2C-73.85428233307128%2C40.90248741828549&zoom=11.1&category=waterfront_access",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-74.08171766693077%2C40.67645187956393%2C-73.85428233307128%2C40.90248741828549&zoom=11.1&category=construction",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.9980406755356%2C40.79412145212274%2C-73.98280572833116%2C40.80925987020106&zoom=15&category=waterfront_access",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.9980406755356%2C40.79412145212274%2C-73.98280572833116%2C40.80925987020106&zoom=15&category=construction",
+        "status": 200
+      },
+      {
+        "path": "interpret",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.9980406755356%2C40.79412145212274%2C-73.98280572833116%2C40.80925987020106&zoom=15&category=construction",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.9980406755356%2C40.79412145212274%2C-73.98280572833116%2C40.80925987020106&zoom=15&category=waterfront_access",
+        "status": 200
+      },
+      {
+        "path": "routes",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.98427433319084%2C40.75258720195331%2C-73.97665506680916%2C40.75958149804669&zoom=15&category=waterfront_access",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.98427433319084%2C40.75258720195331%2C-73.97665506680916%2C40.75958149804669&zoom=15&category=construction",
+        "status": 200
+      },
+      {
+        "path": "pois",
+        "status": 200
+      },
+      {
+        "path": "places/search?lat=40.7536&lon=-73.9832&categories=restaurants&radius_m=1700&limit=50",
+        "status": 200
+      },
+      {
+        "path": "places/dohmh%3A50181591",
+        "status": 200
+      },
+      {
+        "path": "places/osm%3Away/266170533",
+        "status": 200
+      },
+      {
+        "path": "status",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-74.08171766693077%2C40.67645187956393%2C-73.85428233307128%2C40.90248741828549&zoom=11.1&category=construction",
+        "status": 200
+      },
+      {
+        "path": "status",
+        "status": 200
+      }
+    ]
+  },
+  "mobile_emulation": {
+    "status": "PASS",
+    "scope": "Chromium touch emulation, not physical GPS/device validation",
+    "map_loaded": true,
+    "basemap": "actual CARTO/protomaps vector features rendered",
+    "drag": true,
+    "zoom": true,
+    "horizontal_overflow": false,
+    "real_ai_route": {
+      "status": "PASS",
+      "weights": {
+        "Architecture": 50,
+        "Nature": 85,
+        "Culture": 50,
+        "Quiet & Relax": 90,
+        "Spatial Comfort": 50,
+        "Urban Vibrancy": 90,
+        "Food & Retail": 50,
+        "Scenic & Visual": 50,
+        "Walkability": 50,
+        "Access & Safety": 50,
+        "Environment": 50,
+        "Transit Connectivity": 50
+      },
+      "directions": {
+        "Architecture": "high",
+        "Nature": "high",
+        "Culture": "high",
+        "Quiet & Relax": "high",
+        "Spatial Comfort": "high",
+        "Urban Vibrancy": "low",
+        "Food & Retail": "high",
+        "Scenic & Visual": "high",
+        "Walkability": "high",
+        "Access & Safety": "high",
+        "Environment": "high",
+        "Transit Connectivity": "high"
+      },
+      "preferences_used": {
+        "Nature": {
+          "weight": 85,
+          "direction": "high"
+        },
+        "Quiet & Relax": {
+          "weight": 90,
+          "direction": "high"
+        },
+        "Urban Vibrancy": {
+          "weight": 90,
+          "direction": "low"
+        }
+      },
+      "distance_m": 931.4,
+      "geometry_sha256": "546c3bd2ea417ccae2228b5ae9b0f7b376767e9b5b2a158cfb7f0266209487e2"
+    },
+    "experience_maps_and_inspector": 13,
+    "nearby_food_search": {
+      "status": "PASS",
+      "returned": 50,
+      "full_restaurant_downloads": 0
+    },
+    "source_cards": "PASS",
+    "refresh": true,
+    "offline_rejected": true,
+    "recovered": true,
+    "page_errors": [],
+    "api_responses": [
+      {
+        "path": "status",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-74.04098245613918%2C40.67811028697696%2C-73.89501754385863%2C40.90083460533373&zoom=10.875489895877624&category=waterfront_access",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-74.04098245613918%2C40.67811028697696%2C-73.89501754385863%2C40.90083460533373&zoom=10.875489895877624&category=construction",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.99464038640946%2C40.79734894706141%2C-73.98627189428294%2C40.81011550353887&zoom=15&category=waterfront_access",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.99464038640946%2C40.79734894706141%2C-73.98627189428294%2C40.81011550353887&zoom=15&category=construction",
+        "status": 200
+      },
+      {
+        "path": "interpret",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.99464038640946%2C40.79734894706141%2C-73.98627189428294%2C40.81011550353887&zoom=15&category=construction",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.99464038640946%2C40.79734894706141%2C-73.98627189428294%2C40.81011550353887&zoom=15&category=waterfront_access",
+        "status": 200
+      },
+      {
+        "path": "routes",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.98427433319084%2C40.75258720195331%2C-73.97665506680916%2C40.75958149804669&zoom=15&category=construction",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-73.98427433319084%2C40.75258720195331%2C-73.97665506680916%2C40.75958149804669&zoom=15&category=waterfront_access",
+        "status": 200
+      },
+      {
+        "path": "pois",
+        "status": 200
+      },
+      {
+        "path": "places/search?lat=40.7536&lon=-73.9832&categories=restaurants&radius_m=1700&limit=50",
+        "status": 200
+      },
+      {
+        "path": "places/dohmh%3A50181591",
+        "status": 200
+      },
+      {
+        "path": "places/osm%3Away/266170533",
+        "status": 200
+      },
+      {
+        "path": "status",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-74.04098245613918%2C40.67811028697696%2C-73.89501754385863%2C40.90083460533373&zoom=10.875489895877624&category=waterfront_access",
+        "status": 200
+      },
+      {
+        "path": "urban/context?bbox=-74.04098245613918%2C40.67811028697696%2C-73.89501754385863%2C40.90083460533373&zoom=10.875489895877624&category=construction",
+        "status": 200
+      },
+      {
+        "path": "status",
+        "status": 200
+      }
+    ]
+  },
+  "after": {
+    "llm": true,
+    "model": "gpt-4o-mini",
+    "runtime": {
+      "python": "3.14.8"
+    },
+    "process_memory": {
+      "VmHWM_kib": 418236,
+      "VmRSS_kib": 418236
+    },
+    "process_started_at": 1792880815.075569,
+    "uptime_seconds": 171.2,
+    "cgroup_memory": {
+      "current_bytes": 536129536,
+      "peak_bytes": 536870912,
+      "max_bytes": 536870912,
+      "events": {
+        "low": 0,
+        "high": 0,
+        "max": 350,
+        "oom": 0,
+        "oom_kill": 0,
+        "oom_group_kill": 0,
+        "sock_throttled": 0
+      },
+      "composition_bytes": {
+        "anon": 414498816,
+        "file": 104378368,
+        "kernel": 16207872,
+        "slab_reclaimable": 15020112
+      }
+    },
+    "diagnostics": {
+      "route_cache": {
+        "full_routes": 0,
+        "full_serialized_bytes": 0,
+        "navigation_routes": 6,
+        "navigation_serialized_bytes": 23576
+      },
+      "crime_query_counters": {
+        "edge_cache_hits": 0,
+        "edge_cache_misses": 1,
+        "sql_queries": 1
+      },
+      "capacity": {
+        "active": 0,
+        "queued": 0,
+        "rejected": 0,
+        "peak_active": 1,
+        "active_limit": 2,
+        "queue_limit": 3
+      },
+      "geometry": {
+        "packed_bytes": 3578640,
+        "wgs_cache": {
+          "lines": 256,
+          "vertices": 785,
+          "max_lines": 256,
+          "max_vertices": 8192
+        },
+        "xy_cache": {
+          "lines": 256,
+          "vertices": 789,
+          "max_lines": 256,
+          "max_vertices": 8192
+        }
+      }
+    },
+    "deployment_commit": "c02fb2a0b5f0cf24aeebf949db87609a91d4db40",
+    "interpretation_contract": "strict-paired-v3-independent",
+    "features": {
+      "itinerary": true,
+      "menu_verify": "official website only (no menu API connected)",
+      "routing_coverage": "Manhattan OSM pedestrian graph",
+      "place_search": "Manhattan discovery + NYC DOHMH food permits + NYC Parks and public restrooms (citywide discovery; new unsnapped points are search only)",
+      "food_recommendations": true,
+      "menu_ocr_available": false,
+      "citywide_official_discovery": true
+    },
+    "providers": {
+      "google_places": false,
+      "yelp_fusion": false,
+      "foursquare": false,
+      "booking_demand": false,
+      "expedia_rapid": false
+    }
+  },
+  "completed_at": 1792880986.2971525
+}

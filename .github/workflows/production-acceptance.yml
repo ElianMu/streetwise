@@ -1,0 +1,42 @@
+name: Production acceptance and memory monitor
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      live_ai:
+        description: 'Make two real billable AI route requests (desktop + mobile emulation)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+concurrency:
+  group: streetwise-production-acceptance
+  cancel-in-progress: false
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install real browser test dependencies
+        run: |
+          python -m pip install playwright==1.62.0
+          python -m playwright install --with-deps chromium
+      - name: Check actual production and emit reviewable evidence
+        env:
+          LIVE_AI: ${{ github.event.inputs.live_ai || 'false' }}
+          EXPECTED_COMMIT: ${{ github.sha }}
+        run: |
+          args=()
+          if [ "$LIVE_AI" = "true" ]; then args+=(--live-ai); fi
+          python tests/production_e2e.py --expected-commit "$EXPECTED_COMMIT" --output "$RUNNER_TEMP/streetwise-production" "${args[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: production-acceptance-evidence
+          path: ${{ runner.temp }}/streetwise-production/
+          retention-days: 7

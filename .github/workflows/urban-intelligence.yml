@@ -24,13 +24,24 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/streetwise-tests" --save-exact jsdom@27.4.0
       - name: Run full Python suite against shipped source snapshots
         run: python -m unittest discover -s tests -p 'test_*.py'
-      - name: Guard fresh-process memory headroom with three real route clients
-        run: python scripts/check_capacity.py
       - name: Run every JavaScript and DOM script
         env:
           JSDOM_PATH: ${{ runner.temp }}/streetwise-tests/node_modules/jsdom
         run: |
           for test in tests/*.test.cjs; do node "$test" || exit 1; done
+  runtime_capacity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    strategy:
+      matrix:
+        python: ['3.12', '3.14']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - name: Guard runtime memory with three real route clients
+        run: python scripts/check_capacity.py
   public_mta_source_research:
     runs-on: ubuntu-latest
     timeout-minutes: 10
