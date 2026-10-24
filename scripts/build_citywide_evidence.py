@@ -94,6 +94,7 @@ def context():
   item['exact_duplicate_source_rows']=duplicates;item['source_record_identity']='derived SHA-256 of exact source attributes and geometry; original publisher keys retained as attributes, not treated as unique entities'
   manifest.append(item);print(name,len(features),'rejected',bad,'bytes',target.stat().st_size,flush=True)
  # The runtime manifest/database stay intact until index_urban_context publishes the complete next index.
+ manifest.extend(s for s in prior.get('sources',[]) if s['id'].startswith('mta_'))
  (base/'source_manifest.json').write_text(json.dumps({'sources':manifest},indent=2))
  if not changed:print('All context publisher versions unchanged; indexed snapshot retained',flush=True)
 if __name__=='__main__':

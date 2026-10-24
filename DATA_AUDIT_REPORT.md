@@ -1,8 +1,8 @@
 # STREETWISE · NYC — Data Audit Report
 
-Generated 2026-10-24T19:43:17+00:00 by `scripts/build_audit_report.py` from the shipped files (no estimates).
+Generated 2026-10-24T20:02:23+00:00 by `scripts/build_audit_report.py` from the shipped files (no estimates).
 
-**122 datasets** (94 connected), **2,677,208 records** in the shipped files. A record count is not a count of places verified open today.
+**125 datasets** (97 connected), **2,693,559 records** in the shipped files. A record count is not a count of places verified open today.
 
 ## Datasets
 
@@ -124,12 +124,15 @@ Generated 2026-10-24T19:43:17+00:00 by `scripts/build_audit_report.py` from the 
 | Public Restrooms | City of New York | periodic_poi | NYC citywide (search only) | 1063 | 484 | addr 100%, web 100%, boro 100% | fair (a field missing in 100%) | connected |
 | NYPD Complaint Data Historic | NYPD / NYC Open Data | static_urban | NYC five boroughs + unknown source borough | 567391 | 179 | boro_nm 0%, ofns_desc 0%, cmplnt_num 0% | good | connected |
 | NYPD Complaint Data Current (Year To Date) | NYPD / NYC Open Data | static_urban | NYC five boroughs + unknown source borough | 277593 | 89 | boro_nm 0%, ofns_desc 0%, cmplnt_num 0% | good | connected |
-| Forestry Tree Points | Forestry / NYC Open Data | static_urban | NYC five boroughs; published coordinate inventory | 897619 | 3 | planteddate 86%, updateddate 21%, dbh 0% | fair (a field missing in 86%) | connected |
-| NYC Planimetric Database: Hydrography | NYC / NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 2206 | 912 | name 74%, source_id 0%, feat_code 0% | fair (a field missing in 74%) | connected |
-| Waterfront Public Access Areas (WPAAs) | Waterfront / NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 78 | 1087 | cpc_approv 72%, res_dec 60%, cpc_report 5% | fair (a field missing in 72%) | connected |
-| NYC DOT Pedestrian Plazas - Polygon | NYC / NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 93 | 23 | tostreet 13%, femafldt 2%, objectid 0% | good | connected |
-| Street Closures due to Construction Activities by Block and Intersection | Street / NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 4157 | 5 | tostreetname 35%, onstreetname 0%, fromstreetname 0% | good | connected |
-| Seating Locations | Seating / NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 5702 | 10 | side_of_st 6%, femafldt 4%, :@computed_region_efsh_h5xi 0% | good | connected |
+| Forestry Tree Points | NYC Parks | static_urban | NYC five boroughs; published coordinate inventory | 897619 | 3 | planteddate 86%, updateddate 21%, dbh 0% | fair (a field missing in 86%) | connected |
+| NYC Planimetric Database: Hydrography | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 2206 | 912 | name 74%, source_id 0%, feat_code 0% | fair (a field missing in 74%) | connected |
+| Waterfront Public Access Areas (WPAAs) | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 78 | 1088 | cpc_approv 72%, res_dec 60%, cpc_report 5% | fair (a field missing in 72%) | connected |
+| NYC DOT Pedestrian Plazas - Polygon | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 93 | 23 | tostreet 13%, femafldt 2%, objectid 0% | good | connected |
+| Street Closures due to Construction Activities by Block and Intersection | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 4157 | 5 | tostreetname 35%, onstreetname 0%, fromstreetname 0% | good | connected |
+| Seating Locations | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 5702 | 10 | side_of_st 6%, femafldt 4%, :@computed_region_efsh_h5xi 0% | good | connected |
+| MTA Subway Stations | Metropolitan Transportation Authority / Open Data NY | static_urban | All five NYC boroughs | 496 | 0 | ada_notes 98%, ada 0%, ada_northbound 0% | fair (a field missing in 98%) | connected |
+| MTA Subway Entrances and Exits: 2024 | Metropolitan Transportation Authority / Open Data NY | static_urban | All five NYC boroughs | 2120 | 323 | borough 0%, complex_id 0%, constituent_station_name 0% | good | connected |
+| MTA Current Bus Stops | Metropolitan Transportation Authority / Open Data NY | static_urban | All five NYC boroughs; bus service also extends just beyond the city boundary | 13735 | 7 | bundle 0%, in_effect 0%, name 0% | good | connected |
 
 ## Hard-coded quick-pick places (app.js `PLACES`)
 

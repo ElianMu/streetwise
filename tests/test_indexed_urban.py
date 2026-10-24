@@ -60,6 +60,17 @@ class IndexedUrban(unittest.TestCase):
   for cat in ['construction','hydrography','seating']:
    fc=urban_query.context(cat,[-74.03,40.70,-73.94,40.80]);self.assertTrue(fc['features'])
    self.assertTrue(all(f['properties'].get('source_url','').startswith('https://data.cityofnewyork.us') for f in fc['features']))
+ def test_official_mta_index_groups_bus_relationships_without_losing_routes(self):
+  m=manifest('context');bus=next(s for s in m['sources'] if s['id']=='mta_bus_stops')
+  self.assertGreater(bus['source_rows'],bus['records']);self.assertEqual(bus['coordinate_conflict_stop_ids'],0)
+  with connection('context') as db:
+   records=[json.loads(r[0]) for r in db.execute("SELECT properties FROM features WHERE category='mta_bus_stops'")]
+  self.assertEqual(sum(r['route_stop_rows'] for r in records),bus['source_rows'])
+  self.assertEqual(len(records),len({r['stop_id'] for r in records}))
+  self.assertTrue(all(r['routes'] and r['validity_intervals'] for r in records))
+  for lon,lat in [(-73.985,40.755),(-73.98,40.68),(-73.87,40.75),(-73.89,40.85),(-74.08,40.64)]:
+   fc=urban_query.context('mta_bus_stops',[lon-.015,lat-.015,lon+.015,lat+.015]);self.assertTrue(fc['features'])
+   self.assertTrue(all(f['properties']['source_url'].startswith('https://data.ny.gov') for f in fc['features']))
  def test_segment_inspector_uses_identical_indexed_source(self):
   with gzip.open(ROOT/'data/pedestrian/segment-evidence.json.gz','rt') as f:small=json.load(f)
   sid=next(iter(small['records']));s=server.street_segment(sid)

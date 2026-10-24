@@ -1,0 +1,1324 @@
+{
+  "shoreline": [
+    {
+      "id": "bmjq-373p",
+      "name": "2010 Census Tracts",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1779809034,
+      "description": "Census Tracts from the 2010 US Census for New York City clipped to the shoreline. These boundary files are derived from the US Census Bureau's TIGER project and have been geographi"
+    },
+    {
+      "id": "y9w2-ph8n",
+      "name": "2010 Census Blocks",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1779808533,
+      "description": "Census Blocks from the 2010 US Census for New York City clipped to the shoreline. These boundary files are derived from the US Census Bureau's TIGER project and have been geographi"
+    },
+    {
+      "id": "5yfv-9hkp",
+      "name": "State Assembly Districts",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1779984306,
+      "description": "New York State Assembly District boundaries for New York City clipped to the shoreline.\n\nAll previously released versions of this data are available on the <a href=\"https://www.nyc"
+    },
+    {
+      "id": "y4z6-rm3c",
+      "name": "Waterfront Public Access Areas (WPAAs) - Access Points - Map",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1698874075,
+      "description": "Waterfront Public Access Area (WPAA) Access Points are the entrances to the privately owned\nwaterfront zoning lots where publicly accessible open space is provided to and along the"
+    },
+    {
+      "id": "r395-44a8",
+      "name": "Waterfront Public Access Areas (WPAAs) - Footprints - Map",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1698873883,
+      "description": "Waterfront Public Access Area (WPAA) Footprints are the portion of privately owned waterfront\nzoning lots where publicly accessible open space is provided to and along the shorelin"
+    },
+    {
+      "id": "jakx-zd39",
+      "name": "Waterfront Public Access Areas (WPAAs) - Map",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1698867818,
+      "description": "Waterfront Public Access Areas (WPAAs) are privately owned waterfront zoning lots where\npublicly accessible open space is provided to and along the shoreline for public enjoyment, "
+    },
+    {
+      "id": "9y58-8zvz",
+      "name": "Waterfront Public Access Areas (WPAAs) - Access Points",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1698874075,
+      "description": "Waterfront Public Access Area (WPAA) Access Points are the entrances to the privately owned waterfront zoning lots where publicly accessible open space is provided to and along the"
+    },
+    {
+      "id": "bug9-xeqp",
+      "name": "Waterfront Public Access Areas (WPAAs) - Footprints",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1698873883,
+      "description": "Waterfront Public Access Area (WPAA) Footprints are the portion of privately owned waterfront zoning lots where publicly accessible open space is provided to and along the shorelin"
+    },
+    {
+      "id": "388s-pnvc",
+      "name": "Waterfront Public Access Areas (WPAAs)",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1698867818,
+      "description": "Waterfront Public Access Areas (WPAAs) are privately owned waterfront zoning lots where publicly accessible open space is provided to and along the shoreline for public enjoyment, "
+    },
+    {
+      "id": "63ge-mke6",
+      "name": "2020 Census Tracts",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1779824015,
+      "description": "Census Tracts from the 2020 US Census for New York City clipped to the shoreline. These boundary files are derived from the US Census Bureau's TIGER project and have been geographi"
+    },
+    {
+      "id": "wmsu-5muw",
+      "name": "2020 Census Blocks",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1779809830,
+      "description": "Census Blocks from the 2020 US Census for New York City clipped to the shoreline. These boundary files are derived from the US Census Bureau's TIGER project and have been geographi"
+    },
+    {
+      "id": "64uk-42ks",
+      "name": "Primary Land Use Tax Lot Output (PLUTO)",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1787604531,
+      "description": "Extensive land use and geographic data at the tax lot level in comma-separated values (CSV) file format. The PLUTO files contain more than seventy fields derived from data maintain"
+    },
+    {
+      "id": "he6d-2qns",
+      "name": "Land Cover Raster Data (2017) \u2013 6in Resolution",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1544208320,
+      "description": "A 6-in resolution 8-class land cover dataset derived from the 2017 Light Detection and Ranging (LiDAR) data capture. This dataset was developed as part of an updated urban tree can"
+    },
+    {
+      "id": "pawq-tjb4",
+      "name": "Tidally Coordinated Shoreline",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1542834841,
+      "description": "A dataset representing the shorelines of tidally influenced areas of New York City. This dataset is derived from the 2017 Light Detection and Ranging (LiDAR) data capture. In most "
+    },
+    {
+      "id": "ji82-xba5",
+      "name": "Facilities Database",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1784223208,
+      "description": "The Department of City Planning aggregates information about 30,000+ facilities and program sites that are owned, operated, funded, licensed, or certified by a City, State, or Fede"
+    },
+    {
+      "id": "afns-vxeu",
+      "name": "State Senate Districts",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1779826496,
+      "description": "New York State Senate District boundaries for New York City clipped to the shoreline.\n\nAll previously released versions of this data are available on the <a href=\"https://www.nyc.g"
+    },
+    {
+      "id": "wwxk-38u4",
+      "name": "Election Districts",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1779824258,
+      "description": "New York City Board of Elections election district boundaries for New York City clipped to the shoreline.\n\nAll previously released versions of this data are available on the <a hre"
+    },
+    {
+      "id": "59xk-wagz",
+      "name": "NYC Planimetric Database: Shoreline",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1713989156,
+      "description": "Planimetric basemap line layer containing shoreline features. \r\n\r\nPlease see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob"
+    },
+    {
+      "id": "2qj2-cctx",
+      "name": "NYC Planimetric Database: Shoreline",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1713989156,
+      "description": "Planimetric basemap line layer containing shoreline features. Please see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob/mas"
+    },
+    {
+      "id": "f888-ni5f",
+      "name": "Primary Land Use Tax Lot Output - Map (MapPLUTO)",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1374771826,
+      "description": "Extensive land use and geographic data at the tax lot level in GIS format (ESRI Shapefile).  Contains more than seventy fields derived from data maintained by city agencies, merged"
+    }
+  ],
+  "hydrography": [
+    {
+      "id": "8kvz-b7tv",
+      "name": "WaterFeatures_20190417",
+      "publisher": "Department of Parks and Recreation (DPR)",
+      "provenance": "official",
+      "updated": 1556126555,
+      "description": "This dataset captures all water features within NYC Parks. It combines the State\u2019s hydrography layer with known water fountains. Made for cartographic purposes, the attribute data "
+    },
+    {
+      "id": "5v6p-rtfu",
+      "name": "NYC Parks Water Features",
+      "publisher": "Department of Parks and Recreation (DPR)",
+      "provenance": "official",
+      "updated": 1556126555,
+      "description": "This dataset captures all water features within NYC Parks. It combines the State\u2019s hydrography layer with known water fountains. Made for cartographic purposes, the attribute data "
+    },
+    {
+      "id": "he6d-2qns",
+      "name": "Land Cover Raster Data (2017) \u2013 6in Resolution",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1544208320,
+      "description": "A 6-in resolution 8-class land cover dataset derived from the 2017 Light Detection and Ranging (LiDAR) data capture. This dataset was developed as part of an updated urban tree can"
+    },
+    {
+      "id": "6hbv-tek4",
+      "name": "NYC Planimetric Database: Hydrography Structures",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1714073765,
+      "description": "Planimetric basemap layer containing hydrography structures. \r\n\r\nPlease see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob/"
+    },
+    {
+      "id": "53au-zf7x",
+      "name": "NYC Planimetric Database: Hydrography Structures",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1714073765,
+      "description": "Planimetric basemap layer containing hydrography structures.\t\t\t\r\nPlease see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob/"
+    },
+    {
+      "id": "pjs3-c3z5",
+      "name": "NYC Planimetric Database: Hydrography",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1713989305,
+      "description": "Planimetric basemap layer containing hydrography. \r\n\r\nPlease see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob/master/Capt"
+    },
+    {
+      "id": "drh3-e2fd",
+      "name": "NYC Planimetric Database: Hydrography",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1713989305,
+      "description": "Planimetric basemap layer containing hydrography. \r\nPlease see the following link for additional documentation- https://github.com/CityOfNewYork/nyc-planimetrics/blob/master/Captur"
+    }
+  ],
+  "tree canopy": [
+    {
+      "id": "mzcd-fznk",
+      "name": "NYC Climate Budgeting Report: Resiliency Exposure Forecast - Outdoor Heat - Tree Canopy",
+      "publisher": null,
+      "provenance": "official",
+      "updated": 1790705502,
+      "description": "The Resiliency Exposure Forecast for Tree Canopy projects canopy coverage in acres across NYC neighborhoods at decadal intervals (2021, 2030, 2040, 2050, 2055). Projections are bas"
+    },
+    {
+      "id": "95zn-7w5f",
+      "name": "NYC Climate Budgeting Report: Resiliency Exposure Forecast - Outdoor Heat",
+      "publisher": null,
+      "provenance": "official",
+      "updated": 1747767704,
+      "description": "The Resiliency Exposure Forecast for Outdoor Heat serves as an effort to evaluate the scope of planned adaption initiatives and their potential to reduce exposure to increasing tem"
+    },
+    {
+      "id": "by9k-vhck",
+      "name": "Tree Canopy Change (2010 - 2017)",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1544209936,
+      "description": "A 6-in resolution tree canopy change (2010 - 2017) dataset derived from the 2017 Light Detection and Ranging (LiDAR) data capture. This dataset represents a \"top-down\" mapping pers"
+    },
+    {
+      "id": "he6d-2qns",
+      "name": "Land Cover Raster Data (2017) \u2013 6in Resolution",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1544208320,
+      "description": "A 6-in resolution 8-class land cover dataset derived from the 2017 Light Detection and Ranging (LiDAR) data capture. This dataset was developed as part of an updated urban tree can"
+    },
+    {
+      "id": "sknu-4f6s",
+      "name": "Landcover Raster Data (2010) \u2013 6in Resolution",
+      "publisher": "NYC Parks",
+      "provenance": "official",
+      "updated": 1511384207,
+      "description": "6 inch resolution raster image of New York City, classified by landcover type.\r\n\r\nHigh resolution land cover data set for New York City. This is the 6 inch version of the high-reso"
+    },
+    {
+      "id": "hnxz-kkn5",
+      "name": "NYC Urban Tree Canopy Assessment Metrics 2010",
+      "publisher": "Department of Parks and Recreation (DPR)",
+      "provenance": "official",
+      "updated": 1340902677,
+      "description": "Tree Canopy (TC) Assessment metrics for New York City.  This dataset consists of TC metrics summarized to several different sets of geographic base layers. The metrics presented in"
+    },
+    {
+      "id": "9auy-76zt",
+      "name": "Landcover Raster Data (2010) \u2013 3ft Resolution",
+      "publisher": "Department of Parks and Recreation (DPR)",
+      "provenance": "official",
+      "updated": 1340901904,
+      "description": "High resolution land cover data set for New York City.  This is the 3ft version of the high-resolution land cover dataset for New York City. Seven land cover classes were mapped: ("
+    }
+  ],
+  "bus stops": [
+    {
+      "id": "2haw-rqv4",
+      "name": "Real Time Passenger Information Sign Locations (Map)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1772742922,
+      "description": "The Department of Transportation (DOT) replaces standard bus sign poles with Real Time Passenger Information (RTPI) bus signs at numerous locations throughout New York City. The pr"
+    },
+    {
+      "id": "3qgi-jrgw",
+      "name": "Seating Locations (Map)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1791924250,
+      "description": "This dataset identifies the locations of DOT seating features throughout New York City including benches and leaning bars on sidewalks and at bus stops."
+    },
+    {
+      "id": "ipu7-kigb",
+      "name": "ENDGBV in Focus: Outreach Campaigns and Activities, 2018-2019",
+      "publisher": "Mayor's Office to End Domestic and Gender-Based Violence (ENDGBV)",
+      "provenance": "official",
+      "updated": 1667324856,
+      "description": "The data set contains information on outreach activities conducted by staff of the Mayor's Office to End Domestic and Gender-Based Violence (ENDGBV) in calendar year 2018 and 2019."
+    },
+    {
+      "id": "esmy-s8q5",
+      "name": "Seating Locations",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1791924250,
+      "description": "This dataset identifies the locations of DOT seating features throughout New York City including benches and leaning bars on sidewalks and at bus stops."
+    },
+    {
+      "id": "nfid-uabd",
+      "name": "Parking Regulation Locations and Signs",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1792836152,
+      "description": "Department of Transpiration manages approximately 1,000,000 signs on the streets of New York. This dataset contains current and historical parking regulation signs. For all street "
+    },
+    {
+      "id": "qnpk-nwm4",
+      "name": "School Bus Routing Report October_2021_89C_21-996",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1637677739,
+      "description": "Student ride times were reported as defined by the time difference between the scheduled stop time and the school session time. This was reported at the student level as this is a "
+    },
+    {
+      "id": "jbtw-tj3x",
+      "name": "School Bus Report October_2021_21-993",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1637677163,
+      "description": "For the 2020-2021 school year, only students who were enrolled in blended learning were assigned to bus routes. Therefore, students who are routed are assumed to be enrolled in ble"
+    },
+    {
+      "id": "r2j4-rc64",
+      "name": "Pupil Transportation General & Special Education Student Bussing by Vendors & Routes updated 21-993",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1612283838,
+      "description": "Pupil Transportation Pre-school and school-age general & special Education Student Bussing by Vendors & Routes updated 21-993.    Contains total count of students assigned Stop to "
+    },
+    {
+      "id": "dfv3-jzjw",
+      "name": "Pupil Transportation Count of Employees Bus Company - July 1, - December 31, 2021",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1611963633,
+      "description": "Students are reported as those who were planned and routed, but may or may not have used the service provided.  Student stop assignment is done at the school, OPT creates the route"
+    },
+    {
+      "id": "s6qk-qkvb",
+      "name": "School Bus Route Reporting April2020_21_996 - July 1, - December 31, 2019",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1611962655,
+      "description": "Student ride times were reported as defined by the time difference between the scheduled stop time and the school session time. This was reported at the student level as this is a "
+    },
+    {
+      "id": "g9jx-npbk",
+      "name": "Real Time Passenger Information Sign Locations",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1772742922,
+      "description": "The Department of Transportation (DOT) replaces standard bus sign poles with Real Time Passenger Information (RTPI) bus signs at numerous locations throughout New York City. The pr"
+    },
+    {
+      "id": "whjh-s3x7",
+      "name": "City Bench Locations (Map)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1608668427,
+      "description": "CityBench is an initiative to increase the amount of public seating on New York City\u2019s streets. Department of Transportation (DOT) installs attractive and durable benches around th"
+    },
+    {
+      "id": "kuxa-tauh",
+      "name": "City Bench Locations (Historical)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1608668427,
+      "description": "CityBench is an initiative to increase the amount of public seating on New York City\u2019s streets. Department of Transportation (DOT) installs attractive and durable benches around th"
+    },
+    {
+      "id": "7w73-8bcz",
+      "name": "Leaning Bars (Map)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1639084274,
+      "description": "Resting bars for Select Bus Service stops."
+    },
+    {
+      "id": "iaig-3vs5",
+      "name": "Leaning Bars (Historical)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1639084274,
+      "description": "Resting bars for Select Bus Service stops."
+    },
+    {
+      "id": "fg5j-q5nk",
+      "name": "Internet Master Plan: Adoption and Infrastructure Data by Neighborhood",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1615584221,
+      "description": "Key indicators of broadband adoption, service and infrastructure in New York City.</p>\r\n<b>Data Limitations:</b> Data accuracy is limited as of the date of publication and by the m"
+    },
+    {
+      "id": "nmue-7zq2",
+      "name": "Intercity Bus Stop Permits",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1790832611,
+      "description": "Intercity bus operators must obtain a permit from DOT before they can make on-street stops in the city."
+    },
+    {
+      "id": "t4f2-8md7",
+      "name": "Bus Stop Shelters",
+      "publisher": "NYC Department of Transportation",
+      "provenance": "official",
+      "updated": 1790865158,
+      "description": "This dataset contains the location of Bus Stop Shelters."
+    },
+    {
+      "id": "qafz-7myz",
+      "name": "Bus Stop Shelters (Map)",
+      "publisher": "NYC Department of Transportation",
+      "provenance": "official",
+      "updated": 1790865158,
+      "description": "This dataset contains the location of Bus Stop Shelters"
+    },
+    {
+      "id": "hg3c-2jsy",
+      "name": "Transportation Sites",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1790850742,
+      "description": "OPT provides transportation service to many different kinds of locations. Many of these locations are schools but they also include offices or other sites that may be part of certa"
+    },
+    {
+      "id": "8yac-vygm",
+      "name": "Routes",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1790850753,
+      "description": "One of OPT\u2019s main functions is to plan efficient and fiscally responsible school bus routes. OPT staff use a variety of systems to generate and share bus route information with bus"
+    },
+    {
+      "id": "ez4e-fazm",
+      "name": "Bus Breakdown and Delays",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1792837919,
+      "description": "The Bus Breakdown and Delay system collects information from school bus vendors operating out in the field in real time. Bus staff that encounter delays during the route are instru"
+    }
+  ],
+  "street closures": [
+    {
+      "id": "ezy6-djsf",
+      "name": "Street Closures due to Construction Activities by Block and Intersection",
+      "publisher": null,
+      "provenance": "official",
+      "updated": 1792410710,
+      "description": "New York City street closure locations stipulated in the NYC DOT Street Construction Permits. This is subject to a full closure, restricting through traffic, for the purpose of con"
+    },
+    {
+      "id": "sejx-2gn3",
+      "name": "Citywide Public Computer Centers",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1774554753,
+      "description": "List of public facilities offering computers with internet access, according to administrative data collected by the Office of Technology and Innovation."
+    },
+    {
+      "id": "9a6i-gcns",
+      "name": "Street Direction Change Requests (2019 - 2025)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1747923477,
+      "description": "This dataset contains requests for street direction changes within the five boroughs of New York City. It does NOT contain information on closures or temporary re-routing due to co"
+    },
+    {
+      "id": "3kfa-rvez",
+      "name": "NYC Pool Inspections",
+      "publisher": "Department of Health and Mental Hygiene (DOHMH)",
+      "provenance": "official",
+      "updated": 1784124767,
+      "description": "A permit is required to install, operate or construct any indoor or outdoor bathing establishment with a pool in New York City. This permit may also include saunas, steam rooms, or"
+    },
+    {
+      "id": "m6ap-zcwi",
+      "name": "Overhead Electronic Signs (Map)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1764967890,
+      "description": "Electronic Signs are used to display dynamic messages that advise drivers of street closures, delays, severe weather, and other road conditions."
+    },
+    {
+      "id": "as9z-kwsh",
+      "name": "Street Network Changes (Historical)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1748874031,
+      "description": "This dataset contains locations of one-way conversions and reversals, two-way conversions and street closure(s) within the five boroughs of New York City. It does NOT contain infor"
+    },
+    {
+      "id": "a4qt-mpr5",
+      "name": "Parks Closure Status Due to COVID-19: Playgrounds",
+      "publisher": "Department of Parks and Recreation (DPR)",
+      "provenance": "official",
+      "updated": 1712162484,
+      "description": "In response to the COVID-19 pandemic, NYC Parks temporarily closed several amenities, including Playgrounds. This data collection contains the status of each Playground, and is sub"
+    },
+    {
+      "id": "uiay-nctu",
+      "name": "Open Streets Locations",
+      "publisher": "Department of Transportation",
+      "provenance": "official",
+      "updated": 1790849777,
+      "description": "New York City's Open Streets program transforms streets into public spaces open to all. These public spaces allows a variety of activities including education and cultural programm"
+    },
+    {
+      "id": "yhdx-itry",
+      "name": "Overhead Electronic Signs",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1764967890,
+      "description": "Electronic Signs are used to display dynamic messages that advise drivers of street closures, delays, severe weather, and other road conditions."
+    },
+    {
+      "id": "bkfu-528j",
+      "name": "NYC Permitted Event Information - Historical",
+      "publisher": null,
+      "provenance": "official",
+      "updated": 1785262004,
+      "description": "This list contains information on approved event applications from 2008. Please note that Permitted Film Events only reflect those permits which will impact one or more streets for"
+    },
+    {
+      "id": "478a-yykk",
+      "name": "Street Closures due to Construction Activities by Intersection",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1792412346,
+      "description": "DOT Street Closure data identifies locations in the New York City Street Closure map where a street is subject to a full closure, restricting through traffic, for the purpose of co"
+    },
+    {
+      "id": "i6b5-j7bu",
+      "name": "Street Closures due to Construction Activities by Block",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1792412320,
+      "description": "DOT Street Closure data identifies locations in the New York City Street Closure map where a street is subject to a full closure, restricting through traffic, for the purpose of co"
+    },
+    {
+      "id": "43nn-pn8j",
+      "name": "DOHMH New York City Restaurant Inspection Results",
+      "publisher": "Department of Health and Mental Hygiene (DOHMH)",
+      "provenance": "official",
+      "updated": 1792793141,
+      "description": "The dataset contains every sustained or not yet adjudicated violation citation from every full or special program inspection conducted up to three years prior to the most recent in"
+    },
+    {
+      "id": "tvpp-9vvx",
+      "name": "NYC Permitted Event Information",
+      "publisher": "Office of Citywide Event Coordination and Management (CECM)",
+      "provenance": "official",
+      "updated": 1792783218,
+      "description": "This list contains information on approved event applications that will occur within the next month. Please note that Permitted Film Events only reflect those permits which will im"
+    },
+    {
+      "id": "t4s6-khpm",
+      "name": "Special Traffic Updates",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1311988059,
+      "description": "DOT issues traffic alerts, providing the locations of road construction and events where lane and street closings will affect the flow of traffic. http://www.nyc.gov/html/dot/html/"
+    },
+    {
+      "id": "qhen-5rve",
+      "name": "Weekend Traffic Updates",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1311987932,
+      "description": "DOT issues traffic alerts, providing the locations of road construction and events where lane and street closings will affect the flow of traffic. http://www.nyc.gov/html/dot/html/"
+    },
+    {
+      "id": "vihk-m25f",
+      "name": "Weekday Traffic Updates",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1311987795,
+      "description": "DOT issues traffic alerts, providing the locations of road construction and events where lane and street closings will affect the flow of traffic. http://www.nyc.gov/html/dot/html/"
+    }
+  ],
+  "sidewalk sheds": [
+    {
+      "id": "w9ak-ipjd",
+      "name": "DOB NOW: Build \u2013 Job Application Filings",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1792788448,
+      "description": "List of most job filings filed in DOB NOW. This dataset does not include certain types of job.  For Electrical jobs, use https://data.cityofnewyork.us/browse?Data-Collection_Data-C"
+    }
+  ],
+  "public art": [
+    {
+      "id": "am7j-irtt",
+      "name": "Open Data Week Events (2017\u2013Present)",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1790799622,
+      "description": "This dataset lists each Open Data Week event and their accompanying datasets, organizers, and (as available) event recording links.\n\nOpen Data Week is a annual festival celebrating"
+    },
+    {
+      "id": "eg3n-9i5r",
+      "name": "Data Through Design Projects (2018\u2013Present)",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1780519781,
+      "description": "This dataset lists Data Through Design projects and their accompanying datasets. It also lists the people that created each one.\n\nData Through Design (DxD) is an independent art co"
+    },
+    {
+      "id": "npwk-bcm6",
+      "name": "Class Size Report (2006-2007)",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1762452134,
+      "description": "For schools with students in any grades between Kindergarten and 9th grade (where 9th grade is the termination grade for the school), class size is reported by four program areas: "
+    },
+    {
+      "id": "hzd8-k2vv",
+      "name": "Business Improvement District (BID) Trends Report (FY25)",
+      "publisher": "Department of Small Business Services (SBS)",
+      "provenance": "official",
+      "updated": 1790692186,
+      "description": "Business improvement district (BID) program/service output and expense data from FY25."
+    },
+    {
+      "id": "9uqq-k6t8",
+      "name": "English Language Arts (ELA) Test Results 2006-2012",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1712160669,
+      "description": "This report includes results for the New York State English Language Arts (ELA) exams for the years 2006-2012."
+    },
+    {
+      "id": "iebs-5yhr",
+      "name": "English Language Arts (ELA) Test Results 2013-2023",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1712088275,
+      "description": "This report includes results for the New York State English Language Arts exams for the years 2013-2023."
+    },
+    {
+      "id": "388s-pnvc",
+      "name": "Waterfront Public Access Areas (WPAAs)",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1698867818,
+      "description": "Waterfront Public Access Areas (WPAAs) are privately owned waterfront zoning lots where publicly accessible open space is provided to and along the shoreline for public enjoyment, "
+    },
+    {
+      "id": "sejx-2gn3",
+      "name": "Citywide Public Computer Centers",
+      "publisher": "Office of Technology and Innovation (OTI)",
+      "provenance": "official",
+      "updated": 1774554753,
+      "description": "List of public facilities offering computers with internet access, according to administrative data collected by the Office of Technology and Innovation."
+    },
+    {
+      "id": "5zyy-y8am",
+      "name": "NYC Building Energy and Water Data Disclosure for Local Law 84 2023 to Present (Data for Calendar Year 2022-Present)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1764097355,
+      "description": "Local Law 84 of 2009 (LL84) requires annual energy and water benchmarking data to be submitted by owners of buildings with more than 50,000 square feet. This data is collected via "
+    },
+    {
+      "id": "7x5e-2fxh",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2022 (Data for Calendar Year 2021)",
+      "publisher": "Mayor's Office of Climate and Environmental Justice (MOCEJ)",
+      "provenance": "official",
+      "updated": 1666202828,
+      "description": "This data is collected annually via EPA Portfolio Manager.\r\n\r\nThe data collection requires building owners to measure their energy and water consumption and compare it against that"
+    },
+    {
+      "id": "8vk5-fzts",
+      "name": "2020 - 2021 Diversity Report",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1646437080,
+      "description": "Report on Demographic Data in New York City Public Schools, 2020-21Enrollment counts are based on the November 13 Audited Register for 2020.\nCategories with total enrollment values"
+    },
+    {
+      "id": "9h53-fsqa",
+      "name": "2021 Arts Data Report",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1640195189,
+      "description": "The Annual Arts Education Survey collects information on student participation in and access to arts education in schools.\n\nPLEASE NOTE:  THE DATA SET HAS BEEN TRUNCATED TO FACILIT"
+    },
+    {
+      "id": "datr-f3ru",
+      "name": "2019-2020 Arts Report",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1634587995,
+      "description": "Data is based off of STARS scheduling, data is for high school graduates, grade 8, grades 1-6 and additional. All data is available at the school-level only."
+    },
+    {
+      "id": "yr5p-wjer",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2014 (Data for Calendar Year 2013)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632933480,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "nbun-wekj",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2015 (Data for Calendar Year 2014)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632753882,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "77q4-nkfh",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2016 (Data for Calendar Year 2015)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934005,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "utpj-74fz",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2017 (Data for Calendar Year 2016)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934132,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "4t62-jm4m",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2018 (Data for Calendar Year 2017)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934332,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "4tys-3tzj",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2019 (Data for Calendar Year 2018)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934387,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "wcm8-aq5w",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2020 (Data for Calendar Year 2019)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934371,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "usc3-8zwd",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2021 (Data for Calendar Year 2020)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632405832,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "2pg3-gcaa",
+      "name": "Public Design Commission Outdoor Public Art Inventory",
+      "publisher": "Public Design Commission (PDC)",
+      "provenance": "official",
+      "updated": 1788975633,
+      "description": "Inventory of City owned public monument, memorials, artworks and markers installed outside on City-owned property."
+    },
+    {
+      "id": "4n6u-rqyh",
+      "name": "2019-20 Demographic Data In NYC Public Schools Suppressed - Pre-K, K-8 & 9-12 Grades",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1613596380,
+      "description": "Enrollment counts are based on the October 31 Audited Register for 2019 for Pre-K data which includes students in 3-K, K-8 and 9-12 grades. 2019-20 is the first year this report in"
+    },
+    {
+      "id": "njjd-3gve",
+      "name": "2019-2020 Arts Survey Data",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1608327553,
+      "description": "The Annual Arts Education survey collects information on student participation in and access to arts education at NYCDOE schools. \n\nPlease note the following arts-related data are "
+    },
+    {
+      "id": "5cxm-c27f",
+      "name": "2018 - 2019 Arts Data Survey",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1576507712,
+      "description": "The Annual Arts Education survey collects information on student participation in and access to arts education at NYCDOE schools.  \n\nPlease note the following arts-related data are"
+    },
+    {
+      "id": "3r2x-bnmj",
+      "name": "Temporary Art Program",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1791384702,
+      "description": "NYC DOT Art collaborates with community-based organizations to commission artists to design and install temporary art on NYC DOT property."
+    },
+    {
+      "id": "rma9-fm39",
+      "name": "Tourism Grants",
+      "publisher": "Office of the Brooklyn Borough President",
+      "provenance": "official",
+      "updated": 1573673819,
+      "description": "Final list of grantees awarded by NYC & Company Foundation."
+    },
+    {
+      "id": "tybm-5xnx",
+      "name": "2016-2017 Arts Report",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1561735966,
+      "description": "Data is based off of STARS scheduling data for grades 1-6 and additional data for grades 1-5 is self-reported, collected through the Annual Arts Survey. All data is available at th"
+    },
+    {
+      "id": "qeta-4kqg",
+      "name": "Privately Owned Public Spaces (POPS) - Map",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1760459012,
+      "description": "Privately owned public spaces, also known by the acronym POPS, are outdoor and indoor spaces provided for public enjoyment by private owners in exchange for bonus floor area or wai"
+    },
+    {
+      "id": "rvih-nhyn",
+      "name": "Privately Owned Public Spaces (POPS)",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1760459012,
+      "description": "Privately owned public spaces, also known by the acronym POPS, are outdoor  and indoor spaces provided for public enjoyment by private owners in exchange  for bonus floor area or w"
+    }
+  ],
+  "GTFS": [
+    {
+      "id": "b57i-ri22",
+      "name": "Staten Island Ferry Schedule - General Transit Feed Specification (GTFS)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1574456809,
+      "description": "General Transit Feed Specification (GTFS) is a series of text files in a ZIP folder that allows developers to write applications that uses public transportation schedules and assoc"
+    }
+  ],
+  "greenway": [
+    {
+      "id": "mzxg-pwib",
+      "name": "New York City Bike Routes",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1784912466,
+      "description": "The New York City Department of Transportation (NYC DOT) builds and manages bicycle facilities across the five boroughs, alongside other City agencies, New York State, and external"
+    },
+    {
+      "id": "tgzg-ssan",
+      "name": "Uptown Bicycle Counts",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1759419692,
+      "description": "This count reflects cyclists traveling through Manhattan at on 86th Street along the avenues, in Central Park and on the greenways. Note: Data was not collected in years for which "
+    },
+    {
+      "id": "cqsj-cfgu",
+      "name": "Bi-Annual Pedestrian Counts",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1784667526,
+      "description": "An index of pedestrian volumes tracking the long-term trends of neighborhood commercial corridors. Data is collected at 114 locations, including 100 on-street locations (primarily "
+    },
+    {
+      "id": "2de2-6x2h",
+      "name": "Bi-Annual Pedestrian Counts (Map)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1784667526,
+      "description": "An index of pedestrian volumes tracking the long-term trends of neighborhood commercial corridors. Data is collected at 114 locations, including 100 on-street locations (primarily "
+    }
+  ],
+  "traffic volume": [
+    {
+      "id": "8kuj-2n3u",
+      "name": "Exclusive Pedestrian Signal (Barnes Dance) Locations",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1790279354,
+      "description": "Exclusive Pedestrian Signal or Barnes Dance are installed at traffic intersections to allow pedestrian exclusive time to cross the street at all directions while stopping all traff"
+    },
+    {
+      "id": "btm5-ppia",
+      "name": "Traffic Volume Counts (Historical)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1653595208,
+      "description": "This is static historical dataset. New York City Department of Transportation (NYC DOT) uses Automated Traffic Recorders (ATR) to collect traffic sample volume counts at bridge cro"
+    },
+    {
+      "id": "7ym2-wayt",
+      "name": "Automated Traffic Volume Counts",
+      "publisher": null,
+      "provenance": "official",
+      "updated": 1773980461,
+      "description": "New York City Department of Transportation (NYC DOT) uses Automated Traffic Recorders (ATR) to collect traffic sample volume counts at bridge crossings and roadways.These counts do"
+    },
+    {
+      "id": "uebm-cmjr",
+      "name": "Pedestrian Space Added",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1788544980,
+      "description": "Pedestrian space are added between roadways and at sidewalk curbs to increase pedestrian safety as well as traffic calming. The added pedestrian spaces allows accessibility and mob"
+    },
+    {
+      "id": "9n6h-pt9g",
+      "name": "Speed Reducer Tracking System (SRTS)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1792821647,
+      "description": "This dataset contains information regarding placements of speed humps and speed cushions within the five boroughs. \r\n\r\nSpeed humps are traffic calming devices intended to slow traf"
+    },
+    {
+      "id": "96ay-ea4r",
+      "name": "Vehicle Classification Counts (2011 - 2025)",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1777560372,
+      "description": "Vehicle classification counts collected by DOT for New York Metropolitan Transportation Council (NYMTC) to validate the New York Best Practice Model (NYBPM). For NYBPM screenline l"
+    },
+    {
+      "id": "jwvp-gyiq",
+      "name": "DOT Street Lights and Traffic Signals (311 Service Requests from 2010 to Present)",
+      "publisher": "311",
+      "provenance": "official",
+      "updated": 1792805855,
+      "description": "<b>NOTE: This data does not present a full picture of 311 calls or service requests, in part because of operational and system complexities associated with remote call taking neces"
+    }
+  ],
+  "curb ramps": [
+    {
+      "id": "8kic-uvpz",
+      "name": "MBPO Pedestrian Ramp Report",
+      "publisher": "Manhattan Borough President's Office",
+      "provenance": "official",
+      "updated": 1627922746,
+      "description": "A survey of 248 street corner pedestrian ramps near accessible subway stations to determine ADA compliancy."
+    },
+    {
+      "id": "ufzp-rrqu",
+      "name": "Pedestrian Ramp Locations",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1635348390,
+      "description": "Pedestrian ramps provide access on and off streets and sidewalks and are an essential tool for all pedestrians. This data is a comprehensive list of all pedestrian ramps throughout"
+    },
+    {
+      "id": "4y9q-t4wb",
+      "name": "Broadway Curb Cut Survey Data",
+      "publisher": null,
+      "provenance": "official",
+      "updated": 1514321696,
+      "description": ""
+    },
+    {
+      "id": "28rh-vpvr",
+      "name": "Vehicles",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1790850714,
+      "description": "OPT maintains an inventory of all the vehicles used by contracted bus vendors in service to the Department of Education. The vehicles inventory can include school buses, ambulances"
+    },
+    {
+      "id": "8yac-vygm",
+      "name": "Routes",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1790850753,
+      "description": "One of OPT\u2019s main functions is to plan efficient and fiscally responsible school bus routes. OPT staff use a variety of systems to generate and share bus route information with bus"
+    },
+    {
+      "id": "r528-jcks",
+      "name": "Sidewalk Weekly Construction Schedule",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1509544667,
+      "description": "Sidewalk schedule to install, maintain and repair sidewalks, curbs and pedestrian ramps.\nhttps://www.nyc.gov/html/dot/html/motorist/resurfintro.shtml"
+    }
+  ],
+  "museums": [
+    {
+      "id": "5zyy-y8am",
+      "name": "NYC Building Energy and Water Data Disclosure for Local Law 84 2023 to Present (Data for Calendar Year 2022-Present)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1764097355,
+      "description": "Local Law 84 of 2009 (LL84) requires annual energy and water benchmarking data to be submitted by owners of buildings with more than 50,000 square feet. This data is collected via "
+    },
+    {
+      "id": "7x5e-2fxh",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2022 (Data for Calendar Year 2021)",
+      "publisher": "Mayor's Office of Climate and Environmental Justice (MOCEJ)",
+      "provenance": "official",
+      "updated": 1666202828,
+      "description": "This data is collected annually via EPA Portfolio Manager.\r\n\r\nThe data collection requires building owners to measure their energy and water consumption and compare it against that"
+    },
+    {
+      "id": "yr5p-wjer",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2014 (Data for Calendar Year 2013)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632933480,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "nbun-wekj",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2015 (Data for Calendar Year 2014)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632753882,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "77q4-nkfh",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2016 (Data for Calendar Year 2015)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934005,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "utpj-74fz",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2017 (Data for Calendar Year 2016)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934132,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "4t62-jm4m",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2018 (Data for Calendar Year 2017)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934332,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "4tys-3tzj",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2019 (Data for Calendar Year 2018)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934387,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "wcm8-aq5w",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2020 (Data for Calendar Year 2019)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934371,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "usc3-8zwd",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2021 (Data for Calendar Year 2020)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632405832,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "vpeq-ndkd",
+      "name": "9/11 Authorized Bus Parking Permit",
+      "publisher": "Department of Transportation (DOT)",
+      "provenance": "official",
+      "updated": 1785864967,
+      "description": "Parking Permits issued to Motor Coach Tour Bus operators to park in designated metered bus parking spaces below Houston Street from River to River to visit the 9/11 Memorial Museum"
+    },
+    {
+      "id": "ka27-qx5k",
+      "name": "DCLA Cultural Institutions Group Funding",
+      "publisher": "Department of Cultural Affairs (DCLA)",
+      "provenance": "official",
+      "updated": 1771955985,
+      "description": "Operating and energy support funding provided to members of the cultural institution group (CIG)."
+    },
+    {
+      "id": "ez4e-fazm",
+      "name": "Bus Breakdown and Delays",
+      "publisher": "Department of Education (DOE)",
+      "provenance": "official",
+      "updated": 1792837919,
+      "description": "The Bus Breakdown and Delay system collects information from school bus vendors operating out in the field in real time. Bus staff that encounter delays during the route are instru"
+    },
+    {
+      "id": "fn6f-htvy",
+      "name": "MUSEUM",
+      "publisher": "Department of Information Technology & Telecommunications (DoITT)",
+      "provenance": "official",
+      "updated": 1403023071,
+      "description": "Locations of New York City Museums"
+    },
+    {
+      "id": "u35m-9t32",
+      "name": "DCLA Cultural Organizations",
+      "publisher": "Department of Cultural Affairs (DCLA)",
+      "provenance": "official",
+      "updated": 1781120126,
+      "description": "Listing of all DCLA organizations either funded or with direct relation / business dealings"
+    },
+    {
+      "id": "kcrm-j9hh",
+      "name": "Museums and galleries",
+      "publisher": "NYC & Company (NYCGO)",
+      "provenance": "official",
+      "updated": 1311710187,
+      "description": "NYC and Co. museums and galleries"
+    }
+  ],
+  "hotels": [
+    {
+      "id": "br6q-ssj3",
+      "name": "Housing Database Project Level Files",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1790791483,
+      "description": "The NYC Department of City Planning's (DCP) <a href=\"https://www.nyc.gov/site/planning/data-maps/open-data/dwn-housing-database.page#housingdevelopmentproject\">Housing Database</a>"
+    },
+    {
+      "id": "5zyy-y8am",
+      "name": "NYC Building Energy and Water Data Disclosure for Local Law 84 2023 to Present (Data for Calendar Year 2022-Present)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1764097355,
+      "description": "Local Law 84 of 2009 (LL84) requires annual energy and water benchmarking data to be submitted by owners of buildings with more than 50,000 square feet. This data is collected via "
+    },
+    {
+      "id": "48dt-mn3z",
+      "name": "Housing Database by 2020 CDTA",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1790809872,
+      "description": "Net change in housing units arising from new buildings, demolitions, or alterations for NYC Community District Tabulation Areas (CDTAs) since 2010. The NYC Department of City Plann"
+    },
+    {
+      "id": "7x5e-2fxh",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2022 (Data for Calendar Year 2021)",
+      "publisher": "Mayor's Office of Climate and Environmental Justice (MOCEJ)",
+      "provenance": "official",
+      "updated": 1666202828,
+      "description": "This data is collected annually via EPA Portfolio Manager.\r\n\r\nThe data collection requires building owners to measure their energy and water consumption and compare it against that"
+    },
+    {
+      "id": "kswi-37bp",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2011 (Data for Calendar Year 2010)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632933250,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "k7nh-aufb",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2012 (Data for Calendar Year 2011)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632933361,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "r6ub-zhff",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2013 (Data for Calendar Year 2012)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632933434,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "yr5p-wjer",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2014 (Data for Calendar Year 2013)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632933480,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "nbun-wekj",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2015 (Data for Calendar Year 2014)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632753882,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "77q4-nkfh",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2016 (Data for Calendar Year 2015)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934005,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "utpj-74fz",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2017 (Data for Calendar Year 2016)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934132,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "4t62-jm4m",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2018 (Data for Calendar Year 2017)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934332,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "4tys-3tzj",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2019 (Data for Calendar Year 2018)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934387,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "wcm8-aq5w",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2020 (Data for Calendar Year 2019)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632934371,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "usc3-8zwd",
+      "name": "Energy and Water Data Disclosure for Local Law 84 2021 (Data for Calendar Year 2020)",
+      "publisher": "Department of Buildings (DOB)",
+      "provenance": "official",
+      "updated": 1632405832,
+      "description": "Data and metrics on water and energy consumption in privately owned buildings over 25,000 ft2 and in City-owned buildings over 10,000 ft2."
+    },
+    {
+      "id": "3kfa-rvez",
+      "name": "NYC Pool Inspections",
+      "publisher": "Department of Health and Mental Hygiene (DOHMH)",
+      "provenance": "official",
+      "updated": 1784124767,
+      "description": "A permit is required to install, operate or construct any indoor or outdoor bathing establishment with a pool in New York City. This permit may also include saunas, steam rooms, or"
+    },
+    {
+      "id": "6umk-irkx",
+      "name": "Housing Database",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1616112466,
+      "description": "The NYC Department of City Planning\u2019s (DCP) <a href = \"https://www.nyc.gov/site/planning/data-maps/open-data/dwn-housing-database.page#housingdevelopmentproject\">Housing Database</"
+    },
+    {
+      "id": "64uk-42ks",
+      "name": "Primary Land Use Tax Lot Output (PLUTO)",
+      "publisher": "Department of City Planning (DCP)",
+      "provenance": "official",
+      "updated": 1787604531,
+      "description": "Extensive land use and geographic data at the tax lot level in comma-separated values (CSV) file format. The PLUTO files contain more than seventy fields derived from data maintain"
+    },
+    {
+      "id": "tjus-cn27",
+      "name": "Hotels Properties Citywide",
+      "publisher": "Department of Finance (DOF)",
+      "provenance": "official",
+      "updated": 1791914133,
+      "description": "Listing of hotels within the five boroughs."
+    },
+    {
+      "id": "wjvv-6yxq",
+      "name": "HASA Facts",
+      "publisher": "Human Resources Administration (HRA)",
+      "provenance": "official",
+      "updated": 1792595502,
+      "description": "Monthly HIV/AIDS Services Administration Report."
+    },
+    {
+      "id": "veav-vj3r",
+      "name": "Individual Census by Borough, Community District, and Facility Type",
+      "publisher": "Department of Homeless Services (DHS)",
+      "provenance": "official",
+      "updated": 1790948951,
+      "description": "Presents the number of individuals for each shelter facility type by borough and community district"
+    },
+    {
+      "id": "3qem-6v3v",
+      "name": "Buildings by Borough and Community District",
+      "publisher": "Department of Homeless Services (DHS)",
+      "provenance": "official",
+      "updated": 1790948961,
+      "description": "Displays the total number of shelter buildings by borough and community district"
+    },
+    {
+      "id": "mric-ye48",
+      "name": "Annual Tax Effort in NYC since 1929",
+      "publisher": "NYC Independent Budget Office",
+      "provenance": "official",
+      "updated": 1535381683,
+      "description": "Taxes are grouped into six major categories: property, general sales, personal income, business income, real estate-related, and other. We also separate non-exported and exported t"
+    },
+    {
+      "id": "dvaj-b7yx",
+      "name": "Shelter Repair Scorecard",
+      "publisher": "Department of Buildings (DOB), Fire Department of New York City (FDNY), Department of Housing Preservation and Development (HPD), Department of Health and Mental Hygiene (DOHMH)",
+      "provenance": "official",
+      "updated": 1790780802,
+      "description": "A list of all shelter buildings in the DHS system with the number of violations issued to that building."
+    }
+  ]
+}

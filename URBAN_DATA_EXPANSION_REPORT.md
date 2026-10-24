@@ -1,6 +1,6 @@
 # Urban data expansion and spatial pipeline audit
 
-Generated 2026-10-24T19:43:03.867101+00:00. Counts below are computed from indexed source snapshots; the existing full inventory remains in DATA_AUDIT_REPORT.md and data/registry.json.
+Generated 2026-10-24T20:02:07.411667+00:00. Counts below are computed from indexed source snapshots; the existing full inventory remains in DATA_AUDIT_REPORT.md and data/registry.json.
 
 | Dataset | Retained records | Source URL | Routing role |
 |---|---:|---|---|
@@ -8,10 +8,13 @@ Generated 2026-10-24T19:43:03.867101+00:00. Counts below are computed from index
 | NYPD Complaint Data Current (Year To Date) | 277,593 | https://data.cityofnewyork.us/d/5uac-w243 | Independent complaint density: candidate edge costs + exact published-point route corridors + ranking |
 | Forestry Tree Points | 897,619 | https://data.cityofnewyork.us/d/hn5i-inap | Queryable independent tree evidence; existing Nature score remains its versioned tree/park snapshot |
 | NYC Planimetric Database: Hydrography | 2,206 | https://data.cityofnewyork.us/d/pjs3-c3z5 | Independent water-proximity edge costs + length-weighted route metrics + ranking |
-| Waterfront Public Access Areas (WPAAs) | 78 | https://data.cityofnewyork.us/d/388s-pnvc | Context only; no unverified inference of pedestrian access/closure |
-| NYC DOT Pedestrian Plazas - Polygon | 93 | https://data.cityofnewyork.us/d/k5k6-6jex | Context only; no unverified inference of pedestrian access/closure |
-| Street Closures due to Construction Activities by Block and Intersection | 4,157 | https://data.cityofnewyork.us/d/ezy6-djsf | Context only; no unverified inference of pedestrian access/closure |
-| Seating Locations | 5,702 | https://data.cityofnewyork.us/d/esmy-s8q5 | Context only; no unverified inference of pedestrian access/closure |
+| Waterfront Public Access Areas (WPAAs) | 78 | https://data.cityofnewyork.us/d/388s-pnvc | context until explicit geometric linkage is built |
+| NYC DOT Pedestrian Plazas - Polygon | 93 | https://data.cityofnewyork.us/d/k5k6-6jex | context until explicit geometric linkage is built |
+| Street Closures due to Construction Activities by Block and Intersection | 4,157 | https://data.cityofnewyork.us/d/ezy6-djsf | context until explicit geometric linkage is built |
+| Seating Locations | 5,702 | https://data.cityofnewyork.us/d/esmy-s8q5 | context until explicit geometric linkage is built |
+| MTA Subway Stations | 496 | https://data.ny.gov/d/39hk-dx4f | Queryable official transit context; existing Transit Connectivity scoring snapshot unchanged |
+| MTA Subway Entrances and Exits: 2024 | 2,120 | https://data.ny.gov/d/i9wp-a4ja | Queryable official transit context; existing Transit Connectivity scoring snapshot unchanged |
+| MTA Current Bus Stops | 13,735 | https://data.ny.gov/d/ai5j-txmn | Queryable official transit context; existing Transit Connectivity scoring snapshot unchanged |
 
 ## Source quality and exact roles
 
@@ -41,7 +44,7 @@ Two real first-party menu-verifier receipts (Bagel and Cappuccino at the indexed
 
 The official NYC catalog was actively searched for shoreline/hydrography, canopy, bus stops, closures, sidewalk sheds, public art, GTFS, greenways, traffic volume, ramps, museums and hotels. A separate source-discovery receipt records IDs, publishers, update dates and source descriptions. 2015 Street Tree Census was compared with the newer Parks inventory; the newer inventory was selected for current lookup, not mislabelled as measured shade. Building footprints and PLUTO metadata were rechecked; no unverified architectural-style classification is added.
 
-MTA station/entrance metadata on data.ny.gov returned proxy CONNECT 403, not an origin authentication error. Required MTA/NOAA domains and the tested offline Shapely dependency were saved in the cloud environment draft; the draft still requires user publication and does not prove runtime access. Existing MTA and OSM transit snapshots remain working. Live MTA alerts/GTFS integration, full five-borough routing, canopy/solar exposure, live business ratings/room availability, verified current admission prices and proven wheelchair connectivity remain incomplete. These gaps are reported after actual source discovery and ingestion attempts, not used as a substitute for this release.
+MTA station/entrance metadata on data.ny.gov returned proxy CONNECT 403, not an origin authentication error. Required MTA/NOAA domains and the tested offline Shapely dependency were saved in the cloud environment draft; the draft still requires user publication and does not prove runtime access. A normal CI ETL runner then retrieved the complete official MTA station (496), entrance (2,120) and Current Bus Stops (23,218 route-stop rows) datasets. Exact publisher bus IDs/coordinates group these into 13,735 stops with route lists and validity intervals. They now have indexed, bounded map queries and explicit source dates; existing Transit Connectivity score values remain unchanged. Partial historic and ridership samples were excluded from the runtime release. Current station coverage includes all five boroughs; ADA flags are not current elevator status. NOAA/NWS point metadata and 156 hourly forecast periods were also successfully checked; existing Open-Meteo forecasts and NWS alerts remain in place. Live MTA alerts/full GTFS timetable integration, full five-borough routing, canopy/solar exposure, live business ratings/room availability, verified current admission prices and proven wheelchair connectivity remain incomplete. These gaps are reported after actual source discovery and ingestion attempts, not used as a substitute for this release.
 
 ## Performance and production receipts
 

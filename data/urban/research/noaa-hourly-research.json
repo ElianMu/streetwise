@@ -1,0 +1,128 @@
+{
+  "source_url": "https://api.weather.gov/points/40.758,-73.9855",
+  "checked_at": "2026-10-24T19:51:24.357471+00:00",
+  "role": "Official NOAA/NWS source research; existing Open-Meteo forecast not changed",
+  "status": 200,
+  "properties": {
+    "@id": "https://api.weather.gov/points/40.758,-73.9855",
+    "@type": "wx:Point",
+    "cwa": "OKX",
+    "type": "land",
+    "forecastOffice": "https://api.weather.gov/offices/OKX",
+    "gridId": "OKX",
+    "gridX": 34,
+    "gridY": 44,
+    "forecast": "https://api.weather.gov/gridpoints/OKX/34,44/forecast",
+    "forecastHourly": "https://api.weather.gov/gridpoints/OKX/34,44/forecast/hourly",
+    "forecastGridData": "https://api.weather.gov/gridpoints/OKX/34,44",
+    "observationStations": "https://api.weather.gov/gridpoints/OKX/34,44/stations",
+    "relativeLocation": {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -73.9386769,
+          40.6627117
+        ]
+      },
+      "properties": {
+        "city": "New York",
+        "state": "NY",
+        "distance": {
+          "unitCode": "wmoUnit:m",
+          "value": 0
+        },
+        "bearing": {
+          "unitCode": "wmoUnit:degree_(angle)",
+          "value": 0
+        }
+      }
+    },
+    "forecastZone": "https://api.weather.gov/zones/forecast/NYZ072",
+    "county": "https://api.weather.gov/zones/county/NYC061",
+    "fireWeatherZone": "https://api.weather.gov/zones/fire/NYZ212",
+    "timeZone": "America/New_York",
+    "radarStation": "KOKX",
+    "astronomicalData": {
+      "sunrise": "2026-10-24T07:17:23-04:00",
+      "sunset": "2026-10-24T18:02:49-04:00",
+      "transit": "2026-10-24T12:40:06-04:00",
+      "civilTwilightBegin": "2026-10-24T06:49:29-04:00",
+      "civilTwilightEnd": "2026-10-24T18:30:42-04:00",
+      "nauticalTwilightBegin": "2026-10-24T06:17:29-04:00",
+      "nauticalTwilightEnd": "2026-10-24T19:02:43-04:00",
+      "astronomicalTwilightBegin": "2026-10-24T05:45:45-04:00",
+      "astronomicalTwilightEnd": "2026-10-24T19:34:27-04:00"
+    },
+    "nwr": {
+      "transmitter": "KWO35",
+      "sameCode": "036061",
+      "areaBroadcast": "https://api.weather.gov/radio/KWO35/broadcast",
+      "pointBroadcast": "https://api.weather.gov/points/40.758,-73.9855/radio"
+    }
+  },
+  "hourly_research": {
+    "source_url": "https://api.weather.gov/gridpoints/OKX/34,44/forecast/hourly",
+    "checked_at": "2026-10-24T19:51:40.626932+00:00",
+    "http_status": 200,
+    "updated": "2026-10-24T18:23:07+00:00",
+    "generated": "2026-10-24T19:01:03+00:00",
+    "periods": 156,
+    "sample": [
+      {
+        "number": 1,
+        "name": "",
+        "startTime": "2026-10-24T15:00:00-04:00",
+        "endTime": "2026-10-24T16:00:00-04:00",
+        "isDaytime": true,
+        "temperature": 62,
+        "temperatureUnit": "F",
+        "temperatureTrend": null,
+        "probabilityOfPrecipitation": {
+          "unitCode": "wmoUnit:percent",
+          "value": 0
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": 0
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 32
+        },
+        "windSpeed": "2 mph",
+        "windDirection": "W",
+        "icon": "https://api.weather.gov/icons/land/day/few?size=small",
+        "shortForecast": "Sunny",
+        "detailedForecast": ""
+      },
+      {
+        "number": 2,
+        "name": "",
+        "startTime": "2026-10-24T16:00:00-04:00",
+        "endTime": "2026-10-24T17:00:00-04:00",
+        "isDaytime": true,
+        "temperature": 62,
+        "temperatureUnit": "F",
+        "temperatureTrend": null,
+        "probabilityOfPrecipitation": {
+          "unitCode": "wmoUnit:percent",
+          "value": 0
+        },
+        "dewpoint": {
+          "unitCode": "wmoUnit:degC",
+          "value": -0.5555555555555556
+        },
+        "relativeHumidity": {
+          "unitCode": "wmoUnit:percent",
+          "value": 31
+        },
+        "windSpeed": "2 mph",
+        "windDirection": "SW",
+        "icon": "https://api.weather.gov/icons/land/day/few?size=small",
+        "shortForecast": "Sunny",
+        "detailedForecast": ""
+      }
+    ]
+  }
+}

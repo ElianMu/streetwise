@@ -1,5 +1,5 @@
 {
-  "built_at": "2026-10-24T19:43:03.867101+00:00",
+  "built_at": "2026-10-24T20:02:07.411667+00:00",
   "datasets": [
     {
       "dataset_id": "qgea-i56i",
@@ -56,7 +56,10 @@
       },
       "routing_usage": "Independent complaint density: candidate edge costs + exact published-point route corridors + ranking",
       "frontend_usage": "Indexed aggregate density cells; date/offense filters; selected-route corridor",
-      "representation": "SQLite R*Tree + daily 200 m grids; no demographic data"
+      "representation": "SQLite R*Tree + daily 200 m grids; no demographic data",
+      "publisher": "NYPD / NYC Open Data",
+      "license": "NYC Open Data Terms of Use",
+      "license_url": "https://www.nyc.gov/home/terms-of-use.page"
     },
     {
       "dataset_id": "5uac-w243",
@@ -113,7 +116,10 @@
       },
       "routing_usage": "Independent complaint density: candidate edge costs + exact published-point route corridors + ranking",
       "frontend_usage": "Indexed aggregate density cells; date/offense filters; selected-route corridor",
-      "representation": "SQLite R*Tree + daily 200 m grids; no demographic data"
+      "representation": "SQLite R*Tree + daily 200 m grids; no demographic data",
+      "publisher": "NYPD / NYC Open Data",
+      "license": "NYC Open Data Terms of Use",
+      "license_url": "https://www.nyc.gov/home/terms-of-use.page"
     },
     {
       "dataset_id": "hn5i-inap",
@@ -143,11 +149,17 @@
       },
       "routing_usage": "Queryable independent tree evidence; existing Nature score remains its versioned tree/park snapshot",
       "frontend_usage": "Indexed cells at low zoom, source trees at detail zoom; old/new visual sources do not double draw",
-      "representation": "Read-only SQLite R*Tree, 1 MiB page cache per connection"
+      "representation": "Read-only SQLite R*Tree, 1 MiB page cache per connection",
+      "publisher": "NYC Parks",
+      "license": "NYC Open Data Terms of Use",
+      "license_url": "https://www.nyc.gov/home/terms-of-use.page"
     },
     {
       "dataset_id": "pjs3-c3z5",
       "name": "NYC Planimetric Database: Hydrography",
+      "publisher": "NYC Open Data",
+      "license": "NYC Open Data Terms of Use",
+      "license_url": "https://www.nyc.gov/home/terms-of-use.page",
       "source_url": "https://data.cityofnewyork.us/d/pjs3-c3z5",
       "records": 2206,
       "source_rows_in_window": 2206,
@@ -174,6 +186,9 @@
     {
       "dataset_id": "388s-pnvc",
       "name": "Waterfront Public Access Areas (WPAAs)",
+      "publisher": "NYC Open Data",
+      "license": "NYC Open Data Terms of Use",
+      "license_url": "https://www.nyc.gov/home/terms-of-use.page",
       "source_url": "https://data.cityofnewyork.us/d/388s-pnvc",
       "records": 78,
       "source_rows_in_window": 78,
@@ -222,13 +237,16 @@
         "exact_duplicate_records": 0,
         "repeated_legacy_keys": 0
       },
-      "routing_usage": "Context only; no unverified inference of pedestrian access/closure",
+      "routing_usage": "context until explicit geometric linkage is built",
       "frontend_usage": "Indexed viewport/route-corridor query; source inspector + source time",
       "representation": "Published WGS84 geometry; indexed geometry fragments for large water polygons"
     },
     {
       "dataset_id": "k5k6-6jex",
       "name": "NYC DOT Pedestrian Plazas - Polygon",
+      "publisher": "NYC Open Data",
+      "license": "NYC Open Data Terms of Use",
+      "license_url": "https://www.nyc.gov/home/terms-of-use.page",
       "source_url": "https://data.cityofnewyork.us/d/k5k6-6jex",
       "records": 93,
       "source_rows_in_window": 93,
@@ -258,13 +276,16 @@
         "exact_duplicate_records": 0,
         "repeated_legacy_keys": 0
       },
-      "routing_usage": "Context only; no unverified inference of pedestrian access/closure",
+      "routing_usage": "context until explicit geometric linkage is built",
       "frontend_usage": "Indexed viewport/route-corridor query; source inspector + source time",
       "representation": "Published WGS84 geometry; indexed geometry fragments for large water polygons"
     },
     {
       "dataset_id": "ezy6-djsf",
       "name": "Street Closures due to Construction Activities by Block and Intersection",
+      "publisher": "NYC Open Data",
+      "license": "NYC Open Data Terms of Use",
+      "license_url": "https://www.nyc.gov/home/terms-of-use.page",
       "source_url": "https://data.cityofnewyork.us/d/ezy6-djsf",
       "records": 4157,
       "source_rows_in_window": 4157,
@@ -289,13 +310,16 @@
         "exact_duplicate_records": 0,
         "repeated_legacy_keys": 0
       },
-      "routing_usage": "Context only; no unverified inference of pedestrian access/closure",
+      "routing_usage": "context until explicit geometric linkage is built",
       "frontend_usage": "Indexed viewport/route-corridor query; source inspector + source time",
       "representation": "EPSG:2263 to EPSG:4326 for construction WKT; indexed geometry fragments for large water polygons"
     },
     {
       "dataset_id": "esmy-s8q5",
       "name": "Seating Locations",
+      "publisher": "NYC Open Data",
+      "license": "NYC Open Data Terms of Use",
+      "license_url": "https://www.nyc.gov/home/terms-of-use.page",
       "source_url": "https://data.cityofnewyork.us/d/esmy-s8q5",
       "records": 5702,
       "source_rows_in_window": 5702,
@@ -334,9 +358,131 @@
         "exact_duplicate_records": 0,
         "repeated_legacy_keys": 1967
       },
-      "routing_usage": "Context only; no unverified inference of pedestrian access/closure",
+      "routing_usage": "context until explicit geometric linkage is built",
       "frontend_usage": "Indexed viewport/route-corridor query; source inspector + source time",
       "representation": "Published WGS84 geometry; indexed geometry fragments for large water polygons"
+    },
+    {
+      "dataset_id": "39hk-dx4f",
+      "name": "MTA Subway Stations",
+      "publisher": "Metropolitan Transportation Authority / Open Data NY",
+      "license": "Open Data NY Terms of Use",
+      "license_url": "https://data.ny.gov/download/77gx-ii52/application/pdf",
+      "source_url": "https://data.ny.gov/d/39hk-dx4f",
+      "records": 496,
+      "source_rows_in_window": 496,
+      "coverage": "All five NYC boroughs",
+      "time_range": {
+        "source": "complete published snapshot"
+      },
+      "publisher_updated_at": "2026-10-24T04:24:12+00:00",
+      "retrieved_at": "2026-10-24T19:56:38Z",
+      "missing_fields": {
+        "ada": 0.0,
+        "ada_northbound": 0.0,
+        "ada_notes": 0.9838709677419355,
+        "ada_southbound": 0.0,
+        "borough": 0.0,
+        "cbd": 0.0,
+        "complex_id": 0.0,
+        "daytime_routes": 0.0,
+        "division": 0.0,
+        "gtfs_latitude": 0.0,
+        "gtfs_longitude": 0.0,
+        "gtfs_stop_id": 0.0,
+        "line": 0.0,
+        "name": 0.0,
+        "north_direction_label": 0.0,
+        "south_direction_label": 0.0,
+        "station_id": 0.0,
+        "stop_name": 0.0,
+        "structure": 0.0
+      },
+      "quality": {
+        "invalid_geometries": 0,
+        "exact_duplicate_records": 0,
+        "repeated_legacy_keys": 0
+      },
+      "routing_usage": "Queryable official transit context; existing Transit Connectivity scoring snapshot unchanged",
+      "frontend_usage": "Indexed viewport/route-corridor query; source inspector + source time",
+      "representation": "Published WGS84 lat/lon cross-checked with source GeoJSON point; indexed geometry fragments for large water polygons"
+    },
+    {
+      "dataset_id": "i9wp-a4ja",
+      "name": "MTA Subway Entrances and Exits: 2024",
+      "publisher": "Metropolitan Transportation Authority / Open Data NY",
+      "license": "Open Data NY Terms of Use",
+      "license_url": "https://data.ny.gov/download/77gx-ii52/application/pdf",
+      "source_url": "https://data.ny.gov/d/i9wp-a4ja",
+      "records": 2120,
+      "source_rows_in_window": 2120,
+      "coverage": "All five NYC boroughs",
+      "time_range": {
+        "source": "complete published snapshot"
+      },
+      "publisher_updated_at": "2025-12-05T18:36:18+00:00",
+      "retrieved_at": "2026-10-24T19:56:38Z",
+      "missing_fields": {
+        "borough": 0.0,
+        "complex_id": 0.0,
+        "constituent_station_name": 0.0,
+        "daytime_routes": 0.0,
+        "division": 0.0,
+        "entrance_latitude": 0.0,
+        "entrance_longitude": 0.0,
+        "entrance_type": 0.0,
+        "entry_allowed": 0.0,
+        "exit_allowed": 0.0,
+        "gtfs_stop_id": 0.0,
+        "line": 0.0,
+        "name": 0.0,
+        "station_id": 0.0,
+        "stop_name": 0.0
+      },
+      "quality": {
+        "invalid_geometries": 0,
+        "exact_duplicate_records": 0,
+        "repeated_legacy_keys": 0
+      },
+      "routing_usage": "Queryable official transit context; existing Transit Connectivity scoring snapshot unchanged",
+      "frontend_usage": "Indexed viewport/route-corridor query; source inspector + source time",
+      "representation": "Published WGS84 lat/lon cross-checked with source GeoJSON point; indexed geometry fragments for large water polygons"
+    },
+    {
+      "dataset_id": "ai5j-txmn",
+      "name": "MTA Current Bus Stops",
+      "publisher": "Metropolitan Transportation Authority / Open Data NY",
+      "license": "Open Data NY Terms of Use",
+      "license_url": "https://data.ny.gov/download/77gx-ii52/application/pdf",
+      "source_url": "https://data.ny.gov/d/ai5j-txmn",
+      "records": 13735,
+      "source_rows_in_window": 23218,
+      "coverage": "All five NYC boroughs; bus service also extends just beyond the city boundary",
+      "time_range": {
+        "source": "complete published current view; bus route-stop rows grouped by published stop ID + exact coordinates"
+      },
+      "publisher_updated_at": "2026-10-16T20:17:36+00:00",
+      "retrieved_at": "2026-10-24T19:56:38Z",
+      "missing_fields": {
+        "bundle": 0.0,
+        "in_effect": 0.0,
+        "name": 0.0,
+        "route_stop_rows": 0.0,
+        "routes": 0.0,
+        "stop_id": 0.0,
+        "stop_names": 0.0,
+        "valid_from": 0.0,
+        "valid_to": 0.0,
+        "validity_intervals": 0.0
+      },
+      "quality": {
+        "invalid_geometries": 0,
+        "exact_duplicate_records": 0,
+        "repeated_legacy_keys": 0
+      },
+      "routing_usage": "Queryable official transit context; existing Transit Connectivity scoring snapshot unchanged",
+      "frontend_usage": "Indexed viewport/route-corridor query; source inspector + source time",
+      "representation": "Published WGS84 lat/lon cross-checked with source GeoJSON point; indexed geometry fragments for large water polygons"
     }
   ],
   "crime_valid_records": 844984,
@@ -349,7 +495,7 @@
     "UNKNOWN": 2082
   },
   "temporal_quarantine": 4,
-  "total_new_source_records": 1754839,
+  "total_new_source_records": 1771190,
   "notes": [
     "Source-record totals are not globally unique places.",
     "Historical density is not crime rate; no population or exposure denominator.",
