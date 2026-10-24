@@ -7,6 +7,7 @@ its geometry, distance and scores are all derived from that one list.
 """
 import gzip, hashlib, heapq, json, math, os, threading, time, uuid
 from collections import OrderedDict
+from .geometry_store import PackedPolylines, ProjectedPolylines
 
 try:
     from . import weather as wx
@@ -54,7 +55,8 @@ class PedestrianNetwork:
         self.network_version = self.meta['network_version']
         self.score_version = self.score_meta['score_version']
         self.nodes = {int(k): v for k, v in graph['nodes'].items()}
-        self.geoms, self.edges, self.gscores = graph['geoms'], graph['edges'], scores['geoms']
+        self.geoms = PackedPolylines(graph.pop('geoms'))
+        self.edges, self.gscores = graph['edges'], scores['geoms']
         self.adj, self.by_id, self.by_geom = {}, {}, {}
         for i, (u, v, k, gi, rev, length, osmids, tags) in enumerate(self.edges):
             self.adj.setdefault(u, []).append(i)
@@ -62,13 +64,14 @@ class PedestrianNetwork:
             self.by_geom[(gi, rev)] = i
             tags['_steps'] = 'steps' in as_list(tags.get('highway'))
         # Metric polylines and a 100 m bucket index of routable edge geometries (both endpoints in the main component).
-        self.gxy = [[xy(*p) for p in g] for g in self.geoms]
+        self.gxy = ProjectedPolylines(self.geoms, xy)
         self.glen = [sum(math.dist(a, b) for a, b in zip(g, g[1:])) for g in self.gxy]
         self.index = {}
         for i, (u, v, k, gi, rev, *_rest) in enumerate(self.edges):
             if rev or self.nodes[u][3] != 0 or self.nodes[v][3] != 0:
                 continue
-            for a, b in zip(self.gxy[gi], self.gxy[gi][1:]):
+            geom = self.gxy[gi]
+            for a, b in zip(geom, geom[1:]):
                 for bx in range(int(min(a[0], b[0]) // 100), int(max(a[0], b[0]) // 100) + 1):
                     for by in range(int(min(a[1], b[1]) // 100), int(max(a[1], b[1]) // 100) + 1):
                         cell = self.index.setdefault((bx, by), [])

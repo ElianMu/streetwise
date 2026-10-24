@@ -23,6 +23,7 @@ from routing import menu as menu_check
 from routing import providers
 from routing.places import store as place_store
 from routing.recommend import recommend_food
+from routing.capacity import HEAVY_REQUESTS
 from interpretation_contract import RESPONSE_FORMAT, JOURNEY, validate as validate_contract, normalize_wire
 
 ROOT = Path(__file__).resolve().parent
@@ -390,6 +391,8 @@ class Handler(SimpleHTTPRequestHandler):
         self.send_header('Content-Type', 'application/json; charset=utf-8')
         self.send_header('Content-Length', str(len(payload)))
         self.send_header('Cache-Control', 'no-store')
+        if data.get('code') == 'capacity_busy':
+            self.send_header('Retry-After', str(data['retry_after_seconds']))
         self.end_headers()
         self.wfile.write(payload)
 
@@ -438,11 +441,17 @@ class Handler(SimpleHTTPRequestHandler):
                 except OSError:pass
             try:cgroup['events']={k:int(v) for k,v in (line.split() for line in Path('/sys/fs/cgroup/memory.events').read_text().splitlines())}
             except OSError:pass
+            try:
+                stats = dict(line.split() for line in Path('/sys/fs/cgroup/memory.stat').read_text().splitlines())
+                cgroup['composition_bytes'] = {k: int(stats[k]) for k in ('anon','file','kernel','slab_reclaimable') if k in stats}
+            except OSError:pass
             self.send_json(200, {'llm': key_ready, 'model': MODEL if key_ready else None,
+                                 'runtime': {'python': sys.version.split()[0]},
                                  'process_memory':memory,
                                  'process_started_at':PROCESS_STARTED_AT,'uptime_seconds':round(time.time()-PROCESS_STARTED_AT,1),
                                  'cgroup_memory':cgroup,
-                                 'diagnostics':{'route_cache':cache,'crime_query_counters':dict(crime_module.STATS)},
+                                 'diagnostics':{'route_cache':cache,'crime_query_counters':dict(crime_module.STATS), 'capacity': HEAVY_REQUESTS.status(),
+                                                'geometry': {'packed_bytes': loaded.net.geoms.packed_bytes, 'wgs_cache': loaded.net.geoms.cache_status(), 'xy_cache': loaded.net.gxy.cache_status()} if loaded else {}},
                                  'deployment_commit': os.environ.get('RENDER_GIT_COMMIT'),
                                  'interpretation_contract': 'strict-paired-v3-independent',
                                  'features': {'itinerary': True, 'menu_verify': 'official website only (no menu API connected)',
@@ -568,6 +577,19 @@ class Handler(SimpleHTTPRequestHandler):
         if bucket and not rate_ok(self, bucket):
             self.send_json(429, {'error': f'Too many requests; limit {RATE_LIMITS[bucket]} per minute.'})
             return
+        heavy = self.path in ('/api/routes','/api/itinerary','/api/detours','/api/recommend/food','/api/menu/verify','/api/pois')
+        if heavy and not HEAVY_REQUESTS.acquire(timeout=12 if self.path=='/api/routes' else 25):
+            # The body has not been consumed. Close this connection rather than
+            # allowing unread bytes to become another request on a keep-alive socket.
+            self.close_connection = True
+            self.send_json(503, {'error': 'Server is busy; please retry shortly.', 'code': 'capacity_busy', 'retry_after_seconds': 3})
+            return
+        try:
+            return self.post_admitted()
+        finally:
+            if heavy: HEAVY_REQUESTS.release()
+
+    def post_admitted(self):
         if self.path == '/api/itinerary':
             try:
                 doc = read_json(self, 120000)
