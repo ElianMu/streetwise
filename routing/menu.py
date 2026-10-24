@@ -26,39 +26,28 @@ UA = 'STREETWISE-NYC-menu-check/2.0 (+https://elianmu.github.io/streetwise/; one
 MAX_BYTES, TIMEOUT_S, DEADLINE_S, MAX_PAGES = 1_500_000, 6, 20, 3
 CACHE, TTL = {}, 12 * 3600
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLACES_DIR = os.path.join(ROOT, 'data', 'places')
 # Known names and spellings of an item (confirmed); anything else close is only "probable".
 SYNONYMS = {'cappuccino': ['cappuccino', 'capuccino', 'cappucino', 'cappuccini'], 'latte': ['latte', 'caffe latte', 'caffè latte'],
             'espresso': ['espresso'], 'flat white': ['flat white'], 'cortado': ['cortado'], 'macchiato': ['macchiato'],
             'cheesecake': ['cheesecake', 'cheese cake'], 'bagel': ['bagel', 'bagels'], 'croissant': ['croissant', 'croissants'],
             'tiramisu': ['tiramisu', 'tiramisù'], 'matcha': ['matcha'], 'pizza': ['pizza'], 'cannoli': ['cannoli', 'cannolo']}
-_INDEX = None
 
 
 class UnsafeURL(ValueError):
     pass
 
 
-_INDEX_LOCK = __import__('threading').Lock()
+class _Sites:
+    """place id (any merged provider ID or canonical ID) → (website, menu url) from the discovery index — the only sites this
+    service will read. Backed by the shared place store, so the index is held in memory once."""
+    def get(self, key, default=None):
+        from .places import store
+        r = store().raw(key)
+        return (r.get('web'), r.get('menu')) if r and (r.get('web') or r.get('menu')) else default
 
 
 def place_sites():
-    """place id (any merged provider ID or canonical ID) → (website, menu url) from the discovery index — the only sites this
-    service will read. Built completely before it is published, so parallel checks never see a half-built index."""
-    global _INDEX
-    if _INDEX is None:
-        with _INDEX_LOCK:
-            if _INDEX is None:
-                idx = {}
-                for fn in os.listdir(PLACES_DIR) if os.path.isdir(PLACES_DIR) else []:
-                    if fn.endswith('.json') and fn != 'index.json':
-                        for r in json.load(open(os.path.join(PLACES_DIR, fn)))['records']:
-                            if r.get('web') or r.get('menu'):
-                                for key in [r['id'], r.get('cid'), *(r.get('pids') or [])]:
-                                    if key:
-                                        idx.setdefault(key, (r.get('web'), r.get('menu')))
-                _INDEX = idx
-    return _INDEX
+    return _Sites()
 
 
 def _check_host(host):
