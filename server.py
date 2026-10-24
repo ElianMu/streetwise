@@ -23,7 +23,23 @@ from routing import menu as menu_check
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
 MODEL = os.environ.get('OPENAI_MODEL', 'gpt-4o-mini')
-KEY = os.environ.get('OPENAI_API_KEY', '')
+def normalize_openai_api_key(raw):
+    """Remove accidental whitespace at the edges of a pasted environment variable."""
+    return raw.strip()
+
+
+def openai_key_problem(key):
+    """Check HTTP-header safety without logging or exposing the credential."""
+    if not key:
+        return 'not_configured'
+    # HTTP header values cannot contain whitespace, control characters or non-ASCII.
+    # Do not silently alter whitespace inside a credential.
+    if any(not 33 <= ord(char) <= 126 for char in key):
+        return 'invalid_key_format'
+    return None
+
+
+KEY = normalize_openai_api_key(os.environ.get('OPENAI_API_KEY', ''))
 STREETS_DATA = ROOT / 'data' / 'manhattan-streets.json'
 REFRESH_DAYS = float(os.environ.get('STREETWISE_REFRESH_DAYS', '30'))
 GZIP_TYPES = ('.json', '.js', '.css', '.html')
@@ -289,7 +305,8 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/api/status':
-            self.send_json(200, {'llm': bool(KEY), 'model': MODEL if KEY else None,
+            key_ready = openai_key_problem(KEY) is None
+            self.send_json(200, {'llm': key_ready, 'model': MODEL if key_ready else None,
                                  'features': {'itinerary': True, 'menu_verify': 'official website only (no menu API connected)',
                                               'routing_coverage': 'Manhattan OSM pedestrian graph'}})
             return
@@ -458,8 +475,13 @@ def call_llm(payload):
 
 def interpret(doc):
     """POST /api/interpret → (HTTP status, body). Failures carry a safe `reason` and are logged without secrets."""
-    if not KEY:
+    key_problem = openai_key_problem(KEY)
+    if key_problem == 'not_configured':
         return 503, {'error': 'Set OPENAI_API_KEY on the server to use LLM interpretation.', 'reason': {'stage': 'not_configured'}}
+    if key_problem == 'invalid_key_format':
+        reason = {'stage': 'invalid_key_format'}
+        print('interpret failure', json.dumps(reason), flush=True)
+        return 503, {'error': 'OPENAI_API_KEY has invalid formatting on the server.', 'reason': reason}
     if not isinstance(doc, dict):
         return 400, {'error': 'Expected a JSON object'}
     message = doc.get('message', '')
