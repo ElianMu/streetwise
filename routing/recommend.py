@@ -16,7 +16,7 @@ from datetime import datetime, timedelta, timezone
 from . import hours as oh
 from . import menu, providers
 from .engine import WALK_SPEED_M_PER_MIN, RoutingError
-from .places import store
+from .places import store, _metres
 
 EVIDENCE_RANK = {'confirmed_menu_match': 0, 'probable_match_review': 1, 'unverified': 2, 'not_checked': 2, 'not_found_in_checked_sources': 3, None: 2}
 CHECK_LIMIT, WORKERS, DEADLINE_S = 6, 3, 25   # 3 parallel page reads keep memory bounded on the server
@@ -53,6 +53,18 @@ def recommend_food(planner, doc):
     for p in search_points:
         for c in S.search(p, cats, radius_m=int(doc.get('radius_m') or 700), limit=30, cuisine=cuisine):
             found.setdefault(c['place_id'], c)
+    # Dense Midtown can have >30 nearer food businesses. Known actual menu venues
+    # must be considered before that nearest-place cap; expired receipts are hints only.
+    known=set()
+    if item:
+        for pid in menu.candidate_venues(item):
+            c=S.get(pid)
+            if not c or c['category'] not in cats:continue
+            raw=S.raw(pid)
+            if cuisine and cuisine.lower() not in f"{raw.get('cuisine') or ''};{(raw.get('dcuisine') or '').lower()}":continue
+            distance=min(_metres(c['coordinates'],p) for p in search_points)
+            if distance>int(doc.get('radius_m') or 700):continue
+            known.add(c['place_id']);found.setdefault(c['place_id'],{**c,'straight_line_m':round(distance)})
     cands = list(found.values())
     # prefer places whose own tags hint at the item (still not evidence), then nearest
     hint = (item or '').lower()
@@ -60,7 +72,7 @@ def recommend_food(planner, doc):
         r = c.get('restaurant') or {}
         tag = 1 if hint and ((r.get('drink_tags_osm') or {}).get(hint) == 'yes' or ('espresso' in (r.get('drink_tags_osm') or {}) and hint in ('cappuccino', 'latte', 'flat white'))) else 0
         recorded=menu.cached_evidence(c['place_id'],item) if item else None
-        return (-bool(recorded), -tag, -bool(c.get('official_website')), c['straight_line_m'])
+        return (-bool(recorded), -bool(c['place_id'] in known or (c.get('restaurant') or {}).get('menu_url')), -tag, -bool(c.get('official_website')), c['straight_line_m'])
     cands.sort(key=pre)
     cands = cands[:12]
     net = planner.net
@@ -95,7 +107,14 @@ def recommend_food(planner, doc):
     menus = {}
     if item:
         menus={c['place_id']:r for c in cands if (r:=menu.cached_evidence(c['place_id'],item))}
-    to_check = [c for c in cands if c.get('official_website') and c['place_id'] not in menus][:CHECK_LIMIT] if item and (not ratings_required or rating_ready) else []
+    def fresh_eligible(c):
+        m=menus.get(c['place_id']);w=walk.get(c['place_id'])
+        if not m or m.get('status')!='confirmed_menu_match' or not w or c['routing_coverage']!='manhattan_network' or c['quality_status']=='closed':return False
+        if max_detour is not None and w[0]/WALK_SPEED_M_PER_MIN>max_detour:return False
+        eta=departure+timedelta(minutes=w[0]/WALK_SPEED_M_PER_MIN/(2 if len(seq)>=2 else 1))
+        return oh.is_open_at(c.get('opening_hours'),eta) is not False
+    fresh_ready=not ratings_required and max_price is None and any(fresh_eligible(c) for c in cands)
+    to_check = [c for c in cands if (c.get('official_website') or (c.get('restaurant') or {}).get('menu_url')) and c['place_id'] not in menus][:CHECK_LIMIT] if item and not fresh_ready and (not ratings_required or rating_ready) else []
     if to_check:
         with cf.ThreadPoolExecutor(max_workers=WORKERS) as ex:
             futs = {ex.submit(menu.verify, {'place_id': c['place_id'], 'name': c['name'], 'item': item}): c['place_id'] for c in to_check}
@@ -117,7 +136,7 @@ def recommend_food(planner, doc):
         open_eta = oh.is_open_at(c.get('opening_hours'), eta)
         m = menus.get(c['place_id'])
         if item and not m:
-            m = {'status': 'not_checked', 'reason': 'No official website in the checked sources, so no menu could be read.' if not c.get('official_website')
+            m = {'status': 'not_checked', 'reason': 'Fresh source-confirmed matches are available; other venues remain unchecked.' if fresh_ready else 'No official website in the checked sources, so no menu could be read.' if not c.get('official_website')
                  else f'Not checked: only the {CHECK_LIMIT} nearest places with an official website are checked per request.'}
         status = m['status'] if m else None
         excluded = []
@@ -162,7 +181,7 @@ def recommend_food(planner, doc):
     return {'item': item, 'cuisine': cuisine, 'categories': cats, 'departure': departure.astimezone(oh.NY).isoformat(timespec='minutes'),
             'status': 'blocked_by_provider_access' if ratings_required and not rating_ready else 'ok' if any(r['classification'] == 'meets_request' for r in results) else 'no_confirmed_match' if item else 'ok',
             'candidates': results, 'checked_menus': sum(1 for m in menus.values() if m['status'] != 'not_checked'), 'providers_configured': providers.configured(), 'compute_seconds': round(time.time() - t0, 2),
-            'method': 'Hard filters first (DOHMH closure, closed at arrival, detour limit, reachability); then requested-item evidence, '
+            'method': 'Fresh official-menu matches are reused before bounded new website checks; known expired receipts are discovery hints only. Hard filters first (DOHMH closure, closed at arrival, detour limit, reachability); then requested-item evidence, '
                       'walking detour on the network, health-inspection grade as a tie-break. Ratings are shown per provider and not blended.'}
 
 

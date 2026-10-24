@@ -66,6 +66,9 @@ class ContractTests(unittest.TestCase):
         r=server.validate_interpretation({'journey':{'food':[{'category':'restaurants','item':'bagels','required':True},{'category':'cafes','item':'vegan cappuccino','required':True}]}})
         self.assertEqual(r['journey']['food'][0]['item'],'bagel')
         self.assertEqual(r['journey']['food'][1]['item'],'vegan cappuccino')
+        from routing import menu
+        self.assertEqual(menu.match_item('bagels','BAGEL $2')[0],'confirmed')
+        self.assertIsNone(menu.match_item('vegan cappuccino','CAPPUCCINO $5')[0])
     def test_prompt_example_does_not_create_a_hotel_for_preference_only_requests(self):
         for text in ['I want bagels and cappuccino along the route.','Actually, avoid the waterfront and walk away from the river.']:
             with self.subTest(text=text),self.assertRaisesRegex(ValueError,'Hotel bindings require'):
@@ -73,6 +76,11 @@ class ContractTests(unittest.TestCase):
         server.validate_intent_bindings({'journey':{'origin':'hotel','end_mode':'hotel'}},'Start from my hotel and return there.')
         example=server.count_contract_example()['journey']
         self.assertIsNone(example['origin']);self.assertIsNone(example['end_mode'])
+    def test_preference_only_request_cannot_acquire_example_landmark_visits(self):
+        for text in ['I want bagels and cappuccino along the route.','Actually, avoid the waterfront and walk away from the river.']:
+            with self.subTest(text=text),self.assertRaisesRegex(ValueError,'Unrequested interest'):
+                server.validate_intent_bindings({'journey':{'interests':['famous'],'counts':{'famous':2}}},text)
+        server.validate_intent_bindings({'journey':{'interests':['famous'],'counts':{'famous':2}}},'Visit two landmarks during my walk.')
 
     def test_numbered_placeholder_visits_are_not_named_places(self):
         with self.assertRaisesRegex(ValueError, 'Generic numbered'):

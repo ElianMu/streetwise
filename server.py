@@ -716,6 +716,18 @@ def validate_intent_bindings(result, message, history=()):
     counts = j.get('counts') or {}
     if set(counts) - set(j.get('interests', [])):
         raise ValueError('Total visit count keys must belong to interests')
+    # Wire validity does not justify adding visits that the user never requested.
+    interest_terms={
+        'famous':r'landmark|famous|sights?|attractions?|touris|\btour\b|discover|explore|things to see|景点|地标|著名|游览|探索|发现',
+        'museums':r'museums?|galler|\bart\b|博物馆|美术馆|艺术|画廊',
+        'historic':r'architect|historic|history|heritage|landmarks?|old buildings?|brownstone|建筑|历史|古迹|地标',
+        'parks':r'\bparks?\b|gardens?|公园|花园|绿地',
+        'shopping':r'shopp?ing|shops?|retail|markets?|stores?|购物|商店|商场|市场',
+        'culture':r'cultur|theat|broadway|librar|concert|文化|剧院|图书馆|音乐|演出',
+    }
+    for interest in j.get('interests',[]):
+        if interest in interest_terms and not re.search(interest_terms[interest],user_text):
+            raise ValueError('Unrequested interest '+interest+': preference-only requests must not add visits or copy example state')
     total = re.search(r'\b(?:visit|see|explore)\s+(one|two|three|four|five|[1-5])\s+(landmarks?|museums?|parks?)\b', text)
     if total:
         value = int(total[1]) if total[1].isdigit() else ['one','two','three','four','five'].index(total[1])+1
@@ -779,8 +791,6 @@ def interpret(doc):
         'response_format': RESPONSE_FORMAT,
         'messages': [
             {'role': 'system', 'content': SYSTEM},
-            {'role': 'user', 'content': 'Visit two landmarks during my walk.'},
-            {'role': 'assistant', 'content': json.dumps(count_contract_example())},
             {'role': 'user', 'content': 'Current state: '+json.dumps(context, ensure_ascii=False)+'\nRecent conversation: '+json.dumps(history[-8:], ensure_ascii=False)+'\nLatest instruction: '+message}
         ]
     }

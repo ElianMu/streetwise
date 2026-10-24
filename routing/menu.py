@@ -18,14 +18,17 @@ Evidence grades (status):
 A menu listing never confirms today's availability, price or stock.
 """
 import html, http.client, ipaddress, json, os, re, socket, ssl, time, zlib
-import shutil, subprocess
+import shutil, subprocess, threading
+from collections import OrderedDict
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 from urllib import parse, robotparser
 
 UA = 'STREETWISE-NYC-menu-check/2.0 (+https://elianmu.github.io/streetwise/; one request per user action)'
 MAX_BYTES, TIMEOUT_S, DEADLINE_S, MAX_PAGES = 1_500_000, 6, 20, 3
-CACHE, TTL = {}, 12 * 3600
+CACHE, TTL = OrderedDict(), 12 * 3600
+CACHE_LIMIT=256
+_CACHE_LOCK=threading.RLock()
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Known names and spellings of an item (confirmed); anything else close is only "probable".
 SYNONYMS = {'cappuccino': ['cappuccino', 'capuccino', 'cappucino', 'cappuccini'], 'latte': ['latte', 'caffe latte', 'caffè latte'],
@@ -214,7 +217,7 @@ def _lev1(a, b):
 
 def match_item(item, text):
     """(grade, matched text, snippet, price) where grade is 'confirmed', 'probable' or None."""
-    words = SYNONYMS.get(item.lower(), [item.lower()])
+    words = SYNONYMS.get(canonical_item(item), [item.lower()])
     for w in words:
         m = re.search(r'(?i)(?<![\w-])' + re.escape(w) + r'(?![\w-])', text)
         if m:
@@ -296,9 +299,34 @@ def _identity(pid):
     return place['place_id'] if place else pid
 
 
+def _cached(key):
+    with _CACHE_LOCK:
+        entry=CACHE.get(key)
+        if entry:CACHE.move_to_end(key)
+        return entry
+
+def _remember(key,entry):
+    with _CACHE_LOCK:
+        CACHE[key]=entry;CACHE.move_to_end(key)
+        for k,(checked,result) in list(CACHE.items()):
+            if time.time()-checked >= (TTL if result.get('status')=='confirmed_menu_match' else 300):CACHE.pop(k,None)
+        while len(CACHE)>CACHE_LIMIT:CACHE.popitem(last=False)
+
+def candidate_venues(item):
+    """Known menu locations are discovery hints, including expired receipts; they are never success evidence by themselves."""
+    item=canonical_item(item);ids=set()
+    with _CACHE_LOCK:
+        for (pid,food),(checked,result) in list(CACHE.items()):
+            if canonical_item(food)==item and result.get('status')=='confirmed_menu_match':ids.add(pid)
+    path=os.path.join(ROOT,'data','menus','verified-items.json')
+    if os.path.exists(path):
+        with open(path) as f:rows=json.load(f).get('records',[])
+        ids.update(r['place_id'] for r in rows if canonical_item(r.get('item'))==item and r.get('place_id'))
+    return ids
+
 def cached_evidence(pid, item):
     item=canonical_item(item)
-    entry = CACHE.get((_identity(pid), item.lower()))
+    entry = _cached((_identity(pid), item.lower()))
     if entry and entry[1].get('status')=='confirmed_menu_match' and 0 <= time.time()-entry[0] < TTL:
         return entry[1]
     # Small offline-checked evidence corpus avoids repeated page crawls. Expiry and official-host checks still apply.
@@ -311,7 +339,7 @@ def cached_evidence(pid, item):
             except (ValueError,KeyError):continue
             site,_=place_sites().get(pid,(None,None))
             if 0<=age<TTL and r.get('status')=='confirmed_menu_match' and site and parse.urlsplit(site).hostname==parse.urlsplit(r.get('source_url') or '').hostname:
-                CACHE[(_identity(pid),item.lower())]=(time.time()-age,r)
+                _remember((_identity(pid),item.lower()),(time.time()-age,r))
                 return r
     return None
 
@@ -337,11 +365,12 @@ def verify(doc, now=None):
         menu_url = u
     if not site and not menu_url:
         return menu_profile({**base, 'status': 'unverified', 'reason': 'No official website is recorded for this place in the checked sources (OpenStreetMap).'})
-    key = (_identity(pid), item.lower())
+    key = (_identity(pid), canonical_item(item))
     recorded=cached_evidence(pid,item)
     if recorded:return {**recorded,'cached':True}
-    if key in CACHE and time.time() - CACHE[key][0] < (TTL if CACHE[key][1].get('status')=='confirmed_menu_match' else 300):
-        return {**CACHE[key][1], 'cached': True}
+    entry=_cached(key)
+    if entry and 0<=time.time()-entry[0]<(TTL if entry[1].get('status')=='confirmed_menu_match' else 300):
+        return {**entry[1], 'cached': True}
     queue = ([(menu_url, True)] if menu_url else []) + ([(site, False)] if site else [])
     seen, start, reasons, pages = set(), time.monotonic(), [], []
     while queue and len(seen) < MAX_PAGES:
@@ -431,5 +460,5 @@ def verify(doc, now=None):
                            reason='Dated menu evidence is stale or future-dated; current item availability and price are unverified.')
         except ValueError: pass
     out = menu_profile(out)
-    CACHE[key] = (time.time(), out)
+    _remember(key,(time.time(),out))
     return out

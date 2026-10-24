@@ -68,10 +68,10 @@ def completion(content):
 
 
 class InterpretFailures(unittest.TestCase):
-    def run_with(self, effect):
+    def run_with(self, effect, message=None):
         log = io.StringIO()
         with mock.patch.object(server, 'KEY', FAKE_KEY), mock.patch.object(server.request, 'urlopen', **({'side_effect': effect} if isinstance(effect, BaseException) else {'return_value': effect})), contextlib.redirect_stdout(log):
-            status, body = server.interpret(dict(DOC))
+            status, body = server.interpret({'message':message} if message is not None else dict(DOC))
         text = json.dumps(body) + log.getvalue()
         self.assertNotIn(FAKE_KEY, text, 'the key never leaks')
         self.assertNotIn('SECRET', text)
@@ -169,7 +169,7 @@ class InterpretFailures(unittest.TestCase):
         result = {'weights': {'Scenic & Visual': 90, 'Architecture': 85, 'Nature': 85},
                   'journey': {'interests': ['parks'], 'food': [
                       {'category': 'cafes', 'item': 'coffee', 'required': True}]}}
-        status, body, _ = self.run_with(completion(result))
+        status, body, _ = self.run_with(completion(result), message='I want a scenic walk with architecture, parks, and good coffee.')
         self.assertEqual(status, 200)
         self.assertEqual(body['journey']['food'][0]['item'], 'coffee')
         self.assertEqual(body['journey']['interests'], ['parks'])
