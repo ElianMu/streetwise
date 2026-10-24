@@ -2,14 +2,14 @@
 NYPD locations and occurrence dates are source approximations; neither density nor
 absence of reports predicts current individual victimization risk.
 """
-import array,math,threading,time
+import array,hashlib,json,math,threading,time
 from collections import Counter,OrderedDict
 from datetime import date
 from .urban_store import connection,manifest
 
 MX=111320*math.cos(math.radians(40.78));MY=110540
 CORRIDOR_M=100;GRID_M=200
-_cache=OrderedDict();_lock=threading.Lock();STATS={'edge_cache_hits':0,'edge_cache_misses':0,'sql_queries':0}
+_cache=OrderedDict();_corridor_cache=OrderedDict();_lock=threading.Lock();_field_build_lock=threading.Lock();_corridor_build_lock=threading.Lock();STATS={'edge_cache_hits':0,'edge_cache_misses':0,'sql_queries':0}
 
 def metadata():return manifest('crime')
 
@@ -55,6 +55,10 @@ def _pt_seg(p,a,b):
     return math.hypot(p[0]-a[0]-t*ux,p[1]-a[1]-t*uy)
 
 def edge_field(net,p):
+    # One build per key at a time: concurrent cold requests must not repeat the offline-field query.
+    with _field_build_lock:return _edge_field(net,p)
+
+def _edge_field(net,p):
     """200 m daily grids → mean density in nine neighbouring cells at edge samples every 50 m.
     This 600 m neighbourhood is a candidate-search heuristic; final routes use 100 m
     exact published-point corridors and one common normalization scale.
@@ -92,21 +96,43 @@ def fit(density,direction,scale):
     return value if direction=='high' else 1-value
 
 def corridor(coords,p,distance_m):
+    key=(metadata()['sha256'],p['from'],p['to'],tuple(p['offense_codes']),tuple(p['law_categories']),distance_m,hashlib.sha256(json.dumps(coords,separators=(',',':')).encode()).digest())
+    with _corridor_build_lock:
+        with _lock:
+            if key in _corridor_cache:
+                STATS['corridor_cache_hits']=STATS.get('corridor_cache_hits',0)+1;_corridor_cache.move_to_end(key);return {**_corridor_cache[key],'cache_hit':True,'query_seconds':0.0}
+        result=_measure_corridor(coords,p,distance_m)
+        with _lock:
+            _corridor_cache[key]=result
+            while len(_corridor_cache)>64:_corridor_cache.popitem(last=False)
+        return {**result,'cache_hit':False}
+
+def _measure_corridor(coords,p,distance_m):
     t=time.perf_counter();line=[(c[0]*MX,c[1]*MY) for c in coords];index={};size=128
     for a,b in zip(line,line[1:]):
         for x in range(math.floor((min(a[0],b[0])-CORRIDOR_M)/size),math.floor((max(a[0],b[0])+CORRIDOR_M)/size)+1):
             for y in range(math.floor((min(a[1],b[1])-CORRIDOR_M)/size),math.floor((max(a[1],b[1])+CORRIDOR_M)/size)+1):index.setdefault((x,y),[]).append((a,b))
     bounds=[min(c[0] for c in line)-CORRIDOR_M,max(c[0] for c in line)+CORRIDOR_M,min(c[1] for c in line)-CORRIDOR_M,max(c[1] for c in line)+CORRIDOR_M]
     where,args=_where(p,'i.');counts=Counter();law=Counter();samples=[];count=0;examined=0
+    # Read only occupied corridor cells from physically clustered rows. Broad R*Tree
+    # boxes previously caused random primary-key reads across a 200 MB table on Render.
+    cells=set()
+    for a,b in zip(line,line[1:]):
+        for x in range(math.floor((min(a[0],b[0])-CORRIDOR_M)/GRID_M),math.floor((max(a[0],b[0])+CORRIDOR_M)/GRID_M)+1):
+            for y in range(math.floor((min(a[1],b[1])-CORRIDOR_M)/GRID_M),math.floor((max(a[1],b[1])+CORRIDOR_M)/GRID_M)+1):cells.add((x,y))
+    ordered=sorted(cells);queries=0
     with connection('crime') as db:
-        cursor=db.execute('SELECT i.id,i.offense,i.law,i.x,i.y FROM incident_rtree r CROSS JOIN incidents i ON i.id=r.id WHERE r.min_x<=? AND r.max_x>=? AND r.min_y<=? AND r.max_y>=? AND '+where,[bounds[1]+1,bounds[0]-1,bounds[3]+1,bounds[2]-1]+args)
-        for pid,offense,kind,x,y in cursor:
-            examined+=1
-            parts=index.get((math.floor(x/size),math.floor(y/size)),())
-            if parts and min(_pt_seg((x,y),a,b) for a,b in parts)<=CORRIDOR_M:
-                count+=1;counts[str(offense)]+=1;law[kind]+=1
-                if len(samples)<8:samples.append(str(pid))
-    with _lock:STATS['sql_queries']+=1
+        for offset in range(0,len(ordered),200):
+            chunk=ordered[offset:offset+200]
+            sql='WITH cells(gx,gy) AS (VALUES '+','.join('(?,?)' for _ in chunk)+') SELECT i.id,i.offense,i.law,i.x,i.y FROM cells c CROSS JOIN corridor_points i WHERE i.gx=c.gx AND i.gy=c.gy AND '+where
+            cursor=db.execute(sql,[v for cell in chunk for v in cell]+args);queries+=1
+            for pid,offense,kind,x,y in cursor:
+                examined+=1
+                parts=index.get((math.floor(x/size),math.floor(y/size)),())
+                if parts and min(_pt_seg((x,y),a,b) for a,b in parts)<=CORRIDOR_M:
+                    count+=1;counts[str(offense)]+=1;law[kind]+=1
+                    if len(samples)<8:samples.append(str(pid))
+    with _lock:STATS['sql_queries']+=queries
     km=distance_m/1000;linear=count/km if km else None
     # Nominal strip area, not an exact union of the buffered polyline; loops/endcaps differ.
     nominal_area=km*2*CORRIDOR_M/1000
@@ -136,9 +162,10 @@ def map_cells(bounds,p,zoom=13,limit=1800):
     b=(bounds[0]*MX,bounds[1]*MY,bounds[2]*MX,bounds[3]*MY);where,args=_where(p)
     with connection('crime') as db:
         # Server-side aggregate; historical incidents never become a giant browser GeoJSON.
-        rows=list(db.execute('SELECT CAST(floor(i.x/?) AS INTEGER) gx,CAST(floor(i.y/?) AS INTEGER) gy,count(*) n FROM incident_rtree r CROSS JOIN incidents i ON i.id=r.id WHERE r.min_x<=? AND r.max_x>=? AND r.min_y<=? AND r.max_y>=? AND '+where+' GROUP BY gx,gy ORDER BY n DESC LIMIT ?', [size,size,b[2]+1,b[0]-1,b[3]+1,b[1]-1]+args+[limit+1]))
+        factor=size/GRID_M
+        rows=list(db.execute('SELECT CAST(floor(gx/?) AS INTEGER),CAST(floor(gy/?) AS INTEGER),sum(n) FROM grid_daily WHERE gx BETWEEN ? AND ? AND gy BETWEEN ? AND ? AND '+where+' GROUP BY 1,2 ORDER BY 3 DESC LIMIT ?', [factor,factor,math.floor(b[0]/size)*factor,(math.floor(b[2]/size)+1)*factor-1,math.floor(b[1]/size)*factor,(math.floor(b[3]/size)+1)*factor-1]+args+[limit+1]))
     clipped=len(rows)>limit;features=[]
     for x,y,n in rows[:limit]:
         west,south,east,north=x*size/MX,y*size/MY,(x+1)*size/MX,(y+1)*size/MY
         features.append({'type':'Feature','id':str(x)+'_'+str(y),'properties':{'feature_id':str(x)+'_'+str(y),'count':n,'density_per_km2':round(n/(size/1000)**2,2),'cell_m':size,'from':p['from'],'to_exclusive':p['to'],'source':'NYPD reported complaints','approximate_locations':True},'geometry':{'type':'Polygon','coordinates':[[[west,south],[east,south],[east,north],[west,north],[west,south]]]}})
-    return {'type':'FeatureCollection','features':features,'metadata':{'truncated':clipped,'max_cells':limit,'cell_m':size,'from':p['from'],'to_exclusive':p['to'],'offense_codes':p['offense_codes'],'law_categories':p['law_categories'],'snapshot':metadata()['sha256'],'note':'Aggregated approximate reported locations; not current personal risk. Zoom in if cells are truncated.'}}
+    return {'type':'FeatureCollection','features':features,'metadata':{'truncated':clipped,'max_cells':limit,'cell_m':size,'from':p['from'],'to_exclusive':p['to'],'offense_codes':p['offense_codes'],'law_categories':p['law_categories'],'snapshot':metadata()['sha256'],'note':'Whole aggregate cells intersecting the query box, not partial-cell counts; approximate reported locations, not current personal risk. Zoom in if cells are truncated.'}}

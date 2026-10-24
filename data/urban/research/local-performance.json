@@ -1,0 +1,145 @@
+{
+  "scope": "Local cloud machine, fresh Python process per run. OS and extracted-database caches were not cleared. No claim about Render baseline memory. Same-request baseline versus compact result plus separate expanded workload.",
+  "runs": {
+    "before": {
+      "label": "before",
+      "commit": "843a24d910509b1aafab1ed630f9be3a749f1818",
+      "python": "3.12.14",
+      "memory": {
+        "VmHWM": "421604 kB",
+        "VmRSS": "421604 kB"
+      },
+      "first_route_s": 2.188627522002207,
+      "warm_route_s": [
+        0.02089596500445623,
+        0.01738702399597969,
+        0.01723813099670224,
+        0.018999081999936607,
+        0.01977817399892956
+      ],
+      "warm_median_s": 0.018999081999936607,
+      "concurrent_4_s": [
+        0.01950095299980603,
+        0.05153278299985686,
+        0.06248723599856021,
+        0.04744391400163295
+      ],
+      "concurrent_wall_s": 0.06629513199732173,
+      "routes": 4,
+      "shipped_data_bytes": 661099010,
+      "scope": "Fresh local server and process /proc memory; not Render memory. No paid services called."
+    },
+    "after": {
+      "label": "after",
+      "commit": "843a24d910509b1aafab1ed630f9be3a749f1818",
+      "python": "3.12.14",
+      "memory": {
+        "VmHWM": "389668 kB",
+        "VmRSS": "389668 kB"
+      },
+      "first_route_s": 2.3313727129934705,
+      "warm_route_s": [
+        0.021043729997472838,
+        0.01843212500534719,
+        0.019048044996452518,
+        0.01699700499739265,
+        0.017196729000716005
+      ],
+      "warm_median_s": 0.01843212500534719,
+      "concurrent_4_s": [
+        0.042537984998489264,
+        0.03560215999459615,
+        0.06284532500285422,
+        0.07594835799682187
+      ],
+      "concurrent_wall_s": 0.0809262869952363,
+      "routes": 4,
+      "shipped_data_bytes": 787972395,
+      "scope": "Fresh local server and process /proc memory; not Render memory. No paid services called."
+    },
+    "extended": {
+      "label": "extended",
+      "commit": "843a24d910509b1aafab1ed630f9be3a749f1818",
+      "python": "3.12.14",
+      "memory": {
+        "VmHWM": "414560 kB",
+        "VmRSS": "414560 kB"
+      },
+      "first_route_s": 1.7688345140049933,
+      "warm_route_s": [
+        0.019466381992970128,
+        0.025764032994629815,
+        0.02026325299812015,
+        0.01801885100576328,
+        0.01762298899848247
+      ],
+      "warm_median_s": 0.019466381992970128,
+      "concurrent_4_s": [
+        0.027427282999269664,
+        0.05730226799641969,
+        0.07362998300231993,
+        0.07556139200460166
+      ],
+      "concurrent_wall_s": 0.08069184299529297,
+      "routes": 4,
+      "shipped_data_bytes": 788403452,
+      "extended": {
+        "first_crime_s": 2.2906797819960047,
+        "warm_crime_s": [
+          1.0895487329980824,
+          1.1055747339996742,
+          1.118464185994526
+        ],
+        "concurrent_crime_4_s": [
+          10.567052931000944,
+          12.186727856002108,
+          12.338982476998353,
+          11.556207667003036
+        ],
+        "/api/urban/trees?bbox=-73.97,40.66,-73.93,40.70&zoom=17": 0.03884518799895886,
+        "/api/urban/context?category=hydrography&bbox=-74.3,40.45,-73.68,40.95": 0.12355088500044076,
+        "/api/segments/MN-3": 0.009415127999091055,
+        "status": {
+          "llm": false,
+          "model": null,
+          "process_memory": {
+            "VmHWM_kib": 414564,
+            "VmRSS_kib": 414564
+          },
+          "diagnostics": {
+            "route_cache": {
+              "full_routes": 32,
+              "full_serialized_bytes": 5635250,
+              "navigation_routes": 80,
+              "navigation_serialized_bytes": 739764
+            },
+            "crime_query_counters": {
+              "edge_cache_hits": 7,
+              "edge_cache_misses": 1,
+              "sql_queries": 41
+            }
+          },
+          "deployment_commit": null,
+          "interpretation_contract": "strict-paired-v3-independent",
+          "features": {
+            "itinerary": true,
+            "menu_verify": "official website only (no menu API connected)",
+            "routing_coverage": "Manhattan OSM pedestrian graph",
+            "place_search": "Manhattan discovery + NYC DOHMH food permits + NYC Parks and public restrooms (citywide discovery; new unsnapped points are search only)",
+            "food_recommendations": true,
+            "menu_ocr_available": true,
+            "citywide_official_discovery": true
+          },
+          "providers": {
+            "google_places": false,
+            "yelp_fusion": false,
+            "foursquare": false,
+            "booking_demand": false,
+            "expedia_rapid": false
+          }
+        }
+      },
+      "scope": "Fresh local server and process /proc memory; not Render memory. No paid services called."
+    }
+  }
+}

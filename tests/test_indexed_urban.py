@@ -18,6 +18,7 @@ class IndexedUrban(unittest.TestCase):
    self.assertEqual(db.execute('select count(*) from incidents').fetchone()[0],m['records'])
    self.assertEqual(db.execute('select count(*) from incident_rtree').fetchone()[0],m['records'])
    self.assertEqual(db.execute('select count(distinct id) from incidents').fetchone()[0],m['records'])
+   self.assertEqual(db.execute('select count(*) from corridor_points').fetchone()[0],m['records'])
  def test_crime_dates_types_and_direction_are_strict(self):
   for bad in [{'direction':'safe'},{'direction':'high','from':'1800-01-01'},{'direction':'high','offense_codes':[99999]},{'direction':'low','weight':float('nan')},{'direction':'high','offense_types':[None]},{'direction':'high','offense_types':'ROBBERY'},{'direction':'high','offense_codes':{}},{'direction':'high','from':'20250101'}]:
    with self.subTest(bad=bad),self.assertRaises(ValueError):crime.validate(bad)
@@ -60,6 +61,17 @@ class IndexedUrban(unittest.TestCase):
   for cat in ['construction','hydrography','seating']:
    fc=urban_query.context(cat,[-74.03,40.70,-73.94,40.80]);self.assertTrue(fc['features'])
    self.assertTrue(all(f['properties'].get('source_url','').startswith('https://data.cityofnewyork.us') for f in fc['features']))
+ def test_official_mta_index_groups_bus_relationships_without_losing_routes(self):
+  m=manifest('context');bus=next(s for s in m['sources'] if s['id']=='mta_bus_stops')
+  self.assertGreater(bus['source_rows'],bus['records']);self.assertEqual(bus['coordinate_conflict_stop_ids'],0)
+  with connection('context') as db:
+   records=[json.loads(r[0]) for r in db.execute("SELECT properties FROM features WHERE category='mta_bus_stops'")]
+  self.assertEqual(sum(r['route_stop_rows'] for r in records),bus['source_rows'])
+  self.assertEqual(len(records),len({r['stop_id'] for r in records}))
+  self.assertTrue(all(r['routes'] and r['validity_intervals'] for r in records))
+  for lon,lat in [(-73.985,40.755),(-73.98,40.68),(-73.87,40.75),(-73.89,40.85),(-74.08,40.64)]:
+   fc=urban_query.context('mta_bus_stops',[lon-.015,lat-.015,lon+.015,lat+.015]);self.assertTrue(fc['features'])
+   self.assertTrue(all(f['properties']['source_url'].startswith('https://data.ny.gov') for f in fc['features']))
  def test_segment_inspector_uses_identical_indexed_source(self):
   with gzip.open(ROOT/'data/pedestrian/segment-evidence.json.gz','rt') as f:small=json.load(f)
   sid=next(iter(small['records']));s=server.street_segment(sid)
@@ -75,6 +87,12 @@ class IndexedUrban(unittest.TestCase):
   p=crime.validate({'direction':'high','offense_types':['ROBBERY']});fc=crime.map_cells([-74.01,40.74,-73.97,40.77],p,15)
   self.assertTrue(fc['features']);self.assertTrue(all(f['geometry']['type']=='Polygon' and f['properties']['count']>0 for f in fc['features']))
   self.assertLessEqual(len(fc['features']),1800)
+  small=crime.map_cells([-73.98501,40.755,-73.985,40.75501],p,13)
+  for f in small['features']:
+   gx,gy=map(int,f['id'].split('_'));where,args=crime._where(p)
+   with connection('crime') as db:
+    actual=db.execute('SELECT count(*) FROM incidents WHERE x>=? AND x<? AND y>=? AND y<? AND '+where,[gx*400,(gx+1)*400,gy*400,(gy+1)*400]+args).fetchone()[0]
+   self.assertEqual(f['properties']['count'],actual,'Map counts cover the complete parent cell even when the viewport cuts through a child cell')
 
 class FoodEvidence(unittest.TestCase):
  def test_all_required_items_need_source_evidence(self):

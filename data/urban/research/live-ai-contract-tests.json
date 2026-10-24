@@ -1,0 +1,249 @@
+{
+  "deployment_commit": "58a8dde152ba76530b844585d119cb315fdbd677",
+  "scope": "Actual production OpenAI requests before alias patch; not mocked, not post-patch acceptance",
+  "checks": [
+    {
+      "observed_at": "2026-10-24T20:12:59.946970+00:00",
+      "input": "I want a scenic walk with architecture, parks, and good coffee.",
+      "http_status": 200,
+      "seconds": 3.7329,
+      "data": {
+        "weights": {
+          "Scenic & Visual": 90,
+          "Architecture": 85,
+          "Nature": 85,
+          "Food & Retail": 90
+        },
+        "directions": {
+          "Scenic & Visual": "high",
+          "Architecture": "high",
+          "Nature": "high",
+          "Food & Retail": "high"
+        },
+        "crime": null,
+        "waterfront": null,
+        "time_minutes": null,
+        "time_delta_minutes": null,
+        "max_detour_percent": null,
+        "constraints": {},
+        "clarification": null,
+        "weather": null,
+        "journey": {
+          "interests": [
+            "parks"
+          ],
+          "services": [],
+          "named_stops": [],
+          "food": [
+            {
+              "category": "cafes",
+              "item": "coffee",
+              "cuisine": null,
+              "required": true
+            }
+          ],
+          "service_scope": null,
+          "hotel": null,
+          "origin": null,
+          "destination": null,
+          "end_mode": null,
+          "walking_minutes": null,
+          "outing_minutes": null,
+          "distance_km": null,
+          "more": {},
+          "remove": [],
+          "requirements": null,
+          "counts": {}
+        }
+      },
+      "cors": null
+    },
+    {
+      "observed_at": "2026-10-24T20:13:01.587860+00:00",
+      "input": "Find me a quiet walking route with more trees and fewer busy streets.",
+      "http_status": 200,
+      "seconds": 1.6405,
+      "data": {
+        "weights": {
+          "Quiet & Relax": 90,
+          "Nature": 90,
+          "Urban Vibrancy": 90
+        },
+        "directions": {
+          "Quiet & Relax": "high",
+          "Nature": "high",
+          "Urban Vibrancy": "low"
+        },
+        "crime": null,
+        "waterfront": null,
+        "time_minutes": null,
+        "time_delta_minutes": null,
+        "max_detour_percent": null,
+        "constraints": {},
+        "clarification": null,
+        "weather": null,
+        "journey": null
+      },
+      "cors": null
+    },
+    {
+      "observed_at": "2026-10-24T20:13:05.007437+00:00",
+      "input": "I want the shortest walking route with historic landmarks.",
+      "http_status": 200,
+      "seconds": 3.419,
+      "data": {
+        "weights": {
+          "Architecture": 90,
+          "Culture": 90
+        },
+        "directions": {
+          "Architecture": "high",
+          "Culture": "high"
+        },
+        "crime": null,
+        "waterfront": null,
+        "time_minutes": null,
+        "time_delta_minutes": null,
+        "max_detour_percent": 0,
+        "constraints": {
+          "avoidDetours": true
+        },
+        "clarification": null,
+        "weather": null,
+        "journey": {
+          "interests": [
+            "historic"
+          ],
+          "services": [],
+          "named_stops": [],
+          "food": [],
+          "service_scope": null,
+          "hotel": null,
+          "origin": null,
+          "destination": null,
+          "end_mode": null,
+          "walking_minutes": null,
+          "outing_minutes": null,
+          "distance_km": null,
+          "more": {},
+          "remove": [],
+          "requirements": null,
+          "counts": {}
+        }
+      },
+      "cors": null
+    },
+    {
+      "observed_at": "2026-10-24T20:13:08.312835+00:00",
+      "input": "Recommend a waterfront walk with restaurants and cultural attractions.",
+      "http_status": 200,
+      "seconds": 3.305,
+      "data": {
+        "weights": {
+          "Scenic & Visual": 90,
+          "Culture": 85,
+          "Food & Retail": 85
+        },
+        "directions": {
+          "Scenic & Visual": "high",
+          "Culture": "high",
+          "Food & Retail": "high"
+        },
+        "crime": null,
+        "waterfront": {
+          "mode": "set",
+          "direction": "high",
+          "weight": 90
+        },
+        "time_minutes": null,
+        "time_delta_minutes": null,
+        "max_detour_percent": null,
+        "constraints": {},
+        "clarification": null,
+        "weather": null,
+        "journey": {
+          "interests": [
+            "culture"
+          ],
+          "services": [],
+          "named_stops": [],
+          "food": [
+            {
+              "category": "restaurants",
+              "item": null,
+              "cuisine": null,
+              "required": true
+            }
+          ],
+          "service_scope": null,
+          "hotel": null,
+          "origin": null,
+          "destination": null,
+          "end_mode": null,
+          "walking_minutes": null,
+          "outing_minutes": null,
+          "distance_km": null,
+          "more": {},
+          "remove": [],
+          "requirements": null,
+          "counts": {}
+        }
+      },
+      "cors": null
+    },
+    {
+      "observed_at": "2026-10-24T20:13:11.229437+00:00",
+      "input": "I want bagels and cappuccino along the route.",
+      "http_status": 200,
+      "seconds": 2.9161,
+      "data": {
+        "weights": {
+          "Food & Retail": 90
+        },
+        "directions": {
+          "Food & Retail": "high"
+        },
+        "crime": null,
+        "waterfront": null,
+        "time_minutes": null,
+        "time_delta_minutes": null,
+        "max_detour_percent": null,
+        "constraints": {},
+        "clarification": null,
+        "weather": null,
+        "journey": {
+          "interests": [],
+          "services": [],
+          "named_stops": [],
+          "food": [
+            {
+              "category": "cafes",
+              "item": "cappuccino",
+              "cuisine": null,
+              "required": true
+            },
+            {
+              "category": "restaurants",
+              "item": "bagels",
+              "cuisine": null,
+              "required": true
+            }
+          ],
+          "service_scope": null,
+          "hotel": null,
+          "origin": "hotel",
+          "destination": null,
+          "end_mode": "hotel",
+          "walking_minutes": null,
+          "outing_minutes": null,
+          "distance_km": null,
+          "more": {},
+          "remove": [],
+          "requirements": null,
+          "counts": {}
+        }
+      },
+      "cors": null
+    }
+  ]
+}

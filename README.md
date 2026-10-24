@@ -36,11 +36,11 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 
 ## Navigate: Urban Data Layers / 路线周边城市数据
 
-- 地图左下角 **Urban Data Layers**（默认收起）按**真实数据集**分为 10 类（街道与步行设施、自然、建筑、历史文化、餐饮商业、交通安全、环境、公共交通、公共服务、滨水与公共空间），不是按 12 个体验维度。首次打开时所有已接入数据集（59 个）**默认全部开启**；提供 All on / All off、类别开关（部分开启时为半选状态）、单个数据集开关、搜索、透明度和计数。未接入的标为 Not connected · available / Not connected · no dataset，并说明原因。
+- 地图左下角 **Urban Data Layers**（默认收起）按**真实数据集**分为 10 类（街道与步行设施、自然、建筑、历史文化、餐饮商业、交通安全、环境、公共交通、公共服务、滨水与公共空间），不是按 12 个体验维度。原有 59 个静态数据集默认开启；新增索引数据按用途设置默认值（犯罪密度在请求该目标时自动开启），并按缩放级别聚合；提供 All on / All off、类别开关（部分开启时为半选状态）、单个数据集开关、搜索、透明度和计数。未接入的标为 Not connected · available / Not connected · no dataset，并说明原因。
 - 每个数据集的状态互相区分：Loaded · N within 100 m / No nearby features / Loading / Error / Zoom in to load；失败不会显示为 0。还没有规划路线时，数据按**当前地图视野**显示，规划路线后自动切换为路线两侧。全岛视野下只加载稀疏数据集（公园、地标、车站等），密集数据集（树木、建筑、人行道等）提示放大后加载；瓦片请求最多 12 个并发。
 - 范围：**Along selected route**（所选路线两侧 50/100/200/500 m，仅影响显示，不改变评分）或 **Current map view**。切换路线时保留已开启的图层并重新筛选。
 - 点击数据要素打开 Urban Feature Inspector（真实字段、缺失为 Not Available、来源、时间范围、更新日期、与路线的距离；事故/投诉标注为历史记录）。点击路线路段打开 Street Segment Evidence（OSM Edge ID、LION 路段或 Unmatched、附近数据的数量/密度/最近距离/覆盖率，以及现有评分指标）。右侧 **Route Urban Data** 汇总路线周边的真实要素数量，点击即在地图上显示。
-- 图层是静态文件（`data/layers/catalog.json` + 1 km 瓦片），GitHub Pages 可直接读取，不占用后端内存。重建：`python3 scripts/build_urban_layers.py`（需要 OSMnx/pyproj，约 3 分钟）。
+- 原有图层是静态文件（`data/layers/catalog.json` + 1 km 瓦片），GitHub Pages 可直接读取；新增城市级图层由后端索引按视野查询，限制记录数与响应大小。重建：`python3 scripts/build_urban_layers.py`（需要 OSMnx/pyproj，约 3 分钟）。
 - 步行时间：默认 60 分钟，滑块 10–60，自定义更大值时滑块自动扩展；该值原样作为路线引擎的硬约束。
 
 ## Cartographic design system / 地图设计系统
@@ -82,7 +82,7 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 | 全纽约地点搜索（起点、终点、酒店、添加站点共用） | Implemented | `places.js`：Photon（OpenStreetMap POI）+ NYC GeoSearch（NYC Planning 官方地址/场所，五大区），输入 2 个字符起查询，300 ms 防抖，可取消请求，旧请求不会覆盖新结果，键盘/鼠标/触摸，加载/无结果/错误状态，显示 GPS 直线距离（标明为直线），选中后绑定来源 ID 和坐标；手动改名即清除坐标。Mapbox Search Box（/suggest + /retrieve）已接好，仅在配置公开 token 后启用（Blocked：未配置）。 |
 | 道路交叉口搜索 | Partial | 两个免费服务对 “5 Av & 42 St” 这类交叉口支持有限；可用地图点选（附反向地理编码）。 |
 | 地点发现（景点、博物馆、历史建筑、公园、购物、餐饮、酒店、药店、超市、医院、ATM/银行、公共卫生间、行李寄存） | Implemented（仅 Manhattan） | `data/places/`（`scripts/build_place_index.py`）：OpenStreetMap Overpass 快照 + NYC LPC 地标 + NYC 公共卫生间开放数据，只收录离步行路网 150 m 内的地点（共 13,300+ 条），每条有来源 ID、名称、类别、地址、坐标、网站、营业时间、来源和数据时间。“著名程度”使用 Wikidata 条目的维基百科语言版本数（帝国大厦 125），而不是名称相似度。行李寄存在 OSM 中只有 1 条，这是数据缺口。 |
-| 自然语言理解 | Partial | 配置 LLM Key 后，`/api/interpret` 输出结构化 `journey`（兴趣、指定地点、餐饮/菜品、服务、酒店、起终点、步行时间、总时长、距离），未知字段为 null，模型不得输出坐标、菜单或价格。线上 Render 当前**没有配置 LLM Key**，因此使用明确标注的“Limited local interpretation”中英文解析器（规范中的多轮语句均已测试）。 |
+| 自然语言理解 | Partial | 配置 LLM Key 后，`/api/interpret` 输出结构化 `journey`（兴趣、指定地点、餐饮/菜品、服务、酒店、起终点、步行时间、总时长、距离），未知字段为 null，模型不得输出坐标、菜单或价格。线上是否启用以 `/api/status` 为准；真实 AI 失败或未配置时使用明确标注的 Limited Local Preview。 |
 | 多轮对话状态 | Implemented | 每轮合并而不清空：起点、酒店、站点、餐饮、终点方式、时间和距离都会保留；“再加一个博物馆”、“延长到 180 分钟”只改对应项。 |
 | 多站点路线规划 | Implemented | `/api/itinerary`（`routing/itinerary.py`）：地点吸附到 OSM 步行路网 → 真实路网距离矩阵（每个地点一次 Dijkstra） → 必经点 ≤ 7 个时精确枚举顺序与候选，否则最便宜插入 + 2-opt（**标注为启发式，不保证最优**） → 可选站点按“价值/新增分钟”贪心插入，且不超出预算 → 每段用体验加权代价路由并拼接成一条连续路线。必经点不会被静默删除，超出预算时返回“不可行”和原因。支持往返、回酒店、指定终点、开放终点和用户指定顺序。 |
 | 步行与停留时间 | Implemented | 默认最大步行时间 100 分钟（快捷 60/100/120/150/自定义）；最大步行距离默认不设（2/5/8/10 km/自定义，km/mi 切换）；可选总时长 = 步行 + 停留。停留时间为估计值，明确标注且可修改。“我有两个小时”= 总时长 120 分钟。 |
@@ -171,3 +171,18 @@ JSDOM_PATH=/tmp/streetwise-test/node_modules/jsdom node tests/dom.test.cjs
 ```
 
 Browser scripts require Playwright and a supported Chromium installation. `CHROME_PATH` may specify its executable. The cartographic redesign was checked visually in a real browser (MapLibre/WebGL, 1440×900 and 375×812): route/street/city/detail zoom, height, age and land-use building themes, Current map view in dense Midtown, clicks on data points and route segments, Explore round trip. Real hardware GPS and touch gestures on a physical phone were not tested. DOM tests do not prove rendered map interactions.
+
+
+## Indexed NYC evidence / 城市级索引数据
+
+本次扩容的来源、实际记录数、字段缺失率、时间范围与“用于选路 / 仅供地图背景”角色分别见 [城市数据清单](URBAN_DATA_INVENTORY.csv)、[扩容审计报告](URBAN_DATA_EXPANSION_REPORT.md) 和 `data/urban/inventory.json`。完整已有清单仍在 `data/registry.json`，总记录数不能视为去重后的商家数。
+
+- NYPD 历史及 Current YTD 投诉：独立的 Historical Reported Complaint Density 目标，支持高/低偏好、日期（结束日期不含当天）与事件类型。不是犯罪发生率或实时个人风险；不改变 Access & Safety 的交通安全定义。
+- 官方水体边界：真实路网边的水体邻近比例参与候选生成与排序；“改为避开河边”会替换偏好并重算。包含湖泊和海岸水体，不代表可见水景或已核验的公共入口。
+- 当前 Forestry Full-structure 树木库存：五区索引查询和地图聚合，原始条件可能为 Dead / Unknown，不能当作实测树冠遮荫。现有 Nature 数值与 12 维定义保持原版本；修正了把 Full 误写为 Living 的指标文案。
+- 水岸公共空间、步行广场、施工许可与座椅：真实空间背景。施工许可的有效日期不证明全时段封路，也不自动判定人行道不可走。
+- 多项菜品可由一家有独立菜单证据的真实店铺满足；所有要求分别核验并显示来源。12 小时后的缓存证据需要重新核验。
+
+运行服务仍只需 Python 标准库。大量数据在离线 ETL 中写成压缩 SQLite 与空间索引，服务器只进行有界查询；路线及导航缓存也有大小上限。离线重建需 `pyproj==3.7.2` 和 `shapely==2.1.2`，步骤见 `.github/workflows/indexed-urban-refresh.yml`，生成审核用 artifact 后再发布，不会自动覆盖生产数据。衍生的街段证据需在基础评分文件重建后运行 `scripts/build_segment_evidence.py`；水体边特征需在路网或水体源改变后运行 `scripts/build_waterfront_features.py`。
+
+五区数据查询与五区路线覆盖是两回事：现有已验证的步行路网仍覆盖 Manhattan。其他区路线、实测遮荫、实时商业价格/库存和完整无障碍连通性尚未实现。本次不把这些能力报告为完成。

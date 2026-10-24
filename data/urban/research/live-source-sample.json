@@ -1,0 +1,228 @@
+{
+  "checked_at": "2026-10-24T19:55:38.208360+00:00",
+  "sampling": "seed 4217; random row offsets from sorted indexed IDs; small sample, not exhaustive independent field surveying",
+  "datasets": [
+    {
+      "source": "qgea-i56i",
+      "query_url": "https://data.cityofnewyork.us/resource/qgea-i56i.json?%24where=cmplnt_num+in+%28%27311493067%27%2C%27307249627%27%2C%27303961194%27%2C%27310332742%27%2C%27314499670%27%2C%27309673349%27%29&%24select=cmplnt_num%2Clongitude%2Clatitude%2Ccmplnt_fr_dt%2Cky_cd",
+      "sample_size": 6,
+      "checks": [
+        {
+          "source_id": "311493067",
+          "coordinates": [
+            -73.821385,
+            40.752716
+          ],
+          "date": "2025-08-18",
+          "offense_code": 121,
+          "matches_live_source": true
+        },
+        {
+          "source_id": "307249627",
+          "coordinates": [
+            -73.941274,
+            40.836636
+          ],
+          "date": "2025-05-29",
+          "offense_code": 106,
+          "matches_live_source": true
+        },
+        {
+          "source_id": "303961194",
+          "coordinates": [
+            -73.989181,
+            40.76318
+          ],
+          "date": "2025-04-01",
+          "offense_code": 351,
+          "matches_live_source": true
+        },
+        {
+          "source_id": "310332742",
+          "coordinates": [
+            -73.995144,
+            40.57417
+          ],
+          "date": "2025-07-27",
+          "offense_code": 126,
+          "matches_live_source": true
+        },
+        {
+          "source_id": "314499670",
+          "coordinates": [
+            -73.862174,
+            40.750795
+          ],
+          "date": "2025-10-15",
+          "offense_code": 359,
+          "matches_live_source": true
+        },
+        {
+          "source_id": "309673349",
+          "coordinates": [
+            -73.752727,
+            40.606132
+          ],
+          "date": "2025-07-13",
+          "offense_code": 578,
+          "matches_live_source": true
+        }
+      ]
+    },
+    {
+      "source": "5uac-w243",
+      "query_url": "https://data.cityofnewyork.us/resource/5uac-w243.json?%24where=cmplnt_num+in+%28%27322468882%27%2C%27324319865%27%2C%27325100618%27%2C%27325312058%27%2C%27320355871%27%2C%27325849954%27%29&%24select=cmplnt_num%2Clongitude%2Clatitude%2Ccmplnt_fr_dt%2Cky_cd",
+      "sample_size": 6,
+      "checks": [
+        {
+          "source_id": "322468882",
+          "coordinates": [
+            -73.9945368920152,
+            40.7535327012632
+          ],
+          "date": "2026-03-26",
+          "offense_code": 233,
+          "matches_live_source": true
+        },
+        {
+          "source_id": "324319865",
+          "coordinates": [
+            -73.947003,
+            40.837543
+          ],
+          "date": "2026-04-29",
+          "offense_code": 351,
+          "matches_live_source": true
+        },
+        {
+          "source_id": "325100618",
+          "coordinates": [
+            -73.87004,
+            40.71912
+          ],
+          "date": "2026-05-11",
+          "offense_code": 340,
+          "matches_live_source": true
+        },
+        {
+          "source_id": "325312058",
+          "coordinates": [
+            -73.919074,
+            40.631778
+          ],
+          "date": "2026-05-19",
+          "offense_code": 106,
+          "matches_live_source": true
+        },
+        {
+          "source_id": "320355871",
+          "coordinates": [
+            -73.98990393,
+            40.73443438
+          ],
+          "date": "2026-02-13",
+          "offense_code": 343,
+          "matches_live_source": true
+        },
+        {
+          "source_id": "325849954",
+          "coordinates": [
+            -73.873998,
+            40.666639
+          ],
+          "date": "2026-05-30",
+          "offense_code": 342,
+          "matches_live_source": true
+        }
+      ]
+    },
+    {
+      "source": "hn5i-inap",
+      "query_url": "https://data.cityofnewyork.us/resource/hn5i-inap.json?%24where=objectid+in+%282934537%2C4694386%2C5588600%2C3733555%2C5022246%2C5019601%2C5139817%2C1420343%29&%24select=objectid%2Clocation%2Cgenusspecies%2Ctpcondition",
+      "sample_size": 8,
+      "checks": [
+        {
+          "source_id": "2934537",
+          "coordinates": [
+            -74.16696572223503,
+            40.52787844215868
+          ],
+          "species": "Acer platanoides - Norway maple",
+          "condition": "Fair",
+          "matches_live_source": true
+        },
+        {
+          "source_id": "4694386",
+          "coordinates": [
+            -73.845665723164,
+            40.661877573177954
+          ],
+          "species": "Zelkova serrata - Japanese zelkova",
+          "condition": "Fair",
+          "matches_live_source": true
+        },
+        {
+          "source_id": "5588600",
+          "coordinates": [
+            -73.9209958044409,
+            40.792746538057784
+          ],
+          "species": "Quercus bicolor - swamp white oak",
+          "condition": "Good",
+          "matches_live_source": true
+        },
+        {
+          "source_id": "3733555",
+          "coordinates": [
+            -73.93870743751363,
+            40.63958913083248
+          ],
+          "species": "Prunus serrulata 'Green leaf' - 'Green leaf' Japanese flowering cherry",
+          "condition": "Fair",
+          "matches_live_source": true
+        },
+        {
+          "source_id": "5022246",
+          "coordinates": [
+            -74.13431544664304,
+            40.61931203001241
+          ],
+          "species": "Liriodendron tulipifera - tuliptree",
+          "condition": "Good",
+          "matches_live_source": true
+        },
+        {
+          "source_id": "5019601",
+          "coordinates": [
+            -73.92840936166093,
+            40.679952397062344
+          ],
+          "species": "Gleditsia triacanthos var. inermis - Thornless honeylocust",
+          "condition": "Good",
+          "matches_live_source": true
+        },
+        {
+          "source_id": "5139817",
+          "coordinates": [
+            -73.92370815259582,
+            40.78299886827342
+          ],
+          "species": "Unknown - Unknown",
+          "condition": "Fair",
+          "matches_live_source": true
+        },
+        {
+          "source_id": "1420343",
+          "coordinates": [
+            -73.99864271417054,
+            40.7445374783361
+          ],
+          "species": "Zelkova serrata - Japanese zelkova",
+          "condition": "Fair",
+          "matches_live_source": true
+        }
+      ]
+    }
+  ],
+  "status": "PASS"
+}

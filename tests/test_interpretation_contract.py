@@ -62,6 +62,10 @@ class ContractTests(unittest.TestCase):
         r = server.validate_interpretation({'weights': {'Nature': 90}})
         self.assertEqual(r['directions'], {'Nature': 'high'})
         self.assertIsNone(r['journey'])
+    def test_known_food_plurals_use_menu_identity_without_erasing_modifiers(self):
+        r=server.validate_interpretation({'journey':{'food':[{'category':'restaurants','item':'bagels','required':True},{'category':'cafes','item':'vegan cappuccino','required':True}]}})
+        self.assertEqual(r['journey']['food'][0]['item'],'bagel')
+        self.assertEqual(r['journey']['food'][1]['item'],'vegan cappuccino')
 
     def test_numbered_placeholder_visits_are_not_named_places(self):
         with self.assertRaisesRegex(ValueError, 'Generic numbered'):

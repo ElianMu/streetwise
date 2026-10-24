@@ -329,7 +329,7 @@ async function itineraryRequest(){
  }
  for(const f of journey.food){
   if(journey.requirements.restaurant_budget_usd!=null&&!f.item)throw new Error('Restaurant budget cannot be verified without a specific item and directly sourced price.');
-  const cats=f.item==='cheesecake'?['bakeries','restaurants']:f.item==='bagel'?['bakeries','cafes','restaurants']:[f.category];
+  const cats=f.item==='cheesecake'?['bakeries','restaurants']:/^bagels?$/i.test(f.item||'')?['bakeries','cafes','restaurants']:[f.category];
   const filt=f.cuisine?(r=>new RegExp(`(^|;)${f.cuisine}(;|$)`,'i').test(r.cuisine||'')):f.category==='cafes'&&f.item?(r=>r.cat==='cafes'):null;
   const id='food:'+f.category+':'+(f.item||f.cuisine||'');const fixed=journey.replaced[id];
   // a requested item: server-side recommendation (menu evidence first, closed / unreachable excluded); local discovery otherwise or as fallback
@@ -415,7 +415,7 @@ async function recommendFood(f,cats,start,end){
  try{
   const searchAnchor=journey.requirements.search_anchor?await findNamedPlace(journey.requirements.search_anchor):null;
   const r=await streetwiseFetch('/api/recommend/food',{method:'POST',headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(65000),
-   body:JSON.stringify({search_near:searchAnchor?pick(searchAnchor):null,item:f.item,cuisine:f.cuisine||null,categories:cats,sequence:[start,end].filter(Boolean).map(pick),radius_m:1000,max_detour_min:15,departure:new Date().toISOString(),ratings_required:journey.requirements.ratings_required,minimum_rating:journey.requirements.minimum_rating,max_item_price_usd:journey.requirements.restaurant_budget_usd})});
+   body:JSON.stringify({search_near:searchAnchor?pick(searchAnchor):null,item:f.item,cuisine:f.cuisine||null,categories:cats,sequence:[start,end].filter(Boolean).map(pick),radius_m:1000,departure:new Date().toISOString(),ratings_required:journey.requirements.ratings_required,minimum_rating:journey.requirements.minimum_rating,max_item_price_usd:journey.requirements.restaurant_budget_usd})});
   const d=await r.json();if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);
   if(d.status==='blocked_by_provider_access')appendChat('assistant','Requested review evidence is unavailable: no rating provider is configured. No candidate will be called highly rated.');
   const keep=d.candidates.filter(c=>c.classification==='meets_request').slice(0,6);

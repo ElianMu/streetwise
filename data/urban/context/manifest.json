@@ -217,18 +217,170 @@
       "exact_duplicate_records": 0,
       "repeated_original_keys": 1967,
       "source_record_identity": "derived SHA-256 of exact source attributes and geometry; original publisher keys retained as attributes, not treated as unique entities"
+    },
+    {
+      "id": "mta_stations",
+      "dataset_id": "39hk-dx4f",
+      "name": "MTA Subway Stations",
+      "source_url": "https://data.ny.gov/d/39hk-dx4f",
+      "publisher": "Metropolitan Transportation Authority / Open Data NY",
+      "license": "Open Data NY Terms of Use",
+      "license_url": "https://data.ny.gov/download/77gx-ii52/application/pdf",
+      "publisher_updated_at": "2026-10-24T04:24:12+00:00",
+      "retrieved_at": "2026-10-24T19:56:38Z",
+      "source_rows": 496,
+      "records": 496,
+      "invalid_geometries": 0,
+      "exact_duplicate_source_rows": 0,
+      "coordinate_conflict_stop_ids": 0,
+      "coverage": "All five NYC boroughs",
+      "query_scope": {
+        "source": "complete published snapshot"
+      },
+      "crs_transform": "Published WGS84 lat/lon cross-checked with source GeoJSON point",
+      "file": "mta_stations.geojson.gz",
+      "bytes": 23568,
+      "geometry_types": {
+        "Point": 496
+      },
+      "missing_fields": {
+        "ada": 0.0,
+        "ada_northbound": 0.0,
+        "ada_notes": 0.9838709677419355,
+        "ada_southbound": 0.0,
+        "borough": 0.0,
+        "cbd": 0.0,
+        "complex_id": 0.0,
+        "daytime_routes": 0.0,
+        "division": 0.0,
+        "gtfs_latitude": 0.0,
+        "gtfs_longitude": 0.0,
+        "gtfs_stop_id": 0.0,
+        "line": 0.0,
+        "name": 0.0,
+        "north_direction_label": 0.0,
+        "south_direction_label": 0.0,
+        "station_id": 0.0,
+        "stop_name": 0.0,
+        "structure": 0.0
+      },
+      "routing_usage": "Queryable official transit context; existing Transit Connectivity scoring snapshot unchanged",
+      "source_record_identity": "Published station stop ID; entrance attribute/geometry hash; bus published stop ID plus exact coordinates. No name-only entity matching.",
+      "limitations": [
+        "Station ADA flags do not establish a step-free walking path or currently working elevator.",
+        "Entrance data has a 2024 observation vintage; publisher update is not a new field survey.",
+        "Bus route-stop relationships are grouped, not added up as separate physical stops. No timetable or real-time arrivals/alerts are claimed."
+      ]
+    },
+    {
+      "id": "mta_entrances",
+      "dataset_id": "i9wp-a4ja",
+      "name": "MTA Subway Entrances and Exits: 2024",
+      "source_url": "https://data.ny.gov/d/i9wp-a4ja",
+      "publisher": "Metropolitan Transportation Authority / Open Data NY",
+      "license": "Open Data NY Terms of Use",
+      "license_url": "https://data.ny.gov/download/77gx-ii52/application/pdf",
+      "publisher_updated_at": "2025-12-05T18:36:18+00:00",
+      "retrieved_at": "2026-10-24T19:56:38Z",
+      "source_rows": 2120,
+      "records": 2120,
+      "invalid_geometries": 0,
+      "exact_duplicate_source_rows": 0,
+      "coordinate_conflict_stop_ids": 0,
+      "coverage": "All five NYC boroughs",
+      "query_scope": {
+        "source": "complete published snapshot"
+      },
+      "crs_transform": "Published WGS84 lat/lon cross-checked with source GeoJSON point",
+      "file": "mta_entrances.geojson.gz",
+      "bytes": 93960,
+      "geometry_types": {
+        "Point": 2120
+      },
+      "missing_fields": {
+        "borough": 0.0,
+        "complex_id": 0.0,
+        "constituent_station_name": 0.0,
+        "daytime_routes": 0.0,
+        "division": 0.0,
+        "entrance_latitude": 0.0,
+        "entrance_longitude": 0.0,
+        "entrance_type": 0.0,
+        "entry_allowed": 0.0,
+        "exit_allowed": 0.0,
+        "gtfs_stop_id": 0.0,
+        "line": 0.0,
+        "name": 0.0,
+        "station_id": 0.0,
+        "stop_name": 0.0
+      },
+      "routing_usage": "Queryable official transit context; existing Transit Connectivity scoring snapshot unchanged",
+      "source_record_identity": "Published station stop ID; entrance attribute/geometry hash; bus published stop ID plus exact coordinates. No name-only entity matching.",
+      "limitations": [
+        "Station ADA flags do not establish a step-free walking path or currently working elevator.",
+        "Entrance data has a 2024 observation vintage; publisher update is not a new field survey.",
+        "Bus route-stop relationships are grouped, not added up as separate physical stops. No timetable or real-time arrivals/alerts are claimed."
+      ]
+    },
+    {
+      "id": "mta_bus_stops",
+      "dataset_id": "ai5j-txmn",
+      "name": "MTA Current Bus Stops",
+      "source_url": "https://data.ny.gov/d/ai5j-txmn",
+      "publisher": "Metropolitan Transportation Authority / Open Data NY",
+      "license": "Open Data NY Terms of Use",
+      "license_url": "https://data.ny.gov/download/77gx-ii52/application/pdf",
+      "publisher_updated_at": "2026-10-16T20:17:36+00:00",
+      "retrieved_at": "2026-10-24T19:56:38Z",
+      "source_rows": 23218,
+      "records": 13735,
+      "invalid_geometries": 0,
+      "exact_duplicate_source_rows": 0,
+      "coordinate_conflict_stop_ids": 0,
+      "coverage": "All five NYC boroughs; bus service also extends just beyond the city boundary",
+      "query_scope": {
+        "source": "complete published current view; bus route-stop rows grouped by published stop ID + exact coordinates"
+      },
+      "crs_transform": "Published WGS84 lat/lon cross-checked with source GeoJSON point",
+      "file": "mta_bus_stops.geojson.gz",
+      "bytes": 664309,
+      "geometry_types": {
+        "Point": 13735
+      },
+      "missing_fields": {
+        "bundle": 0.0,
+        "in_effect": 0.0,
+        "name": 0.0,
+        "route_stop_rows": 0.0,
+        "routes": 0.0,
+        "stop_id": 0.0,
+        "stop_names": 0.0,
+        "valid_from": 0.0,
+        "valid_to": 0.0,
+        "validity_intervals": 0.0
+      },
+      "routing_usage": "Queryable official transit context; existing Transit Connectivity scoring snapshot unchanged",
+      "source_record_identity": "Published station stop ID; entrance attribute/geometry hash; bus published stop ID plus exact coordinates. No name-only entity matching.",
+      "limitations": [
+        "Station ADA flags do not establish a step-free walking path or currently working elevator.",
+        "Entrance data has a 2024 observation vintage; publisher update is not a new field survey.",
+        "Bus route-stop relationships are grouped, not added up as separate physical stops. No timetable or real-time arrivals/alerts are claimed."
+      ]
     }
   ],
   "database": "context.sqlite.gz",
-  "database_bytes": 12017664,
-  "compressed_bytes": 3766677,
-  "sha256": "e1b6cb9c45e36f3ee97836c0d1e16ec9563b7aabff7d73dd29f8d5181e8dae08",
+  "database_bytes": 21864448,
+  "compressed_bytes": 5395658,
+  "sha256": "ead4ea0085a29ba39567ed46c54fb5d7eb875939097964326fb6b92a2991c59e",
   "indexed_fragments": {
     "hydrography": 2782,
     "waterfront_access": 78,
     "pedestrian_plazas": 93,
     "construction": 4157,
-    "seating": 5702
+    "seating": 5702,
+    "mta_stations": 496,
+    "mta_entrances": 2120,
+    "mta_bus_stops": 13735
   },
   "method": "Hydrography clipped to 2 km cells and simplified by 2 m for display only. Original source geometries retained; routing uses original boundaries. Other geometry kept as supplied or documented CRS transformation."
 }

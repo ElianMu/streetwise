@@ -1,0 +1,217 @@
+[
+  {
+    "place_id": "osm:node/11762033170",
+    "item": "bagel",
+    "http_status": 200,
+    "seconds": 3.9082,
+    "data": {
+      "place_id": "osm:node/11762033170",
+      "name": "Zucker's Bagels & Smoked Fish",
+      "requested_item": "bagel",
+      "item": "bagel",
+      "matched_item": "Bagel",
+      "evidence_type": "html_menu_page",
+      "menu_source_url": "https://www.zuckersbagels.com/menu/",
+      "source_url": "https://www.zuckersbagels.com/menu/",
+      "evidence": "HEAT EVERYTHING WHOLESOME \u2018FLATZ\u2019 \u00bd the Calories & Carbs of a Regular Bagel! WHEAT FLATZ WHEAT EVERYTHING FLATZ BREADS We\u2019re Proud to Offer Daily",
+      "menu_date": null,
+      "menu_date_basis": null,
+      "checked_at": "2026-10-24T20:18:29+00:00",
+      "price": null,
+      "currency": null,
+      "pages_checked": [
+        {
+          "url": "https://www.zuckersbagels.com/",
+          "menu_page": false,
+          "type": "website_page"
+        },
+        {
+          "url": "https://www.zuckersbagels.com/menu/",
+          "menu_page": true,
+          "type": "html_menu_page"
+        }
+      ],
+      "price_verification": null,
+      "freshness": "unknown",
+      "note": "A menu listing does not confirm today\u2019s availability, price or stock. Branches may differ.",
+      "status": "confirmed_menu_match",
+      "reason": "\u201cBagel\u201d appears on the official menu.",
+      "menu": {
+        "restaurant_id": "osm:node/11762033170",
+        "menu_source": "https://www.zuckersbagels.com/menu/",
+        "source_type": "html_menu_page",
+        "checked_at": "2026-10-24T20:18:29+00:00",
+        "complete": false,
+        "items": [
+          {
+            "name": "Bagel",
+            "category": null,
+            "description": null,
+            "price": null,
+            "currency": null,
+            "dietary_tags": [],
+            "evidence_url": "https://www.zuckersbagels.com/menu/",
+            "verification_status": "verified"
+          }
+        ]
+      }
+    },
+    "cors": "https://elianmu.github.io"
+  },
+  {
+    "place_id": "osm:node/11762033170",
+    "item": "cappuccino",
+    "http_status": 200,
+    "seconds": 3.7072,
+    "data": {
+      "place_id": "osm:node/11762033170",
+      "name": "Zucker's Bagels & Smoked Fish",
+      "requested_item": "cappuccino",
+      "item": "cappuccino",
+      "matched_item": "CAPPUCCINO",
+      "evidence_type": "html_menu_page",
+      "menu_source_url": "https://www.zuckersbagels.com/menu/",
+      "source_url": "https://www.zuckersbagels.com/menu/",
+      "evidence": "EGGS COLOMBE COFFEE BAR REGULAR - CORSICA BLEND DECAF CAFF\u00c9 AMERICANO CAPPUCCINO CAFFE LATTE CAFE AU LAIT DOUBLE ESPRESSO MACCHIATO - DOUBLE HOT DRINK",
+      "menu_date": null,
+      "menu_date_basis": null,
+      "checked_at": "2026-10-24T20:18:33+00:00",
+      "price": null,
+      "currency": null,
+      "pages_checked": [
+        {
+          "url": "https://www.zuckersbagels.com/",
+          "menu_page": false,
+          "type": "website_page"
+        },
+        {
+          "url": "https://www.zuckersbagels.com/menu/",
+          "menu_page": true,
+          "type": "html_menu_page"
+        }
+      ],
+      "price_verification": null,
+      "freshness": "unknown",
+      "note": "A menu listing does not confirm today\u2019s availability, price or stock. Branches may differ.",
+      "status": "confirmed_menu_match",
+      "reason": "\u201cCAPPUCCINO\u201d appears on the official menu.",
+      "menu": {
+        "restaurant_id": "osm:node/11762033170",
+        "menu_source": "https://www.zuckersbagels.com/menu/",
+        "source_type": "html_menu_page",
+        "checked_at": "2026-10-24T20:18:33+00:00",
+        "complete": false,
+        "items": [
+          {
+            "name": "CAPPUCCINO",
+            "category": null,
+            "description": null,
+            "price": null,
+            "currency": null,
+            "dietary_tags": [],
+            "evidence_url": "https://www.zuckersbagels.com/menu/",
+            "verification_status": "verified"
+          }
+        ]
+      }
+    },
+    "cors": "https://elianmu.github.io"
+  },
+  {
+    "place_id": "osm:node/1821015958",
+    "item": "bagel",
+    "http_status": 200,
+    "seconds": 1.8403,
+    "data": {
+      "place_id": "osm:node/1821015958",
+      "name": "Broad Nosh Bagel",
+      "requested_item": "bagel",
+      "item": "bagel",
+      "matched_item": "Bagel",
+      "evidence_type": "website_mention",
+      "menu_source_url": null,
+      "source_url": "https://broadnosh.com",
+      "evidence": "locations, .... ..we serve a wide variety of handcrafted bagels Plain Bagel; Everything Bagel; Sesame Bagel; Poppy Seed Bagel; Whole Wheat Bagel;",
+      "menu_date": null,
+      "menu_date_basis": null,
+      "checked_at": "2026-10-24T20:18:36+00:00",
+      "price": null,
+      "currency": null,
+      "pages_checked": [
+        {
+          "url": "https://broadnosh.com",
+          "menu_page": false,
+          "type": "website_page"
+        }
+      ],
+      "price_verification": null,
+      "freshness": "unknown",
+      "note": "A menu listing does not confirm today\u2019s availability, price or stock. Branches may differ.",
+      "status": "unverified",
+      "reason": "\u201cBagel\u201d is mentioned on the official website, but not on a page identified as a menu.",
+      "menu": {
+        "restaurant_id": "osm:node/1821015958",
+        "menu_source": "https://broadnosh.com",
+        "source_type": "website_mention",
+        "checked_at": "2026-10-24T20:18:36+00:00",
+        "complete": false,
+        "items": [
+          {
+            "name": "Bagel",
+            "category": null,
+            "description": null,
+            "price": null,
+            "currency": null,
+            "dietary_tags": [],
+            "evidence_url": "https://broadnosh.com",
+            "verification_status": "unverified"
+          }
+        ]
+      }
+    },
+    "cors": "https://elianmu.github.io"
+  },
+  {
+    "place_id": "osm:node/1821015958",
+    "item": "cappuccino",
+    "http_status": 200,
+    "seconds": 1.7397,
+    "data": {
+      "place_id": "osm:node/1821015958",
+      "name": "Broad Nosh Bagel",
+      "requested_item": "cappuccino",
+      "item": "cappuccino",
+      "matched_item": null,
+      "evidence_type": null,
+      "menu_source_url": null,
+      "source_url": "https://broadnosh.com",
+      "evidence": null,
+      "menu_date": null,
+      "menu_date_basis": null,
+      "checked_at": "2026-10-24T20:18:38+00:00",
+      "price": null,
+      "currency": null,
+      "pages_checked": [
+        {
+          "url": "https://broadnosh.com",
+          "menu_page": false,
+          "type": "website_page"
+        }
+      ],
+      "price_verification": null,
+      "freshness": "unknown",
+      "note": "A menu listing does not confirm today\u2019s availability, price or stock. Branches may differ.",
+      "status": "unverified",
+      "reason": "No readable menu page was found on the official website.",
+      "menu": {
+        "restaurant_id": "osm:node/1821015958",
+        "menu_source": "https://broadnosh.com",
+        "source_type": null,
+        "checked_at": "2026-10-24T20:18:38+00:00",
+        "complete": false,
+        "items": []
+      }
+    },
+    "cors": "https://elianmu.github.io"
+  }
+]

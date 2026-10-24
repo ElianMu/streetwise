@@ -252,6 +252,8 @@ function composeUrbanGroups(){
  const order=[...urbanData.active.keys()].sort((a,b)=>GENERAL.has(a)-GENERAL.has(b));
  for(const id of order){
   if(id==='street_trees'&&urbanData.active.has('citywide_tree_inventory')&&urbanData.drawn.get('citywide_tree_inventory')?.size)continue;
+  const newer={subway_stations:'citywide_mta_stations',subway_entrances:'citywide_mta_entrances',bus_stops:'citywide_mta_bus_stops'}[id];
+  if(newer&&urbanData.active.has(newer)&&urbanData.drawn.get(newer)?.size)continue;
   const d=urbanData.byId.get(id),feats=urbanData.drawn.get(id);if(!feats)continue;
   const g=udGroup(d);
   if(g==='buildings'){

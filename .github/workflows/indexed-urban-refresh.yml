@@ -20,6 +20,8 @@ jobs:
           python scripts/build_crime_store.py
           python scripts/build_citywide_evidence.py --trees
           python scripts/build_citywide_evidence.py
+          python scripts/probe_mta_sources.py
+          python scripts/build_transit_evidence.py --research-dir /tmp/streetwise-mta-research
           python scripts/index_urban_context.py
           python scripts/build_waterfront_features.py
           python scripts/build_segment_evidence.py
