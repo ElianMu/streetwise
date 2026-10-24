@@ -243,10 +243,11 @@ const run=s=>vm.runInContext(s,context);
  assert.equal(run("planner.weights['Scenic & Visual']"),90);
  assert.equal(ai.journey.food[0].item,'coffee');
  run('planner.llmConnected=true');
- w.fetch=async(url)=>String(url).endsWith('/api/interpret')?({ok:false,status:502,json:async()=>({reason:{stage:'upstream_http',code:'invalid_api_key'}})}):initialFetch(url);
+ w.fetch=async(url)=>String(url).endsWith('/api/interpret')?({ok:false,status:502,json:async()=>({reason:{stage:'upstream_http',code:'invalid_api_key',detail:'internal diagnostic keys: weights directions'}})}):initialFetch(url);
  await run("interpretIntent('greener walk')");
  assert.equal(run('planner.interpretation'),'local');
  assert(w.document.querySelector('#toast').textContent.includes('invalid_api_key'));
+ assert(!w.document.querySelector('#toast').textContent.includes('internal diagnostic'));
  run('planner.llmConnected=false');w.fetch=initialFetch;
 
  // Drain route-summary and menu continuations before destroying their document.

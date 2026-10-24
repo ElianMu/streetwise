@@ -152,6 +152,48 @@ class InterpretFailures(unittest.TestCase):
         self.assertEqual(set(routes[0]['dimension_scores']), set(server.DIMENSIONS))
         self.assertIn('food must preserve it', server.SYSTEM)
 
+    def test_orphan_direction_is_corrected_by_model_once(self):
+        invalid = {'weights': {'Nature': 85}, 'directions': {'Architecture': 'high'}}
+        valid = {'weights': {'Nature': 85, 'Architecture': 90},
+                 'directions': {'Nature': 'high', 'Architecture': 'high'},
+                 'journey': {'food': [{'category': 'cafes', 'item': 'coffee', 'required': True}]}}
+        with mock.patch.object(server, 'KEY', FAKE_KEY), mock.patch.object(
+                server.request, 'urlopen', side_effect=[completion(invalid), completion(valid)]) as call:
+            status, body = server.interpret({'message': 'Architecture, parks and coffee'})
+        self.assertEqual(status, 200)
+        self.assertEqual(body['weights'], valid['weights'])
+        self.assertEqual(body['journey']['food'][0]['item'], 'coffee')
+        self.assertEqual(call.call_count, 2)
+        second = json.loads(call.call_args_list[1].args[0].data)
+        self.assertIn('Direction has no corresponding weight', second['messages'][-1]['content'])
+        self.assertEqual(json.loads(second['messages'][-2]['content']), invalid)
+        self.assertLessEqual(call.call_args_list[1].kwargs['timeout'], call.call_args_list[0].kwargs['timeout'])
+
+    def test_repeated_invalid_result_still_fails(self):
+        with mock.patch.object(server, 'KEY', FAKE_KEY), mock.patch.object(
+                server.request, 'urlopen', return_value=completion({'directions': {'Nature': 'high'}})) as call:
+            status, body = server.interpret(dict(DOC))
+        self.assertEqual(status, 502)
+        self.assertEqual(body['reason']['stage'], 'model_output_rejected')
+        self.assertEqual(call.call_count, 2)
+
+    def test_no_retry_after_deadline(self):
+        with mock.patch.object(server, 'KEY', FAKE_KEY), mock.patch.object(
+                server.time, 'monotonic', side_effect=[0, 0, 27]), mock.patch.object(
+                server.request, 'urlopen', return_value=completion({'directions': {'Nature': 'high'}})) as call:
+            status, body = server.interpret(dict(DOC))
+        self.assertEqual(status, 502)
+        self.assertEqual(body['reason']['detail'], 'TimeoutError')
+        self.assertEqual(call.call_count, 1)
+
+    def test_authentication_error_is_not_retried(self):
+        with mock.patch.object(server, 'KEY', FAKE_KEY), mock.patch.object(
+                server.request, 'urlopen', side_effect=http_error(401, {'error': {'code': 'invalid_api_key'}})) as call:
+            status, body = server.interpret(dict(DOC))
+        self.assertEqual(status, 502)
+        self.assertEqual(body['reason']['code'], 'invalid_api_key')
+        self.assertEqual(call.call_count, 1)
+
     def test_scrub(self):
         with mock.patch.object(server, 'KEY', FAKE_KEY):
             self.assertEqual(server.scrub(f'value {FAKE_KEY} and sk-proj-abcdEFGH1234 end'), 'value [key] and [key] end')
