@@ -161,6 +161,15 @@ def _title(page):
     return html.unescape(m.group(1)).strip() if m else ''
 
 
+def _menu_body_text(page, place_name):
+    """Page chrome and the business name are not evidence of a dish listing."""
+    page = re.sub(r'(?is)<(head|title|header|nav|footer)\b[^>]*>.*?</\1>', ' ', page)
+    text = _html_text(page)
+    if place_name:
+        text = re.sub(re.escape(place_name), ' ', text, flags=re.I)
+    return text.strip()
+
+
 def pdf_text(data):
     """Text from simple PDFs: (Flate-)compressed content streams with Tj / TJ string operators. Fonts with custom
     encodings come out unreadable — then the menu stays unverified rather than guessed."""
@@ -294,6 +303,9 @@ def verify(doc, now=None):
     if not item:
         raise ValueError('item is required')
     pid, name = str(doc.get('place_id') or '')[:120], str(doc.get('name') or '')[:160]
+    from .places import store
+    known = store().get(pid)
+    if known: name = known['name']
     checked = (now or datetime.now(timezone.utc)).isoformat(timespec='seconds')
     base = {'place_id': pid, 'name': name, 'requested_item': item, 'item': item, 'matched_item': None, 'evidence_type': None,
             'menu_source_url': None, 'source_url': None, 'evidence': None, 'menu_date': None, 'menu_date_basis': None,
@@ -345,7 +357,7 @@ def verify(doc, now=None):
         else:
             page = body.decode('utf-8', 'replace')
             structured = structured_menu_items(page)
-            text, kind = _html_text(page), 'html_menu_page'
+            text, kind = _menu_body_text(page, name), 'html_menu_page'
             menu_page = is_menu or bool(re.search(r'menu', final + ' ' + _title(page), re.I))
             if not menu_page:
                 queue += [(m, True) for m in _menu_links(final, page)]

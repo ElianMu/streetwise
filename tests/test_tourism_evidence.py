@@ -81,6 +81,12 @@ class TourismEvidence(unittest.TestCase):
         self.assertEqual(by_name['Cappuccino']['price'],5.25);self.assertEqual(by_name['Tiramisu']['price'],12)
         self.assertIsNone(menu.match_item('cappuccino','Cappuccino unavailable. Tiramisu $12')[3])
 
+    def test_brand_and_navigation_are_not_menu_item_evidence(self):
+        page='<head><title>Bagel Pub Menu</title></head><header>Bagel Pub</header><nav>Bagel Menu</nav><main>Bagel Pub welcomes you. See the scanned menu.</main><footer>Bagel Pub</footer>'
+        self.assertIsNone(menu.match_item('bagel',menu._menu_body_text(page,'Bagel Pub'))[0])
+        page+='<section>Plain bagel $3.50</section>'
+        self.assertEqual(menu.match_item('bagel',menu._menu_body_text(page,'Bagel Pub'))[0],'confirmed')
+
     def test_restricted_platform_pages_are_not_scraped(self):
         with mock.patch.object(menu,'_check_host') as dns:
             for url in ['https://www.yelp.com/biz/example','https://booking.com/hotel/example','https://www.google.com/maps/place/example']:
