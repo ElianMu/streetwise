@@ -181,6 +181,7 @@ class InterpretFailures(unittest.TestCase):
         self.assertTrue(all(r['distance_m'] > 0 and r['ordered_edge_ids'] for r in routes))
         self.assertEqual(set(routes[0]['dimension_scores']), set(server.DIMENSIONS))
         self.assertIn('food must preserve it', server.SYSTEM)
+        self.assertIn('restaurants or cafes without naming a dish', server.SYSTEM)
 
     def test_orphan_direction_is_corrected_by_model_once(self):
         invalid = {'weights': {'Nature': 85}, 'directions': {'Architecture': 'high'}}
