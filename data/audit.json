@@ -1,0 +1,182 @@
+{
+ "built_at": "2026-10-24T03:07:54+00:00",
+ "datasets": 112,
+ "connected": 84,
+ "records": 919245,
+ "presets": [
+  {
+   "key": "bryant",
+   "name": "Bryant Park",
+   "matched": "Bryant Park",
+   "matched_id": "osm:way/22727025",
+   "offset_m": 33
+  },
+  {
+   "key": "carnegie",
+   "name": "Carnegie Hall",
+   "matched": "Carnegie Hall",
+   "matched_id": "lpc:LP-00278",
+   "offset_m": 11
+  },
+  {
+   "key": "times",
+   "name": "Times Square",
+   "matched": "Times Square",
+   "matched_id": "osm:way/702540318",
+   "offset_m": 93
+  },
+  {
+   "key": "rock",
+   "name": "Rockefeller Center",
+   "matched": "Rockefeller Center",
+   "matched_id": "osm:node/4236846689",
+   "offset_m": 18
+  },
+  {
+   "key": "nypl",
+   "name": "New York Public Library",
+   "matched": "New York Public Library, Astor, Lenox and Tilden Foundations",
+   "matched_id": "lpc:LP-00246",
+   "offset_m": 59
+  },
+  {
+   "key": "stpatrick",
+   "name": "St. Patrick\u2019s Cathedral",
+   "matched": null,
+   "matched_id": null,
+   "offset_m": null
+  },
+  {
+   "key": "radio",
+   "name": "Radio City Music Hall",
+   "matched": "Radio City Music Hall",
+   "matched_id": "dohmh:41071308",
+   "offset_m": 39
+  },
+  {
+   "key": "moma",
+   "name": "Museum of Modern Art",
+   "matched": null,
+   "matched_id": null,
+   "offset_m": null
+  },
+  {
+   "key": "grand",
+   "name": "Grand Central Terminal",
+   "matched": "Grand Central Terminal",
+   "matched_id": "lpc:LP-00266",
+   "offset_m": 8
+  },
+  {
+   "key": "battery",
+   "name": "The Battery",
+   "matched": null,
+   "matched_id": null,
+   "offset_m": null
+  },
+  {
+   "key": "wall",
+   "name": "Wall Street",
+   "matched": "Wall Street Bordealix",
+   "matched_id": "dohmh:50191904",
+   "offset_m": 230
+  },
+  {
+   "key": "washington",
+   "name": "Washington Square Park",
+   "matched": "Washington Square Park",
+   "matched_id": "osm:way/22899302",
+   "offset_m": 27
+  },
+  {
+   "key": "union",
+   "name": "Union Square",
+   "matched": "Union Square Park",
+   "matched_id": "osm:relation/7095444",
+   "offset_m": 17
+  },
+  {
+   "key": "columbus",
+   "name": "Columbus Circle",
+   "matched": "Columbus Circle",
+   "matched_id": "osm:way/109269254",
+   "offset_m": 3
+  },
+  {
+   "key": "met",
+   "name": "The Metropolitan Museum",
+   "matched": "The Metropolitan Museum of Art",
+   "matched_id": "osm:relation/3698894",
+   "offset_m": 18
+  },
+  {
+   "key": "columbia",
+   "name": "Columbia University",
+   "matched": "Columbia University Bookstore",
+   "matched_id": "osm:node/625842823",
+   "offset_m": 63
+  },
+  {
+   "key": "apollo",
+   "name": "Apollo Theater",
+   "matched": "Apollo Theater",
+   "matched_id": "osm:way/271798914",
+   "offset_m": 25
+  },
+  {
+   "key": "fort",
+   "name": "Fort Tryon Park",
+   "matched": "Fort Tryon Park",
+   "matched_id": "osm:relation/5625630",
+   "offset_m": 212
+  }
+ ],
+ "placeholder_flags": [],
+ "unreferenced_data_files": [
+  "route-validation.json",
+  "route-verification.json",
+  "validation.json"
+ ],
+ "agent_tools": {
+  "search_places / autocomplete": {
+   "implementation": "places.js searchPlaces (Photon + NYC GeoSearch, live)",
+   "status": "wired (call site found)"
+  },
+  "discover places (POI index)": {
+   "implementation": "journey.js discoverPlaces \u2192 data/places/*.json",
+   "status": "wired (call site found)"
+  },
+  "verify_menu_item": {
+   "implementation": "POST /api/menu/verify (routing/menu.py)",
+   "status": "wired (call site found)"
+  },
+  "calculate_walking_route": {
+   "implementation": "POST /api/routes, /api/itinerary",
+   "status": "wired (call site found)"
+  },
+  "validate_route": {
+   "implementation": "routing/validation.py on every route",
+   "status": "wired (call site found)"
+  },
+  "turn-by-turn maneuvers": {
+   "implementation": "routing/maneuvers.py",
+   "status": "wired (call site found)"
+  },
+  "find along route (detours)": {
+   "implementation": "POST /api/detours",
+   "status": "wired (call site found)"
+  },
+  "weather context": {
+   "implementation": "weather.js (Open-Meteo, NWS)",
+   "status": "wired (call site found)"
+  }
+ },
+ "provider_access": {
+  "google_places": false,
+  "yelp_fusion": false,
+  "foursquare": false,
+  "booking_demand": false,
+  "expedia_rapid": false,
+  "openai": false
+ }
+}

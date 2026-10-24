@@ -421,3 +421,7 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
 .ea-compare select{background:#0f2023;color:#e6efe9;border:1px solid #39504e;border-radius:5px;font-size:10px;padding:2px 4px}
 .ea-note{font-size:9.5px;color:#8fa6a1;line-height:1.5;margin:4px 0}.explore-analytics h4{font-size:9.5px;letter-spacing:.8px;color:#a1b2af;margin:10px 0 4px;text-transform:uppercase}
 .ea-sources{margin:0;padding-left:14px;font-size:9.5px;color:#c6d4cf;line-height:1.5}.ea-sources small{color:#7f9a95}.ea-sources a{color:var(--lime)}
+
+.jp-q{display:inline-block;margin:4px 0 0;padding:1px 6px;border-radius:4px;font-size:9.5px;border:1px solid #536d52;color:#c9d6d3}.jp-q.verified{color:#d8f365;border-color:#7c9440}.jp-q.closed{color:#f2a99b;border-color:#8a4d44}.jp-q.limited_data{color:#f8d385}
+.cw-why{font-size:10px;line-height:1.45;color:#b9c9c6;margin-top:3px}.cw-why summary{cursor:pointer;color:#e2f899}.cw-why b{display:block;margin-top:4px;color:#89a5a1;font-weight:600}.cw-why ul{margin:2px 0 0 14px;padding:0}.cw-why p{margin:2px 0}
+.jp{max-height:min(360px,60vh);overflow-y:auto;padding-right:2px}

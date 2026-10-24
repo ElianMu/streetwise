@@ -1,6 +1,6 @@
 {
- "built_at": "2026-10-24T01:43:24+00:00",
- "osm_timestamp": "2026-10-24T01:40:11Z",
+ "built_at": "2026-10-24T02:52:24+00:00",
+ "osm_timestamp": "2026-10-24T02:49:35Z",
  "coverage": "Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan",
  "network_version": "osm-walk-20261023-99602011",
  "categories": [
@@ -12,7 +12,7 @@
    "records_with_conflicts": 1,
    "missing": {
     "addr": 47,
-    "web": 98,
+    "web": 92,
     "hours": 452
    }
   },
@@ -24,7 +24,7 @@
    "records_with_conflicts": 0,
    "missing": {
     "addr": 54,
-    "web": 70,
+    "web": 57,
     "hours": 133
    }
   },
@@ -36,7 +36,7 @@
    "records_with_conflicts": 0,
    "missing": {
     "addr": 190,
-    "web": 132,
+    "web": 120,
     "hours": 213
    }
   },
@@ -48,7 +48,7 @@
    "records_with_conflicts": 0,
    "missing": {
     "addr": 355,
-    "web": 325,
+    "web": 319,
     "hours": 387
    }
   },
@@ -60,44 +60,44 @@
    "records_with_conflicts": 0,
    "missing": {
     "addr": 418,
-    "web": 285,
+    "web": 281,
     "hours": 471
    }
   },
   {
    "id": "cafes",
    "label": "Caf\u00e9s & coffee",
-   "count": 1279,
-   "merged_duplicates": 6,
+   "count": 2001,
+   "merged_duplicates": 9,
    "records_with_conflicts": 2,
    "missing": {
     "addr": 328,
-    "web": 591,
-    "hours": 551
+    "web": 1294,
+    "hours": 1273
    }
   },
   {
    "id": "bakeries",
    "label": "Bakeries & desserts",
-   "count": 400,
-   "merged_duplicates": 5,
+   "count": 713,
+   "merged_duplicates": 6,
    "records_with_conflicts": 0,
    "missing": {
     "addr": 97,
-    "web": 205,
-    "hours": 184
+    "web": 511,
+    "hours": 497
    }
   },
   {
    "id": "restaurants",
    "label": "Restaurants",
-   "count": 5037,
-   "merged_duplicates": 20,
+   "count": 10919,
+   "merged_duplicates": 117,
    "records_with_conflicts": 5,
    "missing": {
     "addr": 1150,
-    "web": 2050,
-    "hours": 2106
+    "web": 7875,
+    "hours": 7988
    }
   },
   {
@@ -108,7 +108,7 @@
    "records_with_conflicts": 0,
    "missing": {
     "addr": 201,
-    "web": 376,
+    "web": 363,
     "hours": 406
    }
   },
@@ -117,10 +117,10 @@
    "label": "Theatres, libraries & landmarks of worship",
    "count": 434,
    "merged_duplicates": 3,
-   "records_with_conflicts": 0,
+   "records_with_conflicts": 1,
    "missing": {
     "addr": 62,
-    "web": 133,
+    "web": 85,
     "hours": 380
    }
   },
@@ -132,7 +132,7 @@
    "records_with_conflicts": 0,
    "missing": {
     "addr": 89,
-    "web": 153,
+    "web": 149,
     "hours": 145
    }
   },
@@ -144,7 +144,7 @@
    "records_with_conflicts": 0,
    "missing": {
     "addr": 66,
-    "web": 174,
+    "web": 173,
     "hours": 113
    }
   },
@@ -156,7 +156,7 @@
    "records_with_conflicts": 0,
    "missing": {
     "addr": 207,
-    "web": 775,
+    "web": 772,
     "hours": 608
    }
   },
@@ -180,7 +180,7 @@
    "records_with_conflicts": 2,
    "missing": {
     "addr": 237,
-    "web": 302,
+    "web": 300,
     "hours": 200
    }
   },
@@ -226,7 +226,9 @@
   "osm": "OpenStreetMap contributors via Overpass API (ODbL); names, tags and hours as mapped, not verified by STREETWISE",
   "lpc": "NYC Landmarks Preservation Commission individual landmarks (NYC Open Data)",
   "nyc_restrooms": "NYC Open Data Public Restrooms (i7jb-7jku), status as published",
-  "wikidata": "Wikidata API sitelink counts (CC0)"
+  "wikidata": "Wikidata API sitelink counts (CC0)",
+  "dof_hotels": "NYC Department of Finance Hotels Properties Citywide (tjus-cn27): hotel-class tax lots",
+  "dohmh": "NYC DOHMH Restaurant Inspection Results (43nn-pn8j): permit, cuisine, phone, grade, last inspection, closure \u2014 not reviews"
  },
  "fields": {
   "sub": "source tag",
@@ -247,5 +249,17 @@
   "drink": "drink:* tags (community-mapped, not menu verification)",
   "diet": "diet:* tags"
  },
- "dropped_outside_routing_coverage": 4973
+ "dropped_outside_routing_coverage": 4968,
+ "inspections": {
+  "available": true,
+  "manhattan_permits": 12215,
+  "linked_to_osm": 5164,
+  "added_from_dohmh": 7018,
+  "closed_by_dohmh": 35
+ },
+ "hotel_lots": {
+  "available": true,
+  "lots": 780,
+  "hotels_matched": 273
+ }
 }

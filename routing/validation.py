@@ -115,6 +115,17 @@ def validate(route, net, constraints=None, stops=None, now=None):
         elif sd > ACCESS_OK_M and sa == 'pass':
             sa = 'warning'; warnings.append(f'“{s["name"]}” access point approximated ({sd:.0f} m from the mapped location).')
 
+    # opening hours at arrival (non-blocking: the walk can still be walked, but the stop cannot be visited as planned)
+    known = [s for s in stops if s.get('open_at_arrival') is not None]
+    tw = 'not_checked' if not known else 'pass'
+    for s in known:
+        if s['open_at_arrival'] is False and s.get('required'):
+            tw = 'fail'
+        elif s.get('closes_during_visit') and tw == 'pass':
+            tw = 'warning'; warnings.append(f'“{s["name"]}” closes during the planned visit (OpenStreetMap hours).')
+    if tw == 'fail':
+        warnings.append('A required stop is closed at its estimated arrival; reorder, replace it or change the start time.')
+
     # constraints ------------------------------------------------------------------------------------------
     viol = route.get('constraints', {}).get('violations', [])
     tc = 'not_checked' if constraints.get('max_minutes') is None and constraints.get('max_outing_minutes') is None else (
@@ -134,7 +145,7 @@ def validate(route, net, constraints=None, stops=None, now=None):
         warnings.append(f'{len(na)} dimension(s) have no data on this route and are shown as N/A: {", ".join(na)}.')
 
     checks = {'geometry_status': g, 'pedestrian_network_status': n, 'required_stops_status': rs, 'stop_access_status': sa,
-              'time_constraint_status': tc, 'distance_constraint_status': dc, 'food_evidence_status': 'not_checked'}
+              'time_constraint_status': tc, 'distance_constraint_status': dc, 'opening_hours_status': tw, 'food_evidence_status': 'not_checked'}
     status = 'fail' if blocking else _status([('warning' if v == 'pass_with_warnings' else v) for v in checks.values() if v != 'not_checked'] + (['warning'] if warnings else []))
     return {**checks, 'status': status, 'navigation_allowed': not blocking,
             'data_coverage': coverage, 'warnings': warnings, 'blocking_issues': blocking, 'validation_version': VALIDATION_VERSION,

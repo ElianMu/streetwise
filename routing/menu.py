@@ -39,16 +39,25 @@ class UnsafeURL(ValueError):
     pass
 
 
+_INDEX_LOCK = __import__('threading').Lock()
+
+
 def place_sites():
-    """place id → (website, menu url) from the discovery index (the only sites this service will read)."""
+    """place id (any merged provider ID or canonical ID) → (website, menu url) from the discovery index — the only sites this
+    service will read. Built completely before it is published, so parallel checks never see a half-built index."""
     global _INDEX
     if _INDEX is None:
-        _INDEX = {}
-        for fn in os.listdir(PLACES_DIR) if os.path.isdir(PLACES_DIR) else []:
-            if fn.endswith('.json') and fn != 'index.json':
-                for r in json.load(open(os.path.join(PLACES_DIR, fn)))['records']:
-                    if r.get('web') or r.get('menu'):
-                        _INDEX[r['id']] = (r.get('web'), r.get('menu'))
+        with _INDEX_LOCK:
+            if _INDEX is None:
+                idx = {}
+                for fn in os.listdir(PLACES_DIR) if os.path.isdir(PLACES_DIR) else []:
+                    if fn.endswith('.json') and fn != 'index.json':
+                        for r in json.load(open(os.path.join(PLACES_DIR, fn)))['records']:
+                            if r.get('web') or r.get('menu'):
+                                for key in [r['id'], r.get('cid'), *(r.get('pids') or [])]:
+                                    if key:
+                                        idx.setdefault(key, (r.get('web'), r.get('menu')))
+                _INDEX = idx
     return _INDEX
 
 

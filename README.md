@@ -94,6 +94,37 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 
 营业时间：`opening-hours.js` 只在 OSM 写法能被确定解析时判断“到达时是否营业”，否则显示“未知”。
 
+## NYC tourism intelligence / 城市旅游信息与证据推荐
+
+Data coverage and quality are measured, not estimated: `python3 scripts/build_registry.py && python3 scripts/build_audit_report.py` writes `data/registry.json`, `DATA_AUDIT_REPORT.md` and `data/audit.json`. Every dataset has a class (`static_urban`, `periodic_poi`, `on_demand_business`, `realtime_availability`), an update frequency and known limitations. `python3 scripts/build_inspections.py` refreshes the NYC DOHMH permits (five boroughs, server-side `data/inspections/dohmh.json.gz`).
+
+| API | Purpose |
+|---|---|
+| `GET /api/places/search?lat&lon&categories&radius_m&q&cuisine&include_closed` | Canonical places near a point. Manhattan: discovery index (OSM, LPC, NYC restrooms, DOHMH, Wikidata, DOF hotel lots). Other boroughs: DOHMH food permits, `routing_coverage: search_only`. |
+| `GET /api/places/<id>` | Canonical place with a `restaurant` / `hotel` / `attraction` / `service` extension, `data_sources` and a rule-based `quality_status` (`verified`, `unverified`, `limited_data`, `closed`). |
+| `GET /api/places/<id>/ratings` | Ratings per provider (Google Places, Yelp Fusion, Foursquare), never blended, held 15 min in memory only. Without keys: `blocked_by_provider_access`. |
+| `GET /api/hotels/<id>/rooms?checkin&checkout&guests` | Room types, prices and availability need a lodging partner API (Booking.com Demand, Expedia Rapid). None is configured: `blocked_by_provider_access`, no rooms. |
+| `POST /api/recommend/food` | Requested item → discover → hard filters (DOHMH closure, closed at arrival, unreachable, detour limit) → official-menu evidence → detour → rank → explanation in four parts: verified facts, derived metrics, rule-based interpretation, unknowns. |
+
+Provider keys (`GOOGLE_PLACES_API_KEY`, `YELP_API_KEY`, `FOURSQUARE_API_KEY`, `BOOKING_DEMAND_API_KEY`, `EXPEDIA_RAPID_API_KEY`) are read only by the Render backend; `/api/status` reports which are configured as booleans. Rate limits per client per minute: places 60, ratings/rooms 20, recommendations 6. No third-party page (Google Maps, Yelp, Booking.com) is scraped.
+
+| Feature | Status |
+|---|---|
+| Data audit report, dataset classes, update policy | Implemented & Tested |
+| Five-borough coverage | Partial — food places (DOHMH) in all five boroughs, search only outside Manhattan; attractions, hotels and routing stay Manhattan |
+| Canonical place model, entity resolution (name + distance; branches stay separate) | Implemented & Tested |
+| DOHMH health grade and closure status on restaurant cards | Implemented & Tested |
+| Restaurant ratings and review counts | Blocked by Provider Access (adapters tested with recorded responses) |
+| Menu items | Partial — item evidence from the official website only (Verified / Probable / Unverified / Not Found); no menu API |
+| Food recommendation pipeline with evidence sections | Implemented & Tested (locally); Not Production-Tested |
+| Restaurant / hotel / attraction cards with confidence labels | Implemented, Not Production-Tested (checked in a local browser) |
+| Hotel stars (OSM) kept apart from guest rating | Implemented & Tested; guest rating Blocked by Provider Access |
+| Hotel room types, prices, availability, money budget | Blocked by Provider Access |
+| Hotel-based walks (start or return to My Hotel) | Implemented & Tested |
+| Attraction opening hours, closed-at-arrival and closing-during-visit checks | Implemented & Tested (OSM hours incl. dated closures; anything else is "unknown") |
+| Admission and reservation | Partial — OSM `fee` / `charge` / `reservation` tags; amounts are rarely mapped |
+| Current exhibitions, live crowding | Not Implemented (no authorised source) |
+
 ## Weather-aware routing / 天气感知路线
 
 天气是**独立的动态上下文**，不是第 13 个维度，也不改变 12 维静态评分。
@@ -133,6 +164,7 @@ node tests/places.test.cjs          # LIVE=1 node tests/places.test.cjs calls th
 node tests/opening-hours.test.cjs
 node tests/nav-gps.test.cjs          # 14 replayable GPS tracks on a real route
 python3 -m unittest discover -s tests -p 'test_*.py'   # includes the routing engine end-to-end tests
+python3 -m unittest tests.test_tourism   # datasets, places, hours, providers (stubbed), scenarios A–F, endpoints
 # Install jsdom separately for DOM integration tests:
 npm install --prefix /tmp/streetwise-test jsdom
 JSDOM_PATH=/tmp/streetwise-test/node_modules/jsdom node tests/dom.test.cjs

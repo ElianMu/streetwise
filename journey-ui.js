@@ -84,13 +84,13 @@ function renderCityWalk(){
  const t=it.totals,c=it.constraints,route=state.routes[0]?.raw;
  const stopRows=it.stops.map(s=>{
   const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);const m=f?journey.menu[s.id+'|'+f.item]:null;
-  const p=placeCache[s.id];const open=p?.hours?isOpenAt(p.hours,new Date(Date.now()+s.arrival_min*60000)):null;
+  const p=placeCache[s.id],hrs=p?.hours||s.hours;const open=s.open_at_arrival!=null?s.open_at_arrival:hrs?isOpenAt(hrs,new Date(Date.now()+s.arrival_min*60000)):null;
   return `<li class="cw-stop ${s.role==='end'?'end':''}"><span class="cw-seq">${s.role==='end'?'■':s.seq}</span><span class="cw-body"><strong>${esc(s.name)}</strong>
    <small>${esc([s.category,s.address].filter(Boolean).join(' · '))}</small>
    <small>Arrive ~${clockAt(s.arrival_min)} · +${(s.leg_in_m/1000).toFixed(2)} km / ${Math.round(s.leg_in_min)} min walk${s.visit_min?` · stay ${s.visit_min} min (est.)`:''}${s.slot_label?` · for “${esc(s.slot_label)}”`:''}${s.required?'':' · optional'}</small>
-   ${open===false?'<small class="cw-warn">Opening hours (OSM) say closed at arrival time</small>':open===true?'<small class="cw-ok">Open at arrival per OSM hours</small>':p?.hours?'':'<small>Hours not listed</small>'}
+   ${open===false?'<small class="cw-warn">Opening hours (OSM) say closed at arrival time</small>':open===true?'<small class="cw-ok">Open at arrival per OSM hours</small>':hrs?'<small>Hours listed but not machine-readable</small>':'<small>Hours not listed</small>'}${s.closes_during_visit?'<small class="cw-warn">Closes during the planned visit (OSM hours)</small>':''}
    ${f?`<small class="cw-menu ${m?.status||''}">${esc(f.item)}: ${esc(MENU_LABEL[m?.status]||'not checked')}${m?.price?` · $${m.price.toFixed(2)} as listed`:''}${m?.source_url?` · <a href="${esc(m.source_url)}" target="_blank" rel="noopener">source</a>`:''}${m?.reason?` — ${esc(m.reason)}`:''}</small>`:''}
-   ${s.evidence?`<small>${esc(s.evidence)}</small>`:''}
+   ${f&&journey.recs[s.id+'|'+f.item]?recExplain(journey.recs[s.id+'|'+f.item]):s.evidence?`<small>${esc(s.evidence)}</small>`:''}
    ${s.alternatives?.length?`<button type="button" class="cw-alt" data-cw-replace="${esc(s.slot_id)}" data-cw-id="${esc(s.id)}">Replace</button>`:''}${s.role!=='end'?`<button type="button" class="cw-alt" data-cw-remove="${esc(s.id)}">Remove</button>`:''}</span></li>`;}).join('');
  root.innerHTML=`<div class="section-row"><div class="section-overline">YOUR CITY WALK</div><span class="small-count">${c.feasible?'WITHIN LIMITS':'NOT FEASIBLE'}</span></div>
   <div class="cw-theme">${esc(route?.route_name||'City walk')}</div>
@@ -105,6 +105,13 @@ function renderCityWalk(){
  root.querySelectorAll('[data-refine]').forEach(b=>b.addEventListener('click',()=>refineWalk(b.dataset.refine)));
  root.querySelectorAll('[data-cw-remove]').forEach(b=>b.addEventListener('click',()=>{journey.removed.add(b.dataset.cwRemove);journey.named=journey.named.filter(n=>n.place.id!==b.dataset.cwRemove);planJourney(true);}));
  root.querySelectorAll('[data-cw-replace]').forEach(b=>b.addEventListener('click',()=>{journey.removed.add(b.dataset.cwId);delete journey.replaced[b.dataset.cwReplace];planJourney(true);}));
+}
+// evidence sections of a server recommendation, kept apart: facts / derived / interpretation / unknown
+function recExplain(r){
+ const e=r.explanation,li=a=>a.map(x=>`<li>${esc(x)}</li>`).join('');
+ return `<details class="cw-why"><summary>${esc(e.interpretation)}</summary>${e.verified_facts.length?`<b>Verified facts</b><ul>${li(e.verified_facts)}</ul>`:''}
+  ${e.derived_metrics.length?`<b>Derived metrics</b><ul>${li(e.derived_metrics)}</ul>`:''}<b>Interpretation</b><p>${esc(e.interpretation)} <i>(${esc(e.interpretation_basis)})</i></p>
+  ${e.unknown.length?`<b>Unknown</b><ul>${li(e.unknown)}</ul>`:''}</details>`;
 }
 const placeCache={};
 async function cacheStopPlaces(){if(!journey.plan)return;for(const s of journey.plan.stops){if(!placeCache[s.id]){const p=await placeById(s.id);if(p)placeCache[s.id]=p;}}renderCityWalk();}
@@ -145,14 +152,40 @@ function updateJourneyMap(){
 async function journeyPopup(f,lngLat){
  const pr=f.properties;
  const p=pr.found?journey.lastFound.places[pr.i]:pr.hotel?journey.hotel:(await placeById(pr.id))||journey.named.find(n=>n.place.id===pr.id)?.place||{name:pr.name,id:pr.id};
+ const d=p.id?await placeDetails(p.id):null;
  const isHotel=/hotel|hostel|guest/i.test(p.category||'')||p.cat==='hotels';
  const cafe=p.cat==='cafes'||/caf/i.test(p.category||'');
  const div=document.createElement('div');div.className='jp';
  div.innerHTML=`<strong>${esc(p.name)}</strong><dl>${[['Category',p.category],['Address',p.address],['Hours (OSM)',p.hours],['Website',p.website?`<a href="${esc(p.website)}" target="_blank" rel="noopener">${esc(p.website.replace(/^https?:\/\//,'').slice(0,40))}</a>`:null],['Source',p.source]].filter(x=>x[1]).map(([k,v])=>`<dt>${k}</dt><dd>${k==='Website'?v:esc(v)}</dd>`).join('')}</dl>
-  <div class="jp-actions">${!pr.planned?'<button type="button" data-a="add">Add stop</button>':''}${isHotel?'<button type="button" data-a="hotel">Set as My Hotel</button>':''}${cafe?'<button type="button" data-a="menu">Check cappuccino on menu</button>':''}</div><div class="jp-menu"></div>`;
+  ${d?typedCard(d):''}
+  <div class="jp-actions">${!pr.planned?'<button type="button" data-a="add">Add stop</button>':''}${isHotel?'<button type="button" data-a="hotel">Set as My Hotel</button>':''}${cafe?'<button type="button" data-a="menu">Check cappuccino on menu</button>':''}${d&&d.category!=='hotels'?'<button type="button" data-a="ratings">Ratings</button>':''}${d?.category==='hotels'?'<button type="button" data-a="rooms">Rooms &amp; prices</button>':''}</div><div class="jp-menu"></div>`;
+ div.querySelector('[data-a="ratings"]')?.addEventListener('click',async()=>{const out=div.querySelector('.jp-menu');out.textContent='Asking rating providers…';
+  try{const r=await placeRatings(d.place_id);out.innerHTML=r.ratings.length?r.ratings.map(x=>`<div><strong>${esc(x.provider)}</strong> ${esc(x.rating)}/${x.rating_scale} · ${esc(x.review_count)} reviews${x.url?` · <a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.attribution)}</a>`:''}</div>`).join('')+'<small>Shown per provider; never combined.</small>'
+   :`<strong>${r.status==='blocked_by_provider_access'?'Blocked by provider access':'Unavailable'}</strong> ${esc(r.status==='blocked_by_provider_access'?'No rating provider (Google Places, Yelp, Foursquare) is configured on the server, so no rating is shown.':r.errors.map(x=>x.provider+': '+x.error).join('; '))}`;}
+  catch(e){out.textContent=`Ratings unavailable (${e.message}).`;}});
+ div.querySelector('[data-a="rooms"]')?.addEventListener('click',async()=>{const out=div.querySelector('.jp-menu');out.textContent='Checking lodging providers…';
+  try{const r=await streetwiseFetch('/api/hotels/'+d.place_id.split('/').map(encodeURIComponent).join('/')+'/rooms?guests=2',{signal:AbortSignal.timeout(15000)});const x=await r.json();
+   out.innerHTML=`<strong>${x.status==='blocked_by_provider_access'?'Blocked by provider access':esc(x.status||'Unavailable')}</strong> ${esc(x.reason||x.error||'')}`;}catch(e){out.textContent=`Room check unavailable (${e.message}).`;}});
  div.querySelector('[data-a="add"]')?.addEventListener('click',()=>addNamedStop(p));
  div.querySelector('[data-a="hotel"]')?.addEventListener('click',()=>{setMyHotel(p);toast(`My hotel: ${p.name}`);});
  div.querySelector('[data-a="menu"]')?.addEventListener('click',async()=>{const out=div.querySelector('.jp-menu');out.textContent='Checking the official menu…';const r=await verifyMenuItem(p,'cappuccino');
   out.innerHTML=`<strong>${esc(MENU_LABEL[r.status]||r.status)}</strong> ${esc(r.reason||'')}${r.source_url?` <a href="${esc(r.source_url)}" target="_blank" rel="noopener">source</a>`:''}`;});
  new maplibregl.Popup({maxWidth:'300px'}).setLngLat(lngLat).setDOMContent(div).addTo(state.map);
+}
+
+// category card from GET /api/places/<id>: every value from a named source; absent values are said to be absent
+function typedCard(d){
+ const row=(k,v)=>v==null||v===''?'':`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`;
+ let rows='';
+ if(d.restaurant){const r=d.restaurant,i=r.inspection;
+  rows+=row('Cuisine',(r.cuisine||r.cuisine_dohmh||'').replace(/;/g,', ')||null)+row('Health grade',i?.grade?`${i.grade} (${i.grade_date}) — NYC DOHMH inspection, not a review`:i?'No letter grade on file':null)+
+   row('Last inspected',i?.last_inspection)+row('Services (OSM)',r.services_osm?Object.entries(r.services_osm).map(([k,v])=>`${k.replace('_',' ')}: ${v}`).join(', '):null)+row('Menu',r.menu_url?'official menu link mapped':'checked per request on the official website');}
+ if(d.hotel){const h=d.hotel;
+  rows+=row('Stars',h.star_rating?`${h.star_rating} (${h.star_rating_source})`:'not mapped')+row('Guest rating','only from a configured provider; never mixed with stars')+
+   row('Wi-Fi (OSM)',h.internet_access)+row('Check-in / out',h.check_in||h.check_out?`${h.check_in||'?'} / ${h.check_out||'?'}`:null)+row('NYC DOF lot',h.dof_hotel_lot?`${h.dof_hotel_lot.bbl} · class ${h.dof_hotel_lot.building_class}`:null)+row('Rooms & prices','Blocked by provider access');}
+ if(d.attraction){const a=d.attraction;
+  rows+=row('About',a.description&&`${a.description} (${a.description_source})`)+row('Admission',a.admission?`${a.admission} (${a.admission_source})`:'unknown')+row('Reservation',a.reservation)+
+   row('Typical visit',`${a.recommended_visit_min} min — ${a.visit_duration_basis}`)+row('Landmark',a.designated_landmark?'NYC designated (LPC)':null);}
+ rows+=row('Coverage',d.routing_coverage==='search_only'?'search only — outside the walking network':null)+row('Sources',d.data_sources.join(', '));
+ return `<span class="jp-q ${esc(d.quality_status)}">${esc(QUALITY_LABEL[d.quality_status]||d.quality_status)}</span><dl>${rows}</dl>`;
 }
