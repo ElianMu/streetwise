@@ -96,6 +96,16 @@ class IndexedUrban(unittest.TestCase):
    self.assertEqual(f['properties']['count'],actual,'Map counts cover the complete parent cell even when the viewport cuts through a child cell')
 
 class FoodEvidence(unittest.TestCase):
+ def test_known_menu_venue_is_found_before_nearest_place_cap_without_extra_crawls(self):
+  from unittest import mock
+  from datetime import datetime
+  from routing import menu,recommend
+  checked=max(datetime.fromisoformat(x['checked_at']).timestamp() for x in json.loads((ROOT/'data/menus/verified-items.json').read_text())['records'])
+  with mock.patch.object(menu.time,'time',return_value=checked+1),mock.patch.object(menu,'verify',side_effect=AssertionError('Fresh eligible menu evidence should not trigger unrelated website crawls')):
+   result=recommend.recommend_food(get_planner(),{'item':'bagel','categories':['bakeries','cafes','restaurants'],'sequence':[{'lat':40.7536,'lon':-73.9832},{'lat':40.7587,'lon':-73.9787}],'radius_m':1000,'departure':'2026-10-24T20:19:00+00:00'})
+  matches=[r for r in result['candidates'] if r['classification']=='meets_request']
+  self.assertTrue(any(r['place']['index_id']=='osm:node/11762033170' for r in matches))
+  self.assertTrue(all(r['menu']['status']=='confirmed_menu_match' for r in matches))
  def test_all_required_items_need_source_evidence(self):
   from routing.itinerary import validate_request,RoutingError
   origin={'lon':-73.9832,'lat':40.7536}

@@ -39,7 +39,9 @@ def fake_menu(status):
 
 
 def recommend(doc, status='not_found_in_checked_sources'):
-    with mock.patch.dict(os.environ, NO_KEYS), mock.patch.object(menu, 'verify', side_effect=fake_menu(status)):
+    # This transport-stub scenario controls all menu evidence, including cached and
+    # recorded receipts. Real receipt discovery has a separate indexed-data regression.
+    with mock.patch.dict(os.environ, NO_KEYS), mock.patch.object(menu, 'verify', side_effect=fake_menu(status)), mock.patch.object(menu,'cached_evidence',return_value=None), mock.patch.object(menu,'candidate_venues',return_value=set()):
         providers._cache.clear()
         return recommend_food(P, doc)
 

@@ -1,0 +1,20 @@
+{
+  "observed_commit": "3a16610b41693c7309ec11c24a61b0c01ecf01fc",
+  "scope": "Actual production browser acceptance and source-backed local reproduction; fix acceptance pending next deploy",
+  "findings": [
+    {
+      "input": "Actually, avoid the waterfront and walk away from the river.",
+      "observed": "Preference direction changed, but two unrequested famous-place visits were added; the count demonstration was copied into live state.",
+      "fix": "Remove live conversation demonstration and reject interests not grounded in actual user context; preserve explicit requested visits."
+    },
+    {
+      "input": "I want bagels and cappuccino along the route.",
+      "observed": "Actual AI parse and menu receipts were valid, but the fresh-menu venue was excluded by the nearest-30 candidate preselection.",
+      "fix": "Include real known-menu venues before the candidate cap; expired receipts are hints only. Reuse fresh eligible evidence before bounded new website checks."
+    },
+    {
+      "observation": "A gateway response and process/cache reset occurred near 495 MiB RSS before full-route-cache removal.",
+      "cause_status": "No Render log access; OOM cause not confirmed for that earlier event. New current cgroup OOM counters are available and remained zero during subsequent single-client API sequence."
+    }
+  ]
+}
