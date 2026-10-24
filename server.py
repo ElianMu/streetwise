@@ -518,11 +518,11 @@ def scrub(text):
     return re.sub(r'(sk|rk|pk)-[A-Za-z0-9_\-*]{6,}', '[key]', text)
 
 
-def call_llm(payload):
+def call_llm(payload, timeout=26):
     req = request.Request('https://api.openai.com/v1/chat/completions', json.dumps(payload).encode('utf-8'),
                           headers={'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json'}, method='POST')
     try:
-        with request.urlopen(req, timeout=26) as resp:
+        with request.urlopen(req, timeout=timeout) as resp:
             raw = resp.read()
     except error.HTTPError as e:
         # OpenAI error bodies: {"error": {"type": ..., "code": ...}}; only type and code are kept (the message can echo key fragments)
@@ -571,11 +571,29 @@ def interpret(doc):
         ]
     }
     try:
-        output = call_llm(payload)
-        try:
-            return 200, validate_interpretation(output)
-        except ValueError as e:
-            raise LLMFailure('model_output_rejected', detail=f'{e}; keys: {sorted(output)[:12] if isinstance(output, dict) else type(output).__name__}')
+        deadline = time.monotonic() + 26
+        for attempt in range(2):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise LLMFailure('upstream_unreachable', detail='TimeoutError')
+            output = call_llm(payload, timeout=remaining)
+            try:
+                return 200, validate_interpretation(output)
+            except ValueError as e:
+                failure = LLMFailure('model_output_rejected', detail=f'{e}; keys: {sorted(output)[:12] if isinstance(output, dict) else type(output).__name__}')
+                if attempt:
+                    raise failure
+                # Ask the model to repair its own result; never manufacture a weight or
+                # silently drop a preference. Keep strict validation on the second result.
+                print('interpret retry', json.dumps(failure.reason), flush=True)
+                payload['messages'].extend([
+                    {'role': 'assistant', 'content': json.dumps(output, ensure_ascii=False)},
+                    {'role': 'user', 'content':
+                     'Your JSON failed validation: ' + str(e) + '. Return a corrected JSON object for the ORIGINAL request. '
+                     'Use only canonical dimension names. Every directions key must have a corresponding integer weight '
+                     'in weights. Omit both fields for dimensions not requested; do not add arbitrary weights merely to '
+                     'satisfy validation. Preserve explicit POI requirements in journey.food and preserve all other intent.'}
+                ])
     except LLMFailure as f:
         print('interpret failure', json.dumps(f.reason), flush=True)
         return 502, {'error': 'LLM request failed; local preview can be used.', 'reason': f.reason}
