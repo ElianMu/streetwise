@@ -40,8 +40,12 @@ const INTEREST_LABEL={famous:'Famous sight',museums:'Museum',historic:'Historic 
 const SERVICE_LABEL={pharmacies:'Pharmacy',groceries:'Grocery / supermarket',health:'Hospital / clinic',banks:'ATM / bank',restrooms:'Public restroom',luggage:'Luggage storage'};
 const placesUrl=c=>`./data/places/${c}.json`;
 async function loadPlaces(cat){
- if(!POI_CACHE[cat])POI_CACHE[cat]=streetwiseJson(placesUrl(cat)).then(d=>d.records.map(r=>({...r,cat}))).catch(e=>{delete POI_CACHE[cat];throw e;});
+ if(!POI_CACHE[cat])POI_CACHE[cat]=streetwiseJson(placesUrl(cat)).then(d=>d.records.filter(r=>!['restaurants','cafes','bakeries','bars'].includes(cat)||foodListingEligible(r)).map(r=>({...r,cat}))).catch(e=>{delete POI_CACHE[cat];throw e;});
  return POI_CACHE[cat];
+}
+function foodListingEligible(r){
+ if(['private','no','permit'].includes(r.access))return false;
+ return !(r.src==='dohmh'&&!(r.pids||[]).some(p=>p.startsWith('osm:'))&&(!r.insp||r.insp.startsWith('1900-01-01'))&&!r.web);
 }
 let PLACE_INDEX=null;
 async function placeIndex(){return PLACE_INDEX||(PLACE_INDEX=streetwiseJson('./data/places/index.json').catch(e=>{PLACE_INDEX=null;throw e;}));}
@@ -93,8 +97,13 @@ function relevance(r,{item=null,cuisine=null}={}){
 /** Tool: candidate places of some categories near the walk, ranked by relevance minus straight-line distance to the path
     (pre-selection only; real walking cost is computed by the planner). */
 async function discoverPlaces(cats,{item=null,cuisine=null,filter=null,limit=8,near=null,radiusKm=2.5}={}){
- const lists=await Promise.all(cats.map(c=>loadPlaces(c).catch(()=>[])));
  const path=near?[near]:anchorPath();if(!path.length)return [];
+ let lists;
+ if(cats.every(c=>['restaurants','cafes','bakeries','bars'].includes(c))){
+  try{lists=[await foodRecordsNearPath(cats,path,radiusKm,cuisine)];}
+  catch(e){console.warn('Food search API unavailable; using the published local source snapshot:',e.message);}
+ }
+ if(!lists)lists=await Promise.all(cats.map(c=>loadPlaces(c).catch(()=>[])));
  // never "discover" the start, the end or a stop already chosen
  const fixedPts=[...anchorPath(),journey.hotel].filter(Boolean);
  const seen=new Set(),out=[];
@@ -108,6 +117,29 @@ async function discoverPlaces(cats,{item=null,cuisine=null,filter=null,limit=8,n
  }
  out.sort((a,b)=>b.score-a.score);
  return out.slice(0,limit).map(x=>({...poiPlace(x.r),score:Math.round(x.rel*100)/100,straightKm:Math.round(x.d*100)/100}));
+}
+function canonicalFoodRecord(p){
+ const food=p.restaurant||{},inspection=food.inspection||{};
+ return {id:p.index_id||p.place_id,cid:p.place_id,name:p.name,cat:p.category,lat:p.coordinates.lat,lon:p.coordinates.lon,addr:p.address,
+  src:(p.index_id||'').startsWith('dohmh:')?'dohmh':'osm',web:p.official_website,menu:food.menu_url,hours:p.opening_hours,
+  cuisine:food.cuisine||food.cuisine_dohmh,drink:food.drink_tags_osm, insp:inspection.last_inspection,dohmh:inspection.permit,
+  search_only:p.routing_coverage==='search_only',boro:p.borough};
+}
+async function foodRecordsNearPath(cats,path,radiusKm,cuisine){
+ // Nearby discovery is a bounded shortlist, not an assertion that every NYC
+ // business was checked. Read at most 50 source records per sampled anchor.
+ const anchors=[path[0]];
+ for(let i=1;i<path.length;i++){
+  const a=path[i-1],b=path[i],steps=Math.max(1,Math.ceil(kmBetween(a,b)));
+  for(let j=1;j<=steps;j++)anchors.push({lat:a.lat+(b.lat-a.lat)*j/steps,lon:a.lon+(b.lon-a.lon)*j/steps});
+ }
+ if(anchors.length>12)throw new Error('Long search area requires the full published snapshot');
+ const found=new Map();
+ for(let i=0;i<anchors.length;i+=3){
+  const responses=await Promise.all(anchors.slice(i,i+3).map(p=>streetwiseJson('/api/places/search?'+new URLSearchParams({lat:p.lat,lon:p.lon,categories:cats.join(','),radius_m:Math.min(3000,Math.ceil(radiusKm*1000+500)),limit:50,...(cuisine?{cuisine}:{})}),{signal:AbortSignal.timeout(12000)})));
+  for(const d of responses){if(!Array.isArray(d.results))throw new Error('Invalid food search response');for(const p of d.results)found.set(p.place_id,canonicalFoodRecord(p));}
+ }
+ return [...found.values()];
 }
 async function findNamedPlace(name){
  // Index first (real records with provenance), then the five-borough search providers.
@@ -437,17 +469,31 @@ async function placeRatings(id){
 }
 
 /* ---------- menu verification ---------- */
+function freshMenuEvidence(m){
+ if(!m?.checked_at)return false;
+ const age=Date.now()-Date.parse(m.checked_at),ttl=m.status==='confirmed_menu_match'?12*3600000:300000;
+ return Number.isFinite(age)&&age>=0&&age<ttl;
+}
+function menuEvidenceForDisplay(m){
+ return m?.status==='confirmed_menu_match'&&!freshMenuEvidence(m)?{...m,status:'unverified',price:null,reason:'Menu evidence has expired or has no check date; recheck the official menu.'}:m;
+}
 function stopMenuItems(stop){
  const f=journey.food.find(f=>stop.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);
  return [...new Set([...(stop.required_items||[]),stop.required_item,f?.item].filter(Boolean))];
 }
+const MENU_INFLIGHT=new Map();
 async function verifyMenuItem(place,item){
- const key=place.id+'|'+item;if(journey.menu[key]?.status&&journey.menu[key].status!=='checking')return journey.menu[key];
+ const key=place.id+'|'+item;if(journey.menu[key]?.status&&journey.menu[key].status!=='checking'&&freshMenuEvidence(journey.menu[key]))return journey.menu[key];
+ if(MENU_INFLIGHT.has(key))return MENU_INFLIGHT.get(key);
+ const pending=checkMenuItem(place,item,key);MENU_INFLIGHT.set(key,pending);
+ try{return await pending;}finally{MENU_INFLIGHT.delete(key);}
+}
+async function checkMenuItem(place,item,key){
  journey.menu[key]={status:'checking'};renderCityWalk();
  try{const r=await streetwiseFetch('/api/menu/verify',{method:'POST',headers:{'Content-Type':'application/json'},
    body:JSON.stringify({place_id:place.id,name:place.name,website:place.website||place.raw?.web||null,menu_url:place.menuUrl||place.raw?.menu||null,item}),signal:AbortSignal.timeout(30000)});
   const d=await r.json();if(!r.ok)throw new Error(d.error||`HTTP ${r.status}`);journey.menu[key]=d;
- }catch(e){journey.menu[key]={status:'unverified',reason:`Menu check unavailable (${e.message}).`};}
+ }catch(e){journey.menu[key]={status:'unverified',checked_at:new Date().toISOString(),reason:`Menu check unavailable (${e.message}).`};}
  renderCityWalk();return journey.menu[key];
 }
 async function autoVerifyMenus(){

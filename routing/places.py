@@ -40,6 +40,21 @@ def _days_since(d):
         return None
 
 
+def food_access(r):
+    """Permit existence alone does not establish a public, operating restaurant."""
+    if r.get('access') in ('private', 'no', 'permit'):
+        return {'status':'restricted', 'recommendation_eligible':False,
+                'basis':'OpenStreetMap access restriction: '+r['access']}
+    permit_only = r.get('src')=='dohmh' and not any(str(p).startswith('osm:') for p in r.get('pids', []))
+    inspected = bool(r.get('insp')) and not str(r['insp']).startswith('1900-01-01')
+    if permit_only and not inspected and not r.get('web'):
+        return {'status':'unverified', 'recommendation_eligible':False,
+                'basis':'Permit-only listing with no actual inspection or official public-facing website; a permit may cover a private workplace or a venue not yet operating.'}
+    return {'status':'mapped_customers' if r.get('access') in ('yes','customers','permissive') else 'unverified',
+            'recommendation_eligible':True,
+            'basis':'Source-listed food business; public access and current opening are not independently verified.'}
+
+
 _DEC = json.JSONDecoder()
 
 
@@ -158,7 +173,7 @@ class PlaceStore:
             return 'verified'
         if cat in ATTRACTION and (r.get('src') == 'lpc' or r.get('lpc') or (r.get('sl') and r.get('web'))):
             return 'verified'
-        if cat == 'hotels' and r.get('dof_lot'):
+        if cat == 'hotels' and (r.get('dof_lot') or (r.get('lpc') and r.get('web'))):
             return 'verified'
         if not (r.get('addr') or r.get('web') or r.get('hours')):
             return 'limited_data'
@@ -186,6 +201,11 @@ class PlaceStore:
                 'source_links': [r['source_url']] if r.get('source_url') else [], 'quality_status': self.quality(r),
                 'routing_coverage': 'search_only' if r.get('search_only') else 'manhattan_network', 'phone': r.get('phone')}
         base['verification_scope'] = 'Identity/source corroboration only; not live opening, menu, ratings, prices or availability.'
+        base['verification_basis'] = ([{'source':'NYC LPC','record_id':r['lpc'],'scope':'Historic property identity/designation; not current hotel operation'}] if r.get('lpc') else []) + ([{'source':'NYC DOF','record_id':r['dof_lot'],'scope':'Hotel-class tax lot; not rooms or availability'}] if r.get('dof_lot') else [])
+        if cat in FOOD:
+            base['public_access'] = food_access(r)
+            if str(base['last_verified_at'] or '').startswith('1900-01-01'):
+                base['last_verified_at'] = None
         source_ids = r.get('pids') or [r['id']]
         base['field_provenance'] = {label: {'source_ids': [r['field_sources'][raw]] if r.get('field_sources',{}).get(raw) else source_ids,
             'resolution': 'field_source' if r.get('field_sources',{}).get(raw) else 'merged_source_set',
@@ -194,7 +214,7 @@ class PlaceStore:
             for label,raw in [('name','name'),('address','addr'),('official_website','web'),('opening_hours','hours'),('coordinates','lat')] if r.get(raw) is not None}
         if cat in FOOD:
             base['restaurant'] = {'cuisine': r.get('cuisine'), 'cuisine_dohmh': r.get('dcuisine'),
-                                  'inspection': {'permit': r.get('dohmh'), 'grade': r.get('grade'), 'grade_date': r.get('gdate'), 'last_inspection': r.get('insp'),
+                                  'inspection': {'permit': r.get('dohmh'), 'grade': r.get('grade'), 'grade_date': r.get('gdate'), 'last_inspection': None if str(r.get('insp') or '').startswith('1900-01-01') else r.get('insp'),
                                                  'closed_since': r.get('closed'), 'source': 'NYC DOHMH' if r.get('dohmh') else None,
                                                  'publisher_updated_at':(self.dohmh_meta or {}).get('publisher_updated_at'),
                                                  'retrieved_at':(self.dohmh_meta or {}).get('retrieved_at'),
@@ -247,6 +267,8 @@ class PlaceStore:
                 r = self._updated(_decode(rows[i], pool))
                 key = r.get('cid') or r['id']
                 if key in seen or r['cat'] not in categories or (r.get('closed') and not include_closed):
+                    continue
+                if r['cat'] in FOOD and not food_access(r)['recommendation_eligible']:
                     continue
                 if r.get('source_url','').endswith('/enfh-gkve') and r.get('sub') in ('Undeveloped','Operations','Lot','Parkway','Strip','Buildings/Institutions','Managed Sites','Cemetery'): continue
                 if not include_closed and str(r.get('source_status') or '').lower() in ('not operational','closed','inactive'): continue

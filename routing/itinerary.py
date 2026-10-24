@@ -69,6 +69,11 @@ def validate_request(doc):
         raise ValueError('end.mode must be fixed, round, hotel or open')
     end_place = _pt(end.get('place'), 'end') if mode in ('fixed', 'hotel') else None
     stops = []
+    def check_public_access(p):
+        from .places import store, food_access, FOOD
+        r = store().raw(p['id'])
+        if r and r.get('cat') in FOOD and not food_access(r)['recommendation_eligible']:
+            raise RoutingError('This food listing has no verified public access or is restricted; it cannot be added as a public restaurant stop.')
     def required_items(value):
         items=value.get('required_items') or []
         if not isinstance(items,list) or len(items)>5 or any(not isinstance(x,str) or not x.strip() or len(x)>60 for x in items):raise ValueError('Invalid required menu items')
@@ -80,6 +85,7 @@ def validate_request(doc):
         return list(dict.fromkeys(x.strip().lower() for x in items))
     for k, s in enumerate((doc.get('stops') or [])[:12]):
         p = _pt(s, f'stop {k + 1}')
+        check_public_access(p)
         items=required_items(s)
         for item in items:
             from .menu import cached_evidence
@@ -92,6 +98,7 @@ def validate_request(doc):
     slots = []
     for k, sl in enumerate((doc.get('slots') or [])[:6]):
         cands = [{**_pt(c, 'candidate'), 'score': float(c.get('score') or 0), 'evidence': c.get('evidence')} for c in (sl.get('candidates') or [])[:8]]
+        for candidate in cands: check_public_access(candidate)
         items=required_items(sl)
         if items:
             from .menu import cached_evidence
@@ -147,6 +154,8 @@ class Planner:
         def add(place, role, **extra):
             from .places import store
             known = store().get(place['id'])
+            if known and not known.get('public_access',{}).get('recommendation_eligible',True):
+                return None, 'food listing has restricted or unverified public access; a permit alone does not establish a visitor-facing restaurant'
             if known and _near_m(place,{'lat':known['coordinates']['lat'],'lon':known['coordinates']['lon']}) > 30:
                 return None, 'place ID and coordinates disagree with the canonical source; refresh the selection'
             if known and (known['quality_status']=='closed' or str(known.get('operational_status') or '').lower() in ('not operational','closed','inactive')):

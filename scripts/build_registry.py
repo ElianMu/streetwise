@@ -127,6 +127,9 @@ def main():
         recs = json.load(open(D('places', c['id'] + '.json')))['records']
         src = Counter(r.get('src') for r in recs)
         pub, lic, lic_url = licence('LPC' if c['id'] == 'historic_lpc' else 'NYC Open Data' if c['id'] == 'restrooms' and src.get('nyc_restrooms', 0) > src.get('osm', 0) else 'OpenStreetMap')
+        if src.get('dohmh'):
+            pub += '; NYC DOHMH'
+            lic += '; NYC Open Data Terms of Use (DOHMH records)'
         rows.append({'dataset_id': 'places:' + c['id'], 'name': c['label'] + ' (discovery index)', 'group': 'tourism_discovery', 'publisher': pub,
                      'source': ', '.join(f'{k} ({v})' for k, v in src.items()), 'source_url': 'https://overpass-api.de/' if src.get('osm') else None,
                      'license': lic, 'license_url': lic_url, 'retrieved_at': idx['built_at'], 'publisher_updated_at': idx['osm_timestamp'],
@@ -135,7 +138,7 @@ def main():
                      'duplicate_records': c.get('merged_duplicates', 0), 'records_with_conflicts': c.get('records_with_conflicts', 0),
                      'missing_fields': {f: round(v / max(1, len(recs)), 3) for f, v in (c.get('missing') or {}).items()},
                      'update_method': 'scripts/build_place_index.py (Overpass snapshot + Wikidata sitelinks)', 'integration_status': 'connected',
-                     'note': 'Listed places; operating status today is not verified.'})
+                     'note': 'Listed places; operating status today and public access are not verified. A DOHMH permit can describe a private workplace or not-yet-inspected business.'})
     graph = json.load(gzip.open(D('pedestrian', 'manhattan-walk-graph.json.gz'), 'rt'))
     g = {**graph['metadata'], 'edges': len(graph['edges']), 'nodes': len(graph['nodes'])}
     es = json.load(gzip.open(D('pedestrian', 'edge-scores.json.gz'), 'rt'))['metadata']

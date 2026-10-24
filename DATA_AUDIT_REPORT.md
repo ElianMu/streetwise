@@ -1,8 +1,8 @@
 # STREETWISE · NYC — Data Audit Report
 
-Generated 2026-10-24T20:11:16+00:00 by `scripts/build_audit_report.py` from the shipped files (no estimates).
+Generated 2026-10-24T22:18:53+00:00 by `scripts/build_audit_report.py` from the shipped files (no estimates).
 
-**125 datasets** (97 connected), **2,693,559 records** in the shipped files. A record count is not a count of places verified open today.
+**125 datasets** (97 connected), **2,695,498 records** in the shipped files. A record count is not a count of places verified open today.
 
 ## Datasets
 
@@ -95,9 +95,9 @@ Generated 2026-10-24T20:11:16+00:00 by `scripts/build_audit_report.py` from the 
 | Famous attractions & viewpoints (discovery index) | OpenStreetMap contributors | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 228 | 0 | hours 93%, addr 83%, web 53% | fair (a field missing in 93%) | connected |
 | Historic places (discovery index) | OpenStreetMap contributors | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 390 | 0 | hours 99%, addr 91%, web 82% | fair (a field missing in 99%) | connected |
 | Parks & gardens (discovery index) | OpenStreetMap contributors | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 526 | 0 | hours 90%, addr 80%, web 53% | fair (a field missing in 90%) | connected |
-| Cafés & coffee (discovery index) | OpenStreetMap contributors | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 2001 | 0 | web 65%, hours 64%, addr 16% | fair (a field missing in 65%) | connected |
-| Bakeries & desserts (discovery index) | OpenStreetMap contributors | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 713 | 0 | web 72%, hours 70%, addr 14% | fair (a field missing in 72%) | connected |
-| Restaurants (discovery index) | OpenStreetMap contributors | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 10919 | 0 | hours 73%, web 72%, addr 10% | fair (a field missing in 73%) | connected |
+| Cafés & coffee (discovery index) | OpenStreetMap contributors; NYC DOHMH | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 2210 | 0 | web 68%, hours 67%, addr 15% | fair (a field missing in 68%) | connected |
+| Bakeries & desserts (discovery index) | OpenStreetMap contributors; NYC DOHMH | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 857 | 0 | web 76%, hours 75%, addr 11% | fair (a field missing in 76%) | connected |
+| Restaurants (discovery index) | OpenStreetMap contributors; NYC DOHMH | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 12505 | 0 | hours 77%, web 76%, addr 9% | fair (a field missing in 77%) | connected |
 | Bars & pubs (discovery index) | OpenStreetMap contributors | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 884 | 0 | hours 46%, web 41%, addr 23% | good | connected |
 | Theatres, libraries & landmarks of worship (discovery index) | OpenStreetMap contributors | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 434 | 0 | hours 88%, web 20%, addr 14% | fair (a field missing in 88%) | connected |
 | Shopping (discovery index) | OpenStreetMap contributors | periodic_poi | Within 150 m of the routable pedestrian graph (osm-walk-20261023-99602011): Manhattan | 278 | 0 | web 54%, hours 52%, addr 32% | fair (a field missing in 54%) | connected |
@@ -111,7 +111,7 @@ Generated 2026-10-24T20:11:16+00:00 by `scripts/build_audit_report.py` from the 
 | OSM pedestrian routing graph | OpenStreetMap contributors | static_urban | Manhattan | 122092 | 1 | — | good | connected |
 | 12-dimension scores on routing edges | STREETWISE (derived) | static_urban | Manhattan | 61047 | 1 | — | good | connected |
 | Manhattan street segments with 12-dimension scores | STREETWISE (derived from NYC DCP LION and listed sources) | static_urban | Manhattan | 10533 | 1 | — | good | connected |
-| Food establishment permits and inspections (five boroughs) | NYC Department of Health and Mental Hygiene | periodic_poi | NYC five boroughs {"Bronx": 2632, "Manhattan": 12536, "Brooklyn": 7997, "Staten Island": 1114, "Queens": 6989, "0": 101} | 31369 | 0 | coordinates 3% | limited (valid geometry 97.4%) | connected |
+| Food establishment permits and inspections (five boroughs) | NYC Department of Health and Mental Hygiene | periodic_poi | NYC five boroughs {"Bronx": 2632, "Manhattan": 12536, "Brooklyn": 7997, "Staten Island": 1114, "Queens": 6989, "0": 101} | 31369 | 1 | coordinates 3% | limited (valid geometry 97.4%) | connected |
 | Hotel-class tax lots (Manhattan) | NYC Department of Finance | periodic_poi | Manhattan | 780 | 0 | — | good | connected |
 | Google Places API (New) | Google | on_demand_business | per request | — | — | — | n/a (blocked by provider access) | blocked_by_provider_access |
 | Yelp Fusion API | Yelp | on_demand_business | per request | — | — | — | n/a (blocked by provider access) | blocked_by_provider_access |
@@ -129,10 +129,10 @@ Generated 2026-10-24T20:11:16+00:00 by `scripts/build_audit_report.py` from the 
 | Waterfront Public Access Areas (WPAAs) | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 78 | 1088 | cpc_approv 72%, res_dec 60%, cpc_report 5% | fair (a field missing in 72%) | connected |
 | NYC DOT Pedestrian Plazas - Polygon | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 93 | 23 | tostreet 13%, femafldt 2%, objectid 0% | good | connected |
 | Street Closures due to Construction Activities by Block and Intersection | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 4157 | 5 | tostreetname 35%, onstreetname 0%, fromstreetname 0% | good | connected |
-| Seating Locations | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 5702 | 10 | side_of_st 6%, femafldt 4%, :@computed_region_efsh_h5xi 0% | good | connected |
+| Seating Locations | NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 5702 | 11 | side_of_st 6%, femafldt 4%, :@computed_region_efsh_h5xi 0% | good | connected |
 | MTA Subway Stations | Metropolitan Transportation Authority / Open Data NY | static_urban | All five NYC boroughs | 496 | 0 | ada_notes 98%, ada 0%, ada_northbound 0% | fair (a field missing in 98%) | connected |
 | MTA Subway Entrances and Exits: 2024 | Metropolitan Transportation Authority / Open Data NY | static_urban | All five NYC boroughs | 2120 | 323 | borough 0%, complex_id 0%, constituent_station_name 0% | good | connected |
-| MTA Current Bus Stops | Metropolitan Transportation Authority / Open Data NY | static_urban | All five NYC boroughs; bus service also extends just beyond the city boundary | 13735 | 7 | bundle 0%, in_effect 0%, name 0% | good | connected |
+| MTA Current Bus Stops | Metropolitan Transportation Authority / Open Data NY | static_urban | All five NYC boroughs; bus service also extends just beyond the city boundary | 13735 | 8 | bundle 0%, in_effect 0%, name 0% | good | connected |
 
 ## Hard-coded quick-pick places (app.js `PLACES`)
 
@@ -196,7 +196,7 @@ Ratings, review counts, review text, hotel room types, live prices and availabil
 
 ## Recomputed tourism identity and missingness
 
-20654 category records; 20654 distinct source record IDs; 0 repeated source IDs; 20437 distinct canonical IDs. 217 linked records share a canonical ID (not automatically a duplicate error). 13 records retain conflict flags. Existing historical merges cannot be unmerged without raw source records.
+22593 category records; 22593 distinct source record IDs; 0 repeated source IDs; 22376 distinct canonical IDs. 217 linked records share a canonical ID (not automatically a duplicate error). 13 records retain conflict flags. Existing historical merges cannot be unmerged without raw source records.
 
 | Category | Records | Missing address | Missing website | Missing hours | Invalid coordinates | Repeated IDs |
 |---|---|---|---|---|---|---|
@@ -205,9 +205,9 @@ Ratings, review counts, review text, hotel room types, live prices and availabil
 | attractions | 228 | 190 | 120 | 213 | 0 | 0 |
 | historic | 390 | 355 | 319 | 387 | 0 | 0 |
 | parks | 526 | 418 | 281 | 471 | 0 | 0 |
-| cafes | 2001 | 328 | 1294 | 1273 | 0 | 0 |
-| bakeries | 713 | 97 | 511 | 497 | 0 | 0 |
-| restaurants | 10919 | 1150 | 7875 | 7988 | 0 | 0 |
+| cafes | 2210 | 328 | 1503 | 1482 | 0 | 0 |
+| bakeries | 857 | 97 | 655 | 641 | 0 | 0 |
+| restaurants | 12505 | 1150 | 9461 | 9574 | 0 | 0 |
 | bars | 884 | 201 | 363 | 406 | 0 | 0 |
 | culture | 434 | 62 | 85 | 380 | 0 | 0 |
 | shopping | 278 | 89 | 149 | 145 | 0 | 0 |

@@ -133,6 +133,12 @@ class A_Itinerary(unittest.TestCase):
 
 
 class B_MenuVerification(unittest.TestCase):
+    def setUp(self):
+        # Each case substitutes a different document at the same fixture URL.
+        # A production page cache must not leak one case's transport into another.
+        menu.DOCUMENTS.clear()
+        menu.DOCUMENT_BYTES=0
+
     """Menu evidence grades with HTTP stubbed (no network); the official site comes from the place index only."""
     SITE = 'https://cafe.test/'
 

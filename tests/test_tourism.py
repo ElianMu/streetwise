@@ -28,7 +28,7 @@ WED_NOON = '2026-10-21T12:00:00-04:00'
 
 
 def fake_menu(status):
-    def verify(doc, now=None):
+    def verify(doc, now=None, deadline=None):
         out = {'place_id': doc['place_id'], 'item': doc['item'], 'status': status, 'checked_at': '2026-10-21T16:00:00Z', 'reason': None}
         if status == 'confirmed_menu_match':
             out.update(matched_item=doc['item'].title(), price=4.5, menu_source_url='https://example.test/menu', source_url='https://example.test/menu')
@@ -95,7 +95,8 @@ class B_Places(unittest.TestCase):
             if h['hotel']['star_rating']:
                 self.assertEqual(h['hotel']['star_rating_source'], 'OpenStreetMap stars tag')
             if h['quality_status'] == 'verified':
-                self.assertIsNotNone(h['hotel']['dof_hotel_lot'])
+                self.assertTrue(h['verification_basis'])
+                self.assertTrue(h['hotel']['dof_hotel_lot'] or any(b['source']=='NYC LPC' for b in h['verification_basis']))
 
     def test_outside_manhattan_is_search_only(self):
         res = S.search({'lat': 40.6782, 'lon': -73.9442}, ['restaurants'], radius_m=400, limit=10)

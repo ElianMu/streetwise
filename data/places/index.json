@@ -66,38 +66,38 @@
   },
   {
    "id": "cafes",
-   "label": "Caf\u00e9s & coffee",
-   "count": 2001,
+   "label": "Cafés & coffee",
+   "count": 2210,
    "merged_duplicates": 9,
    "records_with_conflicts": 2,
    "missing": {
     "addr": 328,
-    "web": 1294,
-    "hours": 1273
+    "web": 1503,
+    "hours": 1482
    }
   },
   {
    "id": "bakeries",
    "label": "Bakeries & desserts",
-   "count": 713,
+   "count": 857,
    "merged_duplicates": 6,
    "records_with_conflicts": 0,
    "missing": {
     "addr": 97,
-    "web": 511,
-    "hours": 497
+    "web": 655,
+    "hours": 641
    }
   },
   {
    "id": "restaurants",
    "label": "Restaurants",
-   "count": 10919,
+   "count": 12505,
    "merged_duplicates": 117,
    "records_with_conflicts": 5,
    "missing": {
     "addr": 1150,
-    "web": 7875,
-    "hours": 7988
+    "web": 9461,
+    "hours": 9574
    }
   },
   {
@@ -228,7 +228,7 @@
   "nyc_restrooms": "NYC Open Data Public Restrooms (i7jb-7jku), status as published",
   "wikidata": "Wikidata API sitelink counts (CC0)",
   "dof_hotels": "NYC Department of Finance Hotels Properties Citywide (tjus-cn27): hotel-class tax lots",
-  "dohmh": "NYC DOHMH Restaurant Inspection Results (43nn-pn8j): permit, cuisine, phone, grade, last inspection, closure \u2014 not reviews"
+  "dohmh": "NYC DOHMH Restaurant Inspection Results (43nn-pn8j): permit, cuisine, phone, grade, last inspection, closure — not reviews"
  },
  "fields": {
   "sub": "source tag",
@@ -253,13 +253,37 @@
  "inspections": {
   "available": true,
   "manhattan_permits": 12215,
-  "linked_to_osm": 5164,
-  "added_from_dohmh": 7018,
+  "linked_to_osm": 3326,
+  "added_from_dohmh": 8856,
   "closed_by_dohmh": 35
  },
  "hotel_lots": {
   "available": true,
   "lots": 780,
   "hotels_matched": 273
+ },
+ "permit_link_repair": {
+  "method": "same source snapshots; unambiguous names AND exact normalized address AND <60 m; uncertain records retained separately",
+  "repaired_at": "2026-10-24T22:12:23+00:00",
+  "permit_source_sha256": "38eaa1fba28140695442701b070afa426ab4f792e9ca29c91e35666d3eb64a75",
+  "source_record_counts": {
+   "restaurants": 10919,
+   "cafes": 2001,
+   "bakeries": 713,
+   "bars": 884
+  },
+  "result_record_counts": {
+   "restaurants": 12505,
+   "cafes": 2210,
+   "bakeries": 857,
+   "bars": 884
+  },
+  "summary": {
+   "available": true,
+   "manhattan_permits": 12215,
+   "linked_to_osm": 3326,
+   "added_from_dohmh": 8856,
+   "closed_by_dohmh": 35
+  }
  }
 }
