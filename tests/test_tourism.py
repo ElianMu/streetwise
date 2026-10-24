@@ -46,16 +46,19 @@ def recommend(doc, status='not_found_in_checked_sources'):
 
 class A_Datasets(unittest.TestCase):
     def test_index_ids_unique_and_coordinates_in_manhattan(self):
-        for cat, recs in S.by_cat.items():
+        for cat in S.categories:
+            recs = list(S.records(cat))
             ids = [r['id'] for r in recs]
             self.assertEqual(len(ids), len(set(ids)), cat)
             for r in recs:
                 self.assertTrue(40.68 < r['lat'] < 40.89 and -74.05 < r['lon'] < -73.90, (cat, r['id']))
 
     def test_dohmh_covers_five_boroughs_with_metadata(self):
-        self.assertEqual({r['boro'] for r in S.nyc_food}, {'Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'})
-        self.assertGreater(S.dohmh_meta['records'], 20000)
-        self.assertIn('43nn-pn8j', S.dohmh_meta['source'])
+        meta = S._outside()
+        self.assertLessEqual({'Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'}, set(meta['by_borough']))
+        self.assertEqual({r['boro'] for r in S.records('_dohmh')}, {'Brooklyn', 'Queens', 'Bronx', 'Staten Island'})
+        self.assertGreater(meta['records'], 20000)
+        self.assertIn('43nn-pn8j', meta['source'])
 
     def test_registry_classes_and_blocked_providers(self):
         reg = json.loads((ROOT / 'data' / 'registry.json').read_text())['datasets']
@@ -98,7 +101,7 @@ class B_Places(unittest.TestCase):
         self.assertTrue(all(r['routing_coverage'] == 'search_only' and r['borough'] == 'Brooklyn' for r in res))
 
     def test_dohmh_closed_places_hidden_unless_asked(self):
-        closed = next(r for r in S.by_id.values() if r.get('closed') and r.get('cat') in ('restaurants', 'cafes') and not r.get('search_only'))
+        closed = next(r for c in ('restaurants', 'cafes') for r in S.records(c) if r.get('closed'))
         near = {'lat': closed['lat'], 'lon': closed['lon']}
         ids = lambda **k: {r['index_id'] for r in S.search(near, [closed['cat']], radius_m=30, limit=50, **k)}
         self.assertNotIn(closed['id'], ids())
@@ -107,7 +110,7 @@ class B_Places(unittest.TestCase):
 
     def test_branches_stay_separate_entities(self):
         names = {}
-        for r in S.by_cat['restaurants']:
+        for r in S.records('restaurants'):
             names.setdefault(r['name'], []).append(r)
         multi = next(v for k, v in names.items() if len(v) >= 3 and k)
         self.assertEqual(len({r['id'] for r in multi}), len(multi))
@@ -292,7 +295,7 @@ class G_Endpoints(unittest.TestCase):
         self.assertEqual(self.get(f'/api/places/{hid}/ratings')[1]['status'], 'blocked_by_provider_access')
 
     def test_slash_ids_and_bad_input(self):
-        oid = next(r['id'] for r in S.by_cat['museums'] if r['id'].startswith('osm:'))
+        oid = next(r['id'] for r in S.records('museums') if r['id'].startswith('osm:'))
         self.assertEqual(self.get('/api/places/' + oid)[0], 200)
         self.assertEqual(self.get('/api/places/nope:1')[0], 404)
         self.assertEqual(self.get('/api/places/search?lat=1&lon=2')[0], 400)

@@ -19,7 +19,7 @@ from .engine import WALK_SPEED_M_PER_MIN, RoutingError
 from .places import store
 
 EVIDENCE_RANK = {'confirmed_menu_match': 0, 'probable_match_review': 1, 'unverified': 2, 'not_checked': 2, 'not_found_in_checked_sources': 3, None: 2}
-CHECK_LIMIT, DEADLINE_S = 6, 25
+CHECK_LIMIT, WORKERS, DEADLINE_S = 6, 3, 25   # 3 parallel page reads keep memory bounded on the server
 
 
 def _pt(d, name):
@@ -79,7 +79,7 @@ def recommend_food(planner, doc):
     to_check = [c for c in cands if c.get('official_website')][:CHECK_LIMIT] if item else []
     menus = {}
     if to_check:
-        with cf.ThreadPoolExecutor(max_workers=CHECK_LIMIT) as ex:
+        with cf.ThreadPoolExecutor(max_workers=WORKERS) as ex:
             futs = {ex.submit(menu.verify, {'place_id': c['place_id'], 'name': c['name'], 'item': item}): c['place_id'] for c in to_check}
             try:
                 for f in cf.as_completed(futs, timeout=DEADLINE_S):
@@ -88,7 +88,9 @@ def recommend_food(planner, doc):
                     except Exception as e:
                         menus[futs[f]] = {'status': 'unverified', 'reason': f'menu check failed ({type(e).__name__})'}
             except cf.TimeoutError:
-                pass
+                for f, pid in futs.items():
+                    f.cancel()
+                    menus.setdefault(pid, {'status': 'not_checked', 'reason': f'The menu check did not finish within {DEADLINE_S} s.'})
     results = []
     for c in cands:
         w = walk.get(c['place_id'])
@@ -132,7 +134,7 @@ def recommend_food(planner, doc):
         r['explanation'] = explain(r, item)
     return {'item': item, 'cuisine': cuisine, 'categories': cats, 'departure': departure.astimezone(oh.NY).isoformat(timespec='minutes'),
             'status': 'ok' if any(r['classification'] == 'meets_request' for r in results) else 'no_confirmed_match' if item else 'ok',
-            'candidates': results, 'checked_menus': len(menus), 'providers_configured': providers.configured(), 'compute_seconds': round(time.time() - t0, 2),
+            'candidates': results, 'checked_menus': sum(1 for m in menus.values() if m['status'] != 'not_checked'), 'providers_configured': providers.configured(), 'compute_seconds': round(time.time() - t0, 2),
             'method': 'Hard filters first (DOHMH closure, closed at arrival, detour limit, reachability); then requested-item evidence, '
                       'walking detour on the network, health-inspection grade as a tie-break. Ratings are shown per provider and not blended.'}
 

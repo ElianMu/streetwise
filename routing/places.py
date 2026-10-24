@@ -12,7 +12,8 @@ quality_status is set by rules on evidence, never for looks:
   unverified        listed by a source, nothing more confirmed
 routing_coverage: 'manhattan_network' when the place snaps to the pedestrian graph, otherwise 'search_only'.
 """
-import gzip, json, math, os, re
+import gzip, json, math, os, re, threading
+from array import array
 from datetime import date, datetime, timezone
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -39,32 +40,82 @@ def _days_since(d):
         return None
 
 
+_DEC = json.JSONDecoder()
+
+
+def _stream(text):
+    """(record, record JSON text) for each element of the file's "records" array, one at a time (no full parse)."""
+    i = text.index('[', text.index(',"records":['))
+    while True:
+        i += 1
+        while text[i] in ' \n\r\t,':
+            i += 1
+        if text[i] == ']':
+            return
+        r, end = _DEC.raw_decode(text, i)
+        yield r, text[i:end]
+        i = end - 1
+
+
+def _decode(text, pool):
+    r = json.loads(text)
+    if pool != '_dohmh':
+        r['cat'] = pool
+    return r
+
+
 class PlaceStore:
+    """Records are held as compact JSON strings with parallel coordinate arrays (about a third of the memory of dicts; the
+    routing graph already uses most of the server's memory) and decoded only when they fall inside a search radius or are
+    asked for by id. DOHMH permits outside Manhattan are loaded on the first search or lookup that needs them."""
+
     def __init__(self):
         self.index = json.load(open(os.path.join(PLACES_DIR, 'index.json')))
-        self.by_id, self.by_cat = {}, {}
-        for c in self.index['categories']:
-            recs = json.load(open(os.path.join(PLACES_DIR, c['id'] + '.json')))['records']
-            for r in recs:
-                r['cat'] = c['id']
-                self.by_id[r['id']] = r
-                self.by_id.setdefault(r.get('cid'), r)
-            self.by_cat[c['id']] = recs
-        self.nyc_food = []
-        if os.path.exists(DOHMH):
-            d = json.load(gzip.open(DOHMH, 'rt'))
-            self.dohmh_meta = d['metadata']
-            for r in d['records']:
-                if r['lat'] and r['boro'] in BORO:
-                    self.nyc_food.append(r)
-                    self.by_id.setdefault('dohmh:' + r['camis'], {'id': 'dohmh:' + r['camis'], 'name': ' '.join(w.capitalize() for w in r['name'].split()), 'lat': r['lat'],
-                                                                  'lon': r['lon'], 'src': 'dohmh', 'addr': r['addr'].title(), 'phone': r['phone'], 'dcuisine': r['cuisine'],
-                                                                  'dohmh': r['camis'], 'grade': r['grade'], 'gdate': r['grade_date'], 'insp': r['last_inspection'],
-                                                                  'closed': r['closure_date'] if r['closed_by_dohmh'] else None, 'boro': r['boro'],
-                                                                  'cat': 'cafes' if r['cuisine'] == 'Coffee/Tea' else 'bakeries' if r['cuisine'] in ('Bakery Products/Desserts', 'Donuts') else 'restaurants',
-                                                                  'search_only': r['boro'] != 'Manhattan'})
-        else:
-            self.dohmh_meta = None
+        self.categories = [c['id'] for c in self.index['categories']]
+        self.rows, self.lat, self.lon, self.ref = {}, {}, {}, {}
+        for cat in self.categories:
+            with open(os.path.join(PLACES_DIR, cat + '.json'), encoding='utf-8') as f:
+                self._add(cat, _stream(f.read()), lambda r: [r['id'], r.get('cid'), *(r.get('pids') or [])])
+        self._outside_lock, self.dohmh_meta = threading.Lock(), None
+
+    def _add(self, pool, items, keys):
+        """items: (record, its JSON text). Only the text and coordinates are kept."""
+        rows, la, lo = self.rows.setdefault(pool, []), self.lat.setdefault(pool, array('d')), self.lon.setdefault(pool, array('d'))
+        for r, text in items:
+            for k in keys(r):
+                if k:
+                    self.ref.setdefault(k, (pool, len(rows)))
+            rows.append(text)
+            la.append(r['lat']); lo.append(r['lon'])
+
+    def _outside(self):
+        """DOHMH food permits in Brooklyn, Queens, the Bronx and Staten Island (Manhattan permits are already in the index)."""
+        if self.dohmh_meta is None and os.path.exists(DOHMH):
+            with self._outside_lock:
+                if self.dohmh_meta is None:
+                    with gzip.open(DOHMH, 'rt', encoding='utf-8') as f:
+                        text = f.read()
+                    meta = _DEC.raw_decode(text, text.index('"metadata":') + 11)[0]
+                    recs = ({'id': 'dohmh:' + r['camis'], 'name': ' '.join(w.capitalize() for w in r['name'].split()), 'lat': r['lat'], 'lon': r['lon'],
+                             'src': 'dohmh', 'addr': r['addr'].title(), 'phone': r['phone'], 'dcuisine': r['cuisine'], 'dohmh': r['camis'], 'grade': r['grade'],
+                             'gdate': r['grade_date'], 'insp': r['last_inspection'], 'closed': r['closure_date'] if r['closed_by_dohmh'] else None, 'boro': r['boro'],
+                             'cat': 'cafes' if r['cuisine'] == 'Coffee/Tea' else 'bakeries' if r['cuisine'] in ('Bakery Products/Desserts', 'Donuts') else 'restaurants',
+                             'search_only': True}
+                            for r, _ in _stream(text) if r['lat'] and r['boro'] in BORO and r['boro'] != 'Manhattan')
+                    self._add('_dohmh', ((r, json.dumps(r, separators=(',', ':'))) for r in recs), lambda r: [r['id']])
+                    del text
+                    self.dohmh_meta = meta
+        return self.dohmh_meta
+
+    def raw(self, pid):
+        """The stored record for any canonical, index or provider id, or None."""
+        if pid not in self.ref and str(pid).startswith('dohmh:'):
+            self._outside()
+        at = self.ref.get(pid)
+        return _decode(self.rows[at[0]][at[1]], at[0]) if at else None
+
+    def records(self, cat):
+        return (_decode(x, cat) for x in self.rows.get(cat, []))
 
     # ---------------------------------------------------------------- canonical model
     def quality(self, r):
@@ -127,7 +178,7 @@ class PlaceStore:
         return base
 
     def get(self, pid):
-        r = self.by_id.get(pid)
+        r = self.raw(pid)
         return self.canonical(r) if r else None
 
     # ---------------------------------------------------------------- search
@@ -136,13 +187,18 @@ class PlaceStore:
         router's job). Manhattan comes from the discovery index; food elsewhere in NYC from DOHMH (search only)."""
         q = re.sub(r'[^a-z0-9 ]', '', (query or '').lower()).strip()
         out, seen = [], set()
-        pools = [self.by_cat.get(c, []) for c in categories]
-        if set(categories) & set(FOOD) and not self._in_manhattan(near):
-            pools.append([r for r in (self.by_id.get('dohmh:' + x['camis']) for x in self.nyc_food) if r and r['cat'] in categories])
+        pools = [c for c in categories if c in self.rows]
+        if set(categories) & set(FOOD) and not self._in_manhattan(near) and self._outside():
+            pools.append('_dohmh')
+        dlat, dlon = radius_m / 111049.7, radius_m / 84414.3
         for pool in pools:
-            for r in pool:
+            la, lo, rows = self.lat[pool], self.lon[pool], self.rows[pool]
+            for i in range(len(rows)):
+                if abs(la[i] - near['lat']) > dlat or abs(lo[i] - near['lon']) > dlon:
+                    continue
+                r = _decode(rows[i], pool)
                 key = r.get('cid') or r['id']
-                if key in seen or (r.get('closed') and not include_closed):
+                if key in seen or r['cat'] not in categories or (r.get('closed') and not include_closed):
                     continue
                 if q and q not in r['name'].lower():
                     continue
@@ -163,8 +219,13 @@ class PlaceStore:
 _STORE = None
 
 
+_STORE_LOCK = threading.Lock()
+
+
 def store():
     global _STORE
     if _STORE is None:
-        _STORE = PlaceStore()
+        with _STORE_LOCK:
+            if _STORE is None:
+                _STORE = PlaceStore()
     return _STORE

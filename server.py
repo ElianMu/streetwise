@@ -339,7 +339,7 @@ class Handler(SimpleHTTPRequestHandler):
                 near = {'lat': float(qs['lat']), 'lon': float(qs['lon'])}
                 if not (40.4 < near['lat'] < 41.0 and -74.3 < near['lon'] < -73.6):
                     raise ValueError('lat/lon must be in New York City')
-                cats = [c for c in (qs.get('categories') or 'restaurants').split(',') if c in S.by_cat or c in ('restaurants', 'cafes', 'bakeries')][:8]
+                cats = [c for c in (qs.get('categories') or 'restaurants').split(',') if c in S.categories][:8]
                 if not cats:
                     raise ValueError('unknown categories')
                 radius = max(50, min(3000, int(qs.get('radius_m') or 800)))
