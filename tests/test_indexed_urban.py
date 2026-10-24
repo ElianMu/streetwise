@@ -19,7 +19,7 @@ class IndexedUrban(unittest.TestCase):
    self.assertEqual(db.execute('select count(*) from incident_rtree').fetchone()[0],m['records'])
    self.assertEqual(db.execute('select count(distinct id) from incidents').fetchone()[0],m['records'])
  def test_crime_dates_types_and_direction_are_strict(self):
-  for bad in [{'direction':'safe'},{'direction':'high','from':'1800-01-01'},{'direction':'high','offense_codes':[99999]},{'direction':'low','weight':float('nan')}]:
+  for bad in [{'direction':'safe'},{'direction':'high','from':'1800-01-01'},{'direction':'high','offense_codes':[99999]},{'direction':'low','weight':float('nan')},{'direction':'high','offense_types':[None]},{'direction':'high','offense_types':'ROBBERY'},{'direction':'high','offense_codes':{}},{'direction':'high','from':'20250101'}]:
    with self.subTest(bad=bad),self.assertRaises(ValueError):crime.validate(bad)
   p=crime.validate({'direction':'high','from':'2025-01-01','to':'2026-01-01','offense_types':['ROBBERY']})
   self.assertEqual(p['offense_codes'],[105]);self.assertEqual(p['direction'],'high')

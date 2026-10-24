@@ -19,9 +19,14 @@ def validate(doc,require_coverage=True,require_labels=True):
     m=metadata();direction=doc.get('direction');weight=doc.get('weight',90)
     if direction not in ('high','low'):raise ValueError('crime.direction must be high or low; direction is never inverted')
     if type(weight) not in (int,float) or not math.isfinite(weight) or not 0<weight<=100:raise ValueError('crime.weight must be 0 < weight <= 100')
+    for field in ('offense_codes','offense_types'):
+        value=doc.get(field)
+        if value is not None and (not isinstance(value,list) or len(value)>100 or any(not isinstance(x,str) if field=='offense_types' else type(x) not in (str,int) for x in value)):
+            raise ValueError('crime.'+field+' must be a bounded list of '+('labels' if field=='offense_types' else 'codes'))
     start=doc.get('from') or m['default_start'];end=doc.get('to') or m['available_end_exclusive']
     try:begin,finish=date.fromisoformat(start),date.fromisoformat(end)
     except (ValueError,TypeError):raise ValueError('Crime dates need YYYY-MM-DD; to is exclusive')
+    if begin.isoformat()!=start or finish.isoformat()!=end:raise ValueError('Crime dates need YYYY-MM-DD; to is exclusive')
     if start>=end:raise ValueError('Crime start date must precede exclusive end date')
     if require_coverage and not (m['available_start']<=start<end<=m['available_end_exclusive']):raise ValueError('Crime dates outside indexed interval '+m['available_start']+' to '+m['available_end_exclusive']+' (exclusive)')
     codes=set()

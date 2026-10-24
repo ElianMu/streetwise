@@ -84,7 +84,9 @@ class PedestrianNetwork:
             if cached['metadata']['source_sha256'] == signature:
                 evidence = cached['records']
         if evidence is None:
-            with open(streets, encoding='utf-8') as f: feats = json.load(f)['features']
+            feats=[]
+            if os.path.exists(streets):
+                with open(streets, encoding='utf-8') as f: feats = json.load(f)['features']
             evidence = {f['properties']['id']: f['properties'] for f in feats}
         self.segment_names = {sid: (p.get('name'), p.get('source_segment_id')) for sid, p in evidence.items()}
         # Raw Nature sub-indicators per LION segment: the spatial evidence for the weather heat term (routing/weather.py).

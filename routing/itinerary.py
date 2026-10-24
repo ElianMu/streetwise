@@ -70,8 +70,13 @@ def validate_request(doc):
     end_place = _pt(end.get('place'), 'end') if mode in ('fixed', 'hotel') else None
     stops = []
     def required_items(value):
-        items=value.get('required_items') or ([value['required_item']] if value.get('required_item') else [])
+        items=value.get('required_items') or []
         if not isinstance(items,list) or len(items)>5 or any(not isinstance(x,str) or not x.strip() or len(x)>60 for x in items):raise ValueError('Invalid required menu items')
+        if value.get('required_item'):
+            legacy=value['required_item']
+            if not isinstance(legacy,str) or not legacy.strip() or len(legacy)>60:raise ValueError('Invalid required menu item')
+            items=[*items,legacy]
+        if len(set(x.strip().lower() for x in items))>5:raise ValueError('Too many required menu items')
         return list(dict.fromkeys(x.strip().lower() for x in items))
     for k, s in enumerate((doc.get('stops') or [])[:12]):
         p = _pt(s, f'stop {k + 1}')

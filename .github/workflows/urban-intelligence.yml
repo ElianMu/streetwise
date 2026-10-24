@@ -32,6 +32,8 @@ jobs:
   public_mta_source_research:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -44,3 +46,17 @@ jobs:
           name: official-mta-source-research
           path: /tmp/streetwise-mta-research/
           retention-days: 1
+      - name: Save official source receipts on this same-repository review branch
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          REVIEW_BRANCH: ${{ github.head_ref }}
+        run: |
+          mkdir -p data/urban/transit-source-research
+          cp /tmp/streetwise-mta-research/*.json data/urban/transit-source-research/
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/urban/transit-source-research/
+          if ! git diff --cached --quiet; then
+            git commit -m 'Record official public MTA source research for review'
+            git push origin "HEAD:$REVIEW_BRANCH"
+          fi
