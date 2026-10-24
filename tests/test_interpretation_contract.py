@@ -116,6 +116,21 @@ class ContractTests(unittest.TestCase):
             code,result=server.interpret({'message':'Visit two landmarks'})
         self.assertEqual(code,502);self.assertNotIn('journey',result)
 
+    def test_independent_crime_and_waterfront_keep_core_dimensions_unchanged(self):
+        d=self.fixture();d['crime']={'mode':'set','direction':'high','weight':90,'from':None,'to':None,'offense_types':['ROBBERY']}
+        d['waterfront']={'mode':'set','direction':'low','weight':90}
+        result=server.validate_interpretation(normalize_wire(d))
+        self.assertEqual(result['crime']['direction'],'high');self.assertEqual(result['waterfront']['direction'],'low')
+        self.assertEqual(result['weights'],{'Nature':90});self.assertNotIn('Crime',server.DIMENSIONS)
+        # Public response remains revalidatable, with names preserved rather than model-invented offense codes.
+        self.assertEqual(server.validate_interpretation(result)['crime'],result['crime'])
+
+    def test_explicit_high_crime_request_is_never_reversed_to_avoidance(self):
+        text='I want a route with very high crime rate.'
+        with self.assertRaises(ValueError):server.validate_intent_bindings({'crime':{'direction':'low'}},text)
+        with self.assertRaises(ValueError):server.validate_intent_bindings({'clarification':'Did you mean to avoid crime instead?'},text)
+        server.validate_intent_bindings({'crime':{'direction':'high'}},text)
+
     def test_scoring_really_changes_on_same_real_route(self):
         from routing.engine import get_planner, preference_weights
         p = get_planner()

@@ -428,3 +428,5 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
 
 /* Typed tourism cards reuse the existing dark popup controls. */
 .jp-actions input{max-width:130px;min-width:0;border:1px solid #536d52;background:transparent;color:#dce9e5;border-radius:5px;padding:4px 6px;font:inherit;font-size:10px}.jp-actions label{font-size:10px;color:#89a5a1}
+/* Indexed data filters use the existing dark controls. */
+.urban-note label{display:block;margin:5px 0}.urban-note input,.urban-note select{max-width:100%;background:#152d30;color:#d8e5e2;border:1px solid #45666a;border-radius:5px;padding:4px;color-scheme:dark}

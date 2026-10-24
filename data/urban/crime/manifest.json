@@ -1,0 +1,368 @@
+{
+  "schema_version": 2,
+  "metric": "Historical Reported Complaint Density",
+  "requested_start": "2025-01-01",
+  "available_start": "2025-01-01",
+  "available_end_exclusive": "2026-07-01",
+  "default_start": "2025-07-01",
+  "records": 844984,
+  "by_borough": {
+    "BRONX": 190549,
+    "BROOKLYN": 239168,
+    "MANHATTAN": 197804,
+    "QUEENS": 181045,
+    "STATEN ISLAND": 34336,
+    "UNKNOWN": 2082
+  },
+  "missing_offense_or_law": 0,
+  "valid_coordinate_records": 844984,
+  "duplicate_source_ids": 0,
+  "publisher_versions": {
+    "qgea-i56i": 1777392609,
+    "5uac-w243": 1785166279
+  },
+  "sources": [
+    {
+      "dataset_id": "qgea-i56i",
+      "name": "NYPD Complaint Data Historic",
+      "publisher": "NYPD / NYC Open Data",
+      "url": "https://data.cityofnewyork.us/d/qgea-i56i",
+      "publisher_updated_at": "2026-04-28T16:10:09+00:00",
+      "retrieved_at": "2026-10-24T18:23:45.275016+00:00",
+      "source_total_records": 10071507,
+      "source_min_occurrence_date": "1010-05-20T00:00:00.000",
+      "source_max_occurrence_date": "2025-12-31T00:00:00.000",
+      "source_latest_report_date": "2025-12-31T00:00:00.000",
+      "downloaded_rows": 567668,
+      "accepted_rows_before_dedup": 567391,
+      "rejected": {
+        "invalid_or_missing_identity_date_coordinate_or_offense": 277,
+        "report_before_occurrence": 0
+      },
+      "missing_fields": {
+        "cmplnt_num": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "cmplnt_fr_dt": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "rpt_dt": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "ky_cd": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "ofns_desc": {
+          "count": 12,
+          "fraction": 2.1139116525856664e-05
+        },
+        "law_cat_cd": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "boro_nm": {
+          "count": 1298,
+          "fraction": 0.0022865477708801625
+        },
+        "latitude": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "longitude": {
+          "count": 0,
+          "fraction": 0.0
+        }
+      }
+    },
+    {
+      "dataset_id": "5uac-w243",
+      "name": "NYPD Complaint Data Current (Year To Date)",
+      "publisher": "NYPD / NYC Open Data",
+      "url": "https://data.cityofnewyork.us/d/5uac-w243",
+      "publisher_updated_at": "2026-07-27T15:31:19+00:00",
+      "retrieved_at": "2026-10-24T18:24:30.892883+00:00",
+      "source_total_records": 279513,
+      "source_min_occurrence_date": "1016-04-30T00:00:00.000",
+      "source_max_occurrence_date": "2026-06-30T00:00:00.000",
+      "source_latest_report_date": "2026-06-30T00:00:00.000",
+      "downloaded_rows": 277722,
+      "accepted_rows_before_dedup": 277593,
+      "rejected": {
+        "invalid_or_missing_identity_date_coordinate_or_offense": 125,
+        "report_before_occurrence": 4
+      },
+      "missing_fields": {
+        "cmplnt_num": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "cmplnt_fr_dt": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "rpt_dt": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "ky_cd": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "ofns_desc": {
+          "count": 3,
+          "fraction": 1.080216907555037e-05
+        },
+        "law_cat_cd": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "boro_nm": {
+          "count": 785,
+          "fraction": 0.0028265675747690135
+        },
+        "latitude": {
+          "count": 0,
+          "fraction": 0.0
+        },
+        "longitude": {
+          "count": 0,
+          "fraction": 0.0
+        }
+      }
+    }
+  ],
+  "offenses": {
+    "102": [
+      "HOMICIDE-NEGLIGENT-VEHICLE"
+    ],
+    "103": [
+      "HOMICIDE-NEGLIGENT,UNCLASSIFIE"
+    ],
+    "104": [
+      "RAPE"
+    ],
+    "105": [
+      "ROBBERY"
+    ],
+    "106": [
+      "FELONY ASSAULT"
+    ],
+    "107": [
+      "BURGLARY"
+    ],
+    "109": [
+      "GRAND LARCENY"
+    ],
+    "110": [
+      "GRAND LARCENY OF MOTOR VEHICLE"
+    ],
+    "111": [
+      "POSSESSION OF STOLEN PROPERTY"
+    ],
+    "112": [
+      "THEFT-FRAUD"
+    ],
+    "113": [
+      "FORGERY"
+    ],
+    "114": [
+      "ARSON"
+    ],
+    "115": [
+      "PROSTITUTION & RELATED OFFENSES"
+    ],
+    "116": [
+      "SEX CRIMES"
+    ],
+    "117": [
+      "DANGEROUS DRUGS"
+    ],
+    "118": [
+      "DANGEROUS WEAPONS"
+    ],
+    "119": [
+      "INTOXICATED/IMPAIRED DRIVING"
+    ],
+    "120": [
+      "CHILD ABANDONMENT/NON SUPPORT 1"
+    ],
+    "121": [
+      "CRIMINAL MISCHIEF & RELATED OF"
+    ],
+    "122": [
+      "GAMBLING"
+    ],
+    "124": [
+      "KIDNAPPING & RELATED OFFENSES"
+    ],
+    "125": [
+      "OTHER STATE LAWS"
+    ],
+    "126": [
+      "MISCELLANEOUS PENAL LAW"
+    ],
+    "230": [
+      "JOSTLING"
+    ],
+    "231": [
+      "BURGLAR'S TOOLS"
+    ],
+    "232": [
+      "POSSESSION OF STOLEN PROPERTY"
+    ],
+    "233": [
+      "SEX CRIMES"
+    ],
+    "234": [
+      "PROSTITUTION & RELATED OFFENSES"
+    ],
+    "235": [
+      "DANGEROUS DRUGS"
+    ],
+    "236": [
+      "DANGEROUS WEAPONS"
+    ],
+    "237": [
+      "ESCAPE 3"
+    ],
+    "238": [
+      "FRAUDULENT ACCOSTING"
+    ],
+    "250": [
+      "CANNABIS RELATED OFFENSES"
+    ],
+    "340": [
+      "FRAUDS"
+    ],
+    "341": [
+      "PETIT LARCENY"
+    ],
+    "342": [
+      "PETIT LARCENY OF MOTOR VEHICLE"
+    ],
+    "343": [
+      "OTHER OFFENSES RELATED TO THEFT"
+    ],
+    "344": [
+      "ASSAULT 3 & RELATED OFFENSES"
+    ],
+    "345": [
+      "OFFENSES RELATED TO CHILDREN"
+    ],
+    "346": [
+      "ALCOHOLIC BEVERAGE CONTROL LAW"
+    ],
+    "347": [
+      "INTOXICATED & IMPAIRED DRIVING"
+    ],
+    "348": [
+      "VEHICLE AND TRAFFIC LAWS"
+    ],
+    "349": [
+      "DISRUPTION OF A RELIGIOUS SERV"
+    ],
+    "350": [
+      "GAMBLING"
+    ],
+    "351": [
+      "CRIMINAL MISCHIEF & RELATED OF"
+    ],
+    "352": [
+      "CRIMINAL TRESPASS"
+    ],
+    "353": [
+      "UNAUTHORIZED USE OF A VEHICLE"
+    ],
+    "354": [
+      "ANTICIPATORY OFFENSES"
+    ],
+    "355": [
+      "OFFENSES AGAINST THE PERSON"
+    ],
+    "356": [
+      "PROSTITUTION & RELATED OFFENSES"
+    ],
+    "357": [
+      "FORTUNE TELLING"
+    ],
+    "358": [
+      "OFFENSES INVOLVING FRAUD"
+    ],
+    "359": [
+      "OFFENSES AGAINST PUBLIC ADMINI"
+    ],
+    "361": [
+      "OFF. AGNST PUB ORD SENSBLTY &"
+    ],
+    "363": [
+      "OFFENSES AGAINST PUBLIC SAFETY"
+    ],
+    "364": [
+      "OTHER STATE LAWS (NON PENAL LAW)"
+    ],
+    "365": [
+      "ADMINISTRATIVE CODE"
+    ],
+    "366": [
+      "NEW YORK CITY HEALTH CODE"
+    ],
+    "455": [
+      "UNLAWFUL POSS. WEAP. ON SCHOOL"
+    ],
+    "571": [
+      "LOITERING/GAMBLING (CARDS, DIC"
+    ],
+    "572": [
+      "DISORDERLY CONDUCT"
+    ],
+    "578": [
+      "HARRASSMENT 2"
+    ],
+    "672": [
+      "LOITERING"
+    ],
+    "675": [
+      "ADMINISTRATIVE CODE"
+    ],
+    "676": [
+      "NEW YORK CITY HEALTH CODE"
+    ],
+    "677": [
+      "OTHER STATE LAWS"
+    ],
+    "678": [
+      "MISCELLANEOUS PENAL LAW"
+    ],
+    "881": [
+      "OTHER TRAFFIC INFRACTION"
+    ]
+  },
+  "grid_cell_m": 200,
+  "projection": {
+    "mx": 84294.0750853646,
+    "my": 110540
+  },
+  "database": "complaints.sqlite.gz",
+  "license": "NYC Open Data Terms of Use",
+  "license_url": "https://www.nyc.gov/home/terms-of-use.page",
+  "method": "Exact published points indexed by R*Tree; daily/200 m grid aggregates accelerate candidate edge costs. Final route statistics use published point-to-polyline distances, a common corridor and de-duplicated complaint IDs.",
+  "limitations": [
+    "Reported complaints, not victimization rates or personal risk. No population/activity denominator.",
+    "Occurrence dates and approximate published block-level coordinates; not live street conditions.",
+    "Most serious recorded offense only; reporting and policing patterns affect counts.",
+    "Snapshot is source-bounded and delayed; later reports and corrections can change historical counts.",
+    "Bounding-box plausibility does not independently verify every coordinate or borough.",
+    "Unknown boroughs remain unknown; no demographic fields are retained."
+  ],
+  "compressed_bytes": 59475077,
+  "database_bytes": 203587584,
+  "sha256": "00e40eeef9286107dfd57975b7c71bc6890863a4b7553deeb8920e0ef2d848c3",
+  "built_at": "2026-10-24T18:25:12.475713+00:00",
+  "build_seconds": 169.5,
+  "quality_null_definition": "Text field SQL NULL and literal (null) both count as missing; rechecked via official aggregate queries.",
+  "temporal_quarantine_records": 4
+}

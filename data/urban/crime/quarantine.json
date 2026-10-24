@@ -1,0 +1,34 @@
+[
+  {
+    "complaint_id": "318841821",
+    "occurrence_date": "2026-01-11",
+    "report_date": "2026-01-03",
+    "source": "5uac-w243",
+    "borough": "UNKNOWN",
+    "reason": "Report predates stated occurrence"
+  },
+  {
+    "complaint_id": "320085139",
+    "occurrence_date": "2026-02-06",
+    "report_date": "2026-02-05",
+    "source": "5uac-w243",
+    "borough": "BROOKLYN",
+    "reason": "Report predates stated occurrence"
+  },
+  {
+    "complaint_id": "326324912",
+    "occurrence_date": "2026-05-31",
+    "report_date": "2026-05-29",
+    "source": "5uac-w243",
+    "borough": "MANHATTAN",
+    "reason": "Report predates stated occurrence"
+  },
+  {
+    "complaint_id": "326384800",
+    "occurrence_date": "2026-06-04",
+    "report_date": "2026-06-01",
+    "source": "5uac-w243",
+    "borough": "BROOKLYN",
+    "reason": "Report predates stated occurrence"
+  }
+]

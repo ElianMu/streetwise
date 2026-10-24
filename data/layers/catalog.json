@@ -73,7 +73,7 @@
    "used_in_scoring": false,
    "scoring": [],
    "historical": false,
-   "note": "Road centrelines — the geometry street scores are measured on. Not the walkable network.",
+   "note": "Road centrelines \u2014 the geometry street scores are measured on. Not the walkable network.",
    "style": null,
    "min_zoom_view": 11,
    "default_visible": true,
@@ -1275,7 +1275,7 @@
   },
   {
    "id": "cafes",
-   "name": "Cafés",
+   "name": "Caf\u00e9s",
    "categories": [
     "activities"
    ],
@@ -1643,7 +1643,7 @@
    "filter": null,
    "geometry": "Point",
    "layer_type": "circle",
-   "source": "NYPD Motor Vehicle Collisions – Crashes",
+   "source": "NYPD Motor Vehicle Collisions \u2013 Crashes",
    "source_url": "https://data.cityofnewyork.us/d/h9gi-nx95",
    "last_updated": "2026-06-15",
    "time_range": "Crashes 2023-10-24 to 2026-06-10 (3 years)",
@@ -1685,7 +1685,7 @@
    "filter": null,
    "geometry": "Point",
    "layer_type": "circle",
-   "source": "NYPD Motor Vehicle Collisions – Crashes",
+   "source": "NYPD Motor Vehicle Collisions \u2013 Crashes",
    "source_url": "https://data.cityofnewyork.us/d/h9gi-nx95",
    "last_updated": "2026-06-15",
    "time_range": "Crashes 2023-10-24 to 2026-06-10 (3 years)",
@@ -2314,7 +2314,7 @@
     "safety"
    ],
    "status": "AVAILABLE_NOT_CONNECTED",
-   "source": "NYPD Motor Vehicle Collisions – Crashes",
+   "source": "NYPD Motor Vehicle Collisions \u2013 Crashes",
    "source_url": "https://data.cityofnewyork.us/d/h9gi-nx95",
    "reason": "Only pedestrian and cyclist injury crashes are connected."
   },
@@ -6436,5 +6436,249 @@
   "noise_from": "2025-10-23",
   "crash_from": "2023-10-24"
  },
- "note": "Display corridors only filter what is drawn; they never change experience scores. Context-only datasets are not part of any score."
+ "note": "Display corridors only filter what is drawn; they never change experience scores. Context-only datasets are not part of any score.",
+ "remote_datasets": [
+  {
+   "id": "reported_complaints",
+   "name": "Historical reported complaint density",
+   "categories": [
+    "safety"
+   ],
+   "geometry": "Polygon",
+   "remote": "crime",
+   "status": "CONNECTED",
+   "feature_count": 844984,
+   "coverage": "NYC source",
+   "source": "NYPD complaints: Historic + Current YTD",
+   "source_url": "https://data.cityofnewyork.us/d/qgea-i56i",
+   "last_updated": "2026-07-27T15:31:19+00:00",
+   "time_range": "Independent route objective; not part of Access & Safety. Map counts cover complete aggregate cells; route statistics separately count source points within 100 m. 2025-01-01 to 2026-07-01 (exclusive). No current personal-risk prediction.",
+   "attributes": [
+    "count",
+    "density_per_km2",
+    "cell_m",
+    "from",
+    "to_exclusive",
+    "approximate_locations"
+   ],
+   "scoring": [],
+   "used_in_scoring": false,
+   "independent_metric": true,
+   "default_visible": false,
+   "layer_type": "indexed_query",
+   "min_zoom_view": 12,
+   "note": "Independent route objective; not part of Access & Safety. Map counts cover complete aggregate cells; route statistics separately count source points within 100 m. 2025-01-01 to 2026-07-01 (exclusive). No current personal-risk prediction."
+  },
+  {
+   "id": "citywide_tree_inventory",
+   "name": "Current citywide tree inventory",
+   "categories": [
+    "nature"
+   ],
+   "geometry": "Point",
+   "remote": "trees",
+   "status": "CONNECTED",
+   "feature_count": 897619,
+   "coverage": "NYC source",
+   "source": "NYC Parks Forestry Tree Points",
+   "source_url": "https://data.cityofnewyork.us/d/hn5i-inap",
+   "last_updated": "2026-10-21T15:50:36+00:00",
+   "time_range": "Current Full-structure inventory. Low zoom shows aggregated cell centres, not individual tree positions. Not a canopy/shade measurement.",
+   "attributes": [
+    "record_kind",
+    "genusspecies",
+    "dbh",
+    "tpcondition",
+    "updateddate",
+    "tree_count"
+   ],
+   "scoring": [],
+   "used_in_scoring": false,
+   "independent_metric": false,
+   "default_visible": false,
+   "layer_type": "indexed_query",
+   "min_zoom_view": 12,
+   "note": "Current Full-structure inventory. Low zoom shows aggregated cell centres, not individual tree positions. Not a canopy/shade measurement."
+  },
+  {
+   "id": "citywide_hydrography",
+   "name": "NYC Planimetric Database: Hydrography \u00b7 citywide",
+   "categories": [
+    "waterfront"
+   ],
+   "geometry": "MultiPolygon",
+   "remote": "context:hydrography",
+   "status": "CONNECTED",
+   "feature_count": 2206,
+   "coverage": "NYC source",
+   "source": "NYC Open Data",
+   "source_url": "https://data.cityofnewyork.us/d/pjs3-c3z5",
+   "last_updated": "2024-04-24T20:08:25+00:00",
+   "time_range": "Source geometry and date; no guarantee of current pedestrian access.",
+   "attributes": [
+    "name",
+    "source_id",
+    "feat_code",
+    "sub_code",
+    "status"
+   ],
+   "scoring": [],
+   "used_in_scoring": false,
+   "independent_metric": false,
+   "default_visible": false,
+   "layer_type": "indexed_query",
+   "min_zoom_view": 12,
+   "note": "Source geometry and date; no guarantee of current pedestrian access."
+  },
+  {
+   "id": "citywide_waterfront_access",
+   "name": "Waterfront Public Access Areas (WPAAs) \u00b7 citywide",
+   "categories": [
+    "waterfront"
+   ],
+   "geometry": "MultiPolygon",
+   "remote": "context:waterfront_access",
+   "status": "CONNECTED",
+   "feature_count": 78,
+   "coverage": "NYC source",
+   "source": "NYC Open Data",
+   "source_url": "https://data.cityofnewyork.us/d/388s-pnvc",
+   "last_updated": "2023-11-01T19:43:38+00:00",
+   "time_range": "Source geometry and date; no guarantee of current pedestrian access.",
+   "attributes": [
+    "wpaa_id",
+    "name",
+    "status",
+    "cpc_approv",
+    "maintenanc",
+    "summary",
+    "res_dec",
+    "cpc_report",
+    "sup_area",
+    "wpaa_area",
+    "zap_link",
+    "hours_open",
+    "waterway",
+    "shore_area"
+   ],
+   "scoring": [],
+   "used_in_scoring": false,
+   "independent_metric": false,
+   "default_visible": true,
+   "layer_type": "indexed_query",
+   "min_zoom_view": 12,
+   "note": "Source geometry and date; no guarantee of current pedestrian access."
+  },
+  {
+   "id": "citywide_pedestrian_plazas",
+   "name": "NYC DOT Pedestrian Plazas - Polygon \u00b7 citywide",
+   "categories": [
+    "streets"
+   ],
+   "geometry": "MultiPolygon",
+   "remote": "context:pedestrian_plazas",
+   "status": "CONNECTED",
+   "feature_count": 93,
+   "coverage": "NYC source",
+   "source": "NYC Open Data",
+   "source_url": "https://data.cityofnewyork.us/d/k5k6-6jex",
+   "last_updated": "2026-10-01T10:00:41+00:00",
+   "time_range": "Source geometry and date; no guarantee of current pedestrian access.",
+   "attributes": [
+    "objectid",
+    "borocd",
+    "assemdist",
+    "coundist",
+    "congdist",
+    "stsendist",
+    "plazaname",
+    "onstreet",
+    "fromstreet",
+    "tostreet",
+    "partner",
+    "borocode",
+    "boroname",
+    "femafldz"
+   ],
+   "scoring": [],
+   "used_in_scoring": false,
+   "independent_metric": false,
+   "default_visible": false,
+   "layer_type": "indexed_query",
+   "min_zoom_view": 12,
+   "note": "Source geometry and date; no guarantee of current pedestrian access."
+  },
+  {
+   "id": "citywide_construction",
+   "name": "Street Closures due to Construction Activities by Block and Intersection \u00b7 citywide",
+   "categories": [
+    "streets"
+   ],
+   "geometry": "LineString",
+   "remote": "context:construction",
+   "status": "CONNECTED",
+   "feature_count": 4157,
+   "coverage": "NYC source",
+   "source": "NYC Open Data",
+   "source_url": "https://data.cityofnewyork.us/d/ezy6-djsf",
+   "last_updated": "2026-10-19T11:51:50+00:00",
+   "time_range": "Permits whose work dates include build day; not proof of continuous closure or blocked sidewalk. {'$where': \"workstartdate<='2026-10-24T23:59:59' AND workenddate>='2026-10-24T00:00:00'\"}",
+   "attributes": [
+    "onstreetname",
+    "fromstreetname",
+    "tostreetname",
+    "boroughname",
+    "workstartdate",
+    "workenddate",
+    "purpose",
+    "oftcode"
+   ],
+   "scoring": [],
+   "used_in_scoring": false,
+   "independent_metric": false,
+   "default_visible": true,
+   "layer_type": "indexed_query",
+   "min_zoom_view": 12,
+   "note": "Permits whose work dates include build day; not proof of continuous closure or blocked sidewalk. {'$where': \"workstartdate<='2026-10-24T23:59:59' AND workenddate>='2026-10-24T00:00:00'\"}"
+  },
+  {
+   "id": "citywide_seating",
+   "name": "Seating Locations \u00b7 citywide",
+   "categories": [
+    "streets"
+   ],
+   "geometry": "Point",
+   "remote": "context:seating",
+   "status": "CONNECTED",
+   "feature_count": 5702,
+   "coverage": "NYC source",
+   "source": "NYC Open Data",
+   "source_url": "https://data.cityofnewyork.us/d/esmy-s8q5",
+   "last_updated": "2026-10-13T20:44:10+00:00",
+   "time_range": "Source geometry and date; no guarantee of current pedestrian access.",
+   "attributes": [
+    "borocode",
+    "boroname",
+    "borocd",
+    "coundist",
+    "assemdist",
+    "stsendist",
+    "congdist",
+    "nearest_add",
+    "on_street",
+    "from_street",
+    "to_street",
+    "side_of_st",
+    "latitude",
+    "longitude"
+   ],
+   "scoring": [],
+   "used_in_scoring": false,
+   "independent_metric": false,
+   "default_visible": false,
+   "layer_type": "indexed_query",
+   "min_zoom_view": 12,
+   "note": "Source geometry and date; no guarantee of current pedestrian access."
+  }
+ ]
 }

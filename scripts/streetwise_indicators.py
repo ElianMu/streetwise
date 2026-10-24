@@ -162,7 +162,7 @@ INDICATORS = {
         ('lpc_k', 'Landmark proximity', 'decay-weighted landmarks', 'Gaussian distance decay Σexp(−d²/2σ²), σ 100 m, cutoff 300 m, mean of points every 40 m along the segment', 'lpc', 'up'),
         ('lpc_n', 'Individual landmarks within 150 m', 'landmarks', 'Landmark lot centroids within 150 m of the segment midpoint', 'lpc', 'context')],
     'nature': [
-        ('tree_km', 'Living street trees per km', 'trees / km', 'Trees with structure "Full" within 30 m, snapped to the nearest segment, ÷ length (80 m floor)', 'trees', 'up'),
+        ('tree_km', 'Full-structure inventory trees per km', 'trees / km', 'Trees with structure "Full" within 30 m, snapped to the nearest segment, ÷ length (80 m floor). Full is a structural inventory category and can include Dead or Unknown condition; not measured canopy shade', 'trees', 'up'),
         ('park_pct', 'Beside parkland', '% of samples', 'Share of points 0/±20/±40 m from the centreline inside NYC Parks properties', 'parks', 'up'),
         ('tree_n', 'Living trees along segment', 'trees', 'Raw count behind trees per km', 'trees', 'context')],
     'culture': [

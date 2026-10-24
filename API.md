@@ -192,3 +192,24 @@ Catalog entry: `id`, `name`, `categories` (10 data categories, not experience di
 Filtering (urban-geo.js, mirrored by routing/layers.py for tests): Along Selected Route keeps records whose geometry is
 within the display corridor (50/100/200/500 m) of the route LineString — polygons by intersection or edge distance, not
 centroid; Current Map View keeps records whose bounds intersect the view. Corridors never change scores.
+
+
+## Indexed independent urban evidence
+
+`/api/interpret` contract `strict-paired-v3-independent` adds nullable `crime` and `waterfront` objects. Each has `mode: set | clear`; a set requires `direction: high | low` and weight 1–100. Crime additionally supports optional `from`, exclusive `to` (YYYY-MM-DD), and exact published `offense_types`. These are independent objectives, never extra experience dimensions. Null preserves a previous preference; clear removes it; a subsequent set replaces it.
+
+`/api/routes` and `/api/itinerary` accept `preferences.crime: {direction, weight, from?, to?, offense_codes?, offense_types?, law_categories?}` and `preferences.waterfront: {direction, weight}`. Defaults and available taxonomy are published by `GET /api/urban/crime/metadata`. Out-of-coverage dates or unknown offense labels return 400; no fabricated empty period is ranked. Interpretation can acknowledge a legitimate unsupported period before retrieval reports the coverage limit.
+
+Responses include `independent_preferences_used`, per-route `independent_metrics`, and `personalized_score.independent_components`. The frontend rejects an older backend that silently omits a requested independent objective. Crime uses unique published complaint points within 100 m and reports per route kilometre, with a clearly declared nominal strip-area normalization; map cell counts are different statistics. Waterfront uses sampled proximity to official water geometry and does not assert views or legal waterfront access. Core 12 dimension values and definitions remain unchanged.
+
+Viewport endpoints (bbox west,south,east,north, bounded to NYC):
+
+- `GET /api/urban/crime?bbox=...&zoom=15&from=2025-07-01&to=2026-07-01&offense_codes=105` returns zoom-dependent aggregated polygons and truncation metadata, never fictional incident coordinates.
+- `GET /api/urban/trees?bbox=...&zoom=17` returns bounded actual inventory points at detail zoom and explicitly labelled inventory cell centres at low zoom.
+- `GET /api/urban/context?category=hydrography&bbox=...` returns bounded indexed display fragments. Other categories are listed in `data/urban/context/manifest.json`; geometry has a 1 MiB decompressed query budget.
+
+These endpoints share the 60/minute per-client places limit. Runtime uses read-only offline SQLite indices and does not fetch source datasets during routing. Source dates, missingness, calculation parameters, and exact routing versus context roles are documented in `URBAN_DATA_INVENTORY.csv` and `data/urban/inventory.json`.
+
+Itinerary stops/slots may include `required_items: ["bagel", "cappuccino"]`; every item must have fresh official-menu evidence at the canonical venue. The legacy `required_item` is still honoured and is validated together with the array. Official receipts expire after 12 hours; snapshots do not prove current stock or opening.
+
+`/api/status` includes process RSS/high-water memory in KiB, bounded cache sizes and crime query counters. These are measurements for the current process, not a memory reservation or uptime guarantee. Optional live `/api/pois` failures return source-backed indexed OSM nodes with `status: snapshot_fallback`, `upstream_status: unavailable` and a snapshot timestamp. They never masquerade as live observations or AI success.

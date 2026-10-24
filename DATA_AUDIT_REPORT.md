@@ -1,8 +1,8 @@
 # STREETWISE · NYC — Data Audit Report
 
-Generated 2026-10-24T13:13:15+00:00 by `scripts/build_audit_report.py` from the shipped files (no estimates).
+Generated 2026-10-24T19:43:17+00:00 by `scripts/build_audit_report.py` from the shipped files (no estimates).
 
-**114 datasets** (86 connected), **922,369 records** in the shipped files. A record count is not a count of places verified open today.
+**122 datasets** (94 connected), **2,677,208 records** in the shipped files. A record count is not a count of places verified open today.
 
 ## Datasets
 
@@ -121,7 +121,15 @@ Generated 2026-10-24T13:13:15+00:00 by `scripts/build_audit_report.py` from the 
 | Current weather | Open-Meteo | realtime_availability | NYC | — | — | — | unmeasured | connected |
 | Weather alerts | US National Weather Service | realtime_availability | NYC | — | — | — | unmeasured | connected |
 | Parks Properties | City of New York | periodic_poi | NYC citywide (search only) | 2061 | 8 | hours 100%, web 100%, addr 40% | fair (a field missing in 100%) | connected |
-| Public Restrooms | City of New York | periodic_poi | NYC citywide (search only) | 1063 | 483 | addr 100%, web 100%, boro 100% | fair (a field missing in 100%) | connected |
+| Public Restrooms | City of New York | periodic_poi | NYC citywide (search only) | 1063 | 484 | addr 100%, web 100%, boro 100% | fair (a field missing in 100%) | connected |
+| NYPD Complaint Data Historic | NYPD / NYC Open Data | static_urban | NYC five boroughs + unknown source borough | 567391 | 179 | boro_nm 0%, ofns_desc 0%, cmplnt_num 0% | good | connected |
+| NYPD Complaint Data Current (Year To Date) | NYPD / NYC Open Data | static_urban | NYC five boroughs + unknown source borough | 277593 | 89 | boro_nm 0%, ofns_desc 0%, cmplnt_num 0% | good | connected |
+| Forestry Tree Points | Forestry / NYC Open Data | static_urban | NYC five boroughs; published coordinate inventory | 897619 | 3 | planteddate 86%, updateddate 21%, dbh 0% | fair (a field missing in 86%) | connected |
+| NYC Planimetric Database: Hydrography | NYC / NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 2206 | 912 | name 74%, source_id 0%, feat_code 0% | fair (a field missing in 74%) | connected |
+| Waterfront Public Access Areas (WPAAs) | Waterfront / NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 78 | 1087 | cpc_approv 72%, res_dec 60%, cpc_report 5% | fair (a field missing in 72%) | connected |
+| NYC DOT Pedestrian Plazas - Polygon | NYC / NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 93 | 23 | tostreet 13%, femafldt 2%, objectid 0% | good | connected |
+| Street Closures due to Construction Activities by Block and Intersection | Street / NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 4157 | 5 | tostreetname 35%, onstreetname 0%, fromstreetname 0% | good | connected |
+| Seating Locations | Seating / NYC Open Data | static_urban | NYC source coverage; not every category covers every borough equally | 5702 | 10 | side_of_st 6%, femafldt 4%, :@computed_region_efsh_h5xi 0% | good | connected |
 
 ## Hard-coded quick-pick places (app.js `PLACES`)
 

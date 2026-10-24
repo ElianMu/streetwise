@@ -329,7 +329,7 @@ async function itineraryRequest(){
  }
  for(const f of journey.food){
   if(journey.requirements.restaurant_budget_usd!=null&&!f.item)throw new Error('Restaurant budget cannot be verified without a specific item and directly sourced price.');
-  const cats=f.item==='cheesecake'?['bakeries','restaurants']:[f.category];
+  const cats=f.item==='cheesecake'?['bakeries','restaurants']:f.item==='bagel'?['bakeries','cafes','restaurants']:[f.category];
   const filt=f.cuisine?(r=>new RegExp(`(^|;)${f.cuisine}(;|$)`,'i').test(r.cuisine||'')):f.category==='cafes'&&f.item?(r=>r.cat==='cafes'):null;
   const id='food:'+f.category+':'+(f.item||f.cuisine||'');const fixed=journey.replaced[id];
   // a requested item: server-side recommendation (menu evidence first, closed / unreachable excluded); local discovery otherwise or as fallback
@@ -338,6 +338,16 @@ async function itineraryRequest(){
   if(fixed)stops.push({...pick(fixed),required:true,required_item:f.item||null,order:null,visit_min:VISIT_MIN[fixed.cat]??20});
   else if(!cands.length&&f.required!==false)throw new Error(`Cannot verify the required ${foodLabel(f)}. No matching place with sufficient evidence was found; the requirement has not been removed.`);
   else if(cands.length)slots.push({slot_id:id,label:foodLabel(f),required_item:f.item||null,required:f.required!==false,visit_min:VISIT_MIN[f.category]??20,candidates:cands.map(slotCand),order:ordered?++order:null});
+ }
+ // One source-verified venue may satisfy several dishes; explicit landmark counts still require distinct places.
+ for(let i=0;i<slots.length;i++){
+  const first=slots[i];if(!first.slot_id.startsWith('food:')||!first.required||!first.required_item)continue;
+  for(let j=i+1;j<slots.length;j++){
+   const next=slots[j];if(!next.slot_id.startsWith('food:')||!next.required||!next.required_item)continue;
+   const shared=first.candidates.filter(c=>next.candidates.some(p=>p.id===c.id));if(!shared.length)continue;
+   first.required_items=[...(first.required_items||[first.required_item]),next.required_item];first.label+=' + '+next.label;
+   first.candidates=shared;first.visit_min=Math.max(first.visit_min,next.visit_min);slots.splice(j--,1);
+  }
  }
  for(const s of journey.services.filter(s=>s.addAsStop)){
   const cands=await discoverPlaces([s.type],{limit:6,radiusKm:1.5});const id='service:'+s.type;
@@ -377,7 +387,7 @@ async function planJourney(isFollowUp=false){
   const json=await res.json().catch(()=>({}));if(run!==planner.runId)return;
   if(!res.ok)throw new Error(json.error||`Itinerary service HTTP ${res.status}`);
   journey.plan=json.itinerary;journey.request=req;
-  applyRouteResponse(json);
+  validateIndependentResponse(req.preferences,json);applyRouteResponse(json);
   planner.lastExplanation=itinerarySummaryText(json.itinerary);
   $('rankingStatus').textContent=planner.lastExplanation;
   renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();renderCityWalk();renderJourneyPanel();
@@ -427,6 +437,10 @@ async function placeRatings(id){
 }
 
 /* ---------- menu verification ---------- */
+function stopMenuItems(stop){
+ const f=journey.food.find(f=>stop.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);
+ return [...new Set([...(stop.required_items||[]),stop.required_item,f?.item].filter(Boolean))];
+}
 async function verifyMenuItem(place,item){
  const key=place.id+'|'+item;if(journey.menu[key]?.status&&journey.menu[key].status!=='checking')return journey.menu[key];
  journey.menu[key]={status:'checking'};renderCityWalk();
@@ -438,8 +452,10 @@ async function verifyMenuItem(place,item){
 }
 async function autoVerifyMenus(){
  if(!journey.plan)return;
- for(const s of journey.plan.stops){const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);
-  if(f){const p=await placeById(s.id);if(p)verifyMenuItem(p,f.item);}}
+ for(const s of journey.plan.stops){
+  const items=stopMenuItems(s);if(!items.length)continue;
+  const p=await placeById(s.id);if(p)for(const item of items)verifyMenuItem(p,item);
+ }
 }
 async function placeById(id){
  for(const c of Object.keys(POI_CACHE)){const r=(await POI_CACHE[c]).find(x=>x.id===id);if(r)return poiPlace(r);}

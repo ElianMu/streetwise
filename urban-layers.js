@@ -17,6 +17,10 @@ const SEGMENT_EVIDENCE=[
 const KIND_LABEL={count:'Raw feature count',density:'Spatial density',nearest:'Nearest distance',coverage:'Area coverage'};
 const urbanData={catalog:null,loading:null,byId:new Map(),tiles:new Map(),active:new Map(),drawn:new Map(),buildingTheme:'height',envTheme:'noise',scope:'route',corridor:100,search:'',openCats:new Set(),settings:false,viewTimer:0,summarySeq:0,lastEdge:null};
 const UD_BEFORE='route-alts';
+async function crimeMetadata(){
+ if(urbanData.crimeMeta)return urbanData.crimeMeta;
+ const m=await streetwiseJson('/api/urban/crime/metadata',{signal:AbortSignal.timeout(20000)});urbanData.crimeMeta=m;return m;
+}
 
 // --- catalog & tiles ---------------------------------------------------------------------------------------
 /** First visit: every connected dataset with default_visible is switched on, once. */
@@ -25,7 +29,7 @@ function applyUrbanDefaults(c){if(urbanData.defaultsApplied)return;urbanData.def
 async function ensureUrbanCatalog(){
  if(urbanData.catalog)return urbanData.catalog;
  urbanData.loading=urbanData.loading||streetwiseJson('./data/layers/catalog.json',{signal:AbortSignal.timeout(20000)});
- try{const c=await urbanData.loading;UrbanGeo.setProjection(c.projection);urbanData.catalog=c;c.datasets.forEach(d=>urbanData.byId.set(d.id,d));applyUrbanDefaults(c);}
+ try{const c=await urbanData.loading;for(const d of c.remote_datasets||[])if(!c.datasets.some(x=>x.id===d.id))c.datasets.push(d);UrbanGeo.setProjection(c.projection);urbanData.catalog=c;c.datasets.forEach(d=>urbanData.byId.set(d.id,d));applyUrbanDefaults(c);}
  catch(e){urbanData.loading=null;throw e;}
  return urbanData.catalog;
 }
@@ -58,6 +62,9 @@ const BUILDING_SET=['building_footprints','building_heights','building_age','lan
 const BUILDING_THEMES=[['neutral','Neutral buildings',null],['height','Building height','building_heights'],['age','Building year built','building_age'],['landuse','Land use (PLUTO)','land_use']];
 const ENV_THEMES=[['noise','311 noise complaint density','noise_complaints'],['none','No environmental surface',null],['air_quality','Air quality',null],['urban_heat','Urban heat',null],['flood_risk','Flood risk',null]];
 function udGroup(d){
+ if(d.remote==='crime')return 'crime';
+ if(d.remote==='trees')return 'trees';
+ if(d.remote?.startsWith('context:'))return 'context';
  const s=UrbanStyle.SPECIAL[d.id];if(s)return s;
  if(d.geometry==='LineString')return 'lines';
  if(d.geometry==='Polygon')return 'surface';
@@ -73,6 +80,8 @@ function udColor(id){
 /** How an enabled dataset is actually drawn right now (stated in the panel and legend, never hidden silently). */
 function udRepresentation(id){
  const z=state.mapReady?state.map.getZoom():12,T=UrbanStyle.T,g=udGroup(urbanData.byId.get(id));
+ if(id==='reported_complaints')return 'NYPD historical complaints · aggregated cells; no personal-risk prediction';
+ if(urbanData.byId.get(id).remote==='trees')return z<16?'Aggregated inventory cell centres; counts in inspector':'Source tree inventory points; no canopy/shade claim';
  if(BUILDING_SET.includes(id)){const theme=BUILDING_THEMES.find(t=>t[0]===urbanData.buildingTheme);
   if(id==='building_footprints')return `Building footprints · fill = ${theme[1]}`;
   return theme[2]===id?'Controls the building fill (active theme)':`Enabled · building theme is ${theme[1]}; open the inspector or switch theme`;}
@@ -112,14 +121,22 @@ function renderUrbanPanel(){
  $('urbanCats').querySelectorAll('[data-ud-toggle]').forEach(c=>c.addEventListener('change',()=>toggleUrbanDataset(c.dataset.udToggle,c.checked)));
  $('urbanCats').querySelectorAll('[data-ud-info]').forEach(b=>b.addEventListener('click',()=>{const box=b.closest('.urban-ds').querySelector('.urban-meta');box.classList.toggle('hidden');b.setAttribute('aria-expanded',String(!box.classList.contains('hidden')));}));
  $('urbanCats').querySelectorAll('[data-ud-opacity]').forEach(r=>r.addEventListener('input',()=>setUrbanOpacity(r.dataset.udOpacity,r.value/100)));
+ $('urbanCats').querySelectorAll('[data-crime-filter]').forEach(r=>r.addEventListener('change',()=>{
+  if(state.routingBusy||planner.parsing){toast('Wait for the current route calculation before changing its data filters.');renderUrbanPanel();return;}
+  const filters=urbanData.crimeFilter||{},k=r.dataset.crimeFilter;filters[k]=k==='offense_types'?(r.value?[r.value]:[]):r.value;urbanData.crimeFilter=filters;
+  if(planner.crime){planner.crime={...planner.crime,...filters};if(typeof journeyMode==='function'&&journeyMode())planJourney(true);else generateRoutes(null,true);}
+  loadUrbanDataset('reported_complaints');
+ }));
  renderActiveCount();
 }
 function urbanDatasetRow(d){
  if(d.status!=='CONNECTED')return `<div class="urban-ds off"><div class="urban-row"><input type="checkbox" disabled aria-label="${esc(d.name)} — ${esc(STATUS_LABEL[d.status])}"><span class="urban-swatch none"></span><span class="urban-name">${esc(d.name)}</span><span class="urban-badge off">${esc(STATUS_LABEL[d.status])}</span></div><p class="urban-reason">${esc(d.reason)}${d.source?` · ${d.source_url?`<a href="${esc(d.source_url)}" target="_blank" rel="noopener noreferrer">${esc(d.source)}</a>`:esc(d.source)}`:''}</p></div>`;
  const a=urbanData.active.get(d.id),dims=d.scoring.map(s=>dimLabel(ExperienceCore.names[ExperienceCore.keys.indexOf(s.dimension)])).join(', ');
- return `<div class="urban-ds"><div class="urban-row"><input type="checkbox" data-ud-toggle="${d.id}" ${a?'checked':''} aria-label="Show ${esc(d.name)}"><span class="urban-swatch ${d.geometry.toLowerCase()}" style="--c:${udColor(d.id)}"></span><span class="urban-name">${esc(d.name)}</span><span class="urban-badge ${d.used_in_scoring?'scoring':'context'}" title="${d.used_in_scoring?`Feeds the ${esc(dims)} score`:'Not part of any score'}">${d.used_in_scoring?'Scoring':'Context'}</span><button type="button" class="urban-info" data-ud-info aria-expanded="false" title="Dataset details">i</button></div>
-  ${a?`<div class="urban-live"><span class="urban-status ${a.kind||''}" data-ud-status="${d.id}">${esc(a.status||'')}</span><span class="urban-repr" data-ud-repr="${d.id}">${esc(udRepresentation(d.id))}</span>${urbanData.settings?`<label class="urban-opacity">Opacity <input type="range" min="15" max="100" value="${Math.round(a.opacity*100)}" data-ud-opacity="${d.id}"></label>`:''}</div>`:''}
-  <dl class="urban-meta hidden"><dt>Source</dt><dd><a href="${esc(d.source_url)}" target="_blank" rel="noopener noreferrer">${esc(d.source)}</a></dd><dt>Geometry</dt><dd>${esc(d.geometry)} · ${Number(d.feature_count).toLocaleString()} Manhattan records</dd><dt>Time</dt><dd>${esc(d.time_range||'—')}</dd><dt>Last updated</dt><dd>${esc(d.last_updated||'unknown')}</dd>
+ const cm=urbanData.crimeMeta,cf={...(planner.crime||{}),...(urbanData.crimeFilter||{})};
+ const crimeFilters=d.remote==='crime'?`<div class="urban-note"><label>From <input type="date" data-crime-filter="from" value="${esc(cf.from||cm?.default_start||'')}" min="${esc(cm?.available_start||'')}" max="${esc(cm?.available_end_exclusive||'')}"></label> <label>To (exclusive) <input type="date" data-crime-filter="to" value="${esc(cf.to||cm?.available_end_exclusive||'')}"></label><label>Offense <select data-crime-filter="offense_types"><option value="">Felony + misdemeanor complaints</option>${[...new Set(Object.values(cm?.offenses||{}).flat())].sort().map(v=>`<option value="${esc(v)}" ${cf.offense_types?.includes(v)?'selected':''}>${esc(v)}</option>`).join('')}</select></label></div>`:'';
+ return `<div class="urban-ds"><div class="urban-row"><input type="checkbox" data-ud-toggle="${d.id}" ${a?'checked':''} aria-label="Show ${esc(d.name)}"><span class="urban-swatch ${d.geometry.toLowerCase()}" style="--c:${udColor(d.id)}"></span><span class="urban-name">${esc(d.name)}</span><span class="urban-badge ${d.used_in_scoring?'scoring':'context'}" title="${d.used_in_scoring?`Feeds the ${esc(dims)} score`:'Not part of any score'}">${d.independent_metric?'Route metric':d.used_in_scoring?'Scoring':'Context'}</span><button type="button" class="urban-info" data-ud-info aria-expanded="false" title="Dataset details">i</button></div>
+  ${a?`<div class="urban-live"><span class="urban-status ${a.kind||''}" data-ud-status="${d.id}">${esc(a.status||'')}</span><span class="urban-repr" data-ud-repr="${d.id}">${esc(udRepresentation(d.id))}</span>${urbanData.settings?`<label class="urban-opacity">Opacity <input type="range" min="15" max="100" value="${Math.round(a.opacity*100)}" data-ud-opacity="${d.id}"></label>`:''}</div>${crimeFilters}`:''}
+  <dl class="urban-meta hidden"><dt>Source</dt><dd><a href="${esc(d.source_url)}" target="_blank" rel="noopener noreferrer">${esc(d.source)}</a></dd><dt>Geometry</dt><dd>${esc(d.geometry)} · ${Number(d.feature_count).toLocaleString()} ${esc(d.coverage||'Manhattan')} records</dd><dt>Time</dt><dd>${esc(d.time_range||'—')}</dd><dt>Last updated</dt><dd>${esc(d.last_updated||'unknown')}</dd>
   <dt>Scoring</dt><dd>${d.used_in_scoring?esc(d.scoring.map(s=>`${dimLabel(ExperienceCore.names[ExperienceCore.keys.indexOf(s.dimension)])} (${s.sub_indicators.join(', ')})`).join('; ')):'Context only — not part of any score'}</dd>${d.note?`<dt>Note</dt><dd>${esc(d.note)}</dd>`:''}<dt>Fields</dt><dd>${esc(d.attributes.join(', '))}</dd></dl></div>`;
 }
 function renderActiveCount(){
@@ -138,6 +155,12 @@ function addGroupLayers(){
  const m=state.map,T=UrbanStyle.T,op=(base)=>['*',base,['coalesce',['get','_op'],1]];
  const src=(id,opts={})=>m.addSource(id,{type:'geojson',data:emptyFC(),...opts});
  const layer=(def,tier)=>m.addLayer(def,tier);
+ src('udg-crime');
+ layer({id:'udg-crime-fill',type:'fill',source:'udg-crime',paint:{'fill-color':['interpolate',['linear'],['get','density_per_km2'],0,'#382b38',1000,'#79556b',5000,'#b17a83',15000,'#d3a09b'],'fill-opacity':op(.24)}},'ud-z-env');
+ src('udg-context');
+ layer({id:'udg-context-fill',type:'fill',source:'udg-context',filter:['==',['geometry-type'],'Polygon'],paint:{'fill-color':['get','_c'],'fill-opacity':op(.16)}},'ud-z-polys');
+ layer({id:'udg-context-line',type:'line',source:'udg-context',filter:['in',['geometry-type'],['literal',['Polygon','LineString']]],paint:{'line-color':['get','_c'],'line-width':1,'line-opacity':op(.5)}},'ud-z-lines');
+ layer({id:'udg-context-pt',type:'circle',source:'udg-context',filter:['==',['geometry-type'],'Point'],paint:{'circle-color':['get','_c'],'circle-radius':2.5,'circle-opacity':op(.7)}},'ud-z-points');
  // Buildings: one fill whose colour follows the building theme; hairline outlines from street zoom.
  src('udg-buildings');
  layer({id:'udg-buildings-fill',type:'fill',source:'udg-buildings',minzoom:T.zoom.neighbourhood-.5,paint:{'fill-color':T.building.neutral,'fill-opacity':op(T.building.fillOpacity)}},'ud-z-polys');
@@ -174,7 +197,8 @@ function addGroupLayers(){
  layer({id:'udg-noise-pt',type:'circle',source:'udg-noise',minzoom:16.5,paint:{'circle-color':T.cat.environment,'circle-radius':['interpolate',['linear'],['zoom'],16.5,1.2,19,3],'circle-opacity':op(.5)}},'ud-z-env');
  // Trees: a fine green texture rather than markers.
  src('udg-trees');
- layer({id:'udg-trees-pt',type:'circle',source:'udg-trees',minzoom:12,paint:{'circle-color':T.cat.nature,'circle-radius':T.tree.radius,'circle-opacity':op(T.tree.opacity),'circle-blur':.15}},'ud-z-trees');
+ layer({id:'udg-trees-pt',type:'circle',source:'udg-trees',minzoom:12,filter:['!',['has','tree_count']],paint:{'circle-color':T.cat.nature,'circle-radius':T.tree.radius,'circle-opacity':op(T.tree.opacity),'circle-blur':.15}},'ud-z-trees');
+ layer({id:'udg-tree-cells',type:'circle',source:'udg-trees',filter:['has','tree_count'],paint:{'circle-color':T.cat.nature,'circle-radius':['interpolate',['linear'],['get','tree_count'],1,.8,100,1.8,1000,4],'circle-opacity':op(.55)}},'ud-z-trees');
  // POIs: one clustered source per data category, so a cluster always means "records of this category".
  for(const c of UD_CATEGORY_IDS){
   const s='udg-pts-'+c,color=T.cat[c],wt=T.weight[c]||{size:1,opacity:1},sized=T.point.stops.map(([z,r])=>[z,r*wt.size]);
@@ -227,6 +251,7 @@ function composeUrbanGroups(){
  const GENERAL=new Set(['activity_places']),placed=new Set();
  const order=[...urbanData.active.keys()].sort((a,b)=>GENERAL.has(a)-GENERAL.has(b));
  for(const id of order){
+  if(id==='street_trees'&&urbanData.active.has('citywide_tree_inventory')&&urbanData.drawn.get('citywide_tree_inventory')?.size)continue;
   const d=urbanData.byId.get(id),feats=urbanData.drawn.get(id);if(!feats)continue;
   const g=udGroup(d);
   if(g==='buildings'){
@@ -241,7 +266,7 @@ function composeUrbanGroups(){
   for(const f of feats.values()){const key=g.startsWith('pts-')&&id!=='accessible_entrances'?f.properties.feature_id:null;
    if(key&&GENERAL.has(id)&&placed.has(key))continue;if(key)placed.add(key);list.push(tag(id,f));}
  }
- const all=['buildings','green','surface','districts','landmarks','lines','noise','trees',...UD_CATEGORY_IDS.map(c=>'pts-'+c)];
+ const all=['buildings','green','surface','districts','landmarks','lines','noise','trees','crime','context',...UD_CATEGORY_IDS.map(c=>'pts-'+c)];
  for(const g of all)state.map.getSource('udg-'+g)?.setData({type:'FeatureCollection',features:groups[g]||[]});
  renderUrbanLegend();
 }
@@ -272,6 +297,33 @@ async function loadUrbanDataset(id){
  const a=urbanData.active.get(id),d=urbanData.byId.get(id);if(!a)return;const seq=++a.seq;
  const done=(fc,text,kind)=>{if(seq!==a.seq||!urbanData.active.has(id))return;urbanData.drawn.set(id,new Map(fc.features.map(f=>[String(f.properties.feature_id),f])));setUrbanStatus(id,text,kind);scheduleUrbanCompose();};
  try{
+  if(d.remote&&d.remote!=='crime'){
+   if(!state.mapReady){done(emptyFC(),'Map not ready','waiting');return;}
+   const b=state.map.getBounds(),coords=!urbanViewScope()?routeCoords():null,box=coords?UrbanGeo.lineBox(coords.map(UrbanGeo.xy),urbanData.corridor):null;
+   const ll=box?[box[0]/urbanData.catalog.projection.mx,box[1]/urbanData.catalog.projection.my,box[2]/urbanData.catalog.projection.mx,box[3]/urbanData.catalog.projection.my]:[b.getWest(),b.getSouth(),b.getEast(),b.getNorth()];
+   ll[0]=Math.max(-74.3,ll[0]);ll[1]=Math.max(40.45,ll[1]);ll[2]=Math.min(-73.68,ll[2]);ll[3]=Math.min(40.95,ll[3]);
+   if(ll[0]>=ll[2]||ll[1]>=ll[3]){done(emptyFC(),'Outside NYC snapshot','empty');return;}
+   const params=new URLSearchParams({bbox:ll.join(','),zoom:state.map.getZoom()});
+   if(d.remote.startsWith('context:'))params.set('category',d.remote.slice(8));
+   const fc=await streetwiseJson('/api/urban/'+(d.remote==='trees'?'trees':'context')+'?'+params,{signal:AbortSignal.timeout(20000)});
+   if(coords)fc.features=UrbanGeo.alongLine(fc.features,coords,urbanData.corridor).map(h=>h.feature);
+   done(fc,`${fc.features.length} ${d.remote==='trees'&&state.map.getZoom()<16?'inventory cells':'features'}${fc.metadata.truncated?' · truncated: zoom in':''}`,'loaded');return;
+  }
+  if(d.remote==='crime'){
+   if(!state.mapReady){done(emptyFC(),'Map not ready','waiting');return;}
+   const meta=await crimeMetadata(),p={...(planner.routeResponse?.independent_preferences_used?.crime||planner.crime||{}),...(urbanData.crimeFilter||{})},b=state.map.getBounds(),coords=!urbanViewScope()?routeCoords():null;
+   const box=coords?UrbanGeo.lineBox(coords.map(UrbanGeo.xy),urbanData.corridor):null;
+   const ll=box?[box[0]/urbanData.catalog.projection.mx,box[1]/urbanData.catalog.projection.my,box[2]/urbanData.catalog.projection.mx,box[3]/urbanData.catalog.projection.my]:[b.getWest(),b.getSouth(),b.getEast(),b.getNorth()];
+   ll[0]=Math.max(-74.3,ll[0]);ll[1]=Math.max(40.45,ll[1]);ll[2]=Math.min(-73.68,ll[2]);ll[3]=Math.min(40.95,ll[3]);
+   if(ll[0]>=ll[2]||ll[1]>=ll[3]){done(emptyFC(),'Outside NYC snapshot','empty');return;}
+   const params=new URLSearchParams({bbox:ll.join(','),zoom:state.map.getZoom(),from:p.from||meta.default_start,to:p.to||meta.available_end_exclusive});
+   const types=urbanData.crimeFilter?.offense_types||p.offense_types;
+   const codes=types?Object.entries(meta.offenses).filter(([k,names])=>types.some(t=>names.includes(t))).map(([k])=>k):p.offense_codes;
+   if(codes?.length)params.set('offense_codes',codes.join(','));
+   const fc=await streetwiseJson('/api/urban/crime?'+params,{signal:AbortSignal.timeout(20000)});
+   if(coords)fc.features=UrbanGeo.alongLine(fc.features,coords,urbanData.corridor).map(h=>h.feature);
+   done(fc,`${fc.features.length} density cells · ${fc.metadata.from}–${fc.metadata.to_exclusive} (end exclusive)${fc.metadata.truncated?' · zoom in: truncated':''}`,'loaded');return;
+  }
   if(!urbanViewScope()){
    const coords=routeCoords();
    setUrbanStatus(id,'Loading…','loading');
@@ -295,7 +347,7 @@ async function loadUrbanDataset(id){
 function urbanViewScope(){return urbanData.scope==='view'||!routeCoords();}
 function refreshUrbanLayers(){for(const id of urbanData.active.keys())loadUrbanDataset(id);}
 /** Route changed (planned, switched or cleared): keep the user's layers, re-filter them, update the summary. */
-function urbanLayersRouteChanged(){if(urbanData.scope==='route')refreshUrbanLayers();renderUrbanLegend();renderRouteUrbanData();closeUrbanInspector();}
+function urbanLayersRouteChanged(){if(planner.crime&&urbanData.byId.has('reported_complaints')&&!urbanData.active.has('reported_complaints'))toggleUrbanDataset('reported_complaints',true,true);if(urbanData.scope==='route')refreshUrbanLayers();renderUrbanLegend();renderRouteUrbanData();closeUrbanInspector();}
 function urbanViewMoved(){if(!urbanViewScope()||!urbanData.active.size)return;clearTimeout(urbanData.viewTimer);urbanData.viewTimer=setTimeout(refreshUrbanLayers,400);}
 
 // --- legend: only what is visible now -------------------------------------------------------------------
@@ -312,6 +364,7 @@ function renderUrbanLegend(){
   else rows.push(`<div class="lg-row">${sw(B.neutral,'fill')}<span>Buildings</span></div>`);
  }
  if(has('parks')||has('community_gardens'))rows.push(`<div class="lg-row">${sw(T.cat.nature,'fill')}<span>Parks & gardens</span></div>`);
+ if(has('reported_complaints'))rows.push(`<div class="lg-row">${sw('#b17a83','fill')}<span>Historical reported complaint density · not a crime rate</span></div>`);
  if(has('street_trees')&&z>=12)rows.push(`<div class="lg-row">${sw(T.cat.nature,'tiny')}<span>Street trees</span></div>`);
  if(has('historic_districts'))rows.push(`<div class="lg-row">${sw(T.cat.heritage,'dash')}<span>Historic districts</span></div>`);
  if(has('landmarks'))rows.push(`<div class="lg-row">${sw(T.cat.heritage,'fill')}<span>Landmark lots</span></div>`);
