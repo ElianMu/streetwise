@@ -66,6 +66,14 @@ class A_Itinerary(unittest.TestCase):
         self.assertEqual({s['id'] for s in it['stops'] if s['role'] == 'stop'}, {x['id'] for x in far})
         self.assertFalse(r['routes'][0]['recommended'])
 
+    def test_arrival_maneuvers_carry_stop_id(self):
+        # The navigation client (nav-ui.js reroute()) matches an already-reached stop by this id, not by its
+        # display name, because two required stops can have the same name.
+        a, b = cands('museums', ROCK, 6)[0], cands('museums', ROCK, 6)[1]
+        r = plan(stops=[{**a, 'required': True}, {**b, 'required': True}])
+        arrivals = [m for m in r['routes'][0]['maneuvers'] if m['type'] == 'arrive_stop']
+        self.assertEqual({m['stop_id'] for m in arrivals}, {a['id'], b['id']})
+
     def test_explicit_order_kept(self):
         a, b = cands('attractions', ROCK, 6)[3], cands('museums', HOTEL, 6)[5]
         r = plan(stops=[{**a, 'order': 1}, {**b, 'order': 2}, {**ROCK, 'order': 3}])
