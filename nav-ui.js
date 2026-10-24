@@ -40,7 +40,7 @@ function renderValidation(r){
 /** Food evidence comes from the separate menu check, never assumed. */
 function foodEvidenceStatus(r){
  if(typeof journey==='undefined'||!journey.plan||r?.objective!=='itinerary')return 'not_checked';
- const items=journey.plan.stops.map(s=>{if(s.required_item)return journey.menu[s.id+'|'+s.required_item];const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);return f?journey.menu[s.id+'|'+f.item]:null;}).filter(Boolean);
+ const items=journey.plan.stops.flatMap(s=>{if(s.required_items?.length)return s.required_items.map(item=>journey.menu[s.id+'|'+item]);if(s.required_item)return journey.menu[s.id+'|'+s.required_item];const f=journey.food.find(f=>s.slot_id===`food:${f.category}:${f.item||f.cuisine||''}`&&f.item);return f?journey.menu[s.id+'|'+f.item]:null;}).filter(Boolean);
  if(!items.length)return 'not_checked';
  return items.every(m=>m.status==='confirmed_menu_match')?'pass':items.some(m=>m.status==='checking')?'not_checked':'warning';
 }
@@ -155,7 +155,7 @@ async function reroute(manual=false){
    const reached=new Set([...eng.arrivedStops].map(id=>eng.maneuvers.find(m=>m.maneuver_id===id)?.stop_name));
    const remaining=journey.plan.stops.filter(s=>s.role!=='end'&&!reached.has(s.name));
    const req={...journey.request,departure:new Date().toISOString(),origin:{id:'gps',name:'My location',lat:here.lat,lon:here.lon},slots:[],pool:{max_stops:0,candidates:[]},
-    stops:remaining.map((s,i)=>({id:s.id,name:s.name,lat:s.lat,lon:s.lon,required:s.required||true,order:i+1,visit_min:s.visit_min,hours:s.hours,required_item:s.required_item}))};
+    stops:remaining.map((s,i)=>({id:s.id,name:s.name,lat:s.lat,lon:s.lon,required:s.required||true,order:i+1,visit_min:s.visit_min,hours:s.hours,required_item:s.required_item,required_items:s.required_items}))};
    const res=await streetwiseFetch('/api/itinerary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req),signal:AbortSignal.timeout(30000)});
    json=await res.json();if(!res.ok)throw new Error(json.error||`HTTP ${res.status}`);newRoute=json.routes[0];
   }else{

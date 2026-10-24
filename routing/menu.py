@@ -293,8 +293,20 @@ def _identity(pid):
 
 def cached_evidence(pid, item):
     entry = CACHE.get((_identity(pid), item.lower()))
-    if entry and 0 <= time.time()-entry[0] < TTL:
+    if entry and entry[1].get('status')=='confirmed_menu_match' and 0 <= time.time()-entry[0] < TTL:
         return entry[1]
+    # Small offline-checked evidence corpus avoids repeated page crawls. Expiry and official-host checks still apply.
+    path=os.path.join(ROOT,'data','menus','verified-items.json')
+    if os.path.exists(path):
+        with open(path) as f:records=json.load(f).get('records',[])
+        for r in records:
+            if r.get('item','').lower()!=item.lower() or _identity(r.get('place_id'))!=_identity(pid):continue
+            try:age=time.time()-datetime.fromisoformat(r['checked_at']).timestamp()
+            except (ValueError,KeyError):continue
+            site,_=place_sites().get(pid,(None,None))
+            if 0<=age<TTL and r.get('status')=='confirmed_menu_match' and site and parse.urlsplit(site).hostname==parse.urlsplit(r.get('source_url') or '').hostname:
+                CACHE[(_identity(pid),item.lower())]=(time.time()-age,r)
+                return r
     return None
 
 
@@ -320,6 +332,8 @@ def verify(doc, now=None):
     if not site and not menu_url:
         return menu_profile({**base, 'status': 'unverified', 'reason': 'No official website is recorded for this place in the checked sources (OpenStreetMap).'})
     key = (_identity(pid), item.lower())
+    recorded=cached_evidence(pid,item)
+    if recorded:return {**recorded,'cached':True}
     if key in CACHE and time.time() - CACHE[key][0] < (TTL if CACHE[key][1].get('status')=='confirmed_menu_match' else 300):
         return {**CACHE[key][1], 'cached': True}
     queue = ([(menu_url, True)] if menu_url else []) + ([(site, False)] if site else [])

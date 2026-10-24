@@ -204,6 +204,8 @@ function localInterpret(q){
 }
 function applyInterpretation(result,source){
   const changes=[];planner.interpretation=source;
+  if(result.waterfront){planner.waterfront=result.waterfront.mode==='clear'?null:{direction:result.waterfront.direction,weight:result.waterfront.weight||90};changes.push(planner.waterfront?`water proximity: prefer ${planner.waterfront.direction}`:'water proximity preference removed');}
+  if(result.crime){planner.crime=result.crime.mode==='clear'?null:Object.fromEntries(Object.entries(result.crime).filter(([k])=>k!=='mode'));if(typeof urbanData!=='undefined')urbanData.crimeFilter={};changes.push(planner.crime?`historical complaint density: ${planner.crime.direction} (${planner.crime.from||'indexed default'} to ${planner.crime.to||'latest available'}, exclusive)`:'complaint-density preference removed');}
   for(const d of DIMENSIONS){
     if(Object.prototype.hasOwnProperty.call(result.weights||{},d.name)){
       const value=Number(result.weights[d.name]);if(Number.isFinite(value)&&value>=0&&value<=100){
@@ -233,14 +235,15 @@ async function interpretIntent(q){
   let data,mode='local';
   if(planner.llmConnected){
     try{
-      const r=await streetwiseFetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,weather:weatherWindow(state.budget),history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(32000)});
+      const r=await streetwiseFetch('/api/interpret',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:input,weights:planner.weights,budget:state.budget,constraints:planner.constraints,crime:planner.crime||null,waterfront:planner.waterfront||null,weather:weatherWindow(state.budget),history:planner.conversations.slice(-8)}),signal:AbortSignal.timeout(32000)});
       if(!r.ok){const j=await r.json().catch(()=>({}));const why=j.reason?[j.reason.stage,j.reason.http_status,j.reason.type,j.reason.code].filter(Boolean).join(' · '):'';
         console.warn('LLM response rejected:',j.reason||{status:r.status});
         throw new Error(`LLM service ${r.status}${why?` (${why})`:''}`);}
       data=await r.json();mode='llm';
     }catch(err){console.warn('LLM parsing unavailable:',err);toast(`AI parsing unavailable — ${err.message}. Using clearly marked limited local preview.`);}
   }
-  if(!data)data=localInterpret(input);
+  if(!data){data=localInterpret(input);if(/\bcrime\b|犯罪/.test(input.toLowerCase()))data.crime={mode:'set',direction:/avoid|lower|less|low crime|避开|低犯罪/i.test(input)?'low':'high',weight:90};}
+  if(mode!=='llm'&&/waterfront|river|河边|河岸|海边/i.test(input))data.waterfront={mode:'set',direction:/avoid|away from|not along|避开|不走/i.test(input)?'low':'high',weight:90};
   // Tourist / multi-stop intent: the LLM's structured `journey`, or the labelled local parser when no LLM is configured.
   if(mode!=='llm'&&typeof localJourney==='function'){await warmNameIndex().catch(()=>{});data.journey=localJourney(input);}
   if(typeof data?.clarification==='string'&&data.clarification.trim())return {changes:[],clarification:data.clarification.trim()};
@@ -487,7 +490,7 @@ async function handlePlan(text,isFollowUp=false){
   for(const kind of ['start','end']){if(kind==='end'&&typeof journey!=='undefined'&&journey.endMode!=='fixed')continue;const typed=$(kind==='start'?'searchStart':'searchEnd').value.trim(),chosen=getPlace(kind);if(typed!==chosen?.name){toast(`Search and choose a ${kind==='start'?'starting point':'destination'} result first, or use a preset.`);return}}
   planner.parsing=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;
   appendChat('user',q);
-  try{const result=await interpretIntent(q);if(result.clarification){appendChat('assistant',result.clarification);return;}
+  try{const result=await interpretIntent(q);if(result.clarification){$('rankingStatus').textContent='Clarification needed. The displayed previous route has not been recalculated.';appendChat('assistant',result.clarification+' The displayed previous route has not been recalculated.');return;}
     if(planner.weatherIntent==='ask'&&state.routes.length){if(weatherContext.status!=='ok')await loadWeather();appendChat('assistant',weatherAnswer());return;}
     if(typeof applyJourney==='function'&&result.journey){
       const jc=await applyJourney(result.journey);
@@ -520,7 +523,7 @@ async function loadRoutePOIs(run){
     if(!res.ok)throw new Error(`POI service HTTP ${res.status}`);
     const json=await res.json();if(run!==planner.runId)return;
     planner.routePois=(json.pois||[]).filter(x=>Number.isFinite(x.lon)&&Number.isFinite(x.lat)&&x.name).slice(0,450);
-    planner.poiStatus=`${planner.routePois.length} OSM records downloaded`;
+    planner.poiStatus=`${planner.routePois.length} ${json.source||'OSM'} records${json.status==='snapshot_fallback'?` · live provider unavailable · snapshot ${json.retrieved_at||'date unknown'}`:''}`;
   }catch(err){if(run!==planner.runId)return;planner.routePois=[];planner.poiStatus='OSM POIs unavailable: '+err.message}
   renderPOIs();syncMapData();
 }
@@ -534,7 +537,7 @@ function poiGeojson(){return {type:'FeatureCollection',features:state.display.po
 function renderPOIs(){
   const list=activePOIs();$('poiCount').textContent=`${list.length} NEAR ROUTE`;
   if(!list.length){$('poiList').innerHTML=`<p class="status-empty">${esc(planner.poiStatus==='Not loaded'?'Generate or select a route to discover POIs.':planner.poiStatus||'No named OSM POIs confirmed near route.')}</p>`;return}
-  $('poiList').innerHTML=list.map((p,i)=>`<button class="poi-item" type="button" data-poi="${i}"><span><strong>${esc(p.name)}</strong><small>${esc(poiDimension(p.tags))} · OpenStreetMap</small></span><span class="poi-distance">${p.distance} m ↗</span></button>`).join('');
+  $('poiList').innerHTML=`<small>${esc(planner.poiStatus)}</small>`+list.map((p,i)=>`<button class="poi-item" type="button" data-poi="${i}"><span><strong>${esc(p.name)}</strong><small>${esc(poiDimension(p.tags))} · OpenStreetMap</small></span><span class="poi-distance">${p.distance} m ↗</span></button>`).join('');
   $('poiList').querySelectorAll('[data-poi]').forEach(el=>el.addEventListener('click',()=>{
     const p=list[+el.dataset.poi];if(state.mapReady)state.map.flyTo({center:[p.lon,p.lat],zoom:16.4,duration:500});toast(`${p.name} · ${p.distance} m from route geometry`);
   }));

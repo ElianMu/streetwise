@@ -69,27 +69,33 @@ def validate_request(doc):
         raise ValueError('end.mode must be fixed, round, hotel or open')
     end_place = _pt(end.get('place'), 'end') if mode in ('fixed', 'hotel') else None
     stops = []
+    def required_items(value):
+        items=value.get('required_items') or ([value['required_item']] if value.get('required_item') else [])
+        if not isinstance(items,list) or len(items)>5 or any(not isinstance(x,str) or not x.strip() or len(x)>60 for x in items):raise ValueError('Invalid required menu items')
+        return list(dict.fromkeys(x.strip().lower() for x in items))
     for k, s in enumerate((doc.get('stops') or [])[:12]):
         p = _pt(s, f'stop {k + 1}')
-        if s.get('required_item'):
+        items=required_items(s)
+        for item in items:
             from .menu import cached_evidence
-            evidence = cached_evidence(p['id'], str(s['required_item']))
+            evidence = cached_evidence(p['id'], item)
             if not evidence or evidence['status'] != 'confirmed_menu_match':
                 raise RoutingError('Required menu item is not verified for chosen place; check the official menu first')
         order = s.get('order')
         stops.append({**p, 'required': s.get('required', True) is not False, 'order': order if type(order) is int else None,
-                      'required_item':s.get('required_item'), 'visit_min': _visit(s), 'visit_estimated': bool(s.get('visit_estimated', True)), 'kind': 'stop'})
+                      'required_item':s.get('required_item'), 'required_items':items, 'visit_min': _visit(s), 'visit_estimated': bool(s.get('visit_estimated', True)), 'kind': 'stop'})
     slots = []
     for k, sl in enumerate((doc.get('slots') or [])[:6]):
         cands = [{**_pt(c, 'candidate'), 'score': float(c.get('score') or 0), 'evidence': c.get('evidence')} for c in (sl.get('candidates') or [])[:8]]
-        if sl.get('required_item'):
+        items=required_items(sl)
+        if items:
             from .menu import cached_evidence
-            cands = [c for c in cands if (cached_evidence(c['id'], str(sl['required_item'])) or {}).get('status') == 'confirmed_menu_match']
+            cands = [c for c in cands if all((cached_evidence(c['id'], item) or {}).get('status') == 'confirmed_menu_match' for item in items)]
         if not cands and sl.get('required', True) is not False:
             raise RoutingError('Required place has no candidates: ' + str(sl.get('label') or sl.get('slot_id') or 'stop'))
         if cands:
             slots.append({'slot_id': str(sl.get('slot_id') or f'slot{k}')[:40], 'label': str(sl.get('label') or 'Stop')[:80],
-                          'required': sl.get('required', True) is not False, 'required_item':sl.get('required_item'), 'visit_min': _visit(sl, 15), 'candidates': cands,
+                          'required': sl.get('required', True) is not False, 'required_item':sl.get('required_item'), 'required_items':items, 'visit_min': _visit(sl, 15), 'candidates': cands,
                           'order': sl.get('order') if type(sl.get('order')) is int else None})
     pool = doc.get('pool') or {}
     pool_c = [{**_pt(c, 'candidate'), 'score': float(c.get('score') or 0), 'visit_min': _visit(c, 20), 'evidence': c.get('evidence'),
@@ -169,7 +175,7 @@ class Planner:
         for sl in req['slots']:
             idxs = []
             for c in sorted(sl['candidates'], key=lambda c: -c['score']):
-                k, err = add(c, 'candidate', slot=sl['slot_id'], required_item=sl.get('required_item'))
+                k, err = add(c, 'candidate', slot=sl['slot_id'], required_item=sl.get('required_item'),required_items=sl.get('required_items'))
                 if k is not None:
                     idxs.append(k)
             if not idxs and sl['required']:
@@ -350,6 +356,14 @@ class Planner:
 
         # 5. route each leg with the experience cost, stitch into one Route Object ----------------------------
         weights, expressed = preference_weights(req['preferences'])
+        crime_pref=crime_field=None
+        if req['preferences'].get('crime'):
+            from . import crime
+            crime_pref=crime.validate(req['preferences']['crime']);crime_field=crime.edge_field(net,crime_pref)
+        water_pref=water_data=None
+        if req['preferences'].get('waterfront'):
+            from . import waterfront
+            water_pref=waterfront.validate(req['preferences']['waterfront']);water_data=waterfront.data(net)
         util_cache = {}
 
         def util(gi):
@@ -357,7 +371,13 @@ class Planner:
                 util_cache[gi] = self.rp.edge_utility(gi, weights)
             return util_cache[gi]
 
-        exp_cost = lambda i: (1.0 + .8 * (1.0 - util(net.edges[i][3]))) if allowed(i) else None
+        def exp_cost(i):
+            if not allowed(i):return None
+            gi=net.edges[i][3];cost=1+.8*(1-util(gi))
+            if crime_pref:cost+=1.2*(1-crime.fit(crime_field['values'][gi],crime_pref['direction'],crime_field['scale']))
+            if water_pref:
+                share=water_data['within_100m_share'][gi];cost+=1.2*(1-(share if water_pref['direction']=='high' else 1-share))
+            return cost
         len_cost = lambda i: 1.0 if allowed(i) else None
 
         def route_legs(fn):
@@ -384,6 +404,8 @@ class Planner:
         route['constraints'] = {'feasible': not violations, 'violations': violations, 'avoid_stairs': bool(avoid),
                                 'contains_steps': any(e['pedestrian_access']['steps'] for e in route['edges'])}
         self.rp.personalize(route, weights, expressed)
+        if crime_pref:crime.apply(route,crime_pref,crime_field,weights if expressed else {})
+        if water_pref:waterfront.apply(route,water_pref,net,weights if expressed else {})
         route['rank'], route['recommended'] = 1, not violations
         route['ranking_explanation'] = (f"{len(inner)} stop(s), {route['distance_m'] / 1000:.2f} km on the OSM pedestrian graph, "
                                         f"{route['estimated_duration_min']:.0f} min walking + {visit_total(chosen):.0f} min visits. "
@@ -406,7 +428,7 @@ class Planner:
             rec = {'seq': n, 'id': p['id'], 'name': p['name'], 'lat': p['lat'], 'lon': p['lon'], 'category': p.get('category'), 'address': p.get('address'),
                    'source': p.get('source'), 'role': 'end' if is_end and not it else p['role'], 'required': bool(it) and it in required,
                    'arrival_min': round(clock, 1), 'leg_in_m': round(m, 1), 'leg_in_min': round(m / WALK_SPEED_M_PER_MIN, 1),
-                   'hours':p.get('hours'), 'required_item':p.get('required_item'), 'visit_min': it['visit'] if it else 0, 'snap_distance_m': p['snap']['snap_distance_m'], 'evidence': p.get('evidence')}
+                   'hours':p.get('hours'), 'required_item':p.get('required_item'), 'required_items':p.get('required_items') or [], 'visit_min': it['visit'] if it else 0, 'snap_distance_m': p['snap']['snap_distance_m'], 'evidence': p.get('evidence')}
             if it and it['type'] == 'slot':
                 rec.update(slot_id=it['slot_id'], slot_label=it['label'], alternatives=[points[j]['id'] for j in it['idx'] if j != k][:5])
             if departure and it:
@@ -439,6 +461,7 @@ class Planner:
                                           [{'name': s['name'], 'lat': s['lat'], 'lon': s['lon'], 'required': s['required'] or s['role'] == 'end',
                                             'snap_distance_m': s['snap_distance_m'], 'open_at_arrival': s.get('open_at_arrival'),
                                             'closes_during_visit': s.get('closes_during_visit')} for s in out_stops])
+        self.rp.remember([route])
         pool_requested = min(req['pool']['max_stops'], len(pool_items))
         itinerary = {'end_mode': req['end_mode'], 'pool': {'requested': pool_requested, 'added': added_pool}, 'start': {k: points[oi][k] for k in ('id', 'name', 'lat', 'lon')},
                      'stops': out_stops, 'skipped': skipped, 'notes': notes, 'method': method,
@@ -452,7 +475,8 @@ class Planner:
                 'feasible_count': int(not violations), 'shortest_distance_m': route['distance_m'],
                 'constraints_used': {'max_minutes': cons.get('max_minutes'), 'max_km': cons.get('max_km'), 'max_outing_minutes': cons.get('max_outing_minutes'),
                                      'max_detour_pct': None, 'avoid_detours': False, 'avoid_stairs': bool(avoid)},
-                'preferences_used': {k: {'weight': w, 'direction': d} for k, (w, d) in weights.items()}, 'preferences_expressed': expressed,
+                'preferences_used': {k: {'weight': w, 'direction': d} for k, (w, d) in weights.items()}, 'preferences_expressed': expressed or bool(crime_pref) or bool(water_pref),
+                'independent_preferences_used':{**({'crime':crime.public_preference(crime_pref)} if crime_pref else {}),**({'waterfront':water_pref} if water_pref else {})},
                 'compute_seconds': round(time.time() - t0, 2),
                 'notes': ['Walking time uses a fixed 4.8 km/h planning pace. Visit durations are estimates you can change.']}
 

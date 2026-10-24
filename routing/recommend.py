@@ -59,7 +59,8 @@ def recommend_food(planner, doc):
     def pre(c):
         r = c.get('restaurant') or {}
         tag = 1 if hint and ((r.get('drink_tags_osm') or {}).get(hint) == 'yes' or ('espresso' in (r.get('drink_tags_osm') or {}) and hint in ('cappuccino', 'latte', 'flat white'))) else 0
-        return (-tag, -bool(c.get('official_website')), c['straight_line_m'])
+        recorded=menu.cached_evidence(c['place_id'],item) if item else None
+        return (-bool(recorded), -tag, -bool(c.get('official_website')), c['straight_line_m'])
     cands.sort(key=pre)
     cands = cands[:12]
     net = planner.net
@@ -91,8 +92,10 @@ def recommend_food(planner, doc):
         with cf.ThreadPoolExecutor(max_workers=4) as executor:
             rating_results.update(executor.map(rate, cands[:4]))
     # item evidence for the best few with an official website (parallel, bounded)
-    to_check = [c for c in cands if c.get('official_website')][:CHECK_LIMIT] if item and (not ratings_required or rating_ready) else []
     menus = {}
+    if item:
+        menus={c['place_id']:r for c in cands if (r:=menu.cached_evidence(c['place_id'],item))}
+    to_check = [c for c in cands if c.get('official_website') and c['place_id'] not in menus][:CHECK_LIMIT] if item and (not ratings_required or rating_ready) else []
     if to_check:
         with cf.ThreadPoolExecutor(max_workers=WORKERS) as ex:
             futs = {ex.submit(menu.verify, {'place_id': c['place_id'], 'name': c['name'], 'item': item}): c['place_id'] for c in to_check}

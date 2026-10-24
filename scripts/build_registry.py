@@ -197,6 +197,16 @@ def main():
                          'geometry_type': 'Point (not a verified entrance)', 'integration_status': 'connected',
                          'missing_fields': {k: sum(not r.get(k) for r in records)/len(records) for k in ['addr','hours','web','boro']},
                          'note': source['known_limitations']})
+    inventory=D('urban','inventory.json')
+    if os.path.exists(inventory):
+        for s in json.load(open(inventory))['datasets']:
+            miss={k:(v.get('fraction') if isinstance(v,dict) else v) for k,v in s.get('missing_fields',{}).items()}
+            rows.append({'dataset_id':'indexed:'+s['dataset_id'],'name':s['name'],'group':'indexed_urban',
+                'publisher':s['name'].split(' ')[0]+' / NYC Open Data','source_url':s['source_url'],'license':'NYC Open Data Terms of Use',
+                'coverage_area':s['coverage'],'feature_count':s['records'],'valid_geometry_count':s['records'],
+                'publisher_updated_at':s['publisher_updated_at'],'retrieved_at':s['retrieved_at'],'freshness_days':age_days(s['publisher_updated_at'],now),
+                'missing_fields':miss,'duplicate_records':0,'geometry_type':'Indexed source geometry','integration_status':'connected',
+                'routing_usage':s['routing_usage'],'frontend_usage':s['frontend_usage'],'note':s['representation']})
     for r in rows:
         r.update(classify(r))
     out = {'built_at': now.isoformat(timespec='seconds'), 'datasets': rows,

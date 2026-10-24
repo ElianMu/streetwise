@@ -59,6 +59,9 @@ JOURNEY = obj({
     })),
 })
 COMMON = {
+    'waterfront':nullable(obj({'mode':enum(['set','clear']),'direction':nullable(enum(['high','low'])),'weight':nullable(number(1,100,True))})),
+    'crime': nullable(obj({'mode':enum(['set','clear']), 'direction':nullable(enum(['high','low'])),
+        'weight':nullable(number(1,100,True)), 'from':nullable(TEXT), 'to':nullable(TEXT), 'offense_types':array(TEXT,10)})),
     'time_minutes': nullable(number(MIN_WALK_MINUTES, integer=True)),
     'time_delta_minutes': nullable(number(-1440, 1440, True)),
     'max_detour_percent': nullable(number(0, 100, True)),

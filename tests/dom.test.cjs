@@ -32,7 +32,7 @@ const run=s=>vm.runInContext(s,context);
   assert(insp().textContent.includes(seg.id));
  }
  w.document.querySelector('#exploreChips [data-view="2"]').click();assert.equal(w.document.querySelector('#exploreTitle').textContent,'Nature');
- assert(insp().textContent.includes('Living street trees per km'));assert(insp().textContent.includes('NYC Parks Forestry Tree Points'));assert.equal(insp().querySelectorAll('.explore-row').length,0);assert(!insp().textContent.includes('Walkability'));
+ assert(insp().textContent.includes('Full-structure inventory trees per km'));assert(insp().textContent.includes('NYC Parks Forestry Tree Points'));assert.equal(insp().querySelectorAll('.explore-row').length,0);assert(!insp().textContent.includes('Walkability'));
  w.document.querySelector('#exploreChips [data-view="5"]').click();assert(insp().textContent.includes('Comfort · Experience Score'));assert(insp().querySelector('.inspector-score strong').textContent==='N/A');assert(insp().textContent.includes('N/A'));
  w.document.querySelector('#exploreChips [data-view="4"]').click();assert(insp().textContent.includes('Roadway width'));assert(/Roadway width\s*N\/A/.test(insp().textContent));
  assert.equal(insp().querySelector('.inspector-score strong').textContent,String(seg.d3));
@@ -108,7 +108,7 @@ const run=s=>vm.runInContext(s,context);
  const nTrees=G.alongLine(allTiles('street_trees'),matched.geometry.coordinates,30).length;
  const treeRow=[...uinsp().querySelectorAll('.evidence-row')].find(r=>r.textContent.startsWith('Street trees'));assert(treeRow.textContent.includes(`${nTrees} within 30 m`),treeRow.textContent);
  assert(ev.includes('Raw feature count')&&ev.includes('Spatial density')&&ev.includes('Nearest distance')&&ev.includes('Area coverage')&&ev.includes('context only'));
- assert(uinsp().querySelector('.evidence-scoring').textContent.includes('Living street trees per km'),'existing scoring indicators are labelled separately');
+ assert(uinsp().querySelector('.evidence-scoring').textContent.includes('Full-structure inventory trees per km'),'existing scoring indicators are labelled separately');
  await run(`showRouteEdgeInspector(state.routes.find(r=>r.id===state.activeRoute).raw.edges[${best.edges.indexOf(best.edges.find(e=>!e.matched_segment_ids.length))}])`);
  assert(uinsp().textContent.includes('Unmatched'));assert(!/MN-\d/.test(uinsp().querySelector('dl').textContent),'an unmatched edge must not show a LION ID');
  // Urban Data Layers: dataset catalog (not dimensions), statuses, search.
@@ -116,10 +116,11 @@ const run=s=>vm.runInContext(s,context);
  assert.equal(w.document.querySelectorAll('#urbanCats .urban-cat').length,10);
  const catText=w.document.querySelector('#urbanCats').textContent;assert(catText.includes('Streets & Pedestrian Infrastructure')&&catText.includes('Not connected · available')&&catText.includes('Not connected · no dataset'));const heads=[...w.document.querySelectorAll('#urbanCats .urban-cat > summary span')].map(x=>x.textContent);assert(!heads.some(h=>run('DIMENSIONS').some(d=>h===d.name)),'categories are datasets, not experience dimensions');
  assert(w.document.querySelector('[data-ud-toggle="air_quality"]')===null,'unconnected datasets cannot be switched on');
- // First visit: every connected dataset is on; All off / All on drive every dataset; categories show partial state.
- const connected=catalog.datasets.filter(d=>d.status==='CONNECTED').length;
- for(let i=0;i<40&&run('urbanData.active.size')<connected;i++)await new Promise(r=>setTimeout(r,50));
- assert.equal(run('urbanData.active.size'),connected,'all connected datasets on by default');assert.equal(w.document.querySelector('#urbanActiveTitle').textContent,`ACTIVE DATASETS: ${connected} of ${connected}`);
+ // Static + indexed transports share category controls; defaults honour the declared visibility/density policy.
+ const allDatasets=[...catalog.datasets,...(catalog.remote_datasets||[])],connected=allDatasets.filter(d=>d.status==='CONNECTED').length;
+ const defaults=allDatasets.filter(d=>d.status==='CONNECTED'&&d.default_visible!==false).length;
+ assert.equal(run('urbanData.active.size'),defaults,'every declared default dataset is on');assert.equal(w.document.querySelector('#urbanActiveTitle').textContent,`ACTIVE DATASETS: ${defaults} of ${connected}`);
+ assert(w.document.querySelector('[data-ud-toggle="reported_complaints"]'),'indexed crime source is available independently of the 12 scores');
  w.document.querySelector('#urbanAllOff').click();assert.equal(run('urbanData.active.size'),0);
  w.document.querySelector('#urbanAllOn').click();assert.equal(run('urbanData.active.size'),connected);
  w.document.querySelector('#urbanAllOff').click();
@@ -253,6 +254,15 @@ const run=s=>vm.runInContext(s,context);
  assert(w.document.querySelector('#routeValidation').textContent.includes('Route check'));
  run("state.routes[0].raw.validation={...state.routes[0].raw.validation,navigation_allowed:false,status:'fail',blocking_issues:['gap between edges']};renderNavStart()");assert(ns.disabled&&ns.title.includes('gap between edges'),'failed route check blocks navigation');
  run("delete state.routes[0].raw.maneuvers;state.routes[0].raw.validation.navigation_allowed=true;renderNavStart()");assert(ns.disabled,'no maneuvers, no navigation');
+ // Independent criteria stay separate, and a legacy response cannot silently ignore them.
+ run("applyInterpretation({weights:{},crime:{mode:'set',direction:'high',weight:90},waterfront:{mode:'set',direction:'high',weight:90}},'local')");
+ assert.equal(run('buildRouteRequest({lat:40.75,lon:-73.99},{lat:40.76,lon:-73.98}).preferences.crime.direction'),'high');
+ run("applyInterpretation({weights:{},waterfront:{mode:'set',direction:'low',weight:90}},'local')");
+ assert.equal(run('planner.waterfront.direction'),'low','a follow-up replaces the prior direction');
+ w.OLD_ROUTE_RESPONSE=fixture;
+ assert.throws(()=>run("validateIndependentResponse({crime:{direction:'high'}},OLD_ROUTE_RESPONSE)"),/did not apply/);
+ run("applyInterpretation({weights:{},crime:{mode:'clear'},waterfront:{mode:'clear'}},'local')");
+ assert.equal(run('planner.crime'),null);assert.equal(run('planner.waterfront'),null);
  // Mock AI transport only; never claim this as a real OpenAI call.
  const initialFetch=w.fetch;
  run('planner.llmConnected=true');

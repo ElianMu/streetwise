@@ -22,13 +22,20 @@ const routeNav={pending:false,last:null,selectedEdge:null};
 function buildRouteRequest(a,b){
  const weights={},directions={};
  for(const d of DIMENSIONS)if(planner.origins[d.name]!=='default'&&planner.weights[d.name]>0){weights[d.name]=planner.weights[d.name];directions[d.name]=planner.directions[d.name]||'high';}
- return {origin:{lat:a.lat,lon:a.lon},destination:{lat:b.lat,lon:b.lon},preferences:{weights,directions},
+ return {origin:{lat:a.lat,lon:a.lon},destination:{lat:b.lat,lon:b.lon},preferences:{weights,directions,...(planner.crime?{crime:planner.crime}:{}),...(planner.waterfront?{waterfront:planner.waterfront}:{})},
   constraints:{max_minutes:state.budget,max_km:state.maxKm,max_detour_pct:planner.maxDetourPct,avoid_detours:planner.constraints.avoidDetours,avoid_stairs:planner.constraints.avoidStairs},
   // Weather snapshot for the walking window (weather.js); the engine decides whether it may change edge costs.
   weather:typeof weatherSnapshot==='function'?weatherSnapshot(state.budget):null};
 }
 /** Adapter: engine Route Object → the shape the existing map and panels read (id/label/coords/km/min). */
 function adaptRoute(r){return {id:r.route_id,label:r.route_name,coords:r.geometry.coordinates,km:r.distance_m/1000,min:r.estimated_duration_min,feasible:r.constraints.feasible,score:r.personalized_score.utility,raw:r};}
+function validateIndependentResponse(preferences,json){
+ for(const key of ['crime','waterfront']){
+  const p=preferences?.[key];if(!p)continue;
+  if(json.independent_preferences_used?.[key]?.direction!==p.direction||!json.routes?.every(r=>r.independent_metrics?.[key]&&r.personalized_score.independent_components?.[key]?.direction===p.direction))throw new Error(`The backend did not apply the requested ${key} preference. A compatible deployment is required.`);
+  if(key==='crime'&&['from','to'].some(k=>p[k]&&json.independent_preferences_used[key][k]!==p[k]))throw new Error('The backend did not apply the requested crime data period.');
+ }
+}
 function applyRouteResponse(json){
  planner.routeResponse=json;state.routes=json.routes.map(adaptRoute);
  planner.weatherSignature=typeof weatherWindow==='function'?WEATHER.signature(weatherWindow(state.budget)):undefined;
@@ -58,10 +65,12 @@ async function generateRoutes(userText=null,isFollowUp=false){
  try{
   resetRoutes(true);renderRouteCards();
   if(location.protocol==='file:')throw new Error('The routing engine runs in server.py; start it and open http://127.0.0.1:8080.');
-  const res=await streetwiseFetch('/api/routes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildRouteRequest(a,b)),signal:AbortSignal.timeout(30000)});
+  const request=buildRouteRequest(a,b);
+  const res=await streetwiseFetch('/api/routes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request),signal:AbortSignal.timeout(30000)});
   const json=await res.json().catch(()=>({}));
   if(run!==planner.runId)return;
   if(!res.ok)throw new Error(json.error||`Routing engine HTTP ${res.status}`);
+  validateIndependentResponse(request.preferences,json);
   applyRouteResponse(json);
   const now=state.routes.find(r=>r.id===state.activeRoute)?.raw.ordered_edge_ids.join(',');
   if(previous&&now)planner.lastExplanation+=previous===now?' The recommended path is unchanged: it still ranks best under the updated preferences.':' The recommended path changed after recalculation.';
@@ -115,16 +124,26 @@ function updateProfile(){
  const r=x.raw,measured=Object.values(r.dimension_scores).filter(v=>v!=null).length;
  $('profileMode').textContent=`${measured}/12 MEASURED`;
  if(planner.profileView==='compare'){
-  $('profileChart').innerHTML=`<table class="route-compare"><thead><tr><th>Dimension</th>${state.routes.map(y=>`<th title="${esc(y.raw.route_name)}">${y.raw.rank}</th>`).join('')}</tr></thead><tbody>${DIMENSIONS.map(d=>`<tr><td>${esc(dimLabel(d.name))}</td>${state.routes.map(y=>`<td class="${y.id===state.activeRoute?'current':''}">${scoreText(y.raw.dimension_scores[d.name])}</td>`).join('')}</tr>`).join('')}<tr class="totals"><td>Personalized</td>${state.routes.map(y=>`<td>${y.raw.personalized_score.utility}</td>`).join('')}</tr><tr><td>Distance</td>${state.routes.map(y=>`<td>${(y.raw.distance_m/1000).toFixed(2)}</td>`).join('')}</tr><tr><td>Detour %</td>${state.routes.map(y=>`<td>${y.raw.detour_percentage}</td>`).join('')}</tr></tbody></table><small class="compare-key">${state.routes.map(y=>`${y.raw.rank} = ${esc(y.raw.route_name)}`).join(' · ')}</small>`;
+  $('profileChart').innerHTML=`<table class="route-compare"><thead><tr><th>Dimension</th>${state.routes.map(y=>`<th title="${esc(y.raw.route_name)}">${y.raw.rank}</th>`).join('')}</tr></thead><tbody>${DIMENSIONS.map(d=>`<tr><td>${esc(dimLabel(d.name))}</td>${state.routes.map(y=>`<td class="${y.id===state.activeRoute?'current':''}">${scoreText(y.raw.dimension_scores[d.name])}</td>`).join('')}</tr>`).join('')}${independentComparisonRows()}<tr class="totals"><td>Personalized</td>${state.routes.map(y=>`<td>${y.raw.personalized_score.utility}</td>`).join('')}</tr><tr><td>Distance</td>${state.routes.map(y=>`<td>${(y.raw.distance_m/1000).toFixed(2)}</td>`).join('')}</tr><tr><td>Detour %</td>${state.routes.map(y=>`<td>${y.raw.detour_percentage}</td>`).join('')}</tr></tbody></table><small class="compare-key">${state.routes.map(y=>`${y.raw.rank} = ${esc(y.raw.route_name)}`).join(' · ')}</small>`;
  }else $('profileChart').innerHTML=`<div class="experience-rows">${profileRows(r)}</div>`;
  $('chartNote').textContent=`Overall ${scoreText(r.overall_score)} · mean data coverage ${Math.round(r.data_coverage.mean*100)}%. Each score is the length-weighted mean over the ${r.ordered_edge_ids.length} OSM edges this route uses (scored length only). Your priorities are stored separately and never change street scores.`;
+}
+function independentComparisonRows(){
+ const rows=[];
+ for(const [key,label,field] of [['crime','Historical reports / route km','reported_incidents_per_route_km'],['waterfront','Length within 100 m of water','within_100m_share']]){
+  if(!state.routes.some(r=>r.raw.independent_metrics?.[key]))continue;
+  rows.push(`<tr><td>${label}</td>${state.routes.map(r=>{const v=r.raw.independent_metrics?.[key]?.[field];return `<td>${v==null?'N/A':key==='waterfront'?(v*100).toFixed(1)+'%':v}</td>`}).join('')}</tr>`);
+ }
+ return rows.join('');
 }
 function updateWhyRoute(){
  const x=state.routes.find(r=>r.id===state.activeRoute),root=$('whyRoute');
  if(!x){root.textContent=planner.constraints.stepFree?'Step-free access cannot be verified, so no route is recommended.':planner.routeResponse?planner.lastExplanation:'No selected route yet.';if(typeof renderWeatherRoute==='function')renderWeatherRoute();return}
  const p=x.raw.personalized_score;
+ const crimeMetric=x.raw.independent_metrics?.crime;
+ const crimeInfo=crimeMetric?`<div class="data-pair"><span>Historical reported complaints</span><span>${crimeMetric.count} within ${crimeMetric.corridor_m} m</span></div><div class="data-pair"><span>Reports per route km</span><span>${crimeMetric.reported_incidents_per_route_km}</span></div><small>${esc(crimeMetric.from)} – ${esc(crimeMetric.to_exclusive)} (end exclusive). Approximate NYPD historical locations; no population denominator or present personal-risk prediction. <a href="${esc(crimeMetric.source_urls[0])}" target="_blank" rel="noopener">NYPD source</a></small>`:'';
  const parts=Object.entries(p.components).sort((a,b)=>b[1].weight-a[1].weight).slice(0,6).map(([d,c])=>`<div class="data-pair"><span>${esc(dimLabel(d))} · weight ${c.weight}${c.direction==='low'?' · less':''}</span><span>${scoreText(c.route_score)} → fit ${c.adjusted_fit}</span></div>`).join('');
- root.innerHTML=`<p>${esc(x.raw.ranking_explanation)}</p>${parts}${p.weather_adjustment!=null?`<div class="data-pair"><span>Weather (heat) adjustment</span><span>−${p.weather_adjustment}</span></div>`:''}<small>${esc(p.formula)}. ${p.preferences_expressed?'Weights come from your request.':'No preference expressed yet, so all 12 dimensions count equally.'}</small>`;
+ root.innerHTML=`<p>${esc(x.raw.ranking_explanation)}</p>${crimeInfo}${parts}${p.weather_adjustment!=null?`<div class="data-pair"><span>Weather (heat) adjustment</span><span>−${p.weather_adjustment}</span></div>`:''}<small>${esc(p.formula)}. ${p.preferences_expressed?'Weights come from your request.':'No preference expressed yet, so all 12 dimensions count equally.'}</small>`;
  if(typeof renderWeatherRoute==='function'){renderWeatherRoute();renderWeatherPanel();}
 }
 // --- Route edges: list in Route Intelligence and clickable on the map -------------------------------------

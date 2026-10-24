@@ -5,7 +5,7 @@ the 12 experience scores transferred to each OSM edge (data/pedestrian/edge-scor
 routed on; it only supplies scores through street_osm_edge_mapping. Every route keeps its ordered edge list, and
 its geometry, distance and scores are all derived from that one list.
 """
-import gzip, heapq, json, math, os, threading, time, uuid
+import gzip, hashlib, heapq, json, math, os, threading, time, uuid
 from collections import OrderedDict
 
 try:
@@ -76,10 +76,19 @@ class PedestrianNetwork:
                             cell.append(i)
         self._step_free = None
         streets = os.path.join(ROOT, 'data', 'manhattan-streets.json')
-        feats = json.load(open(streets, encoding='utf-8'))['features'] if os.path.exists(streets) else []
-        self.segment_names = {f['properties']['id']: (f['properties']['name'], f['properties'].get('source_segment_id')) for f in feats}
+        compact = os.path.join(ROOT, 'data', 'pedestrian', 'segment-evidence.json.gz')
+        evidence = None
+        if os.path.exists(compact) and os.path.exists(streets):
+            with gzip.open(compact, 'rt') as f: cached = json.load(f)
+            with open(streets, 'rb') as f: signature = hashlib.file_digest(f, 'sha256').hexdigest()
+            if cached['metadata']['source_sha256'] == signature:
+                evidence = cached['records']
+        if evidence is None:
+            with open(streets, encoding='utf-8') as f: feats = json.load(f)['features']
+            evidence = {f['properties']['id']: f['properties'] for f in feats}
+        self.segment_names = {sid: (p.get('name'), p.get('source_segment_id')) for sid, p in evidence.items()}
         # Raw Nature sub-indicators per LION segment: the spatial evidence for the weather heat term (routing/weather.py).
-        self.segment_raw = {f['properties']['id']: {k: f['properties'].get(k) for k in ('tree_km', 'park_pct')} for f in feats}
+        self.segment_raw = {sid: {k: p.get(k) for k in ('tree_km', 'park_pct')} for sid, p in evidence.items()}
         self._exposure = None
         self.load_seconds = round(time.time() - t0, 1)
 
@@ -386,6 +395,9 @@ class RoutePlanner:
     def __init__(self, network):
         self.net = network
         self.routes = OrderedDict()  # route_id -> navigation-ready route, for progress/off-route queries
+        self.route_sizes = {}
+        self.nav_routes = OrderedDict()
+        self.nav_sizes = {}
         self.lock = threading.Lock()
 
     def edge_utility(self, gi, weights):
@@ -414,6 +426,15 @@ class RoutePlanner:
         o = net.snap(origin['lon'], origin['lat'], 'Origin', no_steps)
         d = net.snap(destination['lon'], destination['lat'], 'Destination', no_steps)
         weights, expressed = preference_weights(preferences)
+        crime_pref = crime_field = None
+        if (preferences or {}).get('crime') is not None:
+            from . import crime
+            crime_pref = crime.validate(preferences['crime'])
+            crime_field = crime.edge_field(net, crime_pref)
+        water_pref=water_data=None
+        if (preferences or {}).get('waterfront') is not None:
+            from . import waterfront
+            water_pref=waterfront.validate(preferences['waterfront']);water_data=waterfront.data(net)
         # Weather: a dynamic context, separate from the 12 static scores. It adds a cost only when assess() finds a factor
         # with spatial evidence (daytime heat → tree-cover proxy); otherwise every search below is exactly the static one.
         wctx = wx.assess(wx.validate_snapshot(weather), evidence_available=bool(net.segment_raw) or any(g.get('raw') for g in net.gscores))
@@ -449,6 +470,39 @@ class RoutePlanner:
 
         specs = [('shortest', 'Shortest Walk', length_cost)]
         specs += [('experience', 'Best Experience Match', experience_cost(2.0)), ('experience_balanced', 'Balanced Experience Route', experience_cost(0.8))]
+        if crime_pref:
+            # Use the same high/low candidate pool for a comparable ranking, regardless of requested direction.
+            def crime_cost(direction, strength):
+                def cost(i):
+                    base = experience_cost(.8)(i)
+                    if base is None: return None
+                    value = crime.fit(crime_field['values'][net.edges[i][3]], direction, crime_field['scale'])
+                    return base + strength*(1-value)
+                return cost
+            for direction in ('high', 'low'):
+                for strength in (.6, 2.0):
+                    specs.append(('crime_'+direction, 'Reported Complaint Density · '+direction, crime_cost(direction,strength)))
+        if water_pref:
+            def water_cost(direction,strength):
+                def cost(i):
+                    base=experience_cost(.8)(i)
+                    if base is None:return None
+                    share=water_data['within_100m_share'][net.edges[i][3]]
+                    return base+strength*(1-(share if direction=='high' else 1-share))
+                return cost
+            for direction in ('high','low'):
+                for strength in (.6,2.0):specs.append(('waterfront_'+direction,'Water Proximity · '+direction,water_cost(direction,strength)))
+        if (crime_pref or water_pref) and (expressed or (crime_pref and water_pref)):
+            def combined_cost(i):
+                if not allowed(i):return None
+                gi=net.edges[i][3];core_weight=sum(w for w,_ in weights.values()) if expressed else 0
+                total=core_weight;matched=core_weight*net_utility(gi)
+                if crime_pref:
+                    total+=crime_pref['weight'];matched+=crime_pref['weight']*crime.fit(crime_field['values'][gi],crime_pref['direction'],crime_field['scale'])
+                if water_pref:
+                    share=water_data['within_100m_share'][gi];total+=water_pref['weight'];matched+=water_pref['weight']*(share if water_pref['direction']=='high' else 1-share)
+                return 1+2*(1-matched/total)
+            specs.append(('multi_objective','Combined Independent + Experience Route',combined_cost))
         candidates = []
         for objective, name, fn in specs:
             steps = net.search(o, d, fn)
@@ -501,6 +555,9 @@ class RoutePlanner:
                                 'contains_steps': any(e['pedestrian_access']['steps'] for e in r['edges'])}
             self.personalize(r, weights, expressed)
             self.weather_fields(r, wctx, heat)
+            if crime_pref:
+                crime.apply(r, crime_pref, crime_field, weights if expressed else {})
+            if water_pref:waterfront.apply(r,water_pref,net,weights if expressed else {})
             r['maneuvers'] = mv.build(r, net)
             r['route_signature'] = route_signature(r)
             r['validation'] = qa.validate(r, net, {'max_minutes': max_minutes, 'max_km': max_km, 'avoid_stairs': avoid_stairs},
@@ -514,21 +571,35 @@ class RoutePlanner:
             r['recommended'] = n == 1 and r['constraints']['feasible']
             r['ranking_explanation'] = explain(r, ranked, weights, expressed)
         wctx['routing']['effect'] = weather_effect(ranked, baseline, heat)
-        with self.lock:
-            for r in ranked:
-                self.routes[r['route_id']] = r
-            while len(self.routes) > 200:
-                self.routes.popitem(last=False)
+        self.remember(ranked)
         return {
             'network_version': net.network_version, 'score_version': net.score_version,
             'origin': o, 'destination': d, 'shortest_distance_m': shortest,
-            'preferences_used': {k: {'weight': w, 'direction': dr} for k, (w, dr) in weights.items()}, 'preferences_expressed': expressed,
+            'preferences_used': {k: {'weight': w, 'direction': dr} for k, (w, dr) in weights.items()}, 'preferences_expressed': expressed or bool(crime_pref) or bool(water_pref),
+            'independent_preferences_used': {**({'crime':crime.public_preference(crime_pref)} if crime_pref else {}),**({'waterfront':water_pref} if water_pref else {})},
             'constraints_used': {'max_minutes': max_minutes, 'max_km': max_km, 'max_detour_pct': max_detour, 'avoid_detours': constraints.get('avoid_detours', True), 'avoid_stairs': avoid_stairs},
             'feasible_count': sum(r['constraints']['feasible'] for r in ranked),
             'routes': ranked, 'compute_seconds': round(time.time() - t0, 2), 'weather_routing': wctx,
             'notes': ['Walking time uses a fixed 4.8 km/h planning pace; no live pedestrian or traffic data.',
                       'Scores are relative ranks within Manhattan (0–100), not calibrated experience scores. N/A dimensions are excluded, never counted as zero.'],
         }
+
+    def remember(self, routes):
+        """Bound the full-route cache by serialized bytes and count; client snapshots survive eviction."""
+        sizes = {r['route_id']: len(json.dumps(r, separators=(',', ':'))) for r in routes}
+        with self.lock:
+            for r in routes:
+                self.routes[r['route_id']] = r
+                self.route_sizes[r['route_id']] = sizes[r['route_id']]
+                slim={k:r[k] for k in ('route_id','geometry','distance_m','network_version','ordered_edge_ids')}
+                slim['edges']=[{k:e[k] for k in ('edge_id','traversed_length_m')} for e in r['edges']]
+                self.nav_routes[r['route_id']]=slim
+                self.nav_sizes[r['route_id']]=len(json.dumps(slim,separators=(',',':')))
+            while len(self.routes) > 32 or sum(self.route_sizes.values()) > 8*1024*1024:
+                rid, _ = self.routes.popitem(last=False)
+                self.route_sizes.pop(rid, None)
+            while len(self.nav_routes)>200 or sum(self.nav_sizes.values())>4*1024*1024:
+                rid,_=self.nav_routes.popitem(last=False);self.nav_sizes.pop(rid,None)
 
     def build_route(self, objective, name, steps, o, d, origin, destination):
         """Route Object: geometry, distance and scores all come from the same ordered edge list."""
@@ -638,7 +709,7 @@ class RoutePlanner:
         """Where a reported position sits on a planned route. Pure geometry: no live tracking is claimed. Works from the
         in-memory route when this process planned it, otherwise from a client snapshot (restart-safe)."""
         with self.lock:
-            r = self.routes.get(route_id)
+            r = self.routes.get(route_id) or self.nav_routes.get(route_id)
         if not r and snapshot:
             r = self.route_from_snapshot(snapshot)
         if not r:
@@ -708,6 +779,19 @@ def explain(r, ranked, weights, expressed):
     basis = 'your expressed preferences' if expressed else 'all 12 dimensions equally (no preference expressed)'
     status = 'Recommended' if r.get('recommended') else 'Not feasible: ' + '; '.join(r['constraints']['violations']) if not r['constraints']['feasible'] else f"Ranked {r['rank']} of {len(ranked)}"
     low = r['data_coverage']['low_coverage_dimensions']
+    if r.get('independent_metrics', {}).get('crime'):
+        metric = r['independent_metrics']['crime']
+        direction = ps['independent_components']['crime']['direction']
+        return (f"{status}. Historical reported complaint density: {metric['count']} unique complaints within {metric['corridor_m']} m; "
+                f"{metric['reported_incidents_per_route_km']:.1f} reports per route km, {metric['from']} to {metric['to_exclusive']} (exclusive). "
+                f"Preference: {'higher' if direction=='high' else 'lower'} recorded density. Utility {ps['utility']} includes this independent objective, "
+                f"{'your expressed experience weights and ' if expressed else ''}the {ps['travel_cost_penalty']} detour penalty. "
+                "NYPD approximate historical locations; this is not a crime rate or a prediction of present personal safety.")
+    if r.get('independent_metrics',{}).get('waterfront'):
+        m=r['independent_metrics']['waterfront']
+        return (f"{status}. {m['within_100m_share']:.1%} of sampled walking length lies within 100 m of official mapped water; "
+                f"preference {'more' if m['direction']=='high' else 'less'} proximity. Utility {ps['utility']} includes this independent objective, "
+                f"experience preferences and the {ps['travel_cost_penalty']} detour penalty. Physical proximity is not a verified view or promenade.")
     return (f"{status}. Personalized score {ps['utility']} = weighted experience {ps['weighted_experience']} − {ps['travel_cost_penalty']} detour penalty "
             f"(+{r['detour_percentage']}% vs shortest), weighted by {basis}. Route scores: {', '.join(bits)}."
             + (f" Low data coverage: {', '.join(low)}." if low else ''))

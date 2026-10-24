@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "name": "Forestry Tree Points",
+  "dataset_id": "hn5i-inap",
+  "source_url": "https://data.cityofnewyork.us/d/hn5i-inap",
+  "publisher": "NYC Parks",
+  "publisher_version": 1792597836,
+  "publisher_updated_at": "2026-10-21T15:50:36+00:00",
+  "retrieved_at": "2026-10-24T18:39:51.910144+00:00",
+  "source_rows": 897619,
+  "records": 897619,
+  "invalid_records": 0,
+  "duplicates": 0,
+  "conditions": {
+    "Critical": 990,
+    "Dead": 11703,
+    "Excellent": 98257,
+    "Fair": 313959,
+    "Good": 445766,
+    "Poor": 22543,
+    "Unknown": 4401
+  },
+  "missing_fields": {
+    "objectid": 0.0,
+    "genusspecies": 2.3395226705317068e-05,
+    "dbh": 8.801061474857372e-05,
+    "tpcondition": 0.0,
+    "tpstructure": 0.0,
+    "planteddate": 0.8622099131145843,
+    "updateddate": 0.20605067406104371,
+    "location": 0.0
+  },
+  "coverage": "NYC citywide",
+  "database": "trees.sqlite.gz",
+  "database_bytes": 134934528,
+  "compressed_bytes": 45086387,
+  "sha256": "279153969cb2bb6e11e5d15463cfa3aa243e84309e2409c5b25ef60b1f83e7b0",
+  "limitations": [
+    "NYC Parks Full tree structures; not proof of current canopy shade or public pedestrian access.",
+    "Inventory condition and update dates are source values, not live observations.",
+    "Existing Nature scoring definitions remain unchanged; this index supplies independently queryable source evidence."
+  ]
+}

@@ -52,6 +52,8 @@ _gzip_cache = {}
 DIMENSIONS = list(ROUTE_DIMENSIONS)
 
 SYSTEM = f"""You are STREETWISE's structured walking-preference interpreter. Never invent route geometry, verified spatial indicators, observations, or street-level environmental evidence.
+Waterfront/river proximity is an independent top-level waterfront preference backed by official hydrography. Use mode set,direction high for by/along the river or waterfront; direction low for avoid/away from the waterfront. A later avoidance request REPLACES that previous proximity preference, never adds an opposing second preference. Use mode clear only for explicit removal. Leave unmentioned fields null. Do not translate avoidance of water into avoidance of all Scenic & Visual features; the existing Scenic definition also includes public art and monuments. Hydrography proximity includes mapped lakes/coastal water; it does not guarantee a river promenade or views.
+Crime is an INDEPENDENT historical reported-complaint density preference, never Access & Safety (which measures pedestrian traffic injuries). The top-level crime field is null when unchanged; mode clear only when explicitly removed. For 'very high crime rate' use mode set, direction high, weight 90: respect the requested direction, do not ask whether the user meant avoidance. 'Avoid crime' or 'lower crime density' means direction low. Use dates only when requested (from inclusive, to exclusive); otherwise null uses the actual indexed default period supplied in Current state. Preserve exact offense names from the supplied source taxonomy when requested; otherwise offense_types=[]. Never invent incident counts or personal risk. Crime data is historical, approximate and has no population denominator, so call it reported complaint density, not a crime rate. Crime-only requests need no journey or experience weight.
 Return one JSON object matching the supplied strict schema. All schema properties must exist: use null for unspecified nullable values, empty arrays for no requests, and null in constraints/more entries to preserve unchanged state. Keys:
 "preferences": array of unique mentioned dimensions, each an object with "dimension" (exactly one of {json.dumps(DIMENSIONS)}), "weight" (integer 0..100), and "direction" (high or low). Weight is importance, not a street score. Clear preferences such as more trees, quieter or fewer busy streets should have high importance around 85–95, independently of direction. Fewer busy streets means Urban Vibrancy with high importance and direction low, not a small weight. For example less crowded means Urban Vibrancy with high importance and direction low; quieter means Quiet & Relax direction high. Omit unmentioned dimensions from the array. Never return separate weights/directions maps; the backend derives them from these pairs. Use full canonical names, not UI abbreviations.
 "time_minutes": absolute walking hard cap in whole minutes (at least 10; no upper limit), if explicitly given; otherwise null.
@@ -83,7 +85,7 @@ Preserve current state: omit unmentioned dimensions from preferences; set unment
 def validate_interpretation(doc):
     if not isinstance(doc, dict):
         raise ValueError('LLM must return a JSON object')
-    allowed = {'weights', 'directions', 'time_minutes', 'time_delta_minutes', 'max_detour_percent', 'constraints', 'clarification', 'weather', 'journey'}
+    allowed = {'weights', 'directions', 'time_minutes', 'time_delta_minutes', 'max_detour_percent', 'constraints', 'clarification', 'weather', 'journey', 'crime', 'waterfront'}
     if set(doc) - allowed:
         raise ValueError('Unrecognized output keys')
     weights = doc.get('weights', {})
@@ -118,7 +120,24 @@ def validate_interpretation(doc):
     clarification = doc.get('clarification')
     if clarification is not None and (not isinstance(clarification, str) or len(clarification) > 300):
         raise ValueError('Invalid clarification')
-    return {'weights':weights, 'directions':{k:dirs.get(k, 'high') for k in weights},
+    crime_value = doc.get('crime')
+    if crime_value is not None:
+        from interpretation_contract import COMMON
+        validate_contract(crime_value, COMMON['crime'], 'crime', required=False)
+        if crime_value['mode'] == 'set':
+            from routing import crime
+            # Understanding a valid request is separate from whether the local snapshot covers it.
+            # Route retrieval enforces coverage/known labels; lack of data must not masquerade as AI failure.
+            cp = crime.validate({k:v for k,v in crime_value.items() if k!='mode' and v is not None},require_coverage=False,require_labels=False)
+            crime_value = {'mode':'set', **{k:cp[k] for k in ('direction','from','to')}, 'weight':int(cp['weight']), 'offense_types':crime_value.get('offense_types') or []}
+        else: crime_value = {'mode':'clear'}
+    water_value=doc.get('waterfront')
+    if water_value is not None:
+        from interpretation_contract import COMMON
+        from routing import waterfront
+        validate_contract(water_value,COMMON['waterfront'],'waterfront',required=False)
+        water_value={'mode':'clear'} if water_value['mode']=='clear' else {'mode':'set',**waterfront.validate({k:v for k,v in water_value.items() if k!='mode'})}
+    return {'weights':weights, 'directions':{k:dirs.get(k, 'high') for k in weights}, 'crime':crime_value, 'waterfront':water_value,
             'time_minutes':absolute,'time_delta_minutes':delta,'max_detour_percent':detour,
             'constraints':constraints,'clarification':clarification,'weather':doc.get('weather'),'journey':journey}
 
@@ -221,19 +240,39 @@ def validate_route_request(doc):
         if type(d) not in (int, float) or not 0 <= d <= 100:
             raise ValueError('constraints.max_detour_pct must be 0..100')
         out['max_detour_pct'] = float(d)
-    return (validate_point(doc.get('origin'), 'origin'), validate_point(doc.get('destination'), 'destination'), {'weights': weights, 'directions': dirs}, out,
+    clean_prefs = {'weights': weights, 'directions': dirs}
+    if prefs.get('crime') is not None:
+        from routing import crime
+        clean_prefs['crime'] = crime.public_preference(crime.validate(prefs['crime']))
+    if prefs.get('waterfront') is not None:
+        from routing import waterfront
+        clean_prefs['waterfront']=waterfront.validate(prefs['waterfront'])
+    return (validate_point(doc.get('origin'), 'origin'), validate_point(doc.get('destination'), 'destination'), clean_prefs, out,
             validate_weather(doc.get('weather')))
 
 
 _segments = None
+class IndexedSegments:
+    def get(self,sid):
+        from routing.urban_store import connection
+        with connection('segments') as db:row=db.execute('SELECT feature FROM segments WHERE id=?',(sid,)).fetchone()
+        return json.loads(row[0]) if row else None
 
 
 def street_segment(segment_id):
     """Street Segment Object (shared data contract) from the Explore Urban Data layer."""
     global _segments
     if _segments is None:
-        data = json.loads(STREETS_DATA.read_text(encoding='utf-8'))
-        _segments = (data['metadata'], {f['properties']['id']: f for f in data['features']})
+        from routing.urban_store import manifest
+        import hashlib
+        try:
+            compact=manifest('segments')
+            with STREETS_DATA.open('rb') as f:signature=hashlib.file_digest(f,'sha256').hexdigest()
+        except RuntimeError:compact=None
+        if compact and compact['source_sha256']==signature:_segments=(compact['street_metadata'],IndexedSegments())
+        else:
+            data = json.loads(STREETS_DATA.read_text(encoding='utf-8'))
+            _segments = (data['metadata'], {f['properties']['id']: f for f in data['features']})
     meta, index = _segments
     f = index.get(segment_id)
     if not f:
@@ -266,7 +305,7 @@ def fetch_pois(bounds):
     from urllib.parse import urlencode
     south,west,north,east = bounds
     bbox = ','.join(f'{x:.6f}' for x in (south,west,north,east))
-    query = (f'[out:json][timeout:17];('
+    query = (f'[out:json][timeout:6];('
              f'node["name"]["tourism"~"^(museum|gallery|attraction|viewpoint)$"]({bbox});'
              f'node["name"]["historic"]({bbox});'
              f'node["name"]["amenity"~"^(cafe|restaurant|theatre)$"]({bbox});'
@@ -275,11 +314,42 @@ def fetch_pois(bounds):
     endpoint = os.environ.get('OVERPASS_URL', 'https://overpass-api.de/api/interpreter')
     payload = urlencode({'data':query}).encode('utf-8')
     req = request.Request(endpoint, data=payload, method='POST', headers={'User-Agent':'StreetwiseResearchPrototype/0.4', 'Content-Type':'application/x-www-form-urlencoded'})
-    with request.urlopen(req, timeout=23) as resp:
+    with request.urlopen(req, timeout=8) as resp:
         doc = json.load(resp)
     return [{'id':str(x['id']), 'lat':x['lat'], 'lon':x['lon'], 'name':x['tags']['name'], 'tags':x['tags']}
             for x in doc.get('elements', []) if x.get('type')=='node' and isinstance(x.get('tags',{}).get('name'),str)
             and isinstance(x.get('lat'), (int,float)) and isinstance(x.get('lon'), (int,float))][:450]
+
+def snapshot_pois(bounds):
+    """Actual indexed OSM nodes when the optional live provider is unavailable; provenance stays explicit."""
+    south,west,north,east=bounds;S=place_store();out=[]
+    for category in ('attractions','museums','historic','culture','parks','cafes','restaurants'):
+        for r in S.records(category):
+            if not r['id'].startswith('osm:node/') or r.get('closed') or not(west<=r['lon']<=east and south<=r['lat']<=north):continue
+            sub=r.get('sub') or ''
+            if '=' not in sub:continue
+            k,v=sub.split('=',1)
+            if k not in ('tourism','historic','amenity','leisure'):continue
+            out.append({'id':r['id'],'name':r['name'],'lat':r['lat'],'lon':r['lon'],'tags':{k:v},'source':'OpenStreetMap indexed snapshot'})
+            if len(out)>=450:break
+        if len(out)>=450:break
+    return {'source':'OpenStreetMap indexed snapshot','status':'snapshot_fallback','upstream_status':'unavailable','retrieved_at':S.index.get('built_at'),'pois':out,
+        'note':'Live Overpass unavailable; these are source-backed snapshot records, not live observations.'}
+
+_poi_state={'retry_at':0,'inflight':False}
+_poi_lock=threading.Lock()
+def load_pois(bounds):
+    with _poi_lock:
+        blocked=_poi_state['inflight'] or time.monotonic()<_poi_state['retry_at']
+        if not blocked:_poi_state['inflight']=True
+    if blocked:return snapshot_pois(bounds)
+    try:return {'source':'OpenStreetMap Overpass live nodes','status':'live','pois':fetch_pois(bounds)}
+    except Exception as e:
+        with _poi_lock:_poi_state['retry_at']=time.monotonic()+60
+        print('pois upstream unavailable',json.dumps({'detail':type(e).__name__,'http_status':getattr(e,'code',None)}),flush=True)
+        return snapshot_pois(bounds)
+    finally:
+        with _poi_lock:_poi_state['inflight']=False
 
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -322,11 +392,48 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_GET(self):
+        if self.path.startswith(('/api/urban/trees','/api/urban/context')):
+            try:
+                from routing import urban_query
+                if not rate_ok(self,'places'):self.send_json(429,{'error':'Urban query rate limit reached'});return
+                u=urlsplit(self.path);q={k:v[-1] for k,v in parse_qs(u.query).items()};box=[float(v) for v in q.get('bbox','').split(',')]
+                if u.path=='/api/urban/trees':result=urban_query.trees(box,float(q.get('zoom',15)))
+                elif u.path=='/api/urban/context':result=urban_query.context(q.get('category'),box)
+                else:self.send_json(404,{'error':'Unknown urban endpoint'});return
+                self.send_json(200,result);return
+            except (ValueError,TypeError) as e:self.send_json(400,{'error':str(e)});return
+            except RuntimeError as e:self.send_json(503,{'error':str(e)});return
+        if self.path.startswith('/api/urban/crime'):
+            from routing import crime
+            try:
+                if not rate_ok(self, 'places'):
+                    self.send_json(429, {'error':'Urban query rate limit reached'}); return
+                u=urlsplit(self.path);q={k:v[-1] for k,v in parse_qs(u.query).items()}
+                if u.path=='/api/urban/crime/metadata':
+                    self.send_json(200,crime.metadata());return
+                if u.path!='/api/urban/crime':self.send_json(404,{'error':'Unknown crime endpoint'});return
+                pref=crime.validate({'direction':'high','from':q.get('from'),'to':q.get('to'),
+                    'offense_codes':q['offense_codes'].split(',') if q.get('offense_codes') else [],
+                    'law_categories':q['law_categories'].split(',') if q.get('law_categories') else None})
+                bounds=[float(v) for v in q.get('bbox','').split(',')]
+                self.send_json(200,crime.map_cells(bounds,pref,float(q.get('zoom',13))));return
+            except (ValueError,TypeError) as e:self.send_json(400,{'error':str(e)});return
+            except RuntimeError as e:self.send_json(503,{'error':str(e)});return
         if self.path == '/api/status':
             key_ready = openai_key_problem(KEY) is None
+            memory={}
+            try:
+                memory={line.split(':')[0]+'_kib':int(line.split()[1]) for line in Path('/proc/self/status').read_text().splitlines() if line.startswith(('VmRSS:','VmHWM:'))}
+            except OSError:pass
+            from routing import engine as routing_engine,crime as crime_module
+            loaded=routing_engine._planner;cache={}
+            if loaded:
+                with loaded.lock:cache={'full_routes':len(loaded.routes),'full_serialized_bytes':sum(loaded.route_sizes.values()),'navigation_routes':len(loaded.nav_routes),'navigation_serialized_bytes':sum(loaded.nav_sizes.values())}
             self.send_json(200, {'llm': key_ready, 'model': MODEL if key_ready else None,
+                                 'process_memory':memory,
+                                 'diagnostics':{'route_cache':cache,'crime_query_counters':dict(crime_module.STATS)},
                                  'deployment_commit': os.environ.get('RENDER_GIT_COMMIT'),
-                                 'interpretation_contract': 'strict-paired-v2',
+                                 'interpretation_contract': 'strict-paired-v3-independent',
                                  'features': {'itinerary': True, 'menu_verify': 'official website only (no menu API connected)',
                                               'routing_coverage': 'Manhattan OSM pedestrian graph',
                                               'place_search': 'Manhattan discovery + NYC DOHMH food permits + NYC Parks and public restrooms (citywide discovery; new unsnapped points are search only)',
@@ -505,7 +612,8 @@ class Handler(SimpleHTTPRequestHandler):
                 if n <= 0 or n > 1000:
                     self.send_json(413, {'error': 'Invalid POI request size'}); return
                 bounds = validate_bbox(json.loads(self.rfile.read(n)))
-                self.send_json(200, {'source':'OpenStreetMap Overpass live nodes','pois':fetch_pois(bounds)})
+                result=load_pois(bounds)
+                self.send_json(200,result)
             except (ValueError, TypeError, json.JSONDecodeError):
                 self.send_json(400, {'error':'Invalid POI request'})
             except Exception:
@@ -578,8 +686,15 @@ def call_llm(payload, timeout=26):
 def validate_intent_bindings(result, message, history=()):
     """Reject known invented bindings; ask the model to repair, never manufacture intent."""
     j = result.get('journey') or {}
-    if result.get('clarification'): return
     text = message.lower()
+    expected = ('high' if re.search(r'\bi want (?:a )?route with (?:very )?high crime rate\b',text) else
+                'low' if re.search(r'\b(?:avoid(?: high)? crime|lower crime(?: density)?)\b',text) else None)
+    if result.get('clarification'):
+        if expected=='high' and re.search(r'avoid|instead',result['clarification'],re.I):raise ValueError('Do not invert the explicit higher complaint-density request into avoidance')
+        return
+    if expected:
+        if (result.get('crime') or {}).get('direction') != expected:
+            raise ValueError('Explicit crime preference must use independent crime.direction='+expected+'; do not invert it or substitute traffic safety')
     for stop in j.get('named_stops', []):
         name = stop['name'].lower().strip()
         if re.fullmatch(r'(?:landmark|museum|cafe|restaurant|hotel|park|attraction|stop)[ _-]*(?:[0-9]+|one|two|three)', name) and name not in text:
@@ -638,6 +753,12 @@ def interpret(doc):
         return 400, {'error': 'history must be an array'}
     context = {k: doc.get(k) for k in ('weights', 'constraints', 'weather')}
     context['walking_budget_minutes'] = doc.get('budget')
+    context['independent_preferences']={k:doc.get(k) for k in ('crime','waterfront')}
+    try:
+        from routing import crime
+        cm = crime.metadata()
+        context['crime_data'] = {k:cm[k] for k in ('available_start','available_end_exclusive','default_start','offenses')}
+    except RuntimeError: context['crime_data'] = None
     payload = {
         'model': MODEL,
         'temperature': 0,

@@ -1,0 +1,46 @@
+name: Indexed urban source refresh
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '13 11 * * *'
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install shapely==2.1.2 pyproj==3.7.2
+      - name: Refresh versioned sources and build indexed spatial features
+        run: |
+          python scripts/build_crime_store.py
+          python scripts/build_citywide_evidence.py --trees
+          python scripts/build_citywide_evidence.py
+          python scripts/index_urban_context.py
+          python scripts/build_waterfront_features.py
+          python scripts/build_segment_evidence.py
+          python scripts/wire_urban_catalog.py
+          python scripts/build_urban_audit.py
+          python scripts/build_registry.py
+          python scripts/build_audit_report.py
+      - name: Check source validity and executable objectives
+        run: python -m unittest discover -s tests -p test_indexed_urban.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: urban-snapshot-review-before-release
+          path: |
+            data/urban/
+            data/pedestrian/waterfront-features.json.gz
+            data/pedestrian/segment-evidence.json.gz
+            data/layers/catalog.json
+            data/registry.json
+            data/audit.json
+            URBAN_DATA_INVENTORY.csv
+            URBAN_DATA_EXPANSION_REPORT.md
+            DATA_AUDIT_REPORT.md
+          retention-days: 1
+# Validated review artifact only: no auto-commit, production overwrite or credentials.
