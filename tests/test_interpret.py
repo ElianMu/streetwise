@@ -46,12 +46,30 @@ class InterpretFailures(unittest.TestCase):
         self.assertNotIn('SECRET', text)
         return status, body, log.getvalue()
 
-    def test_embedded_newline_key_is_rejected_without_network(self):
-        with mock.patch.object(server, 'KEY', 'sk-test\ninvalid'), mock.patch.object(server.request, 'urlopen') as call:
+    def test_key_environment_whitespace_is_trimmed(self):
+        key = server.normalize_openai_api_key('  \r\nsk-test-clean-token \t\n')
+        self.assertEqual(key, 'sk-test-clean-token')
+        self.assertIsNone(server.openai_key_problem(key))
+        with mock.patch.object(server, 'KEY', key), mock.patch.object(server.request, 'urlopen', return_value=completion({'weights': {}, 'constraints': {}})) as opener:
             status, body = server.interpret(dict(DOC))
-        self.assertEqual(status, 502)
-        self.assertEqual(body['reason']['stage'], 'invalid_configuration')
-        call.assert_not_called()
+        self.assertEqual(status, 200)
+        self.assertEqual(body['weights'], {})
+        self.assertEqual(opener.call_args.args[0].get_header('Authorization'), 'Bearer sk-test-clean-token')
+
+    def test_key_format_problem_stops_before_http(self):
+        for key in ('sk-test-middle\nnewline', 'sk-test-middle space', 'sk-test-middle\x00nul', 'sk-test-middle\u200bnonascii'):
+            with self.subTest(key=repr(key)), mock.patch.object(server, 'KEY', key), mock.patch.object(server.request, 'urlopen') as opener:
+                log = io.StringIO()
+                with contextlib.redirect_stdout(log):
+                    status, body = server.interpret(dict(DOC))
+                self.assertEqual(status, 503)
+                self.assertEqual(body['reason']['stage'], 'invalid_key_format')
+                self.assertNotIn(key, json.dumps(body) + log.getvalue())
+                opener.assert_not_called()
+
+    def test_blank_environment_value_is_not_configured(self):
+        self.assertEqual(server.normalize_openai_api_key(' \r\n '), '')
+        self.assertEqual(server.openai_key_problem(''), 'not_configured')
 
     def test_not_configured(self):
         with mock.patch.object(server, 'KEY', ''):

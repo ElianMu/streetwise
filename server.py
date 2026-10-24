@@ -13,6 +13,7 @@ import subprocess
 import sys
 import threading
 import time
+import traceback
 from urllib import request, error
 from urllib.parse import unquote, urlsplit, parse_qs
 from routing.engine import get_planner, reset_planner, RoutingError, DIMENSIONS as ROUTE_DIMENSIONS, MIN_WALK_MINUTES
@@ -26,7 +27,23 @@ from routing.recommend import recommend_food
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
 MODEL = os.environ.get('OPENAI_MODEL', 'gpt-4o-mini')
-KEY = os.environ.get('OPENAI_API_KEY', '').strip()
+def normalize_openai_api_key(raw):
+    """Remove accidental whitespace at the edges of a pasted environment variable."""
+    return raw.strip()
+
+
+def openai_key_problem(key):
+    """Check HTTP-header safety without logging or exposing the credential."""
+    if not key:
+        return 'not_configured'
+    # HTTP header values cannot contain whitespace, control characters or non-ASCII.
+    # Do not silently alter whitespace inside a credential.
+    if any(not 33 <= ord(char) <= 126 for char in key):
+        return 'invalid_key_format'
+    return None
+
+
+KEY = normalize_openai_api_key(os.environ.get('OPENAI_API_KEY', ''))
 STREETS_DATA = ROOT / 'data' / 'manhattan-streets.json'
 REFRESH_DAYS = float(os.environ.get('STREETWISE_REFRESH_DAYS', '30'))
 GZIP_TYPES = ('.json', '.js', '.css', '.html')
@@ -57,6 +74,7 @@ Return one JSON object ONLY with keys:
    "end_mode": "fixed"|"round"|"hotel"|"open"|null,
    "walking_minutes": walking-time limit or null, "outing_minutes": total time incl. visits ("I have two hours" = 120) or null,
    "distance_km": walking-distance limit in km or null, "more": {{"category": count to add}} for "add another museum", "remove": [names] }}
+  For any explicit food or drink request, journey must be non-null and food must preserve it, even in a simple walking-preference sentence. Coffee is category cafes, item coffee; parks also belong in journey.interests. Food & Retail weight alone never satisfies a requested POI.
   Never output coordinates, addresses, menus, prices or opening hours: places are looked up by STREETWISE tools.
 "clarification": null unless user intent is materially ambiguous or contradictory (for example asks for both a strict 10-minute cap and a 30-minute minimum, or asks for inaccessible route when step-free is required). If ambiguous, write one short question here, do not infer changes.
 Preserve current state by omitting every unmentioned dimension/constraint. Time and accessibility are hard constraints, not dimension scores. Do not claim quiet or step-free conditions are validated.
@@ -292,7 +310,8 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/api/status':
-            self.send_json(200, {'llm': bool(KEY), 'model': MODEL if KEY else None,
+            key_ready = openai_key_problem(KEY) is None
+            self.send_json(200, {'llm': key_ready, 'model': MODEL if key_ready else None,
                                  'features': {'itinerary': True, 'menu_verify': 'official website only (no menu API connected)',
                                               'routing_coverage': 'Manhattan OSM pedestrian graph',
                                               'place_search': 'Manhattan discovery index + NYC DOHMH food permits (five boroughs, search only outside Manhattan)',
@@ -496,9 +515,6 @@ def scrub(text):
 
 
 def call_llm(payload):
-    # Reject embedded whitespace/control bytes before constructing an HTTP header.
-    if not KEY.isascii() or any(ord(c) <= 32 or ord(c) == 127 for c in KEY):
-        raise LLMFailure('invalid_configuration', detail='OPENAI_API_KEY contains invalid characters')
     req = request.Request('https://api.openai.com/v1/chat/completions', json.dumps(payload).encode('utf-8'),
                           headers={'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json'}, method='POST')
     try:
@@ -525,13 +541,21 @@ def call_llm(payload):
 
 def interpret(doc):
     """POST /api/interpret → (HTTP status, body). Failures carry a safe `reason` and are logged without secrets."""
-    if not KEY:
+    key_problem = openai_key_problem(KEY)
+    if key_problem == 'not_configured':
         return 503, {'error': 'Set OPENAI_API_KEY on the server to use LLM interpretation.', 'reason': {'stage': 'not_configured'}}
+    if key_problem == 'invalid_key_format':
+        reason = {'stage': 'invalid_key_format'}
+        print('interpret failure', json.dumps(reason), flush=True)
+        return 503, {'error': 'OPENAI_API_KEY has invalid formatting on the server.', 'reason': reason}
     if not isinstance(doc, dict):
         return 400, {'error': 'Expected a JSON object'}
     message = doc.get('message', '')
     if not isinstance(message, str) or not message.strip() or len(message) > 2000:
         return 400, {'error': 'Invalid message'}
+    history = doc.get('history', [])
+    if not isinstance(history, list):
+        return 400, {'error': 'history must be an array'}
     context = {k: doc.get(k) for k in ('weights', 'budget', 'constraints', 'weather')}
     payload = {
         'model': MODEL,
@@ -539,7 +563,7 @@ def interpret(doc):
         'response_format': {'type': 'json_object'},
         'messages': [
             {'role': 'system', 'content': SYSTEM},
-            {'role': 'user', 'content': 'Current state: '+json.dumps(context, ensure_ascii=False)+'\nRecent conversation: '+json.dumps(doc.get('history', [])[-8:], ensure_ascii=False)+'\nLatest instruction: '+message}
+            {'role': 'user', 'content': 'Current state: '+json.dumps(context, ensure_ascii=False)+'\nRecent conversation: '+json.dumps(history[-8:], ensure_ascii=False)+'\nLatest instruction: '+message}
         ]
     }
     try:
@@ -553,7 +577,10 @@ def interpret(doc):
         return 502, {'error': 'LLM request failed; local preview can be used.', 'reason': f.reason}
     except Exception as e:
         reason = {'stage': 'server_error', 'detail': type(e).__name__}
-        print('interpret failure', json.dumps(reason), flush=True)
+        # Frame locations only: exception messages and locals can contain credentials.
+        frames = [{'file': Path(f.filename).name, 'line': f.lineno, 'function': f.name}
+                  for f in traceback.extract_tb(e.__traceback__)]
+        print('interpret failure', json.dumps({**reason, 'frames': frames}), flush=True)
         return 500, {'error': 'Server interpretation error', 'reason': reason}
 
 def refresh_street_data_if_stale():
