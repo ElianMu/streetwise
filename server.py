@@ -7,6 +7,7 @@ from pathlib import Path
 import os
 import json
 import math
+import re
 import gzip
 import subprocess
 import sys
@@ -400,39 +401,93 @@ class Handler(SimpleHTTPRequestHandler):
         if self.path != '/api/interpret':
             self.send_json(404, {'error': 'Unknown endpoint'})
             return
-        if not KEY:
-            self.send_json(503, {'error': 'Set OPENAI_API_KEY on the local server to use LLM interpretation.'})
-            return
         try:
             n = int(self.headers.get('Content-Length', 0))
             if n <= 0 or n > 25000:
                 self.send_json(413, {'error': 'Invalid request size'})
                 return
             doc = json.loads(self.rfile.read(n))
-            message = doc.get('message', '')
-            if not isinstance(message, str) or not message.strip() or len(message) > 2000:
-                self.send_json(400, {'error': 'Invalid message'})
-                return
-            context = {k: doc.get(k) for k in ('weights', 'budget', 'constraints', 'weather')}
-            payload = {
-                'model': MODEL,
-                'temperature': 0,
-                'response_format': {'type': 'json_object'},
-                'messages': [
-                    {'role': 'system', 'content': SYSTEM},
-                    {'role': 'user', 'content': 'Current state: '+json.dumps(context, ensure_ascii=False)+'\nRecent conversation: '+json.dumps(doc.get('history', [])[-8:], ensure_ascii=False)+'\nLatest instruction: '+message}
-                ]
-            }
-            req = request.Request('https://api.openai.com/v1/chat/completions', json.dumps(payload).encode('utf-8'),
-                                  headers={'Authorization':'Bearer '+KEY, 'Content-Type':'application/json'}, method='POST')
-            with request.urlopen(req, timeout=26) as resp:
-                response = json.load(resp)
-            output = validate_interpretation(json.loads(response['choices'][0]['message']['content']))
-            self.send_json(200, output)
-        except (error.URLError, KeyError, ValueError, json.JSONDecodeError) as exc:
-            self.send_json(502, {'error': 'LLM request failed; local preview can be used.'})
-        except Exception:
-            self.send_json(500, {'error': 'Server interpretation error'})
+        except (ValueError, json.JSONDecodeError):
+            self.send_json(400, {'error': 'Invalid JSON'})
+            return
+        status, body = interpret(doc)
+        self.send_json(status, body)
+
+
+class LLMFailure(Exception):
+    """A failed interpretation with a reason that is safe to show and log (never the key, never the provider's message)."""
+    def __init__(self, stage, http_status=None, type_=None, code=None, detail=None):
+        super().__init__(stage)
+        self.reason = {'stage': stage, 'http_status': http_status, 'type': type_, 'code': code, 'detail': scrub(detail)}
+
+
+def scrub(text):
+    """Remove anything that looks like a credential from a diagnostic string."""
+    if not text:
+        return None
+    text = str(text)[:200]
+    if KEY:
+        text = text.replace(KEY, '[key]')
+    return re.sub(r'(sk|rk|pk)-[A-Za-z0-9_\-*]{6,}', '[key]', text)
+
+
+def call_llm(payload):
+    req = request.Request('https://api.openai.com/v1/chat/completions', json.dumps(payload).encode('utf-8'),
+                          headers={'Authorization': 'Bearer ' + KEY, 'Content-Type': 'application/json'}, method='POST')
+    try:
+        with request.urlopen(req, timeout=26) as resp:
+            raw = resp.read()
+    except error.HTTPError as e:
+        # OpenAI error bodies: {"error": {"type": ..., "code": ...}}; only type and code are kept (the message can echo key fragments)
+        try:
+            err = json.loads(e.read() or b'{}').get('error') or {}
+        except (ValueError, AttributeError):
+            err = {}
+        raise LLMFailure('upstream_http', e.code, err.get('type'), err.get('code'))
+    except (error.URLError, TimeoutError, OSError) as e:
+        raise LLMFailure('upstream_unreachable', detail=type(getattr(e, 'reason', e)).__name__)
+    try:
+        content = json.loads(raw)['choices'][0]['message']['content']
+    except (ValueError, KeyError, IndexError, TypeError):
+        raise LLMFailure('upstream_bad_response', detail='no choices[0].message.content in the provider response')
+    try:
+        return json.loads(content)
+    except (ValueError, TypeError):
+        raise LLMFailure('model_output_invalid_json')
+
+
+def interpret(doc):
+    """POST /api/interpret → (HTTP status, body). Failures carry a safe `reason` and are logged without secrets."""
+    if not KEY:
+        return 503, {'error': 'Set OPENAI_API_KEY on the server to use LLM interpretation.', 'reason': {'stage': 'not_configured'}}
+    if not isinstance(doc, dict):
+        return 400, {'error': 'Expected a JSON object'}
+    message = doc.get('message', '')
+    if not isinstance(message, str) or not message.strip() or len(message) > 2000:
+        return 400, {'error': 'Invalid message'}
+    context = {k: doc.get(k) for k in ('weights', 'budget', 'constraints', 'weather')}
+    payload = {
+        'model': MODEL,
+        'temperature': 0,
+        'response_format': {'type': 'json_object'},
+        'messages': [
+            {'role': 'system', 'content': SYSTEM},
+            {'role': 'user', 'content': 'Current state: '+json.dumps(context, ensure_ascii=False)+'\nRecent conversation: '+json.dumps(doc.get('history', [])[-8:], ensure_ascii=False)+'\nLatest instruction: '+message}
+        ]
+    }
+    try:
+        output = call_llm(payload)
+        try:
+            return 200, validate_interpretation(output)
+        except ValueError as e:
+            raise LLMFailure('model_output_rejected', detail=f'{e}; keys: {sorted(output)[:12] if isinstance(output, dict) else type(output).__name__}')
+    except LLMFailure as f:
+        print('interpret failure', json.dumps(f.reason), flush=True)
+        return 502, {'error': 'LLM request failed; local preview can be used.', 'reason': f.reason}
+    except Exception as e:
+        reason = {'stage': 'server_error', 'detail': type(e).__name__}
+        print('interpret failure', json.dumps(reason), flush=True)
+        return 500, {'error': 'Server interpretation error', 'reason': reason}
 
 def refresh_street_data_if_stale():
     """Rebuild the 12-dimension street snapshot in the background when it is missing or older than REFRESH_DAYS."""
