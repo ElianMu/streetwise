@@ -66,6 +66,13 @@ class ContractTests(unittest.TestCase):
         r=server.validate_interpretation({'journey':{'food':[{'category':'restaurants','item':'bagels','required':True},{'category':'cafes','item':'vegan cappuccino','required':True}]}})
         self.assertEqual(r['journey']['food'][0]['item'],'bagel')
         self.assertEqual(r['journey']['food'][1]['item'],'vegan cappuccino')
+    def test_prompt_example_does_not_create_a_hotel_for_preference_only_requests(self):
+        for text in ['I want bagels and cappuccino along the route.','Actually, avoid the waterfront and walk away from the river.']:
+            with self.subTest(text=text),self.assertRaisesRegex(ValueError,'Hotel bindings require'):
+                server.validate_intent_bindings({'journey':{'origin':'hotel','end_mode':'hotel'}},text)
+        server.validate_intent_bindings({'journey':{'origin':'hotel','end_mode':'hotel'}},'Start from my hotel and return there.')
+        example=server.count_contract_example()['journey']
+        self.assertIsNone(example['origin']);self.assertIsNone(example['end_mode'])
 
     def test_numbered_placeholder_visits_are_not_named_places(self):
         with self.assertRaisesRegex(ValueError, 'Generic numbered'):

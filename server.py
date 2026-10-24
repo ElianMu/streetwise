@@ -27,6 +27,7 @@ from interpretation_contract import RESPONSE_FORMAT, JOURNEY, validate as valida
 
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
+PROCESS_STARTED_AT=time.time()
 MODEL = os.environ.get('OPENAI_MODEL', 'gpt-4o-mini')
 def normalize_openai_api_key(raw):
     """Remove accidental whitespace at the edges of a pasted environment variable."""
@@ -79,6 +80,7 @@ For an explicitly shortest route set constraints.avoidDetours=true and max_detou
   - Recommend tiramisu with good reviews within my walking budget: interests=[], food=[category restaurants,item tiramisu,required true], requirements ratings_required=true, every monetary field null.
   Never output coordinates, addresses, menus, fetched prices, ratings or opening hours. STREETWISE data tools provide those facts.
 "clarification": null unless user intent is materially ambiguous or contradictory (for example asks for both a strict 10-minute cap and a 30-minute minimum, or asks for inaccessible route when step-free is required). If ambiguous, write one short question here, do not infer changes.
+Food requests alone do not imply a Scenic, Architecture or Nature preference. An along-the-route food request is a POI requirement, not a request for scenic routing.
 Preserve current state: omit unmentioned dimensions from preferences; set unmentioned constraint values to null. Time and accessibility are hard constraints, not dimension scores. Do not claim quiet or step-free conditions are validated.
 """
 
@@ -429,8 +431,17 @@ class Handler(SimpleHTTPRequestHandler):
             loaded=routing_engine._planner;cache={}
             if loaded:
                 with loaded.lock:cache={'full_routes':len(loaded.routes),'full_serialized_bytes':sum(loaded.route_sizes.values()),'navigation_routes':len(loaded.nav_routes),'navigation_serialized_bytes':sum(loaded.nav_sizes.values())}
+            cgroup={}
+            for key,name in [('current_bytes','memory.current'),('peak_bytes','memory.peak'),('max_bytes','memory.max')]:
+                try:
+                    value=Path('/sys/fs/cgroup',name).read_text().strip();cgroup[key]=int(value) if value.isdigit() else value
+                except OSError:pass
+            try:cgroup['events']={k:int(v) for k,v in (line.split() for line in Path('/sys/fs/cgroup/memory.events').read_text().splitlines())}
+            except OSError:pass
             self.send_json(200, {'llm': key_ready, 'model': MODEL if key_ready else None,
                                  'process_memory':memory,
+                                 'process_started_at':PROCESS_STARTED_AT,'uptime_seconds':round(time.time()-PROCESS_STARTED_AT,1),
+                                 'cgroup_memory':cgroup,
                                  'diagnostics':{'route_cache':cache,'crime_query_counters':dict(crime_module.STATS)},
                                  'deployment_commit': os.environ.get('RENDER_GIT_COMMIT'),
                                  'interpretation_contract': 'strict-paired-v3-independent',
@@ -687,6 +698,9 @@ def validate_intent_bindings(result, message, history=()):
     """Reject known invented bindings; ask the model to repair, never manufacture intent."""
     j = result.get('journey') or {}
     text = message.lower()
+    user_text = text + ' ' + ' '.join(str(h.get('content') or '').lower() for h in history[-8:] if isinstance(h,dict) and h.get('role')=='user')
+    if (j.get('origin')=='hotel' or j.get('end_mode')=='hotel' or j.get('hotel')) and not re.search(r'\bhotel\b|酒店|旅馆|住宿',user_text) and not re.search(r'\b(?:back|return)\b|回去|回到',text):
+        raise ValueError('Hotel bindings require actual user context; a prompt example is not the current hotel. Leave unrequested origin and end_mode null.')
     expected = ('high' if re.search(r'\bi want (?:a )?route with (?:very )?high crime rate\b',text) else
                 'low' if re.search(r'\b(?:avoid(?: high)? crime|lower crime(?: density)?)\b',text) else None)
     if result.get('clarification'):
@@ -728,7 +742,7 @@ def count_contract_example():
         return [] if schema['type']=='array' else None
     sample=blank(WIRE_SCHEMA)
     j=blank(JOURNEY)
-    j.update(interests=['famous'],origin='hotel',end_mode='hotel')
+    j.update(interests=['famous'])
     j['counts']=blank(JOURNEY['properties']['counts']['anyOf'][0]);j['counts']['famous']=2
     sample['journey']=j
     return sample
@@ -765,7 +779,7 @@ def interpret(doc):
         'response_format': RESPONSE_FORMAT,
         'messages': [
             {'role': 'system', 'content': SYSTEM},
-            {'role': 'user', 'content': 'Start from my hotel, visit two landmarks and return to my hotel.'},
+            {'role': 'user', 'content': 'Visit two landmarks during my walk.'},
             {'role': 'assistant', 'content': json.dumps(count_contract_example())},
             {'role': 'user', 'content': 'Current state: '+json.dumps(context, ensure_ascii=False)+'\nRecent conversation: '+json.dumps(history[-8:], ensure_ascii=False)+'\nLatest instruction: '+message}
         ]
@@ -833,10 +847,15 @@ if __name__ == '__main__':
     print(f'STREETWISE · http://localhost:{PORT}')
     print('LLM status:', f'ON ({MODEL})' if KEY else 'OFF (limited local preview)')
     refresh_street_data_if_stale()
-    def warm():
-        try:
-            print('Pedestrian routing network ready:', get_planner().net.network_version)
-        except RuntimeError as e:
-            print('Routing unavailable:', e)
-    threading.Thread(target=warm, daemon=True).start()
+    # Complete one-time disk extraction and default field construction before accepting
+    # traffic. No user route request should pay cold decompression or race that work.
+    from routing.urban_store import database
+    from routing import crime
+    network=get_planner().net
+    print('Pedestrian routing network ready:',network.network_version,flush=True)
+    for dataset in ('crime','trees','context','segments'):
+        started=time.monotonic();database(dataset)
+        print('Indexed snapshot ready:',dataset,round(time.monotonic()-started,2),'seconds',flush=True)
+    crime.edge_field(network,crime.validate({'direction':'high'}))
+    print('Default complaint-density field ready; accepting traffic.',flush=True)
     ThreadingHTTPServer(('0.0.0.0', PORT), Handler).serve_forever()
