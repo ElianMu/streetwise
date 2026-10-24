@@ -1,0 +1,421 @@
+{
+  "MTA Bus Stops": [
+    {
+      "id": "fvdm-uavx",
+      "name": "MTA Bus Stop Ridership Estimates: Beginning 2024",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792782836,
+      "description": "This dataset includes estimated boardings for bus stop level ridership. Each record represents ridership activity for a route, direction, and stop during a specific month-day of week-hour. Boarding estimates are derived from Automatic Passenger Counters (APCs) that are in use on the buses along MTA\u2019s routes."
+    },
+    {
+      "id": "nh7m-at3e",
+      "name": "MTA Customer Feedback: Beginning 2018",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792831190,
+      "description": "The Customer Feedback dataset provides a summary of customer feedback recorded in the MTA\u2019s Customer Relationship Management (CRM) system. Customers may submit feedback about MTA services by phone, through online form, by mail, or through other customer service channels. Each submission is entered as a case in the CRM system and assigned attributes such as agency, date received, and category."
+    },
+    {
+      "id": "4fnn-qsea",
+      "name": "MTA Bus Schedules: 2026",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792869084,
+      "description": "This dataset includes data for all bus schedules. It includes rows for each scheduled timepoint stop on a trip."
+    },
+    {
+      "id": "kag2-r3f3",
+      "name": "MTA NaviLens Usage",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1767985868,
+      "description": "Navilens usage data contains records of scan events (each row represents a time a NaviLens code was scanned). Scan records include the code identifier, the type of asset scanned (e.g., bus stop, bus vehicle, subway station, train car, or vehicle feature), the app used (NaviLens vs. NaviLens GO), the device language setting at time of scan, and timestamps. For certain asset types, scan events are also enriched with location fields such as bus stop identifiers and names or subway station identifiers and names. This data supports evaluation of the NaviLens deployment and related project reporting"
+    },
+    {
+      "id": "q2wi-uth2",
+      "name": "MTA NaviLens Feedback Survey",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1767985840,
+      "description": "This dataset contains responses from the MTA NaviLens feedback survey, which collects customer feedback on NaviLens and NaviLens GO, two accessibility and wayfinding smartphone apps used with brightly colored NaviLens codes installed across select MTA subway stations, subway cars, bus stops, and buses. This data supports evaluation of the NaviLens deployment and related project reporting, including work funded through the USDOT SMART Grant."
+    },
+    {
+      "id": "da2m-wrtz",
+      "name": "MTA Current Bus Stops Map",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792181856,
+      "description": "This dataset contains point features for bus stops used on each route and direction within a bundle, including stop usage flags (revenue, timepoint, boarding, alighting, is in CBD) and basic route descriptors for mapping and stop-level analyses."
+    },
+    {
+      "id": "ai5j-txmn",
+      "name": "MTA Current Bus Stops",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792181856,
+      "description": "This dataset contains point features for bus stops used on each route and direction within a bundle, including stop usage flags (revenue, timepoint, boarding, alighting, is in CBD) and basic route descriptors for mapping and stop-level analyses."
+    },
+    {
+      "id": "kh8p-hcbm",
+      "name": "MTA Bus Automated Camera Enforcement Violations: Beginning October 2019",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1790351276,
+      "description": "This dataset contains records of violations, including issued violations and those rejected for business reasons. Each row represents an individual violation of a vehicle double parked or blocking a bus lane or bus stop."
+    },
+    {
+      "id": "udt9-hvjq",
+      "name": "MTA Bus Schedules: 2024",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1755725032,
+      "description": "This dataset includes data for all bus schedules. It includes rows for each scheduled timepoint stop on a trip."
+    },
+    {
+      "id": "d6ix-pek4",
+      "name": "MTA Bus Schedules: 2021",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1755215196,
+      "description": "This dataset includes data for all bus schedules. It includes rows for each scheduled timepoint stop on a trip."
+    },
+    {
+      "id": "w6dm-6y5c",
+      "name": "MTA Bus Schedules: 2022",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1755283436,
+      "description": "This dataset includes data for all bus schedules. It includes rows for each scheduled timepoint stop on a trip."
+    },
+    {
+      "id": "x5mx-4rfs",
+      "name": "MTA Bus Schedules: 2023",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1755646386,
+      "description": "This dataset includes data for all bus schedules. It includes rows for each scheduled timepoint stop on a trip."
+    },
+    {
+      "id": "t4bz-xqa9",
+      "name": "MTA Bus Schedules: 2025",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1772248233,
+      "description": "This dataset includes data for all bus schedules. It includes rows for each scheduled timepoint stop on a trip."
+    },
+    {
+      "id": "r6db-kkzj",
+      "name": "MTA Central Business District Bus Speeds: Beginning 2023",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792768811,
+      "description": "This dataset provides aggregated data on how fast MTA buses are traveling between major stops (timepoints) on a bus route for every route operated by NYCT and MTABC. These segments are categorized as either CBD or Non-CBD. The dataset provides the average speed in miles per hour and the number of bus trips for each bus route, aggregated by month, day type, hour of day, and relation to the CBD."
+    },
+    {
+      "id": "ak4z-sape",
+      "name": "MTA Subway Station Monthly Ridership: Beginning February 2017",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792767960,
+      "description": "This dataset provides subway ridership estimates on a monthly basis by subway station complex."
+    },
+    {
+      "id": "2ucp-7wg5",
+      "name": "MTA Bus Stops",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792181856,
+      "description": "This dataset contains point features for bus stops used on each route and direction within a bundle, including stop usage flags (revenue, timepoint, boarding, alighting, is in CBD) and basic route descriptors for mapping and stop-level analyses."
+    },
+    {
+      "id": "ki2b-sg5y",
+      "name": "MTA Bus Automated Camera Enforced Routes: Beginning October 2019",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792767950,
+      "description": "This dataset provides information on the implementation dates of Automated Bus Lane Enforcement (ABLE) and Automated Camera Enforcement (ACE) systems across MTA bus routes. ABLE, launched as a pilot in 2019, and later expanded and rebranded as ACE in 2024, uses cameras mounted on buses to capture vehicles obstructing bus lanes, double parked, or parked illegally at bus stops."
+    },
+    {
+      "id": "5wq4-mkjj",
+      "name": "MTA Subway Hourly Ridership: Beginning 2025",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792599184,
+      "description": "This dataset provides subway ridership estimates on an hourly basis by subway station complex and class of fare payment."
+    },
+    {
+      "id": "kufs-yh3x",
+      "name": "MTA Bus Route Segment Speeds: Beginning 2025",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792773091,
+      "description": "This dataset provides data on how fast buses are traveling between pairs of subsequent timepoints (the major stops on a bus route) for every bus route in the system. It will provide the average speed in miles per hour between pairs of timepoints, the average travel time in minutes, the road distance in miles, and the number of bus trips for each bus route aggregated by month, day of the week, and hour of day. It also provides the type of bus trip (Local, Limited, SBS, Express, School), the borough of the bus route, the names of the timepoints, their coordinates, and the stop sequence order of "
+    },
+    {
+      "id": "58t6-89vi",
+      "name": "MTA Bus Route Segment Speeds: 2023 - 2024",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1737741362,
+      "description": "This dataset provides data on how fast buses are traveling between pairs of subsequent timepoints (the major stops on a bus route) for every bus route in the system. It will provide the average speed in miles per hour between pairs of timepoints, the average travel time in minutes, the road distance in miles, and the number of bus trips for each bus route aggregated by month, day of the week, and hour of day. It also provides the type of bus trip (Local, Limited, SBS, Express, School), the borough of the bus route, the names of the timepoints, their coordinates, and the stop sequence order of "
+    }
+  ],
+  "MTA Subway Stations": [
+    {
+      "id": "umx2-k5hm",
+      "name": "MTA Subway General Orders: Beginning 2019",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792768067,
+      "description": "This dataset represents each of the General Orders (GOs) that were created for the subway system since 2019 and their respective impacts on the system. GOs are made to notify operating personnel about how, when, and where service is being changed for work being done in the subway system."
+    },
+    {
+      "id": "6yjv-fk7g",
+      "name": "MTA Subway Station Amenities: Beginning May 2026",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1790828333,
+      "description": "The MTA Subway Station Amenities data provides information about amenities available at subway stations across the New York City transit system."
+    },
+    {
+      "id": "dyuj-5if7",
+      "name": "MTA DOS Track Linear Referencing System (LRS)",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1778618862,
+      "description": "This dataset includes track geometries for the MTA NYCT Subway system, including both mainline and yard tracks. It also includes stationing measurement data (in feet) for the tracks."
+    },
+    {
+      "id": "28vm-gjqr",
+      "name": "MTA Subway Origin-Destination Ridership Estimate: Beginning 2026",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792479639,
+      "description": "This dataset provides an estimate of subway travel patterns based on scaled-up OMNY and MetroCard return swipe data. It provides estimated passenger volumes for all populated origin-destination (O-D) pairs aggregated by month, day of the week, and hour of day. It also provides the name, ID, and approximate latitude and longitude of the origin and destination subway complexes."
+    },
+    {
+      "id": "5754-yujh",
+      "name": "MTA Pulse Survey: Beginning 2025",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792770039,
+      "description": "The Pulse Survey dataset provides customer sentiment and satisfaction results across MTA service modes. The dataset is organized as survey output records (not individual-level responses) and includes fields such as month, time period, mode, bus type, question text, category, measure, score grain, score type, score, and sample size."
+    },
+    {
+      "id": "g8es-h7gb",
+      "name": "MTA Subway Schedules: 2026",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792868980,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "kag2-r3f3",
+      "name": "MTA NaviLens Usage",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1767985868,
+      "description": "Navilens usage data contains records of scan events (each row represents a time a NaviLens code was scanned). Scan records include the code identifier, the type of asset scanned (e.g., bus stop, bus vehicle, subway station, train car, or vehicle feature), the app used (NaviLens vs. NaviLens GO), the device language setting at time of scan, and timestamps. For certain asset types, scan events are also enriched with location fields such as bus stop identifiers and names or subway station identifiers and names. This data supports evaluation of the NaviLens deployment and related project reporting"
+    },
+    {
+      "id": "q2wi-uth2",
+      "name": "MTA NaviLens Feedback Survey",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1767985840,
+      "description": "This dataset contains responses from the MTA NaviLens feedback survey, which collects customer feedback on NaviLens and NaviLens GO, two accessibility and wayfinding smartphone apps used with brightly colored NaviLens codes installed across select MTA subway stations, subway cars, bus stops, and buses. This data supports evaluation of the NaviLens deployment and related project reporting, including work funded through the USDOT SMART Grant."
+    },
+    {
+      "id": "94fv-bak7",
+      "name": "MTA Subway Elevator and Escalator Asset Inventory",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792837376,
+      "description": "Subway Elevator and Escalator Asset Inventory represents active subway elevator and escalator assets in MTA\u2019s subway stations (excluding withdrawn and pending machines)."
+    },
+    {
+      "id": "7pnn-mafy",
+      "name": "MTA Subway Schedules: 2023",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1754694489,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "rq86-r8pt",
+      "name": "MTA Subway Schedules: 2022",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1754689262,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "y63v-kht3",
+      "name": "MTA Subway Schedules: 2021",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1754673405,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "ebrw-j62c",
+      "name": "MTA Subway Schedules: 2024",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1754698239,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "q9nv-uegs",
+      "name": "MTA Subway Schedules: 2025",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1772234670,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "ak4z-sape",
+      "name": "MTA Subway Station Monthly Ridership: Beginning February 2017",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792767960,
+      "description": "This dataset provides subway ridership estimates on a monthly basis by subway station complex."
+    },
+    {
+      "id": "6kvv-fcph",
+      "name": "MTA Capital Projects ACEP Funding Plans: Beginning 2005",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792768875,
+      "description": "The MTA Capital Program is comprised of a series of five-year capital investment plans. These capital plans describe the capital investments\u2014or projects\u2014to which the MTA will commit funding over a specified five-year period. This dataset contains encompasses the ACEP investment budgets across our Capital Plans."
+    },
+    {
+      "id": "emiu-mxak",
+      "name": "Metropolitan Transportation Authority (MTA) Capital Dashboard Agencies Summary - Current Quarter",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1778247112,
+      "description": "The Capital Dashboard data provides information about the projects in the MTA\u2019s 2010 to 2014 and 2005 \u2014 2009 Capital Programs. The data describes the planned projects and provide information about the status of Project Budgets, Scopes and Schedules. This view provides data for the current quarter only."
+    },
+    {
+      "id": "9euv-6q7e",
+      "name": "MTA Subway and Rail Station Envelopes with 50 Foot Buffer Map",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1756239229,
+      "description": "This dataset consists of a set of 2D geospatial polygons that are intended to capture all publicly accessible areas of NYCT, LIRR, and MNR rail mass transit stations within the City of New York as defined by the New York City Zoning Resolution Article 6 Chapter 6 \u2013 Special Regulations Applying Around Mass Transit Stations (NYC ZR \u00a7 66-00). This dataset is intended to help inform property owners whose property may fall under the requirements of NYC ZR \u00a7 66-00, specifically those that significantly enlarge or develop real property with an area larger than 5,000 square feet within 50 feet of a ma"
+    },
+    {
+      "id": "9dv4-f2we",
+      "name": "MTA Subway and Rail Station Envelopes with 50 Foot Buffer",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1756239229,
+      "description": "This dataset consists of a set of 2D geospatial polygons that are intended to capture a 50-foot buffer around all publicly accessible areas of NYCT, LIRR, and MNR rail mass transit stations within the City of New York as defined by the New York City Zoning Resolution Article 6 Chapter 6 \u2013 Special Regulations Applying Around Mass Transit Stations (NYC ZR \u00a7 66-00). This dataset is intended to help inform property owners whose property may fall under the requirements of NYC ZR \u00a7 66-00, specifically those that significantly enlarge or develop real property with an area larger than 5,000 square fee"
+    },
+    {
+      "id": "jbmk-xs9u",
+      "name": "MTA Subway and Rail Station Envelopes Map",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1756239866,
+      "description": "This dataset consists of a set of 2D geospatial polygons that are intended to capture all publicly accessible areas of NYCT, LIRR, and MNR rail mass transit stations within the City of New York as defined by the New York City Zoning Resolution Article 6 Chapter 6 \u2013 Special Regulations Applying Around Mass Transit Stations (NYC ZR \u00a7 66-00). This dataset is intended to help inform property owners whose property may fall under the requirements of NYC ZR \u00a7 66-00, specifically those that significantly enlarge or develop real property with an area larger than 5,000 square feet within 50 feet of a ma"
+    }
+  ],
+  "MTA GTFS": [
+    {
+      "id": "g8es-h7gb",
+      "name": "MTA Subway Schedules: 2026",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792868980,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "ai5j-txmn",
+      "name": "MTA Current Bus Stops",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792181856,
+      "description": "This dataset contains point features for bus stops used on each route and direction within a bundle, including stop usage flags (revenue, timepoint, boarding, alighting, is in CBD) and basic route descriptors for mapping and stop-level analyses."
+    },
+    {
+      "id": "h2wf-afav",
+      "name": "MTA Current Bus Routes",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792182211,
+      "description": "This dataset contains polyline geometries and metadata for distinct bus route shapes by route and direction across schedule bundles."
+    },
+    {
+      "id": "bzwk-3hb4",
+      "name": "MTA Bus Routes",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792182211,
+      "description": "This dataset contains polyline geometries and metadata for distinct bus route shapes by route and direction across schedule bundles."
+    },
+    {
+      "id": "7pnn-mafy",
+      "name": "MTA Subway Schedules: 2023",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1754694489,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "rq86-r8pt",
+      "name": "MTA Subway Schedules: 2022",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1754689262,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "y63v-kht3",
+      "name": "MTA Subway Schedules: 2021",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1754673405,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "ebrw-j62c",
+      "name": "MTA Subway Schedules: 2024",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1754698239,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "q9nv-uegs",
+      "name": "MTA Subway Schedules: 2025",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1772234670,
+      "description": "This dataset includes data for subway schedules, both the base schedule and the supplement schedule in effect. It includes rows for each scheduled stop on a trip."
+    },
+    {
+      "id": "2ucp-7wg5",
+      "name": "MTA Bus Stops",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792181856,
+      "description": "This dataset contains point features for bus stops used on each route and direction within a bundle, including stop usage flags (revenue, timepoint, boarding, alighting, is in CBD) and basic route descriptors for mapping and stop-level analyses."
+    },
+    {
+      "id": "sp9g-mzjh",
+      "name": "MTA Subway End-to-End Running Times: Beginning 2019",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792768417,
+      "description": "This dataset provides information on the actual end-to-end running times for subway trips between their origin and destination stations, including the average, and 25th, 50th (median), and 75th percentile running times in minutes, along with the scheduled end-to-end running time in minutes for these trips. \n\nData is available for a combination of each month, day type (Weekday, Saturday, Sunday), time period (AM Peak, Midday, PM Peak, Evening, Overnight), subway line, and stop path id (each distinct set of subway stops made by trains). The dataset also includes the direction, number of stops, o"
+    },
+    {
+      "id": "tdmq-asac",
+      "name": "MTA Subway Paths: Beginning 2019",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792768116,
+      "description": "This dataset is a table of each distinct set of stations, or path, made by all normal and extra subway trips that run in service, excepting those that skipped one or more planned stops due to service disruptions.\n\nThere is a row for each subway stop made by a stop path. These rows also contain the unique id for each path, the number of stops made by the path, the distance in miles along the path, the origin and destination stations, and the order a stop is in the stop path."
+    },
+    {
+      "id": "7kct-peq7",
+      "name": "MTA Service Alerts: Beginning April 2020",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792768200,
+      "description": "Service alerts in the MTA system are generated to inform passengers of both scheduled and unscheduled events that affect the transit network. These events can range from planned maintenance and construction activities to unexpected incidents such as accidents, track maintenance or planned work and more. The process of creating alerts involves the continuous monitoring of the transit system, including station locations, track statuses, and external factors that might impact service. When a potential disruption is identified, an alert is generated to provide passengers with timely and accurate i"
+    },
+    {
+      "id": "5f5g-n3cz",
+      "name": "MTA Subway Stations and Complexes",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792816112,
+      "description": "A dataset listing all subway and Staten Island Railway stations, with data aggregated by station complex. This dataset includes information on station names, their locations, Station IDs, Complex IDs, GTFS Stop IDs, the services that stop there, the type of structure the station is on or in, whether they are in Manhattan\u2019s Central Business District (CBD), and their ADA-accessibility status."
+    },
+    {
+      "id": "p6ps-59h2",
+      "name": "MTA Subway Stations Map",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792815852,
+      "description": "A dataset listing all subway and Staten Island Railway stations, with information on their locations, Station Master Reference Number (MRN), Complex MRN, GTFS Stop ID, the services that stop there, the type of structure the station is on or in, whether the station is in Manhattan\u2019s Central Business District (CBD), and their ADA-accessibility status."
+    },
+    {
+      "id": "39hk-dx4f",
+      "name": "MTA Subway Stations",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1792815852,
+      "description": "A dataset listing all subway and Staten Island Railway stations, with information on their locations, Station Master Reference Number (MRN), Complex MRN, GTFS Stop ID, the services that stop there, the type of structure the station is on or in, whether the station is in Manhattan\u2019s Central Business District (CBD), and their ADA-accessibility status."
+    },
+    {
+      "id": "68hr-j2j7",
+      "name": "MTA Subway Entrances and Exits: 2024 Map",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1764959778,
+      "description": "This is a dataset containing the entrances and exits at New York City Subway and Staten Island Railway stations. Information is provided on the entrance or exit, including their coordinates, the borough they are in, whether it allows entries and exits, and the type of entrance (more information below). The dataset also includes the name of the station complex, the complex ID number, the name of the specific station in the complex the entrance is for (constituent station), the station ID number, the GTFS Stop ID, the daytime routes that stop at the station complex, and the line and division the"
+    },
+    {
+      "id": "fgm6-ccue",
+      "name": "MTA General Transit Feed Specification (GTFS) Static Data",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1659648961,
+      "description": "This data contains schedules and associated data for NYCT Subway, NYCT Bus,\r\nMTA Bus, LIRR, and Metro-North in GTFS Static format:\r\n--Station / bus stop locations\r\n--Train lines / bus routes\r\n--Schedule information, including holiday services\r\n--Schedules for upcoming planned work (LIRR and MNR only)"
+    },
+    {
+      "id": "i9wp-a4ja",
+      "name": "MTA Subway Entrances and Exits: 2024",
+      "publisher": "Metropolitan Transportation Authority",
+      "updated": 1764959778,
+      "description": "This is a dataset containing the entrances and exits at New York City Subway and Staten Island Railway stations. Information is provided on the entrance or exit, including their coordinates, the borough they are in, whether it allows entries and exits, and the type of entrance (more information below). The dataset also includes the name of the station complex, the complex ID number, the name of the specific station in the complex the entrance is for (constituent station), the station ID number, the GTFS Stop ID, the daytime routes that stop at the station complex, and the line and division the"
+    }
+  ]
+}

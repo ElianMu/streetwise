@@ -1,0 +1,38 @@
+[
+  {
+    "id": "39hk-dx4f",
+    "name": "MTA Subway Stations",
+    "records": 496,
+    "complete": true
+  },
+  {
+    "id": "i9wp-a4ja",
+    "name": "MTA Subway Entrances and Exits: 2024",
+    "records": 2120,
+    "complete": true
+  },
+  {
+    "id": "fvdm-uavx",
+    "name": "MTA Bus Stop Ridership Estimates: Beginning 2024",
+    "records": 50000,
+    "complete": false
+  },
+  {
+    "id": "da2m-wrtz",
+    "name": "MTA Current Bus Stops Map",
+    "records": 23218,
+    "complete": true
+  },
+  {
+    "id": "ai5j-txmn",
+    "name": "MTA Current Bus Stops",
+    "records": 23218,
+    "complete": true
+  },
+  {
+    "id": "2ucp-7wg5",
+    "name": "MTA Bus Stops",
+    "records": 50000,
+    "complete": false
+  }
+]
