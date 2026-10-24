@@ -57,7 +57,7 @@ DIMENSIONS = [
 SYSTEM = f"""You are STREETWISE's structured walking-preference interpreter. Never invent route geometry, verified spatial indicators, observations, or street-level environmental evidence.
 Return one JSON object ONLY with keys:
 "weights": object mapping ONLY mentioned dimensions (exactly these 12 names: {json.dumps(DIMENSIONS)}) to independent IMPORTANCE integers 0..100. 0 means ignore, not an inverse objective. A clear request such as 'more greenery', 'less traffic', or 'quieter streets' gives high importance about 85-95.
-"directions": object mapping ONLY the same mentioned dimensions to either 'high' or 'low': desired greater or lesser measured exposure. 'Less crowded' = Urban Vibrancy weight 90 direction low. 'Quieter' = Quiet & Relax weight 90 direction high (quiet is desired high). Do not use low weights to represent a negative preference.
+"directions": object mapping ONLY the same mentioned dimensions to either 'high' or 'low': desired greater or lesser measured exposure. 'Less crowded' = Urban Vibrancy weight 90 direction low. 'Quieter' = Quiet & Relax weight 90 direction high (quiet is desired high). Do not use low weights to represent a negative preference. Every directions key must also exist in weights. Use canonical API names, never UI abbreviations: Comfort = Spatial Comfort; Vibrancy = Urban Vibrancy; Scenic = Scenic & Visual; Safety = Access & Safety; Transit = Transit Connectivity. Parks maps to Nature; coffee is a journey.food requirement, not a dimension named Coffee.
 "time_minutes": absolute walking hard cap in whole minutes (at least 10; no upper limit), if explicitly given; otherwise null.
 "time_delta_minutes": signed integer modification to existing walking cap, if user explicitly says 'five more minutes'; otherwise null. Never return both time_minutes and time_delta_minutes non-null.
 "max_detour_percent": optional integer from 0 to 100 if explicitly specified (extra distance over the shortest candidate route distance), otherwise null.
@@ -91,8 +91,12 @@ def validate_interpretation(doc):
     constraints = doc.get('constraints', {})
     if not all(isinstance(x, dict) for x in (weights, dirs, constraints)):
         raise ValueError('Invalid object fields')
-    if set(weights) - set(DIMENSIONS) or set(dirs) - set(weights):
-        raise ValueError('Invalid dimension name')
+    if set(weights) - set(DIMENSIONS):
+        raise ValueError('Invalid dimension name in weights (use canonical dimension names)')
+    if set(dirs) - set(DIMENSIONS):
+        raise ValueError('Invalid dimension name in directions (use canonical dimension names)')
+    if set(dirs) - set(weights):
+        raise ValueError('Direction has no corresponding weight')
     if any(type(v) is not int or not 0 <= v <= 100 for v in weights.values()):
         raise ValueError('Preference must be integer 0..100')
     if any(v not in ('high', 'low') for v in dirs.values()):

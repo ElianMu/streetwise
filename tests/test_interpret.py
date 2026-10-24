@@ -109,6 +109,17 @@ class InterpretFailures(unittest.TestCase):
         self.assertEqual(r['stage'], 'model_output_rejected'); self.assertIn('Invalid dimension name', r['detail']); self.assertIn("keys: ['constraints', 'directions', 'weights']", r['detail'])
         self.assertIn('model_output_rejected', log)
 
+    def test_dimension_failure_diagnostics_are_distinct(self):
+        cases = [({'weights': {'Scenic': 90}}, 'name in weights'),
+                 ({'weights': {'Nature': 90}, 'directions': {'Parks': 'high'}}, 'name in directions'),
+                 ({'weights': {}, 'directions': {'Nature': 'high'}}, 'no corresponding weight')]
+        for output, detail in cases:
+            with self.subTest(detail=detail):
+                status, body, _ = self.run_with(completion(output))
+                self.assertEqual(status, 502)
+                self.assertEqual(body['reason']['stage'], 'model_output_rejected')
+                self.assertIn(detail, body['reason']['detail'])
+
     def test_success_unchanged(self):
         status, body, _ = self.run_with(completion({'weights': {'Nature': 90}, 'directions': {'Nature': 'high'}, 'constraints': {}}))
         self.assertEqual(status, 200); self.assertEqual(body['weights'], {'Nature': 90}); self.assertNotIn('reason', body)

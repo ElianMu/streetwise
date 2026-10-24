@@ -26,3 +26,9 @@ A synthetic credential containing an internal newline reproduces ValueError in P
 Git push denied to ym3178-afk (403), although GitHub read API now works. No new PR, merge or Render deployment was completed. New prompt needs live validation after deployment; it cannot yet be reported as a production POI fix. Physical GPS and production map interaction were not retested in this focused task.
 
 Do not rotate a working production key solely on the historical generic error. If logs report invalid_key_format, securely correct Render OPENAI_API_KEY; never paste it into chat. For invalid_api_key, insufficient_quota or model_not_found, correct the indicated authentication/billing/model access in the provider dashboard. This task cannot inspect account billing status.
+
+## Supplied Render logs: dimension validation failure
+
+The supplied 00:58:11 log records HTTP 502, stage model_output_rejected, detail Invalid dimension name, followed by successful interpretation requests at 00:58:36, 00:59:43 and 01:00:41 and routes at 01:00:42. This confirms model output reached validation; it is distinct from the historical generic HTTP 500. The original combined validator could reject unknown weights, unknown directions, or a canonical direction without a matching weight, so the precise offending key cannot be recovered from that log. No raw model output or deploy SHA was supplied.
+
+Validation diagnostics now distinguish these three cases without logging arbitrary output values. The prompt explicitly lists canonical names for UI abbreviations and requires directions keys to exist in weights. Regression tests keep all three malformed cases rejected with HTTP 502; this is not relaxed validation or proof that the new prompt eliminates every model error.
