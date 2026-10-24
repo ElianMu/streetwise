@@ -20,7 +20,7 @@ const journey={
  endMode:'fixed',          // fixed | open | round | hotel
  hotel:null,rememberHotel:false,
  interests:[],             // famous | museums | historic | parks | shopping | culture
- requirements:{},counts:{},
+ requirements:{},counts:{},unresolved:[],
  food:[],                  // {category,item,cuisine,required}
  services:[],              // {type,scope,addAsStop}
  named:[],                 // resolved concrete stops: {place,required,order,visitMin,visitEstimated}
@@ -242,7 +242,8 @@ async function applyJourney(j){
  for(const n of j.named_stops){
   if(journey.named.some(x=>normName(x.place.name)===normName(n.name)))continue;
   const p=await findNamedPlace(n.name);
-  if(!p){changes.push(`“${n.name}” not found in NYC place data`);continue;}
+  if(!p){if(n.required!==false&&!journey.unresolved.includes(n.name))journey.unresolved.push(n.name);changes.push(`“${n.name}” not found in NYC place data`);continue;}
+  journey.unresolved=journey.unresolved.filter(name=>normName(name)!==normName(n.name));
   journey.named.push({place:p,required:n.required!==false,order:n.order,visitMin:VISIT_MIN[p.cat]??20,visitEstimated:true});changes.push(`stop: ${p.name}`);
  }
  if(j.origin==='hotel'){if(journey.hotel){setJourneyPlace('start',journey.hotel);changes.push('start: my hotel');}else changes.push('start: my hotel (set your hotel first)');}
@@ -258,6 +259,7 @@ async function applyJourney(j){
  if(j.distance_km!=null&&setDistanceLimit(j.distance_km))changes.push(`max ${j.distance_km} km`);
  if(j.less_walking&&journey.plan){const km=Math.max(1,Math.round(journey.plan.totals.walk_m/1000*.8*10)/10);setDistanceLimit(km);changes.push(`less walking: max ${km} km`);}
  for(const name of j.remove||[]){const n=normName(name);const hit=journey.named.find(x=>normName(x.place.name).includes(n))||journey.plan?.stops.find(s=>normName(s.name).includes(n));
+  journey.unresolved=journey.unresolved.filter(value=>!normName(value).includes(n));
   if(hit){const id=hit.place?.id||hit.id;journey.removed.add(id);journey.named=journey.named.filter(x=>x.place.id!==id);changes.push(`removed ${hit.place?.name||hit.name}`);}}
  if(j.hotel)changes.push(...await handleHotelIntent(j.hotel));
  renderJourneyPanel();
@@ -304,6 +306,7 @@ function setMyHotel(p){
 
 /* ---------- building the planner request ---------- */
 async function itineraryRequest(){
+ if(journey.unresolved.length)throw new Error('Required places could not be resolved from source data: '+journey.unresolved.join(', ')+'. Choose a real place or explicitly remove the requirement.');
  const start=getPlace('start');if(!start)throw new Error('Choose a starting point (search, GPS, My hotel or the map).');
  const end=journey.endMode==='fixed'?getPlace('end'):journey.endMode==='hotel'?journey.hotel:null;
  if(journey.endMode==='fixed'&&!end)throw new Error('Choose a destination, or pick “Discover for me”.');

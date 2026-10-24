@@ -39,6 +39,8 @@ Reused endpoints: place search/details/ratings, official menu verify, food recom
 
 Required menu candidates are accepted into itineraries only while matching backend evidence is fresh. A 12-dimensional route score cannot stand in for dish availability, ratings, hotel inventory or admission eligibility. Required unavailable venues and unsatisfied time limits block Start Navigation until the plan is revised.
 
+Unresolved required named stops also remain blocking across follow-up turns until a real source match or explicit removal. An interpretation/application exception stops that planning attempt rather than proceeding with stale state.
+
 ## Modified files and tests
 
 Core: routing/places.py, routing/providers.py, routing/menu.py, routing/recommend.py, routing/itinerary.py, routing/validation.py, interpretation_contract.py, server.py.

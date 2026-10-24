@@ -502,7 +502,7 @@ async function handlePlan(text,isFollowUp=false){
     }
     const changes=result.changes;if(changes.length)appendChat('assistant',`${planner.interpretation==='llm'?'AI interpretation':'Limited local interpretation'}: ${changes.join(' · ')}. Checking feasible pedestrian paths…`);
     else appendChat('assistant',`No explicit preference change recognized${planner.interpretation==='local'?' by limited local preview':''}. I’ll check route options using current settings.`);
-  }catch(err){toast('Unable to interpret preferences: '+err.message)}
+  }catch(err){toast('Unable to interpret preferences: '+err.message);return;}
   finally{planner.parsing=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false}
   if(typeof journeyMode==='function'&&journeyMode())await planJourney(isFollowUp);
   else await generateRoutes(q,isFollowUp);
