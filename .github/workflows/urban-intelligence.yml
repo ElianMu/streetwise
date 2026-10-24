@@ -24,6 +24,8 @@ jobs:
           npm install --prefix "$RUNNER_TEMP/streetwise-tests" --save-exact jsdom@27.4.0
       - name: Run full Python suite against shipped source snapshots
         run: python -m unittest discover -s tests -p 'test_*.py'
+      - name: Guard fresh-process memory headroom with three real route clients
+        run: python scripts/check_capacity.py
       - name: Run every JavaScript and DOM script
         env:
           JSDOM_PATH: ${{ runner.temp }}/streetwise-tests/node_modules/jsdom
