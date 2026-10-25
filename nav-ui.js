@@ -3,7 +3,12 @@
    engine; this file only shows them, follows the GPS, speaks the engine's instructions and asks the engine to re-plan.
    Privacy: positions stay in the browser; the server only receives the current position when a re-route is needed.
    Session: the route snapshot and progress (no GPS track) are kept in sessionStorage for 6 h to survive a page refresh. */
-const nav={engine:null,watch:null,units:'metric',voice:true,voiceLang:'en',follow:true,headingUp:false,heading:null,headingSrc:null,
+const nav={engine:null,watch:null,units:'metric',voice:true,voiceLang:'en',follow:true,
+ // Three explicit camera modes (never silently fabricated): 'heading' turns the map to match the device's real
+ // compass/GPS-course heading; 'route' turns it to match the way the current route segment is going (an honest
+ // fallback, not a claim about where the phone is pointed); 'north' keeps the map fixed north-up. heading/heading
+ // falls back to 'route' bearing automatically — and says so — whenever no reliable device/GPS heading exists.
+ viewMode:'heading',heading:null,headingSrc:null,
  last:null,queue:[],lastReroute:0,rerouteFails:0,wakeLock:null,lastCam:0,sessionKey:'sw.nav.v1',
  // Cumulative distance/time already spent on THIS journey, across reroutes and a resumed session (never reset by a
  // reroute): rerouting must deduct this from the original budget, not silently hand the walker a fresh one.
@@ -212,21 +217,30 @@ async function reroute(manual=false){
 /* ---------- map ---------- */
 function setupNavMap(){
  const m=state.map;
- for(const id of ['nav-walked','nav-acc','nav-cone','nav-dot','nav-next'])m.addSource(id,{type:'geojson',data:emptyFC()});
+ for(const id of ['nav-walked','nav-acc','nav-cone','nav-dot','nav-arrow','nav-next'])m.addSource(id,{type:'geojson',data:emptyFC()});
  m.addLayer({id:'nav-walked',type:'line',source:'nav-walked',paint:{'line-color':'#56666a','line-width':['interpolate',['linear'],['zoom'],12,3,16,6,19,9],'line-opacity':.9},layout:{'line-cap':'round','line-join':'round'}});
  m.addLayer({id:'nav-acc',type:'fill',source:'nav-acc',paint:{'fill-color':'#4aa3ff','fill-opacity':.14,'fill-outline-color':'#4aa3ff'}});
  m.addLayer({id:'nav-cone',type:'fill',source:'nav-cone',paint:{'fill-color':'#4aa3ff','fill-opacity':.32}});
  m.addLayer({id:'nav-next',type:'circle',source:'nav-next',paint:{'circle-radius':7,'circle-color':'rgba(0,0,0,0)','circle-stroke-color':'#ffffff','circle-stroke-width':2.5}});
  m.addLayer({id:'nav-dot',type:'circle',source:'nav-dot',paint:{'circle-radius':8,'circle-color':'#2f8cff','circle-stroke-color':'#ffffff','circle-stroke-width':3}});
+ // A crisp heading chevron on the dot, distinct from the wide nav-cone fan: the cone shows the general
+ // confidence spread, this shows one precise direction. Drawn only when a real heading exists (never guessed).
+ m.addLayer({id:'nav-arrow',type:'fill',source:'nav-arrow',paint:{'fill-color':'#ffffff','fill-opacity':.95}});
  m.on('dragstart',e=>{if(nav.engine&&e.originalEvent){nav.follow=false;$('navRecenter')?.classList.add('show');}});
 }
 function circlePoly(c,r,n=48){const pts=[];for(let i=0;i<=n;i++){const a=i/n*2*Math.PI;pts.push([c[0]+r*Math.sin(a)/84414.3,c[1]+r*Math.cos(a)/111049.7]);}return pts;}
 function conePoly(c,h,r=28,spread=32){const pts=[c];for(let a=-spread;a<=spread;a+=8){const t=(h+a)*Math.PI/180;pts.push([c[0]+r*Math.sin(t)/84414.3,c[1]+r*Math.cos(t)/111049.7]);}pts.push(c);return pts;}
+/** A small, precise chevron pointing at heading h, for the crisp "you're facing exactly here" indicator (kept
+ * separate from the wider confidence cone above). */
+function arrowPoly(c,h,len=11,spread=32){
+ const at=(a,r)=>{const t=(h+a)*Math.PI/180;return [c[0]+r*Math.sin(t)/84414.3,c[1]+r*Math.cos(t)/111049.7];};
+ return [at(0,len),at(180-spread,len*.62),at(180,len*.22),at(180+spread,len*.62),at(0,len)];
+}
 const navFC=fs=>({type:'FeatureCollection',features:fs});
 function drawNavRoute(route){state.map?.getSource('nav-walked')?.setData(emptyFC());}
 function drawNavPosition(out){
  const m=state.map;if(!m?.getSource('nav-dot'))return;
- if(!out||!nav.last){for(const id of ['nav-dot','nav-acc','nav-cone','nav-next','nav-walked'])m.getSource(id).setData(emptyFC());return;}
+ if(!out||!nav.last){for(const id of ['nav-dot','nav-acc','nav-cone','nav-arrow','nav-next','nav-walked'])m.getSource(id).setData(emptyFC());return;}
  const weak=['GPS_WEAK','POSSIBLY_OFF_ROUTE','OFF_ROUTE','REROUTING'].includes(out.state)||out.location_quality==='poor';
  // the dot is the raw GPS position; it snaps to the route only when the match is confident
  const p=out.matched_coordinate&&out.confidence==='high'&&!weak?out.matched_coordinate:out.raw;
@@ -234,17 +248,34 @@ function drawNavPosition(out){
  m.setPaintProperty('nav-dot','circle-color',weak?'#8aa4b8':'#2f8cff');
  m.getSource('nav-acc').setData(out.accuracy_m?navFC([{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[circlePoly(out.raw,out.accuracy_m)]}}]):emptyFC());
  m.getSource('nav-cone').setData(nav.heading!=null?navFC([{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[conePoly(p,nav.heading)]}}]):emptyFC());
+ // The crisp chevron only ever appears with a real device/GPS heading — never the route bearing, which would
+ // misrepresent "the way the route goes" as "the way you're facing".
+ m.getSource('nav-arrow').setData(nav.heading!=null?navFC([{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[arrowPoly(p,nav.heading)]}}]):emptyFC());
  const nm=out.next_maneuver;m.getSource('nav-next').setData(nm?navFC([{type:'Feature',properties:{},geometry:{type:'Point',coordinates:nm.coordinate}}]):emptyFC());
  const eng=nav.engine,walked=[];for(let s=0;s<=out.progress_m;s+=Math.max(5,out.progress_m/200))walked.push(eng.pointAt(s));walked.push(eng.pointAt(out.progress_m));
  m.getSource('nav-walked').setData(walked.length>1?navFC([{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:walked}}]):emptyFC());
+}
+/** The map's rotation for the current view mode — the one place that decides it, so nothing else can fabricate
+ * a heading. 'heading' prefers the real device/GPS heading but is never allowed to silently claim one that
+ * doesn't exist: with none available it falls back to the route's own bearing (honestly, not disguised as the
+ * phone's direction) and renderNav() says so. 'route' always uses the route bearing. 'north' is always 0. */
+function navBearingFor(mode){
+ if(mode==='north')return 0;
+ if(mode==='heading'&&nav.heading!=null)return nav.heading;
+ return nav.engine?.bearingAt()??nav.heading??0;
 }
 function updateCamera(force=false){
  const m=state.map,out=nav.engine?.lastOutput;if(!m||!out||(!nav.follow&&!force))return;
  const now=Date.now();if(!force&&now-nav.lastCam<1200)return;nav.lastCam=now;
  const p=out.matched_coordinate&&out.confidence==='high'?out.matched_coordinate:out.raw;
  const small=window.innerWidth<=740;
- m.easeTo({center:p,zoom:Math.max(m.getZoom(),17),bearing:nav.headingUp&&nav.heading!=null?nav.heading:0,pitch:0,
-  padding:{top:small?150:170,bottom:small?170:120,left:20,right:20},duration:force?500:900,essential:true});
+ const h=m.getContainer().clientHeight||(small?520:700);
+ // Perspective, walker's-eye camera (Section 4): pitched, with the walker low on screen so the road ahead — not
+ // the ground behind — fills most of the view. A big top pad and a small bottom one does that: easeTo centers
+ // `center` within the padded box, so padding the top heavily pushes that box (and the walker inside it) down.
+ m.easeTo({center:p,zoom:Math.max(m.getZoom(),17.3),bearing:navBearingFor(nav.viewMode),pitch:55,
+  padding:{top:Math.round(h*(small?.58:.54)),bottom:Math.round(h*(small?.1:.08)),left:24,right:24},
+  duration:force?500:900,essential:true});
 }
 
 /* ---------- panels ---------- */
@@ -268,8 +299,12 @@ function renderNav(out=nav.engine?.lastOutput){
  $('navStopActions').classList.toggle('hidden',st!=='ARRIVED_AT_STOP');
  if(st==='ARRIVED_AT_STOP'){const m=eng.maneuvers[eng.next];$('navStopName').textContent=m?.stop_name||'';$('navStopVisit').textContent=m?.visit_min?`Suggested visit ${m.visit_min} min (estimate)`:'';$('navSkip').classList.toggle('hidden',m?.required!==false);}
  $('navPause').textContent=st==='PAUSED'?'Resume':'Pause';$('navVoice').setAttribute('aria-pressed',String(nav.voice));$('navVoice').textContent=nav.voice?'Voice on':'Voice off';
- $('navUnits').textContent=nav.units==='metric'?'m':'ft';$('navMode').textContent=nav.headingUp?'Heading up':'North up';
- $('navHeadingNote').textContent=nav.heading==null?'No direction data — heading cone hidden':`Direction: ${nav.headingSrc}`;
+ $('navUnits').textContent=nav.units==='metric'?'m':'ft';
+ const modeLabel={heading:'Heading up',route:'Route up',north:'North up'}[nav.viewMode];
+ $('navMode').textContent=modeLabel; // the honest "falling back to route bearing" detail lives in navHeadingNote below, not a long button label
+ $('navHeadingNote').textContent=nav.heading==null
+  ?(nav.viewMode==='heading'?'No device direction — map follows the route instead; arrow hidden':'No direction data — heading arrow hidden')
+  :`Direction: ${nav.headingSrc}`;
  $('navArrived').classList.toggle('hidden',st!=='ARRIVED');
  drawNavPosition(out);if(st!=='ARRIVED')saveNavSession();
 }
@@ -283,7 +318,7 @@ function exitNavigation(){
  stopWatch();try{speechSynthesis.cancel();}catch(e){}nav.wakeLock?.release?.().catch(()=>{});
  window.removeEventListener('deviceorientationabsolute',onOrientation,true);window.removeEventListener('deviceorientation',onOrientation,true);
  nav.engine=null;nav.queue=[];nav.last=null;nav.heading=null;drawNavPosition(null);clearNavSession();hideNav();setDataLayersForNav(false);renderNavStart();
- state.map?.easeTo({bearing:0,duration:400});
+ state.map?.easeTo({bearing:0,pitch:0,padding:{top:0,bottom:0,left:0,right:0},duration:400});
 }
 
 /* ---------- session (survives refresh; no GPS history) ---------- */
@@ -322,7 +357,7 @@ function setupNavUI(){
  $('navRepeat').addEventListener('click',()=>{const o=nav.engine?.lastOutput;const m=o?.next_maneuver;if(m){const was=nav.voice;nav.voice=true;speak(spokenInstruction(m,o.distance_to_next_m,nav.voiceLang,nav.units));nav.voice=was;}});
  $('navLang').addEventListener('change',e=>{nav.voiceLang=e.target.value;renderNav();});
  $('navUnits').addEventListener('click',()=>{nav.units=nav.units==='metric'?'imperial':'metric';renderNav();});
- $('navMode').addEventListener('click',()=>{nav.headingUp=!nav.headingUp;renderNav();updateCamera(true);});
+ $('navMode').addEventListener('click',()=>{nav.viewMode={heading:'route',route:'north',north:'heading'}[nav.viewMode];renderNav();updateCamera(true);});
  $('navPause').addEventListener('click',()=>{const e=nav.engine;if(!e)return;
   if(e.state==='PAUSED'){e.transition('NAVIGATING','resume');nav.watch=navigator.geolocation.watchPosition(onFix,onFixError,{enableHighAccuracy:true,maximumAge:1000,timeout:20000});}
   else if(e.transition('PAUSED','user')){stopWatch();try{speechSynthesis.cancel();}catch(x){}}renderNav();});
