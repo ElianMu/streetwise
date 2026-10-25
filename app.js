@@ -405,12 +405,32 @@ function updateMapStyles(){
   setMapLayerVisible('landmark-outline',state.display.lpc);
   // The selected route is always visible; the toggle controls alternative routes only.
   setMapLayerVisible('route-alts',state.display.routes);
+  setMapLayerVisible('route-glow',true);
   setMapLayerVisible('route-shadow',true);
   setMapLayerVisible('route-selected',true);
+  setMapLayerVisible('poi-points-glow',state.display.pois);
   setMapLayerVisible('poi-points',state.display.pois);
   updateExperienceStyles();
 }
 function updateLegend(){ renderExperienceLegend(); }
+/** Re-tint CARTO's stock dark-matter basemap to the STROLLANE palette (only paint/layout properties
+ * on CARTO's own layers — no style replaced, no extra tile requests). Water reads as water instead of
+ * void; the road hierarchy gets more contrast; CARTO's own flat building fill is hidden because
+ * udg-buildings-fill (real PLUTO footprints, see urban-layers.js) draws richer 3D buildings on top. */
+function tuneBasemap(m){
+  const set=(id,prop,val)=>{if(m.getLayer(id))m.setPaintProperty(id,prop,val);};
+  set('background','background-color','#081114');
+  for(const id of ['landcover','landuse'])set(id,'fill-color','#0a1416');
+  set('water','fill-color','#0d2630');
+  set('water_shadow','fill-color','#061419');
+  set('road_mot_fill_noramp','line-color','#5c6a74');
+  set('road_mot_fill_ramp','line-color','#5c6a74');
+  set('road_pri_fill_noramp','line-color','#46525c');
+  set('road_pri_fill_ramp','line-color','#46525c');
+  set('road_sec_fill_noramp','line-color','#3a444c');
+  set('road_minor_fill','line-color','#2e363d');
+  for(const id of ['building','building-top'])if(m.getLayer(id))m.setLayoutProperty(id,'visibility','none');
+}
 function setupMap(){
   if(!window.maplibregl){ $('mapFallback').querySelector('h2').textContent='Map library unavailable';$('mapFallback').querySelector('p').textContent='Internet access is required to load the live map library. The interface remains accessible.';setSourceStatus('MAP LIBRARY OFFLINE');return;}
   try{
@@ -418,6 +438,7 @@ function setupMap(){
     m.addControl(new maplibregl.NavigationControl({showCompass:false}), 'bottom-right');
     m.on('load',()=>{
       state.mapReady=true;$('mapFallback').classList.add('hidden');m.fitBounds(MANHATTAN_BOUNDS,{padding:24,duration:0,maxZoom:11.1});
+      tuneBasemap(m);
       for(const id of ['nyc-roads','nyc-trees','nyc-landmarks','candidate-routes','selected-route','points','route-pois'])m.addSource(id,{type:'geojson',data:emptyFC()});
       m.addLayer({id:'road-underlay',type:'line',source:'nyc-roads',paint:{'line-color':'#0b141b','line-width':5.3,'line-opacity':.85}});
       m.addLayer({id:'road-highlight',type:'line',source:'nyc-roads',paint:{'line-color':'#476b72','line-width':['interpolate',['linear'],['zoom'],11,.6,14,2,16,3.4],'line-opacity':.90}});
@@ -426,11 +447,18 @@ function setupMap(){
       m.addLayer({id:'tree-points',type:'circle',source:'nyc-trees',paint:{'circle-color':'#a6e19a','circle-radius':['interpolate',['linear'],['zoom'],11,1.5,14,3,16,5],'circle-opacity':.82,'circle-stroke-color':'#0a2524','circle-stroke-width':.6}});
       // Route hierarchy: quiet dashed alternatives; the selected route is the only lime on the map, with a dark halo that separates it from data below.
       m.addLayer({id:'route-alts',type:'line',source:'candidate-routes',paint:{'line-color':'#8a9e9c','line-width':['interpolate',['linear'],['zoom'],12,1.6,16,3],'line-opacity':.55,'line-dasharray':[2,1.6]},layout:{'line-cap':'round','line-join':'round'}});
+      // Glow beneath the dark separator shadow: a wide, soft-blurred lime halo (Citymapper/Google night-mode
+      // routing). The dark route-shadow above it still does its job of separating the line from data clutter.
+      m.addLayer({id:'route-glow',type:'line',source:'selected-route',paint:{'line-color':'#d8f365','line-width':['interpolate',['linear'],['zoom'],12,14,16,22,19,30],'line-opacity':.22,'line-blur':6},layout:{'line-cap':'round','line-join':'round'}});
       m.addLayer({id:'route-shadow',type:'line',source:'selected-route',paint:{'line-color':'#06110f','line-width':['interpolate',['linear'],['zoom'],12,6,16,11,19,16],'line-opacity':.82,'line-blur':1},layout:{'line-cap':'round','line-join':'round'}});
       m.addLayer({id:'route-selected',type:'line',source:'selected-route',paint:{'line-color':'#d8f365','line-width':['interpolate',['linear'],['zoom'],12,2.6,16,5,19,8],'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
+      m.addLayer({id:'poi-points-glow',type:'circle',source:'route-pois',paint:{'circle-color':'#b7a3e1','circle-radius':13,'circle-opacity':.3,'circle-blur':1}});
       m.addLayer({id:'poi-points',type:'circle',source:'route-pois',paint:{'circle-color':'#b7a3e1','circle-radius':5,'circle-stroke-color':'#132529','circle-stroke-width':2}});
+      m.addLayer({id:'point-starts-glow',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#6fd2d8','circle-radius':['interpolate',['linear'],['zoom'],12,11,16,16],'circle-opacity':.35,'circle-blur':1}});
       m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#6fd2d8','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
+      m.addLayer({id:'point-ends-glow',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,11,16,16],'circle-opacity':.35,'circle-blur':1}});
       m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
+      m.addLayer({id:'point-gps-glow',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':16,'circle-opacity':.35,'circle-blur':1}});
       m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':7,'circle-stroke-color':'#fff','circle-stroke-width':3}});
       setupRouteEdgeLayer();setupUrbanMap();if(typeof setupJourneyMap==='function')setupJourneyMap();if(typeof setupNavMap==='function')setupNavMap();
       state.mapLayersReady=true; setupExperienceMap(); syncMapData();updateMapStyles();
@@ -441,6 +469,15 @@ function setupMap(){
       m.on('click',async(e)=>{if(!state.pick)return;const kind=state.pick;const p={id:`map:${e.lngLat.lat.toFixed(5)},${e.lngLat.lng.toFixed(5)}`,name:`Map point ${e.lngLat.lat.toFixed(4)}, ${e.lngLat.lng.toFixed(4)}`,lat:e.lngLat.lat,lon:e.lngLat.lng,source:'Selected on map'};state[kind==='start'?'customStart':'customEnd']=p;state[kind]='custom';$(kind==='start'?'startSelect':'endSelect').value='custom';$(kind==='start'?'searchStart':'searchEnd').value=p.name;state.pick=null;$('pickNotice').classList.add('hidden');m.getCanvas().style.cursor='';resetRoutes();syncMapData();if(typeof placeInputs!=='undefined')placeInputs[kind]?.set(p);if(typeof reverseGeocode==='function'){const r=await reverseGeocode(p.lat,p.lon);if(r){p.address=r.address;p.borough=r.borough;p.name=`Near ${r.address}`;placeInputs[kind]?.set(p);$(kind==='start'?'searchStart':'searchEnd').value=p.name;}}toast(`${kind==='start'?'Start':'Destination'} set from the map.`)});
       for(const layer of ['road-highlight','route-alts']){m.on('mouseenter',layer,()=>{m.getCanvas().style.cursor=state.pick?'crosshair':'pointer'});m.on('mouseleave',layer,()=>{m.getCanvas().style.cursor=state.pick?'crosshair':''})}
       m.on('moveend',()=>{scheduleOverlayRefresh();$('mapCoords').textContent=`${m.getCenter().lat.toFixed(3)}° N · ${Math.abs(m.getCenter().lng).toFixed(3)}° W`});
+      // Auto-tilt the 3D buildings into view as the walker zooms in (flat city overview → tilted street level),
+      // the same zoom-triggered pattern Google Maps/Apple Maps use. Only on zoomend (not every 'zoom' tick) so
+      // this never fights the user's own pinch/scroll gesture; live navigation forces pitch:0 of its own accord
+      // (nav-ui.js updateCamera), so this never tilts the GPS view.
+      m.on('zoomend',()=>{
+       if(document.body.classList.contains('nav-mode'))return;
+       const nz=UrbanStyle.T.zoom.neighbourhood,z=m.getZoom(),target=z>=nz?Math.min(50,(z-nz)*13):0;
+       if(Math.abs(m.getPitch()-target)>2)m.easeTo({pitch:target,duration:600});
+      });
     });
     m.on('error',(event)=>{if(event?.error)console.warn(state.mapReady?'MapLibre style/data error:':'MapLibre loading issue:',event.error.message)});
     setTimeout(()=>{if(!state.mapReady){$('mapFallback').querySelector('h2').textContent='Map tiles not reachable';$('mapFallback').querySelector('p').textContent='The web prototype is ready, but external basemap tiles require a network connection. The GIS layers can be explored when online.'}},16000);

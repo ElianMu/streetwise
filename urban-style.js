@@ -17,8 +17,10 @@ const T={
  cluster:{radius:['interpolate',['linear'],['get','point_count'],2,6,40,10,400,15],fill:.16,stroke:.75,maxZoom:15,pixelRadius:42},
  label:{font:['Montserrat Medium','Open Sans Regular'],size:10,minZoom:17},
  building:{
-  neutral:'#29343a',outline:'#56636b',fillOpacity:.62,
-  height:{prop:'height_roof_ft',unit:'ft',stops:[[0,'#202b31'],[40,'#283840'],[80,'#34505c'],[150,'#4c6f7e'],[300,'#7898a7'],[600,'#c4d5dc']]},
+  neutral:'#29343a',outline:'#56636b',fillOpacity:.62,extrusionOpacity:.84,
+  // Capped below off-white: in the flat 2D fill this ramp's top end barely showed (rooftop only); extruded to full
+  // height a skyscraper's whole face carries it, so a near-white top stop blew out and broke the dark theme.
+  height:{prop:'height_roof_ft',unit:'ft',stops:[[0,'#1c262b'],[40,'#263743'],[80,'#33505f'],[150,'#3e6478'],[300,'#4f7f93'],[600,'#6fa3b4']]},
   age:{prop:'construction_year',unit:'year built',stops:[[1800,'#5b4636'],[1880,'#6d5a44'],[1920,'#7b6f57'],[1950,'#5e6c6c'],[1980,'#4c6879'],[2015,'#3c6489']]},
   landuse:{prop:'landuse_name',classes:[['One & two family','#6f7f5b'],['Multi-family walk-up','#857d58'],['Multi-family elevator','#8c7552'],['Mixed residential & commercial','#8e6a5c'],['Commercial & office','#7a6070'],
    ['Industrial & manufacturing','#6a5f7c'],['Transportation & utility','#5b6a80'],['Public facilities & institutions','#4f7480'],['Open space & outdoor recreation','#4f7c66'],['Parking','#5e6468'],['Vacant land','#4a4f52']],other:'#3a4247'}},
