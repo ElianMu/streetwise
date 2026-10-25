@@ -71,6 +71,14 @@ class NavEngine{
   return [(a[0]+(b[0]-a[0])*t)/MX_NAV,(a[1]+(b[1]-a[1])*t)/MY_NAV];
  }
  edgeAt(s){for(const [end,id] of this.edgeEnds)if(s<=end+1e-6)return id;return this.edgeEnds.at(-1)?.[1]||null;}
+ /** True compass bearing of the route itself a short distance ahead of s (route metres; default: current
+  * progress). Used for Route-Up camera mode and as an honest fallback when device/GPS heading is unavailable —
+  * never presented as the user's real heading, only as "the way the route is going". */
+ bearingAt(s=this.progress){
+  const a=this.pointAt(Math.max(0,s-2)),b=this.pointAt(Math.min(this.netLen,s+15));
+  if(Math.hypot((b[0]-a[0])*MX_NAV,(b[1]-a[1])*MY_NAV)<1e-6)return null;
+  return navBearing(a,b);
+ }
  /** Project p onto route segments whose route-metre span intersects [lo,hi]; best by score. */
  match(p,lo,hi,fix){
   const sAcc=Math.max(8,Math.min(fix.accuracy??30,80));let best=null;

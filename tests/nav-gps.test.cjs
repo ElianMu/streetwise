@@ -93,6 +93,16 @@ test('units and spoken text come from engine maneuvers',()=>{
  const m=route.maneuvers.find(x=>x.instruction_text==='Turn left onto 5th Ave');
  assert.equal(spokenInstruction(m,30),'In 30 meters, turn left onto 5th Ave');assert.equal(spokenInstruction(m,30,'zh'),'前方约30米，'+m.instruction_zh);
 });
+test('bearingAt: the route\'s own forward direction, for Route-Up and the honest no-compass fallback',()=>{
+ const [e]=fresh();
+ // On the straight stretch between the W 42nd St and 5th Ave turns, the route bearing should read close to the
+ // W 42nd St maneuver's own bearing_after (119°) — not some other direction, and not null.
+ const b=e.bearingAt(150);
+ assert(b!=null,'a real stretch of route has a bearing');
+ assert(Math.abs(((b-119+540)%360)-180)<15,`bearing ${b.toFixed(1)}° should be close to 119°`);
+ assert(e.bearingAt(0)!=null,'bearing at the very start of the route is defined');
+ assert(e.bearingAt(route.distance_m)!=null,'bearing at the very end of the route is defined');
+});
 test('validation gate: a failed route cannot navigate',()=>{
  const bad={...JSON.parse(JSON.stringify(route)),validation:{navigation_allowed:false,blocking_issues:['gap']}};
  assert.deepEqual(new NavEngine(bad).blocked,['gap']);
