@@ -33,7 +33,7 @@ const normName=s=>String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]
 function makePlace(o){
  return {id:o.id,name:o.name,address:o.address||null,neighborhood:o.neighborhood||null,borough:o.borough||null,category:o.category||null,
   lat:+o.lat,lon:+o.lon,source:o.source,sourceUrl:o.sourceUrl||null,website:o.website||null,hours:o.hours||null,retrievedAt:new Date().toISOString(),
-  verification:o.verification||'Listed by source (not verified by STREETWISE)',raw:o.raw||null};
+  verification:o.verification||'Listed by source (not verified by STROLLANE)',raw:o.raw||null};
 }
 const PROVIDERS={
  photon:{label:'OpenStreetMap (Photon)',async search(q,opts,signal){

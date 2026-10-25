@@ -118,7 +118,7 @@ function setupExperienceControls(){
  $('layerExperience').addEventListener('change',e=>{mapExperience.visible=e.target.checked;updateMapStyles();});
  $('layerCoverage').addEventListener('change',e=>{mapExperience.coverage=e.target.checked;updateMapStyles();});
  $('analyzeView').addEventListener('click',()=>analyzeArea(false));
- $('exportExperience').addEventListener('click',()=>downloadGeoJSON('Streetwise_experience_sections.geojson',fc(experienceFeatures())));
+ $('exportExperience').addEventListener('click',()=>downloadGeoJSON('Strollane_experience_sections.geojson',fc(experienceFeatures())));
  $('toggleLegend').addEventListener('click',()=>{const hidden=$('udLegend').classList.toggle('hidden');$('toggleLegend').setAttribute('aria-pressed',String(!hidden));});
  renderExperienceLegend();
 }

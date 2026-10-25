@@ -1,0 +1,16 @@
+{
+  "name": "STROLLANE · NYC",
+  "short_name": "Strollane",
+  "description": "Personalized Manhattan city walks: real pedestrian routing, 12 walking-experience dimensions and live NYC urban data.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#081114",
+  "theme_color": "#081114",
+  "icons": [
+    { "src": "./favicon-16x16.png", "sizes": "16x16", "type": "image/png" },
+    { "src": "./favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

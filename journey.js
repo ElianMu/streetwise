@@ -55,7 +55,7 @@ function poiPlace(r){
  return {id:r.id,name:r.name,address:r.addr||null,neighborhood:null,borough:r.boro||(r.search_only?null:'Manhattan'),routing_coverage:r.search_only?'search_only':'manhattan_network',category:poiCategoryLabel(r),lat:r.lat,lon:r.lon,source:src,
   sourceUrl:r.id.startsWith('osm:')?`https://www.openstreetmap.org/${r.id.slice(4)}`:r.source_url||r.report||null,website:r.web||null,menuUrl:r.menu||null,hours:r.hours||null,
   wikidata:r.wd||null,cat:r.cat,drink:r.drink||null,cuisine:r.cuisine||null,cid:r.cid||r.id,providerIds:r.pids||[r.id],quality:r.q||null,accessM:r.snap??null,
-  operationalStatus:'Listed in source — not verified open today',landmark:r.src==='lpc'||Boolean(r.lpc),verification:'Listed by source (not verified by STREETWISE)',raw:r};
+  operationalStatus:'Listed in source — not verified open today',landmark:r.src==='lpc'||Boolean(r.lpc),verification:'Listed by source (not verified by STROLLANE)',raw:r};
 }
 function poiCategoryLabel(r){
  const s=r.sub||'';const v=s.split('=')[1]||'';
