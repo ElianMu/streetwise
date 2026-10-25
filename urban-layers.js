@@ -161,9 +161,13 @@ function addGroupLayers(){
  layer({id:'udg-context-fill',type:'fill',source:'udg-context',filter:['==',['geometry-type'],'Polygon'],paint:{'fill-color':['get','_c'],'fill-opacity':op(.16)}},'ud-z-polys');
  layer({id:'udg-context-line',type:'line',source:'udg-context',filter:['in',['geometry-type'],['literal',['Polygon','LineString']]],paint:{'line-color':['get','_c'],'line-width':1,'line-opacity':op(.5)}},'ud-z-lines');
  layer({id:'udg-context-pt',type:'circle',source:'udg-context',filter:['==',['geometry-type'],'Point'],paint:{'circle-color':['get','_c'],'circle-radius':2.5,'circle-opacity':op(.7)}},'ud-z-points');
- // Buildings: one fill whose colour follows the building theme; hairline outlines from street zoom.
+ // Buildings: a real 3D massing model (fill-extrusion on real PLUTO roof height, not a flat colour block) whose
+ // colour still follows the building theme; hairline footprint outlines from street zoom.
  src('udg-buildings');
- layer({id:'udg-buildings-fill',type:'fill',source:'udg-buildings',minzoom:T.zoom.neighbourhood-.5,paint:{'fill-color':T.building.neutral,'fill-opacity':op(T.building.fillOpacity)}},'ud-z-polys');
+ layer({id:'udg-buildings-fill',type:'fill-extrusion',source:'udg-buildings',minzoom:T.zoom.neighbourhood-.5,
+  paint:{'fill-extrusion-color':T.building.neutral,'fill-extrusion-opacity':T.building.extrusionOpacity, // fill-extrusion-opacity is camera-only in MapLibre (no data expressions, unlike fill-opacity)
+   'fill-extrusion-height':['*',0.3048,['coalesce',['to-number',['get',T.building.height.prop]],35]],
+   'fill-extrusion-base':0,'fill-extrusion-vertical-gradient':true}},'ud-z-polys');
  layer({id:'udg-buildings-line',type:'line',source:'udg-buildings',minzoom:T.zoom.street,paint:{'line-color':T.building.outline,'line-width':['interpolate',['linear'],['zoom'],15,.3,18,.8],'line-opacity':.55}},'ud-z-polys');
  // Green: parks and gardens as soft fills with fine edges; classification subsets as dashed outlines.
  src('udg-green');
@@ -275,7 +279,7 @@ function composeUrbanGroups(){
 function applyBuildingTheme(){
  if(!state.mapLayersReady)return;const B=UrbanStyle.T.building,t=urbanData.buildingTheme;
  const color=t==='height'?UrbanStyle.rampExpr(B.height.prop,B.height.stops):t==='age'?['case',['has',B.age.prop],UrbanStyle.rampExpr(B.age.prop,B.age.stops),B.neutral]:t==='landuse'?UrbanStyle.categoricalExpr(B.landuse.prop,B.landuse.classes,B.landuse.other):B.neutral;
- state.map.setPaintProperty('udg-buildings-fill','fill-color',color);
+ state.map.setPaintProperty('udg-buildings-fill','fill-extrusion-color',color);
  if(t==='landuse'&&!urbanData.active.has('land_use'))toast('Land use theme needs the Land use (tax lots) dataset; it has been switched on.');
  if(t==='landuse'&&!urbanData.active.has('land_use'))toggleUrbanDataset('land_use',true);
  refreshRepresentations();scheduleUrbanCompose();
