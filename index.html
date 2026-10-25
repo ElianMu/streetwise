@@ -4,18 +4,36 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#081114" />
-  <meta name="description" content="Streetwise: explore Manhattan street data, weather and real pedestrian routes in an early interactive prototype." />
-  <title>STREETWISE · Manhattan Experience Navigator</title>
+  <meta name="description" content="Strollane: personalized Manhattan city walks — real pedestrian routing, 12 walking-experience dimensions and live NYC urban data in an early interactive prototype." />
+  <title>STROLLANE · NYC | Personalized City Walks</title>
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Strollane" />
+  <meta property="og:title" content="STROLLANE · NYC | Personalized City Walks" />
+  <meta property="og:description" content="Personalized Manhattan city walks: real pedestrian routing, 12 walking-experience dimensions and live NYC urban data." />
+  <meta property="og:image" content="./icon-512.png" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="STROLLANE · NYC | Personalized City Walks" />
+  <meta name="twitter:description" content="Personalized Manhattan city walks: real pedestrian routing, 12 walking-experience dimensions and live NYC urban data." />
+  <meta name="twitter:image" content="./icon-512.png" />
+  <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="./favicon-32x32.png" sizes="32x32" type="image/png" />
+  <link rel="icon" href="./favicon-16x16.png" sizes="16x16" type="image/png" />
+  <link rel="shortcut icon" href="./favicon.ico" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+  <link rel="manifest" href="./site.webmanifest" />
+  <meta name="apple-mobile-web-app-title" content="Strollane" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=28" />
+  <link rel="stylesheet" href="./styles.css?v=29" />
 </head>
 <body>
 <div class="site-shell">
   <header class="topbar">
-    <div class="brand-zone"><svg class="brand-glyph" viewBox="0 0 38 45" role="img" aria-label="Streetwise symbol">
+    <div class="brand-zone"><svg class="brand-glyph" viewBox="0 0 38 45" role="img" aria-label="Strollane symbol">
       <path class="glyph-motion" d="M2 17h5M1 22h6M3 27h4"/>
       <rect class="glyph-leg" x="16.50" y="22.35" width="13.82" height="3.90" rx="1.95" transform="rotate(118.05 16.50 24.30)"/>
       <rect class="glyph-leg" x="16.50" y="22.25" width="13.09" height="4.10" rx="2.05" transform="rotate(46.55 16.50 24.30)"/>
@@ -23,8 +41,8 @@
       <rect class="glyph-arm" x="21.80" y="9.55" width="8.28" height="2.90" rx="1.45" transform="rotate(25.02 21.80 11.00)"/>
       <rect class="glyph-arm" x="19.50" y="10.00" width="9.18" height="3.00" rx="1.50" transform="rotate(150.64 19.50 11.50)"/>
       <circle class="glyph-head" cx="22" cy="6" r="4"/>
-    </svg><div class="brand-name">STREETWISE<span class="brand-dot">.</span></div><span class="brand-location">MANHATTAN · NYC</span></div>
-    <div class="top-center"><span class="pulse-dot"></span><span>URBAN EXPERIENCE NAVIGATOR</span><span class="divider-vertical"></span><span class="badge-quiet">AGENT-READY · V0.4</span></div>
+    </svg><div class="brand-name">STROLLANE</div><span class="brand-location">MANHATTAN · NYC</span></div>
+    <div class="top-center"><span class="pulse-dot"></span><span>CITY WALK STUDIO IN NEW YORK</span></div>
     <div class="top-actions"><span id="topWeather" class="top-weather"><span class="tiny-sun">☁</span> Weather loading…</span><button id="openInfo" class="icon-button" title="About the prototype" aria-label="About"><span>i</span></button><button id="openKepler" class="kepler-btn"><span class="kepler-mark">◈</span> Kepler studio <span>↗</span></button></div>
   </header>
 
@@ -52,7 +70,7 @@
         </div>
 
         <div class="line-divider"></div>
-        <div class="section-row"><div class="section-overline">02 / TELL STREETWISE WHAT YOU WANT</div><span class="subtag">NATURAL LANGUAGE</span></div>
+        <div class="section-row"><div class="section-overline">02 / TELL STROLLANE WHAT YOU WANT</div><span class="subtag">NATURAL LANGUAGE</span></div>
         <p class="field-description">Describe the experience. You don't need to select any data layers.</p>
         <div class="voice-row"><button type="button" class="mic-btn" data-mic="intentText" aria-pressed="false" aria-label="Speak your request">🎙</button><select id="voiceLang" aria-label="Voice language"><option value="en-US">EN</option><option value="zh-CN">中文</option></select><span id="voiceStatus" class="voice-status">Voice or text — you can edit the transcript.</span></div>
         <textarea id="intentText" class="intent-box" rows="3" spellcheck="false" placeholder="I’d like a greener, quieter walk with interesting architecture.">I'd like a greener, quieter walk with interesting architecture.</textarea>
@@ -67,7 +85,7 @@
 
         <div class="line-divider"></div>
         <div class="section-row"><div class="section-overline">03 / YOUR WALKING PREFERENCES</div><span id="preferenceSource" class="small-count">NOT INTERPRETED</span></div>
-        <p class="field-description">Streetwise turns your words into priorities; unmentioned dimensions stay neutral.</p>
+        <p class="field-description">Strollane turns your words into priorities; unmentioned dimensions stay neutral.</p>
         <div id="preferenceSummary" class="preference-summary"><span class="status-empty">✧ Your interpreted priorities appear here after planning.</span></div>
         <button id="expandDimensions" class="expand-button" aria-expanded="false" aria-controls="dimensionsPanel">View all 12 dimensions <span id="dimensionChevron">⌄</span></button>
         <div id="dimensionsPanel" class="hidden">
@@ -92,7 +110,7 @@
         <label class="constraint-check"><input id="avoidStairs" type="checkbox"> Avoid stairs <small>excludes OpenStreetMap steps from routing</small></label>
         <p id="constraintWarning" class="constraint-warning hidden">⚠ Step-free access needs verified curb-ramp and elevator data, which is not connected. Recommendations are blocked while this constraint is on.</p>
 
-        <section id="conversationSection" class="conversation-section hidden" aria-label="Streetwise conversation">
+        <section id="conversationSection" class="conversation-section hidden" aria-label="Strollane conversation">
           <div class="line-divider"></div>
           <div class="section-row"><div class="section-overline">05 / REFINE YOUR WALK</div><span class="small-count">CONVERSATION</span></div>
           <p class="field-description">Ask for changes. New route results and the map are recomputed when possible.</p>
@@ -178,7 +196,7 @@
         <section id="cityWalk" class="city-walk hidden" aria-live="polite"></section>
         <div class="subtle-divider"></div>
         <div class="section-row"><div class="section-overline">AI RECOMMENDED ROUTES</div><span class="small-count" id="routeCount">0 LOADED</span></div>
-        <p class="soft-copy">Real routes from the STREETWISE engine on the OpenStreetMap pedestrian graph, ranked by your preferences on the same 12 experience scores as Explore.</p>
+        <p class="soft-copy">Real routes from the STROLLANE engine on the OpenStreetMap pedestrian graph, ranked by your preferences on the same 12 experience scores as Explore.</p>
         <div id="rankingStatus" class="ranking-status">No route data yet.</div>
         <div id="routeValidation" class="route-validation hidden" aria-live="polite"></div>
         <button type="button" id="navStart" class="primary-cta nav-start hidden"><span>➤ Start Navigation</span><span class="cta-arrow">↗</span></button>

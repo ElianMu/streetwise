@@ -1,4 +1,4 @@
-# STREETWISE · NYC — Pedestrian Routing Engine
+# STROLLANE · NYC — Pedestrian Routing Engine
 
 本版本在原有界面上加入真实的步行路线引擎：路线在 OpenStreetMap 步行路网上计算，12 个体验维度评分与 Explore Urban Data 共用同一套定义和版本。架构见 `ARCHITECTURE.md`，接口和数据契约见 `API.md`。
 

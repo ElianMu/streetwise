@@ -68,7 +68,7 @@ async function startNavigation(){
 function askStartChoice(r,here,away){
  const box=$('navChoice');box.classList.remove('hidden');
  box.innerHTML=`<div class="nav-choice-card"><strong>You are ${formatNavDistance(away,nav.units)} from the start of this route.</strong>
-  <p>Choose how to begin. STREETWISE will not pretend you are at the start.</p>
+  <p>Choose how to begin. STROLLANE will not pretend you are at the start.</p>
   <button type="button" class="primary-cta" data-c="to-start">Navigate to start</button><button type="button" class="mini-outline" data-c="replan">Replan from my location</button><button type="button" class="mini-outline" data-c="cancel">Cancel</button></div>`;
  box.onclick=async e=>{const c=e.target.dataset?.c;if(!c)return;box.classList.add('hidden');
   if(c==='to-start'){const s=r.geometry.coordinates[0];const leg=await requestRoute(here,{lon:s[0],lat:s[1]});if(leg){nav.queue=[r];beginNavigation(leg,{temporary:true});}}

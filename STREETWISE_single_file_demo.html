@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#081114" />
-  <meta name="description" content="Streetwise: explore Manhattan street data, weather and real pedestrian routes in an early interactive prototype." />
-  <title>STREETWISE · Manhattan Experience Navigator</title>
+  <meta name="description" content="Strollane: personalized Manhattan city walks — real pedestrian routing, 12 walking-experience dimensions and live NYC urban data in an early interactive prototype." />
+  <title>STROLLANE · NYC | Personalized City Walks</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -19,7 +19,7 @@
 
 .modal .export-list button{background:#1b3b38;border:1px solid #55765f;color:#daf589;border-radius:5px;padding:6px 9px;margin:3px 0 3px 10px;font-size:10px;font-weight:700}.modal .export-list button:disabled{color:#7b8a80;border-color:#354f48;background:#152a29}.modal .export-list li{margin:9px 0}
 
-/* Streetwise Manhattan geographic coverage controls */
+/* Strollane Manhattan geographic coverage controls */
 .brand-name{font-size:24px;letter-spacing:-1.1px}.brand-location{color:#a2beb3}
 .map-jump{position:absolute;z-index:5;top:102px;right:15px;display:flex;gap:7px;align-items:center;background:#0b1a1ee8;border:1px solid #314f4b;border-radius:9px;padding:7px 9px;backdrop-filter:blur(12px)}
 .map-jump label{font-size:9px;font-weight:800;color:#afc8bf;letter-spacing:1px;white-space:nowrap}
@@ -440,7 +440,7 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
 <body>
 <div class="site-shell">
   <header class="topbar">
-    <div class="brand-zone"><div class="brand-glyph" aria-label="Streetwise symbol"><span></span><span></span><span></span></div><div class="brand-name">STREETWISE<span class="brand-dot">.</span></div><span class="brand-location">MANHATTAN · NYC</span></div>
+    <div class="brand-zone"><div class="brand-glyph" aria-label="Strollane symbol"><span></span><span></span><span></span></div><div class="brand-name">STROLLANE</div><span class="brand-location">MANHATTAN · NYC</span></div>
     <div class="top-center"><span class="pulse-dot"></span><span>URBAN EXPERIENCE NAVIGATOR</span><span class="divider-vertical"></span><span class="badge-quiet">AGENT-READY · V0.4</span></div>
     <div class="top-actions"><span id="topWeather" class="top-weather"><span class="tiny-sun">☁</span> Weather loading…</span><button id="openInfo" class="icon-button" title="About the prototype" aria-label="About"><span>i</span></button><button id="openKepler" class="kepler-btn"><span class="kepler-mark">◈</span> Kepler studio <span>↗</span></button></div>
   </header>
@@ -469,7 +469,7 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
         </div>
 
         <div class="line-divider"></div>
-        <div class="section-row"><div class="section-overline">02 / TELL STREETWISE WHAT YOU WANT</div><span class="subtag">NATURAL LANGUAGE</span></div>
+        <div class="section-row"><div class="section-overline">02 / TELL STROLLANE WHAT YOU WANT</div><span class="subtag">NATURAL LANGUAGE</span></div>
         <p class="field-description">Describe the experience. You don't need to select any data layers.</p>
         <div class="voice-row"><button type="button" class="mic-btn" data-mic="intentText" aria-pressed="false" aria-label="Speak your request">🎙</button><select id="voiceLang" aria-label="Voice language"><option value="en-US">EN</option><option value="zh-CN">中文</option></select><span id="voiceStatus" class="voice-status">Voice or text — you can edit the transcript.</span></div>
         <textarea id="intentText" class="intent-box" rows="3" spellcheck="false" placeholder="I’d like a greener, quieter walk with interesting architecture.">I'd like a greener, quieter walk with interesting architecture.</textarea>
@@ -484,7 +484,7 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
 
         <div class="line-divider"></div>
         <div class="section-row"><div class="section-overline">03 / YOUR WALKING PREFERENCES</div><span id="preferenceSource" class="small-count">NOT INTERPRETED</span></div>
-        <p class="field-description">Streetwise turns your words into priorities; unmentioned dimensions stay neutral.</p>
+        <p class="field-description">Strollane turns your words into priorities; unmentioned dimensions stay neutral.</p>
         <div id="preferenceSummary" class="preference-summary"><span class="status-empty">✧ Your interpreted priorities appear here after planning.</span></div>
         <button id="expandDimensions" class="expand-button" aria-expanded="false" aria-controls="dimensionsPanel">View all 12 dimensions <span id="dimensionChevron">⌄</span></button>
         <div id="dimensionsPanel" class="hidden">
@@ -509,7 +509,7 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
         <label class="constraint-check"><input id="avoidStairs" type="checkbox"> Avoid stairs <small>excludes OpenStreetMap steps from routing</small></label>
         <p id="constraintWarning" class="constraint-warning hidden">⚠ Step-free access needs verified curb-ramp and elevator data, which is not connected. Recommendations are blocked while this constraint is on.</p>
 
-        <section id="conversationSection" class="conversation-section hidden" aria-label="Streetwise conversation">
+        <section id="conversationSection" class="conversation-section hidden" aria-label="Strollane conversation">
           <div class="line-divider"></div>
           <div class="section-row"><div class="section-overline">05 / REFINE YOUR WALK</div><span class="small-count">CONVERSATION</span></div>
           <p class="field-description">Ask for changes. New route results and the map are recomputed when possible.</p>
@@ -595,7 +595,7 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
         <section id="cityWalk" class="city-walk hidden" aria-live="polite"></section>
         <div class="subtle-divider"></div>
         <div class="section-row"><div class="section-overline">AI RECOMMENDED ROUTES</div><span class="small-count" id="routeCount">0 LOADED</span></div>
-        <p class="soft-copy">Real routes from the STREETWISE engine on the OpenStreetMap pedestrian graph, ranked by your preferences on the same 12 experience scores as Explore.</p>
+        <p class="soft-copy">Real routes from the STROLLANE engine on the OpenStreetMap pedestrian graph, ranked by your preferences on the same 12 experience scores as Explore.</p>
         <div id="rankingStatus" class="ranking-status">No route data yet.</div>
         <div id="routeValidation" class="route-validation hidden" aria-live="polite"></div>
         <button type="button" id="navStart" class="primary-cta nav-start hidden"><span>➤ Start Navigation</span><span class="cta-arrow">↗</span></button>
@@ -859,7 +859,7 @@ const normName=s=>String(s||'').toLowerCase().normalize('NFKD').replace(/[̀-ͯ]
 function makePlace(o){
  return {id:o.id,name:o.name,address:o.address||null,neighborhood:o.neighborhood||null,borough:o.borough||null,category:o.category||null,
   lat:+o.lat,lon:+o.lon,source:o.source,sourceUrl:o.sourceUrl||null,website:o.website||null,hours:o.hours||null,retrievedAt:new Date().toISOString(),
-  verification:o.verification||'Listed by source (not verified by STREETWISE)',raw:o.raw||null};
+  verification:o.verification||'Listed by source (not verified by STROLLANE)',raw:o.raw||null};
 }
 const PROVIDERS={
  photon:{label:'OpenStreetMap (Photon)',async search(q,opts,signal){
@@ -1301,7 +1301,7 @@ async function checkInterpreter(){
 }
 function appendChat(role,message){
   planner.conversations.push({role,content:message});$('conversationSection').classList.remove('hidden');
-  $('chatHistory').innerHTML=planner.conversations.map(m=>`<div class="chat-message ${m.role==='user'?'user-message':'assistant-message'}"><div class="chat-name">${m.role==='user'?'YOU':'✦ STREETWISE'}</div><div class="chat-copy">${esc(m.content)}</div></div>`).join('');
+  $('chatHistory').innerHTML=planner.conversations.map(m=>`<div class="chat-message ${m.role==='user'?'user-message':'assistant-message'}"><div class="chat-name">${m.role==='user'?'YOU':'✦ STROLLANE'}</div><div class="chat-copy">${esc(m.content)}</div></div>`).join('');
   $('chatHistory').scrollTop=$('chatHistory').scrollHeight;
   if(role==='assistant' && /Selected |No route meets|Pedestrian service unavailable|Route planning failed/.test(message)){
     $('conversationSection').scrollIntoView({block:'end',behavior:'smooth'});
@@ -1416,7 +1416,7 @@ async function loadViewportEvidence(kind){
 }
 function setMapLayerVisible(id,yes){if(state.mapReady&&state.map.getLayer(id))state.map.setLayoutProperty(id,'visibility',yes?'visible':'none')}
 function getEmptyLine(){return {type:'FeatureCollection',features:[]}}
-function currentRoutesGeojson(){return {type:'FeatureCollection',features:state.routes.map(r=>({type:'Feature',properties:{id:r.id,name:r.label,distance_km:r.km,time_min:r.min,network_version:r.raw.network_version,method:'STREETWISE pedestrian routing engine on the OSM pedestrian graph'},geometry:{type:'LineString',coordinates:r.coords}}))}}
+function currentRoutesGeojson(){return {type:'FeatureCollection',features:state.routes.map(r=>({type:'Feature',properties:{id:r.id,name:r.label,distance_km:r.km,time_min:r.min,network_version:r.raw.network_version,method:'Strollane pedestrian routing engine on the OSM pedestrian graph'},geometry:{type:'LineString',coordinates:r.coords}}))}}
 function activeRouteGeojson(){const r=state.routes.find(x=>x.id===state.activeRoute);return r?{type:'FeatureCollection',features:[{type:'Feature',properties:{name:r.label},geometry:{type:'LineString',coordinates:r.coords}}]}:emptyFC()}
 function pointGeojson(){const fs=[];for(const type of ['start','end']){const p=getPlace(type);if(p)fs.push({type:'Feature',properties:{role:type,name:p.name||type},geometry:{type:'Point',coordinates:[p.lon,p.lat]}})}if(state.gps)fs.push({type:'Feature',properties:{role:'gps',name:'Device location'},geometry:{type:'Point',coordinates:[state.gps.lon,state.gps.lat]}});return {type:'FeatureCollection',features:fs}}
 function syncMapData(){
@@ -1625,14 +1625,14 @@ function openModal(kind){
     const items=[['experience','Computed sections (NULL validated scores)'],['streets','Manhattan NYC centerlines (all pages)'],['trees','2015 tree records (current view)'],['lpc','LPC polygons (current view)']];
     const rows=items.map(([id,label])=>`<li><strong>${esc(label)}</strong> — ${state.datasets[id]?.features?.length||0} features <button data-export="${id}" ${!state.datasets[id]?'disabled':''}>Download GeoJSON</button></li>`).join('');
     c.innerHTML=`<p>Kepler.gl is the <strong>GIS exploration workspace</strong>. Export the real official street records and viewport evidence currently loaded in this website, then drag the GeoJSON files into Kepler.gl. The navigation shell itself uses MapLibre; native Kepler embedding is a later React step.</p><ul class="export-list">${rows}<li><strong>Computed pedestrian routes</strong> — ${state.routes.length} available <button data-export="routes" ${!state.routes.length?'disabled':''}>Download GeoJSON</button></li></ul><p>Citywide street GeoJSON loads in batches. Trees and landmarks are viewport-only raw evidence, not complete Manhattan datasets or experience scores.</p><div class="modal-actions"><button id="goKeplerFromModal">Open Kepler.gl Studio ↗</button></div>`;
-    c.querySelectorAll('[data-export]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.export;const d=id==='routes'?currentRoutesGeojson():state.datasets[id];if(d)downloadGeoJSON(`Streetwise_${id}_Manhattan_or_viewport.geojson`,d)}));
+    c.querySelectorAll('[data-export]').forEach(b=>b.addEventListener('click',()=>{const id=b.dataset.export;const d=id==='routes'?currentRoutesGeojson():state.datasets[id];if(d)downloadGeoJSON(`Strollane_${id}_Manhattan_or_viewport.geojson`,d)}));
     $('goKeplerFromModal').addEventListener('click',()=>window.open(API.kepler,'_blank','noopener,noreferrer'));
   }else if(kind==='methodology'){
     c.innerHTML=renderMethodology();
   }else if(kind==='data'){
-    c.innerHTML=`<p>The project's 12 domains are a <strong>catalog of candidate urban data</strong>, not proof that every dataset is acquired, cleaned or represented as a GIS layer.</p><ol>${DOMAINS.map(t=>`<li>${esc(t)}</li>`).join('')}</ol><h3>Currently used</h3><p>NYC LION street centerlines, NYC Parks Forestry Tree Points and Parks Properties, LPC individual landmarks, NYC planimetric sidewalks, 311 noise complaints, NYPD pedestrian-injury crashes, MTA subway entrances and OpenStreetMap places score the 12 dimensions on every Manhattan street segment. Routes are computed by the STREETWISE engine on the OpenStreetMap pedestrian graph. Open-Meteo supplies weather context only.</p><h3>What still needs research</h3><p>Calibrating the relative ranks against observed walking experience, pedestrian-volume adjustment for crash exposure, sensitivity tests of buffer distances, and verified accessibility (curb ramps, elevators) data.</p>`;
+    c.innerHTML=`<p>The project's 12 domains are a <strong>catalog of candidate urban data</strong>, not proof that every dataset is acquired, cleaned or represented as a GIS layer.</p><ol>${DOMAINS.map(t=>`<li>${esc(t)}</li>`).join('')}</ol><h3>Currently used</h3><p>NYC LION street centerlines, NYC Parks Forestry Tree Points and Parks Properties, LPC individual landmarks, NYC planimetric sidewalks, 311 noise complaints, NYPD pedestrian-injury crashes, MTA subway entrances and OpenStreetMap places score the 12 dimensions on every Manhattan street segment. Routes are computed by the STROLLANE engine on the OpenStreetMap pedestrian graph. Open-Meteo supplies weather context only.</p><h3>What still needs research</h3><p>Calibrating the relative ranks against observed walking experience, pedestrian-volume adjustment for crash exposure, sensitivity tests of buffer distances, and verified accessibility (curb ramps, elevators) data.</p>`;
   }else{
-    c.innerHTML=`<p><strong>NYC Urban Experience Navigator</strong> is a research prototype. It is not a turn-by-turn navigation app and its scores are not a validated index.</p><h3>Real / verifiable components</h3><p>Walking routes come from the STREETWISE routing engine on the OpenStreetMap pedestrian graph; every route lists the OSM edges it uses. The 12 experience scores are computed from public NYC and OSM records on NYC LION street segments and transferred to OSM edges through a documented LION–OSM match table. Weather comes from Open-Meteo. GPS requires your permission and stays in your browser except when checking progress along a planned route on the local server.</p><h3>Prototype / incomplete components</h3><p>Scores are relative ranks within Manhattan, not calibrated measurements. Walking time uses a fixed 4.8 km/h pace. Step-free routing is blocked until accessibility data is connected. There is no voice guidance or live traffic.</p>`;
+    c.innerHTML=`<p><strong>NYC Urban Experience Navigator</strong> is a research prototype. It is not a turn-by-turn navigation app and its scores are not a validated index.</p><h3>Real / verifiable components</h3><p>Walking routes come from the STROLLANE routing engine on the OpenStreetMap pedestrian graph; every route lists the OSM edges it uses. The 12 experience scores are computed from public NYC and OSM records on NYC LION street segments and transferred to OSM edges through a documented LION–OSM match table. Weather comes from Open-Meteo. GPS requires your permission and stays in your browser except when checking progress along a planned route on the local server.</p><h3>Prototype / incomplete components</h3><p>Scores are relative ranks within Manhattan, not calibrated measurements. Walking time uses a fixed 4.8 km/h pace. Step-free routing is blocked until accessibility data is connected. There is no voice guidance or live traffic.</p>`;
   }
 }
 function renderMethodology(){
@@ -2065,7 +2065,7 @@ function poiPlace(r){
  return {id:r.id,name:r.name,address:r.addr||null,neighborhood:null,borough:'Manhattan',category:poiCategoryLabel(r),lat:r.lat,lon:r.lon,source:src,
   sourceUrl:r.id.startsWith('osm:')?`https://www.openstreetmap.org/${r.id.slice(4)}`:r.report||null,website:r.web||null,menuUrl:r.menu||null,hours:r.hours||null,
   wikidata:r.wd||null,cat:r.cat,drink:r.drink||null,cuisine:r.cuisine||null,cid:r.cid||r.id,providerIds:r.pids||[r.id],quality:r.q||null,accessM:r.snap??null,
-  operationalStatus:'Listed in source — not verified open today',landmark:r.src==='lpc'||Boolean(r.lpc),verification:'Listed by source (not verified by STREETWISE)',raw:r};
+  operationalStatus:'Listed in source — not verified open today',landmark:r.src==='lpc'||Boolean(r.lpc),verification:'Listed by source (not verified by STROLLANE)',raw:r};
 }
 function poiCategoryLabel(r){
  const s=r.sub||'';const v=s.split('=')[1]||'';
@@ -2875,7 +2875,7 @@ async function startNavigation(){
 function askStartChoice(r,here,away){
  const box=$('navChoice');box.classList.remove('hidden');
  box.innerHTML=`<div class="nav-choice-card"><strong>You are ${formatNavDistance(away,nav.units)} from the start of this route.</strong>
-  <p>Choose how to begin. STREETWISE will not pretend you are at the start.</p>
+  <p>Choose how to begin. STROLLANE will not pretend you are at the start.</p>
   <button type="button" class="primary-cta" data-c="to-start">Navigate to start</button><button type="button" class="mini-outline" data-c="replan">Replan from my location</button><button type="button" class="mini-outline" data-c="cancel">Cancel</button></div>`;
  box.onclick=async e=>{const c=e.target.dataset?.c;if(!c)return;box.classList.add('hidden');
   if(c==='to-start'){const s=r.geometry.coordinates[0];const leg=await requestRoute(here,{lon:s[0],lat:s[1]});if(leg){nav.queue=[r];beginNavigation(leg,{temporary:true});}}
@@ -4014,7 +4014,7 @@ function setupExperienceControls(){
  $('layerExperience').addEventListener('change',e=>{mapExperience.visible=e.target.checked;updateMapStyles();});
  $('layerCoverage').addEventListener('change',e=>{mapExperience.coverage=e.target.checked;updateMapStyles();});
  $('analyzeView').addEventListener('click',()=>analyzeArea(false));
- $('exportExperience').addEventListener('click',()=>downloadGeoJSON('Streetwise_experience_sections.geojson',fc(experienceFeatures())));
+ $('exportExperience').addEventListener('click',()=>downloadGeoJSON('Strollane_experience_sections.geojson',fc(experienceFeatures())));
  $('toggleLegend').addEventListener('click',()=>{const hidden=$('udLegend').classList.toggle('hidden');$('toggleLegend').setAttribute('aria-pressed',String(!hidden));});
  renderExperienceLegend();
 }
