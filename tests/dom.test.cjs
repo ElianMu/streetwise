@@ -7,6 +7,23 @@ const vm=require('vm'),context=dom.getInternalVMContext();
 for(const file of ['experience-core.js','api-config.js','weather.js','places.js','opening-hours.js','app.js','route-client.js','weather-ui.js','journey.js','journey-ui.js','voice.js','nav-engine.js','nav-ui.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','explore-analytics.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
 const run=s=>vm.runInContext(s,context);
 (async()=>{
+ // flatMapBounds: a pitch-independent query box, checked against a real map.getBounds() reading captured live
+ // in a browser (zoom 16.5, center [-73.9855,40.758], a 375x754 container, pitch 0 — where the two describe the
+ // same thing) — regression-pins the 2^(z+1) MapLibre tile-size convention this depends on (MapLibre's zoom is
+ // defined on a 512px base tile, one level ahead of the classic 156543.03392-constant's 256px assumption; this
+ // was off by exactly 2x per dimension, 4x area, before accounting for it).
+ w.__fmbMock={getZoom:()=>16.5,getCenter:()=>({lat:40.758,lng:-73.9855}),getContainer:()=>({clientWidth:375,clientHeight:754})};
+ const fmb=run('flatMapBounds(window.__fmbMock)');
+ const realDLng=0.0014224561372060407,realDLat=0.0021664396578131573,cLng=-73.9855,cLat=40.758;
+ assert(Math.abs((fmb.getEast()-fmb.getWest())/2-realDLng)/realDLng<0.01,`flatMapBounds lng half-extent ${(fmb.getEast()-fmb.getWest())/2} should match the real map.getBounds() reading (${realDLng}) within 1%`);
+ assert(Math.abs((fmb.getNorth()-fmb.getSouth())/2-realDLat)/realDLat<0.01,`flatMapBounds lat half-extent ${(fmb.getNorth()-fmb.getSouth())/2} should match the real map.getBounds() reading (${realDLat}) within 1%`);
+ assert(Math.abs((fmb.getWest()+fmb.getEast())/2-cLng)<1e-9&&Math.abs((fmb.getSouth()+fmb.getNorth())/2-cLat)<1e-9,'flatMapBounds is centered on the map center');
+ // Pitch independence: the whole point of this function. A second mock at a different zoom confirms the box
+ // scales with zoom (smaller at a higher zoom), not with anything pitch-related (pitch isn't even an input).
+ w.__fmbMock2={getZoom:()=>17.5,getCenter:()=>({lat:40.758,lng:-73.9855}),getContainer:()=>({clientWidth:375,clientHeight:754})};
+ const fmb2=run('flatMapBounds(window.__fmbMock2)');
+ assert((fmb2.getEast()-fmb2.getWest())<(fmb.getEast()-fmb.getWest()),'a higher zoom covers less ground, independent of any pitch input (there is none)');
+
  assert.equal(w.document.querySelectorAll('#experienceDimension option').length,12);
  assert.equal(run("localJourney('I want tiramisu at an Italian restaurant with good reviews').food[0].item"),'tiramisu');
  assert.equal(run("localJourney('I want tiramisu at an Italian restaurant with good reviews').food[0].cuisine"),'italian');
