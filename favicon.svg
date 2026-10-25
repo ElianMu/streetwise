@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Strollane">
-  <rect width="64" height="64" rx="14" fill="#091517"/>
-  <g transform="translate(6.65 5.67) scale(1.3)" fill="#d8f365">
-    <rect x="16.50" y="22.35" width="13.82" height="3.90" rx="1.95" transform="rotate(118.05 16.50 24.30)"/>
-    <rect x="16.50" y="22.25" width="13.09" height="4.10" rx="2.05" transform="rotate(46.55 16.50 24.30)"/>
-    <rect x="20.80" y="7.80" width="14.17" height="6.00" rx="3.00" transform="rotate(107.67 20.80 10.80)"/>
-    <rect x="21.80" y="9.55" width="8.28" height="2.90" rx="1.45" transform="rotate(25.02 21.80 11.00)"/>
-    <rect x="19.50" y="10.00" width="9.18" height="3.00" rx="1.50" transform="rotate(150.64 19.50 11.50)"/>
-    <circle cx="22" cy="6" r="4"/>
+  <rect width="64" height="64" rx="13" fill="#ffffff"/>
+  <g transform="translate(6.65 5.67) scale(1.3)" fill="none" stroke="#0a0a0a" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="16.50" y1="24.30" x2="10.00" y2="35.96"/>
+    <line x1="16.50" y1="24.30" x2="26.07" y2="33.08"/>
+    <line x1="20.80" y1="10.80" x2="16.50" y2="24.30"/>
+    <line x1="21.80" y1="11.00" x2="29.30" y2="14.50"/>
+    <line x1="19.50" y1="11.50" x2="11.50" y2="16.00"/>
+    <circle cx="22" cy="6" r="4" fill="#0a0a0a" stroke="none"/>
   </g>
 </svg>
