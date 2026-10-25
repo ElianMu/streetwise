@@ -93,7 +93,9 @@ in order, first/last may be `partial`], `distance_m`, `estimated_duration_min` (
 - `maneuvers`: `[{maneuver_id, route_id, leg_id, type: depart | continue | slight_left | turn_left | sharp_left | slight_right |
   turn_right | sharp_right | keep_left | keep_right | u_turn | enter_path | cross | arrive_stop | arrive | notice, street_name,
   coordinate, distance_along_route_m, bearing_before, bearing_after, turn_angle, node_id, instruction_text, instruction_zh,
-  confidence: high | medium | low, data_source, then?, stop_name?, required?, visit_min?}]`.
+  confidence: high | medium | low, data_source, then?, stop_name?, stop_id?, required?, visit_min?}]`. `stop_id` is the
+  itinerary stop's own id (stable across a reroute, unlike `stop_name`, which two different stops may share) — a
+  navigation client matches a reached stop by this id, not by name.
 - `route_signature`: sha1(network_version | ordered edge IDs), 16 hex.
 
 ### POST /api/navigation/progress

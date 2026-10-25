@@ -4,7 +4,11 @@
    Privacy: positions stay in the browser; the server only receives the current position when a re-route is needed.
    Session: the route snapshot and progress (no GPS track) are kept in sessionStorage for 6 h to survive a page refresh. */
 const nav={engine:null,watch:null,units:'metric',voice:true,voiceLang:'en',follow:true,headingUp:false,heading:null,headingSrc:null,
- last:null,queue:[],lastReroute:0,rerouteFails:0,wakeLock:null,lastCam:0,sessionKey:'sw.nav.v1'};
+ last:null,queue:[],lastReroute:0,rerouteFails:0,wakeLock:null,lastCam:0,sessionKey:'sw.nav.v1',
+ // Cumulative distance/time already spent on THIS journey, across reroutes and a resumed session (never reset by a
+ // reroute): rerouting must deduct this from the original budget, not silently hand the walker a fresh one.
+ totalWalkedM:0,totalVisitMin:0,journeyStart:null};
+const WALK_MPM=80; // metres/minute = routing/engine.py WALK_SPEED_M_PER_MIN (4.8 km/h); keeps budget math consistent with the server
 const NAV_ARROWS={depart:'M12 20V5m0 0-5 5m5-5 5 5',continue:'M12 20V5m0 0-5 5m5-5 5 5',turn_left:'M17 20v-7a4 4 0 0 0-4-4H5m0 0 4-4M5 9l4 4',
  turn_right:'M7 20v-7a4 4 0 0 1 4-4h8m0 0-4-4m4 4-4 4',slight_left:'M15 20v-6L8 7m0 0v5m0-5h5',slight_right:'M9 20v-6l7-7m0 0v5m0-5h-5',
  sharp_left:'M16 4v9a3 3 0 0 1-5 2L5 9m0 0v6m0-6h6',sharp_right:'M8 4v9a3 3 0 0 0 5 2l6-6m0 0v6m0-6h-6',keep_left:'M14 20v-5L9 9V4m0 0L6 7m3-3 3 3',
@@ -85,6 +89,10 @@ function beginNavigation(route,opts={}){
  stopWatch();
  const eng=new NavEngine(route,{progress_m:opts.progress_m||0});
  if(eng.blocked){toast('Route check failed: '+eng.blocked.join(' '));return;}
+ // A genuinely new journey starts its budget at zero; a reroute or a resumed session continues the same one
+ // (reroute() has already folded the just-finished leg into nav.totalWalkedM before calling this).
+ if(!opts.continuesJourney){nav.totalWalkedM=0;nav.totalVisitMin=0;nav.journeyStart=Date.now();}
+ else if(opts.restoreTotals){nav.totalWalkedM=opts.restoreTotals.walkedM||0;nav.totalVisitMin=opts.restoreTotals.visitMin||0;nav.journeyStart=opts.restoreTotals.journeyStart||Date.now();}
  nav.engine=eng;nav.temporary=Boolean(opts.temporary);nav.route=route;
  if(opts.restore){eng.next=opts.restore.next;opts.restore.arrived.forEach(a=>eng.arrivedStops.add(a));}
  eng.on(onNavEvent);eng.transition('READY');eng.transition('STARTING','start');
@@ -133,6 +141,8 @@ function onNavEvent(ev){
   const m=ev.maneuver,d=ev.level==='now'?null:ev.distance_m;
   speak(spokenInstruction(m,d,nav.voiceLang,nav.units));
  }else if(ev.type==='arrived_stop'){
+  // dwell time at a stop is not walking time: track it separately so a later reroute deducts the right thing from each budget
+  nav.totalVisitMin=(nav.totalVisitMin||0)+(Number(ev.maneuver.visit_min)||0);
   speak(nav.voiceLang==='zh'?ev.maneuver.instruction_zh:ev.maneuver.instruction_text);renderNav();
  }else if(ev.type==='arrived'){
   speak(nav.voiceLang==='zh'?ev.maneuver.instruction_zh:ev.maneuver.instruction_text);
@@ -141,6 +151,27 @@ function onNavEvent(ev){
  }else if(ev.type==='off_route'){
   speak(nav.voiceLang==='zh'?'您已偏离路线，正在重新规划。':'You are off route. Recalculating.');reroute();
  }else if(ev.type==='state')renderNav();
+}
+/** What is left of the original City Walk budget after the distance/time already spent (this leg + every earlier
+ * leg since the walk began). Never resets the total on reroute, and never silently relaxes it: if what is left
+ * would fall under the server's own minimum for a constraint, reroute must stop and say so instead of asking for
+ * a route that implicitly restarts the clock. */
+function remainingJourneyBudget(){
+ const eng=nav.engine,orig=journey.request.constraints||{};
+ const walkedM=(nav.totalWalkedM||0)+(eng?.progress||0),walkedMin=walkedM/WALK_MPM,visitMin=nav.totalVisitMin||0;
+ const LO={max_minutes:10,max_km:.1,max_outing_minutes:10};
+ const spent={max_minutes:walkedMin,max_km:walkedM/1000,max_outing_minutes:walkedMin+visitMin};
+ const constraints={};
+ for(const k of Object.keys(LO)){
+  if(orig[k]==null)continue;
+  const left=orig[k]-spent[k];
+  if(left<LO[k]){
+   const label=k==='max_km'?`${orig.max_km} km distance`:`${orig[k]} min`;
+   return {exhausted:true,reason:`This walk's ${label} budget is used up (not reset by rerouting). End navigation or plan a new walk with more time.`};
+  }
+  constraints[k]=Math.round(left*10)/10;
+ }
+ return {exhausted:false,constraints};
 }
 async function reroute(manual=false){
  const eng=nav.engine;if(!eng||!nav.last)return;
@@ -151,10 +182,14 @@ async function reroute(manual=false){
  const here={lat:nav.last.lat,lon:nav.last.lon};let newRoute=null,json=null;
  try{
   if(nav.route.objective==='itinerary'&&typeof journey!=='undefined'&&journey.plan&&journey.request){
-   // keep every required stop not reached yet, in the same order; the end stays the same
-   const reached=new Set([...eng.arrivedStops].map(id=>eng.maneuvers.find(m=>m.maneuver_id===id)?.stop_name));
-   const remaining=journey.plan.stops.filter(s=>s.role!=='end'&&!reached.has(s.name));
+   // keep every required stop not reached yet, in the same order (matched by stable id — two stops can share a
+   // name); the end stays the same
+   const reached=new Set([...eng.arrivedStops].map(id=>eng.maneuvers.find(m=>m.maneuver_id===id)?.stop_id).filter(id=>id!=null));
+   const remaining=journey.plan.stops.filter(s=>s.role!=='end'&&!reached.has(s.id));
+   const budget=remainingJourneyBudget();
+   if(budget.exhausted){eng.transition('OFF_ROUTE','budget exhausted');showNavCard({status:budget.reason,retry:false});return;}
    const req={...journey.request,departure:new Date().toISOString(),origin:{id:'gps',name:'My location',lat:here.lat,lon:here.lon},slots:[],pool:{max_stops:0,candidates:[]},
+    constraints:{...journey.request.constraints,...budget.constraints},
     stops:remaining.map((s,i)=>({id:s.id,name:s.name,lat:s.lat,lon:s.lon,required:s.required||true,order:i+1,visit_min:s.visit_min,hours:s.hours,required_item:s.required_item,required_items:s.required_items}))};
    const res=await streetwiseFetch('/api/itinerary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req),signal:AbortSignal.timeout(30000)});
    json=await res.json();if(!res.ok)throw new Error(json.error||`HTTP ${res.status}`);newRoute=json.routes[0];
@@ -165,7 +200,8 @@ async function reroute(manual=false){
   if(newRoute.validation&&!newRoute.validation.navigation_allowed)throw new Error('the new route failed its route check');
   nav.rerouteFails=0;
   if(json){journey.plan=json.itinerary;applyRouteResponse(json);}else{state.routes=[adaptRoute(newRoute)];state.activeRoute=newRoute.route_id;}
-  eng.transition('NAVIGATING','rerouted');stopWatch();nav.engine=null;beginNavigation(newRoute);
+  nav.totalWalkedM=(nav.totalWalkedM||0)+eng.progress; // the just-finished leg counts toward the journey's spent budget
+  eng.transition('NAVIGATING','rerouted');stopWatch();nav.engine=null;beginNavigation(newRoute,{continuesJourney:true});
   if(typeof syncMapData==='function')syncMapData();
  }catch(e){
   nav.rerouteFails++;eng.transition('OFF_ROUTE','reroute failed');
@@ -256,7 +292,11 @@ function saveNavSession(){
  const r=nav.route,slim={route_id:r.route_id,route_name:r.route_name,objective:r.objective,route_signature:r.route_signature,network_version:r.network_version,
   geometry:r.geometry,distance_m:r.distance_m,maneuvers:r.maneuvers,edges:(r.edges||[]).map(e=>({edge_id:e.edge_id,traversed_length_m:e.traversed_length_m})),
   ordered_edge_ids:r.ordered_edge_ids,validation:r.validation&&{status:r.validation.status,navigation_allowed:r.validation.navigation_allowed,blocking_issues:r.validation.blocking_issues}};
- try{sessionStorage.setItem(nav.sessionKey,JSON.stringify({v:1,route:slim,progress:eng.snapshot(),created:nav.created||(nav.created=Date.now()),expires:(nav.created||Date.now())+6*3600e3}));}catch(e){}
+ // The structured City Walk context (stops, preferences, hard constraints) must survive a refresh too, or a
+ // reroute right after resuming would silently fall back to a plain point-to-point route and lose it.
+ const journeyCtx=r.objective==='itinerary'&&typeof journey!=='undefined'&&journey.request?{plan:journey.plan,request:journey.request}:null;
+ const totals={walkedM:nav.totalWalkedM||0,visitMin:nav.totalVisitMin||0,journeyStart:nav.journeyStart||nav.created||Date.now()};
+ try{sessionStorage.setItem(nav.sessionKey,JSON.stringify({v:1,route:slim,progress:eng.snapshot(),journeyCtx,totals,created:nav.created||(nav.created=Date.now()),expires:(nav.created||Date.now())+6*3600e3}));}catch(e){}
 }
 function clearNavSession(){try{sessionStorage.removeItem(nav.sessionKey);}catch(e){}nav.created=null;}
 async function offerNavResume(){
@@ -268,7 +308,11 @@ async function offerNavResume(){
  box.innerHTML=`<div class="nav-choice-card"><strong>Resume navigation?</strong><p>${esc(s.route.route_name||'Your walk')} · ${formatNavDistance(s.route.distance_m-s.progress.progress_m,nav.units)} left. The same route is restored (signature ${esc(s.route.route_signature)}).</p>
   <button type="button" class="primary-cta" data-c="resume">Resume</button><button type="button" class="mini-outline" data-c="discard">Discard</button></div>`;
  box.onclick=e=>{const c=e.target.dataset?.c;if(!c)return;box.classList.add('hidden');
-  if(c==='resume'){nav.created=s.created;beginNavigation(s.route,{progress_m:s.progress.progress_m,restore:s.progress});}else clearNavSession();};
+  if(c==='resume'){
+   nav.created=s.created;
+   if(s.journeyCtx&&typeof journey!=='undefined'){journey.plan=s.journeyCtx.plan;journey.request=s.journeyCtx.request;}
+   beginNavigation(s.route,{progress_m:s.progress.progress_m,restore:s.progress,continuesJourney:true,restoreTotals:s.totals});
+  }else clearNavSession();};
 }
 function setupNavUI(){
  $('navStart').addEventListener('click',startNavigation);

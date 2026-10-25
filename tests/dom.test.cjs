@@ -264,6 +264,33 @@ const run=s=>vm.runInContext(s,context);
  assert(w.document.querySelector('#routeValidation').textContent.includes('Route check'));
  run("state.routes[0].raw.validation={...state.routes[0].raw.validation,navigation_allowed:false,status:'fail',blocking_issues:['gap between edges']};renderNavStart()");assert(ns.disabled&&ns.title.includes('gap between edges'),'failed route check blocks navigation');
  run("delete state.routes[0].raw.maneuvers;state.routes[0].raw.validation.navigation_allowed=true;renderNavStart()");assert(ns.disabled,'no maneuvers, no navigation');
+ // Reroute must preserve the City Walk: match a reached stop by stable id (two stops can share a name) and deduct
+ // what was already walked/visited from the original budget instead of resetting it.
+ {
+  Object.defineProperty(w.navigator,'geolocation',{value:{watchPosition:()=>1,clearWatch:()=>{},getCurrentPosition:()=>{}},configurable:true});
+  const rr=JSON.parse(JSON.stringify(navRoute));rr.objective='itinerary';
+  const stopM=rr.maneuvers.find(m=>m.type==='arrive_stop');
+  stopM.stop_id='place:cafe-A';
+  // a second, not-yet-reached stop shares the exact same name as the reached one
+  const secondStopM={...stopM,maneuver_id:'rt-extra-stop',stop_id:'place:cafe-B',distance_along_route_m:stopM.distance_along_route_m+50};
+  rr.maneuvers.push(secondStopM);rr.maneuvers.sort((a,b)=>a.distance_along_route_m-b.distance_along_route_m);
+  w.NAVR2=rr;
+  run("journey.plan={stops:[{id:'place:cafe-A',name:'Café',role:'stop',lat:40.758,lon:-73.978},{id:'place:cafe-B',name:'Café',role:'stop',lat:40.759,lon:-73.977},{id:'end',name:'End',role:'end',lat:40.76,lon:-73.98}]};"+
+      "journey.request={origin:{id:'o',name:'Origin',lat:40.753,lon:-73.983},end:{mode:'fixed',place:null},constraints:{max_minutes:30,max_km:2,max_outing_minutes:40},preferences:{weights:{}},theme:'t'};");
+  run("nav.engine=new NavEngine(NAVR2);nav.route=NAVR2;nav.last={lat:40.7536,lon:-73.9798};nav.lastReroute=0;nav.totalWalkedM=0;nav.totalVisitMin=0;"+
+      "nav.engine.state='OFF_ROUTE';nav.engine.progress=800;nav.engine.arrivedStops.add(NAVR2.maneuvers.find(m=>m.stop_id==='place:cafe-A').maneuver_id);");
+  const before=calls.length;await run('reroute(true)');
+  const body=calls.slice(before).find(c=>c.url.endsWith('/api/itinerary'))?.body;
+  assert(body,'reroute posted a new itinerary request');
+  assert.deepEqual(body.stops.map(s=>s.id),['place:cafe-B'],'the reached stop is dropped by id, not by its (shared) name; the end stays in req.end, not req.stops');
+  assert(body.constraints.max_minutes<30&&body.constraints.max_minutes>0,`budget must shrink by what was already walked, got ${body.constraints.max_minutes}`);
+  assert.equal(Math.round(body.constraints.max_minutes*10),Math.round((30-800/80)*10),'deduction matches progress at the 80 m/min walking pace');
+  // Budget already exhausted: reroute must say so and must NOT ask the server for a fresh, implicitly-reset budget.
+  run("nav.engine.state='OFF_ROUTE';nav.totalWalkedM=30*80;nav.engine.progress=0;nav.lastReroute=0;");
+  const before2=calls.length;await run('reroute(true)');
+  assert.equal(calls.length,before2,'exhausted budget must not call the itinerary endpoint');
+  assert(w.document.querySelector('#navStatus').textContent.includes('used up'),'the walker is told the budget ran out, not given a silently reset one');
+ }
  // Independent criteria stay separate, and a legacy response cannot silently ignore them.
  run("applyInterpretation({weights:{},crime:{mode:'set',direction:'high',weight:90},waterfront:{mode:'set',direction:'high',weight:90}},'local')");
  assert.equal(run('buildRouteRequest({lat:40.75,lon:-73.99},{lat:40.76,lon:-73.98}).preferences.crime.direction'),'high');

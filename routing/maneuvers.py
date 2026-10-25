@@ -254,7 +254,7 @@ def build(route, net, stops=None):
                        'instruction_text': (f'Arrive at {nm}' if nm else 'Arrive at your destination') if final else f'Arrive at stop: {nm}',
                        'instruction_zh': (f'到达{nm}' if nm else '到达目的地') if final else f'到达站点：{nm}',
                        'confidence': 'high', 'data_source': 'route end' if final else 'itinerary stop', 'stop_name': nm,
-                       'required': st.get('required', True), 'visit_min': st.get('visit_min')})
+                       'stop_id': st.get('id'), 'required': st.get('required', True), 'visit_min': st.get('visit_min')})
     merged.sort(key=lambda m: (m['distance_along_route_m'], m['type'].startswith('arrive')))
     for n, m in enumerate(merged):
         m['maneuver_id'] = f'{rid}-m{n}'

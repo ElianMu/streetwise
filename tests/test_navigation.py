@@ -145,12 +145,15 @@ class A_SyntheticManeuvers(unittest.TestCase):
 
     def test_multi_stop_arrivals(self):
         net = self.plus()
-        ms = mv.build(route_through(net, ['S', 'C', 'E']), net, [{'name': 'Café', 'distance_along_route_m': 100, 'required': True, 'final': False, 'visit_min': 15},
-                                                                 {'name': 'Museum', 'distance_along_route_m': 200, 'required': True, 'final': True}])
+        ms = mv.build(route_through(net, ['S', 'C', 'E']), net, [{'id': 'place:cafe-1', 'name': 'Café', 'distance_along_route_m': 100, 'required': True, 'final': False, 'visit_min': 15},
+                                                                 {'id': 'place:museum-1', 'name': 'Museum', 'distance_along_route_m': 200, 'required': True, 'final': True}])
         arr = [m for m in ms if m['type'].startswith('arrive')]
         self.assertEqual([m['type'] for m in arr], ['arrive_stop', 'arrive']); self.assertEqual(arr[0]['stop_name'], 'Café'); self.assertEqual(arr[0]['visit_min'], 15)
         ids = [m['maneuver_id'] for m in ms]
         self.assertEqual(len(ids), len(set(ids)))
+        # A stable stop id (not just the display name, which two different stops can share) must survive onto the
+        # arrival maneuver: the navigation client matches a reached stop on reroute by this id.
+        self.assertEqual(arr[0]['stop_id'], 'place:cafe-1'); self.assertEqual(arr[1]['stop_id'], 'place:museum-1')
 
 
 class B_RealRouteManeuvers(unittest.TestCase):

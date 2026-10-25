@@ -466,7 +466,7 @@ class Planner:
         along, stops_mv = 0.0, []
         for k, s in enumerate(out_stops):
             along += s['leg_in_m']
-            stops_mv.append({'name': s['name'], 'distance_along_route_m': along, 'required': s['required'], 'final': k == len(out_stops) - 1,
+            stops_mv.append({'id': s['id'], 'name': s['name'], 'distance_along_route_m': along, 'required': s['required'], 'final': k == len(out_stops) - 1,
                              'visit_min': s['visit_min'], 'leg_id': k})
         route['maneuvers'] = mv.build(route, net, stops_mv)
         from .engine import route_signature
