@@ -114,6 +114,10 @@ function setDataLayersForNav(on){
  for(const id of urbanMapLayerIds())state.map.setLayoutProperty(id,'visibility',on?'none':'visible');
  for(const id of ['journey-found','poi-points','route-alts'])if(state.map.getLayer(id))state.map.setLayoutProperty(id,'visibility',on?'none':'visible');
  if(!on&&typeof applyEnvTheme==='function')applyEnvTheme();
+ // urban-layers.js stops re-fetching entirely while nav-mode is on (see urbanViewMoved) — the walker may have
+ // moved well away from wherever the data was last fetched for, so the layers just made visible again need a
+ // real refresh, not whatever they last held before navigation started.
+ if(!on&&typeof refreshUrbanLayers==='function')refreshUrbanLayers();
 }
 function stopWatch(){if(nav.watch!=null)navigator.geolocation.clearWatch(nav.watch);nav.watch=null;clearInterval(nav.tick);}
 
