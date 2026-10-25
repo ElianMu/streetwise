@@ -146,6 +146,16 @@ class B_MenuVerification(unittest.TestCase):
         # A production page cache must not leak one case's transport into another.
         menu.DOCUMENTS.clear()
         menu.DOCUMENT_BYTES=0
+        # A confirmed match can persist to disk (routing/menu.py's _persist_confirmed), but that is off
+        # by default (server.py turns it on only for the actual running server) precisely so an import
+        # of routing.menu by a test never has this side effect. Turn it on here, AND point it at a
+        # throwaway file, so the real, committed data/menus/verified-items.json is never touched by tests.
+        tmp_path = str(ROOT / 'tests' / '.tmp-verified-items.json')
+        patch = mock.patch.multiple(menu, VERIFIED_ITEMS_PATH=tmp_path, PERSIST_CONFIRMED=True)
+        patch.start()
+        self.addCleanup(patch.stop)
+        self.addCleanup(lambda: pathlib.Path(tmp_path).unlink(missing_ok=True))
+        self.addCleanup(lambda: pathlib.Path(tmp_path + '.tmp').unlink(missing_ok=True))
 
     """Menu evidence grades with HTTP stubbed (no network); the official site comes from the place index only."""
     SITE = 'https://cafe.test/'
@@ -166,6 +176,35 @@ class B_MenuVerification(unittest.TestCase):
         self.assertEqual(r['menu_source_url'], 'https://cafe.test/menu'); self.assertEqual(r['matched_item'], 'Cappuccino')
         for k in ('place_id', 'requested_item', 'matched_item', 'evidence_type', 'menu_source_url', 'evidence', 'menu_date', 'checked_at', 'price'):
             self.assertIn(k, r)
+
+    def test_confirmed_match_survives_a_cold_cache(self):
+        # A confirmed match must be written to disk (not just kept in the in-memory CACHE), and a later
+        # lookup with an EMPTY in-memory cache (what a fresh process — or an evicted entry — looks like)
+        # must find it there without a second network fetch.
+        pages = {'https://cafe.test/menu': ('https://cafe.test/menu', 'text/html', '<title>Menu</title><li>Cappuccino $5.25</li>'),
+                 self.SITE: (self.SITE, 'text/html', '<title>Home</title>')}
+        r = self.run_with(pages, menu_url='https://cafe.test/menu')
+        self.assertEqual(r['status'], 'confirmed_menu_match')
+        on_disk = json.loads(pathlib.Path(menu.VERIFIED_ITEMS_PATH).read_text())
+        self.assertEqual(len(on_disk['records']), 1)
+        self.assertEqual(on_disk['records'][0]['place_id'], 'osm:node/1')
+        self.assertEqual(on_disk['records'][0]['requested_item'], 'cappuccino')
+        menu.CACHE.clear()  # simulate the in-memory cache a fresh process (or a TTL eviction) starts with
+        with mock.patch.object(menu, 'place_sites', return_value={'osm:node/1': (self.SITE, 'https://cafe.test/menu')}), \
+             mock.patch.object(menu, 'safe_get', side_effect=AssertionError('must not re-fetch: the disk corpus should answer this')):
+            cached = menu.cached_evidence('osm:node/1', 'cappuccino')
+        self.assertIsNotNone(cached)
+        self.assertEqual(cached['status'], 'confirmed_menu_match')
+
+    def test_persisted_record_is_deduped_by_place_and_item(self):
+        # Re-confirming the same (place, item) must replace its disk record, not accumulate duplicates.
+        pages = {'https://cafe.test/menu': ('https://cafe.test/menu', 'text/html', '<title>Menu</title><li>Cappuccino $5.25</li>'),
+                 self.SITE: (self.SITE, 'text/html', '<title>Home</title>')}
+        self.run_with(pages, menu_url='https://cafe.test/menu')
+        menu.CACHE.clear()
+        self.run_with(pages, menu_url='https://cafe.test/menu')
+        on_disk = json.loads(pathlib.Path(menu.VERIFIED_ITEMS_PATH).read_text())
+        self.assertEqual(len(on_disk['records']), 1)
 
     def test_probable_variant_needs_review(self):
         r = self.run_with({'https://cafe.test/menu': ('https://cafe.test/menu', 'text/html', '<title>Menu</title><li>Iced Cappuccinos $6</li>' + 'x' * 300),

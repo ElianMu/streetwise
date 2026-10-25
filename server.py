@@ -878,6 +878,7 @@ def refresh_street_data_if_stale():
 if __name__ == '__main__':
     print(f'STREETWISE · http://localhost:{PORT}')
     print('LLM status:', f'ON ({MODEL})' if KEY else 'OFF (limited local preview)')
+    menu_check.PERSIST_CONFIRMED = True  # only the actual running server persists confirmed menu evidence to disk
     refresh_street_data_if_stale()
     # Complete one-time disk extraction and default field construction before accepting
     # traffic. No user route request should pay cold decompression or race that work.

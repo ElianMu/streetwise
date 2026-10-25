@@ -342,12 +342,42 @@ def _cached(key):
         if entry:CACHE.move_to_end(key)
         return entry
 
+VERIFIED_ITEMS_PATH=os.path.join(ROOT,'data','menus','verified-items.json')
+VERIFIED_ITEMS_LIMIT=2000
+# Off by default: importing this module (every test, every script) must never write to the
+# repo's committed evidence corpus as a side effect. server.py turns this on only inside its
+# own `if __name__=='__main__':` startup — i.e. only the actual running server persists.
+PERSIST_CONFIRMED=False
+
+def _persist_confirmed(record):
+    """Grow the small on-disk evidence corpus (read back by cached_evidence()) with a freshly
+    confirmed menu match, so the NEXT process start (or a cold in-memory cache) does not have
+    to re-crawl a site this process already verified. Best-effort only: a read-only or
+    ephemeral filesystem (a plain container restart on most PaaS wipes local disk) must never
+    fail the request that triggered this — the in-memory CACHE already served that request."""
+    if not PERSIST_CONFIRMED:
+        return
+    try:
+        doc={'acquisition':'Actual first-party STROLLANE menu verifier HTTP requests; official-site evidence, not mocked','max_age_seconds':TTL,'records':[]}
+        if os.path.exists(VERIFIED_ITEMS_PATH):
+            with open(VERIFIED_ITEMS_PATH) as f:doc=json.load(f)
+        key=(_identity(record.get('place_id')),(record.get('item') or '').lower())
+        records=[r for r in doc.get('records',[]) if (_identity(r.get('place_id')),(r.get('item') or '').lower())!=key]
+        records.append(record)
+        doc['records']=records[-VERIFIED_ITEMS_LIMIT:]
+        tmp=VERIFIED_ITEMS_PATH+'.tmp'
+        with open(tmp,'w') as f:json.dump(doc,f,ensure_ascii=False,indent=2)
+        os.replace(tmp,VERIFIED_ITEMS_PATH)
+    except OSError:
+        pass
+
 def _remember(key,entry):
     with _CACHE_LOCK:
         CACHE[key]=entry;CACHE.move_to_end(key)
         for k,(checked,result) in list(CACHE.items()):
             if time.time()-checked >= (TTL if result.get('status')=='confirmed_menu_match' else 300):CACHE.pop(k,None)
         while len(CACHE)>CACHE_LIMIT:CACHE.popitem(last=False)
+    if entry[1].get('status')=='confirmed_menu_match':_persist_confirmed(entry[1])
 
 
 def cache_status():
@@ -362,7 +392,7 @@ def candidate_venues(item):
     with _CACHE_LOCK:
         for (pid,food),(checked,result) in list(CACHE.items()):
             if canonical_item(food)==item and result.get('status')=='confirmed_menu_match':ids.add(pid)
-    path=os.path.join(ROOT,'data','menus','verified-items.json')
+    path=VERIFIED_ITEMS_PATH
     if os.path.exists(path):
         with open(path) as f:rows=json.load(f).get('records',[])
         ids.update(r['place_id'] for r in rows if canonical_item(r.get('item'))==item and r.get('place_id'))
@@ -374,7 +404,7 @@ def cached_evidence(pid, item):
     if entry and entry[1].get('status')=='confirmed_menu_match' and 0 <= time.time()-entry[0] < TTL:
         return entry[1]
     # Small offline-checked evidence corpus avoids repeated page crawls. Expiry and official-host checks still apply.
-    path=os.path.join(ROOT,'data','menus','verified-items.json')
+    path=VERIFIED_ITEMS_PATH
     if os.path.exists(path):
         with open(path) as f:records=json.load(f).get('records',[])
         for r in records:
