@@ -350,27 +350,40 @@ async function itineraryRequest(){
  const sameAs=(p,q)=>q&&(kmBetween(p,q)<.05||(kmBetween(p,q)<.25&&(normName(p.name).includes(normName(q.name))||normName(q.name).includes(normName(p.name)))));
  const stops=journey.named.filter(n=>!journey.removed.has(n.place.id)&&!sameAs(n.place,start)&&!sameAs(n.place,end)).map(n=>({...pick(n.place),required:n.required,order:n.order,visit_min:n.visitMin,visit_estimated:n.visitEstimated}));
  const slots=[],poolCands=[];let order=stops.length;
- for(const i of journey.interests){
-  const cands=await discoverPlaces(INTEREST_SOURCES[i],{near:searchAnchor,limit:10,filter:i==='famous'?(r=>(r.sl||0)>=8):null});
+ // Interests, food items and service candidates are independent lookups (no iteration reads another's result),
+ // so they are fetched together instead of one-at-a-time: with live menu verification able to take several
+ // seconds per food item (server budget in routing/recommend.py), awaiting them in sequence was the main reason
+ // planning a walk with more than one requirement felt slow. Fetching runs in parallel; applying the results
+ // (throwing on a missing requirement, building slots, assigning `order`) stays in the original, deterministic
+ // array order exactly as before — only the waiting is concurrent, not the outcome.
+ if(journey.requirements.restaurant_budget_usd!=null&&journey.food.some(f=>!f.item))throw new Error('Restaurant budget cannot be verified without a specific item and directly sourced price.');
+ const [interestResults,foodResults]=await Promise.all([
+  Promise.all(journey.interests.map(i=>discoverPlaces(INTEREST_SOURCES[i],{near:searchAnchor,limit:10,filter:i==='famous'?(r=>(r.sl||0)>=8):null}))),
+  Promise.all(journey.food.map(f=>{
+   const cats=f.item==='cheesecake'?['bakeries','restaurants']:/^bagels?$/i.test(f.item||'')?['bakeries','cafes','restaurants']:[f.category];
+   const filt=f.cuisine?(r=>new RegExp(`(^|;)${f.cuisine}(;|$)`,'i').test(r.cuisine||'')):f.category==='cafes'&&f.item?(r=>r.cat==='cafes'):null;
+   const fixed=journey.replaced['food:'+f.category+':'+(f.item||f.cuisine||'')];
+   if(fixed)return Promise.resolve(null); // no lookup needed; applied from journey.replaced below
+   // a requested item: server-side recommendation (menu evidence first, closed / unreachable excluded); local discovery otherwise or as fallback
+   return (f.item||journey.requirements.ratings_required)?recommendFood(f,cats,start,end).then(rec=>rec||[]):discoverPlaces(cats,{item:f.item,cuisine:f.cuisine,filter:filt,limit:6,radiusKm:1.2,near:searchAnchor});
+  })),
+ ]);
+ journey.interests.forEach((i,idx)=>{
+  const cands=interestResults[idx];
   const fixed=journey.replaced['interest:'+i];
   if(fixed)stops.push({...pick(fixed),required:true,order:null,visit_min:VISIT_MIN[fixed.cat]??30});
   else if(!cands.length)throw new Error(`No verified discovery candidate for ${INTEREST_LABEL[i]}; this required interest is not fulfilled.`);
   else if(cands.length){const count=journey.counts[i]||1;if(cands.length<count)throw new Error(`Only ${cands.length} distinct candidates for ${count} required ${INTEREST_LABEL[i]}.`);
    for(let k=0;k<count;k++)slots.push({slot_id:'interest:'+i+(count>1?':'+(k+1):''),label:INTEREST_LABEL[i]+(count>1?' '+(k+1):''),required:true,visit_min:INTEREST_VISIT[i],candidates:cands.slice(0,Math.max(4,count)).map(slotCand)});}
   for(const c of cands.slice(4))poolCands.push({...slotCand(c),visit_min:INTEREST_VISIT[i],group:i});
- }
- for(const f of journey.food){
-  if(journey.requirements.restaurant_budget_usd!=null&&!f.item)throw new Error('Restaurant budget cannot be verified without a specific item and directly sourced price.');
-  const cats=f.item==='cheesecake'?['bakeries','restaurants']:/^bagels?$/i.test(f.item||'')?['bakeries','cafes','restaurants']:[f.category];
-  const filt=f.cuisine?(r=>new RegExp(`(^|;)${f.cuisine}(;|$)`,'i').test(r.cuisine||'')):f.category==='cafes'&&f.item?(r=>r.cat==='cafes'):null;
+ });
+ journey.food.forEach((f,idx)=>{
   const id='food:'+f.category+':'+(f.item||f.cuisine||'');const fixed=journey.replaced[id];
-  // a requested item: server-side recommendation (menu evidence first, closed / unreachable excluded); local discovery otherwise or as fallback
-  const rec=(f.item||journey.requirements.ratings_required)&&!fixed?await recommendFood(f,cats,start,end):null;
-  const cands=(f.item||journey.requirements.ratings_required)&&!fixed?(rec||[]):await discoverPlaces(cats,{item:f.item,cuisine:f.cuisine,filter:filt,limit:6,radiusKm:1.2,near:searchAnchor});
+  const cands=foodResults[idx]||[];
   if(fixed)stops.push({...pick(fixed),required:true,required_item:f.item||null,order:null,visit_min:VISIT_MIN[fixed.cat]??20});
   else if(!cands.length&&f.required!==false)throw new Error(`Cannot verify the required ${foodLabel(f)}. No matching place with sufficient evidence was found; the requirement has not been removed.`);
   else if(cands.length)slots.push({slot_id:id,label:foodLabel(f),required_item:f.item||null,required:f.required!==false,visit_min:VISIT_MIN[f.category]??20,candidates:cands.map(slotCand),order:ordered?++order:null});
- }
+ });
  // One source-verified venue may satisfy several dishes; explicit landmark counts still require distinct places.
  for(let i=0;i<slots.length;i++){
   const first=slots[i];if(!first.slot_id.startsWith('food:')||!first.required||!first.required_item)continue;
@@ -381,11 +394,13 @@ async function itineraryRequest(){
    first.candidates=shared;first.visit_min=Math.max(first.visit_min,next.visit_min);slots.splice(j--,1);
   }
  }
- for(const s of journey.services.filter(s=>s.addAsStop)){
-  const cands=await discoverPlaces([s.type],{limit:6,radiusKm:1.5});const id='service:'+s.type;
+ const neededServices=journey.services.filter(s=>s.addAsStop);
+ const serviceResults=await Promise.all(neededServices.map(s=>discoverPlaces([s.type],{limit:6,radiusKm:1.5})));
+ neededServices.forEach((s,idx)=>{
+  const cands=serviceResults[idx],id='service:'+s.type;
   if(!cands.length)throw new Error(`No candidate for required ${SERVICE_LABEL[s.type]}.`);
-  if(cands.length)slots.push({slot_id:id,label:SERVICE_LABEL[s.type],required:true,visit_min:VISIT_MIN[s.type]??10,candidates:cands.map(slotCand),order:s.type==='luggage'?0:null});
- }
+  slots.push({slot_id:id,label:SERVICE_LABEL[s.type],required:true,visit_min:VISIT_MIN[s.type]??10,candidates:cands.map(slotCand),order:s.type==='luggage'?0:null});
+ });
  const outing=state.outingMin;
  if(journey.requirements.ticket_budget_usd!=null||journey.requirements.total_budget_usd!=null)throw new Error('Ticket/total monetary budget cannot be verified: admission prices and all required costs are not connected. Walking time remains separate.');
  // extra discoveries scale with the time available (walking budget, or the total outing when set)
