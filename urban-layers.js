@@ -354,7 +354,16 @@ function urbanViewScope(){return urbanData.scope==='view'||!routeCoords();}
 function refreshUrbanLayers(){for(const id of urbanData.active.keys())loadUrbanDataset(id);}
 /** Route changed (planned, switched or cleared): keep the user's layers, re-filter them, update the summary. */
 function urbanLayersRouteChanged(){if(planner.crime&&urbanData.byId.has('reported_complaints')&&!urbanData.active.has('reported_complaints'))toggleUrbanDataset('reported_complaints',true,true);if(urbanData.scope==='route')refreshUrbanLayers();renderUrbanLegend();renderRouteUrbanData();closeUrbanInspector();}
-function urbanViewMoved(){if(!urbanViewScope()||!urbanData.active.size)return;clearTimeout(urbanData.viewTimer);urbanData.viewTimer=setTimeout(refreshUrbanLayers,400);}
+// Live navigation hides every udg-* layer (setDataLayersForNav in nav-ui.js) but never touched urbanData.active,
+// so this kept firing on every nav-mode camera move anyway — re-fetching all active datasets (often 50+) for a
+// viewport nobody could see, and a LARGER one than usual: a pitched nav camera's map.getBounds() covers ~3x the
+// ground area of the same flat view (measured: axis-aligned bbox area at pitch 50° vs pitch 0°, same center/
+// zoom), because a tilted camera sees out to the horizon. Confirmed with real request logging: a single pitched
+// jump fired 490+ tile requests across the active categories. That's the real cause behind "generating a route
+// is slow" and "navigation is laggy" — not route computation itself (measured at ~9ms server-side) or the 3D
+// buildings layer alone, but this fetch storm re-running on every GPS-driven camera move during nav, and again
+// whenever a freshly planned route's fitBounds pans/zooms onto new ground.
+function urbanViewMoved(){if(!urbanViewScope()||!urbanData.active.size||document.body.classList.contains('nav-mode'))return;clearTimeout(urbanData.viewTimer);urbanData.viewTimer=setTimeout(refreshUrbanLayers,400);}
 
 // --- legend: only what is visible now -------------------------------------------------------------------
 function renderUrbanLegend(){
