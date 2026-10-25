@@ -336,9 +336,29 @@ async function loadManhattanStreets(){
     toast(`Street data incomplete (${features.length.toLocaleString()} loaded). Retry button available; no substitute geometry was invented.`);
   }finally{state.loading.streets=false;syncMapData();updateLegend();updateSegmentDetails();}
 }
+/** A LngLatBounds-shaped box (getWest/getSouth/getEast/getNorth — the only methods every caller in this codebase
+ * uses) computed from center + zoom + container size, the same way map.getBounds() would at pitch 0 — standard
+ * Web Mercator ground resolution, not MapLibre's actual (pitch-dependent) frustum. Use this instead of
+ * map.getBounds() for anything that queries data by area (urban-layers.js's dataset fetches, this file's
+ * visibleEnvelope): a pitched camera's real bounds cover roughly 3x the ground area of the same flat view at
+ * the same center/zoom (measured directly, axis-aligned bbox ratio) because a tilted camera sees toward the
+ * horizon, and every active dataset re-querying that inflated area on every camera move was the actual cause of
+ * the stalls reported as "generating a route is slow" / "navigation is laggy" (see urbanViewMoved in
+ * urban-layers.js). The tilt is a camera/visual choice; what data is "in view" for fetching purposes should not
+ * balloon just because the view is tilted to look further down the street. */
+function flatMapBounds(m){
+  const z=m.getZoom(),c=m.getCenter(),el=m.getContainer(),w=el.clientWidth||1,h=el.clientHeight||1;
+  // MapLibre/Mapbox GL's own zoom levels are defined on a 512px base tile, one level "ahead" of the classic
+  // 256px XYZ/OSM raster convention the 156543.03392 constant assumes — hence 2^(z+1), not 2^z. Verified against
+  // the real map.getBounds() at pitch 0 (where this formula and the real frustum describe the same thing):
+  // without the +1 this was out by exactly 2x in each dimension (4x area), confirmed, not assumed.
+  const metersPerPixel=156543.03392*Math.cos(c.lat*Math.PI/180)/Math.pow(2,z+1);
+  const dLng=(w/2*metersPerPixel)/(111320*Math.cos(c.lat*Math.PI/180)),dLat=(h/2*metersPerPixel)/110540;
+  return {getWest:()=>c.lng-dLng,getEast:()=>c.lng+dLng,getSouth:()=>c.lat-dLat,getNorth:()=>c.lat+dLat};
+}
 function visibleEnvelope(){
   if(!state.mapReady)return null;
-  const b=state.map.getBounds();
+  const b=flatMapBounds(state.map);
   const raw=[Math.max(BBOX[0],b.getWest()),Math.max(BBOX[1],b.getSouth()),Math.min(BBOX[2],b.getEast()),Math.min(BBOX[3],b.getNorth())];
   return raw[0]<raw[2]&&raw[1]<raw[3]?raw:null;
 }

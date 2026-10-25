@@ -305,7 +305,7 @@ async function loadUrbanDataset(id){
  try{
   if(d.remote&&d.remote!=='crime'){
    if(!state.mapReady){done(emptyFC(),'Map not ready','waiting');return;}
-   const b=state.map.getBounds(),coords=!urbanViewScope()?routeCoords():null,box=coords?UrbanGeo.lineBox(coords.map(UrbanGeo.xy),urbanData.corridor):null;
+   const b=flatMapBounds(state.map),coords=!urbanViewScope()?routeCoords():null,box=coords?UrbanGeo.lineBox(coords.map(UrbanGeo.xy),urbanData.corridor):null;
    const ll=box?[box[0]/urbanData.catalog.projection.mx,box[1]/urbanData.catalog.projection.my,box[2]/urbanData.catalog.projection.mx,box[3]/urbanData.catalog.projection.my]:[b.getWest(),b.getSouth(),b.getEast(),b.getNorth()];
    ll[0]=Math.max(-74.3,ll[0]);ll[1]=Math.max(40.45,ll[1]);ll[2]=Math.min(-73.68,ll[2]);ll[3]=Math.min(40.95,ll[3]);
    if(ll[0]>=ll[2]||ll[1]>=ll[3]){done(emptyFC(),'Outside NYC snapshot','empty');return;}
@@ -317,7 +317,7 @@ async function loadUrbanDataset(id){
   }
   if(d.remote==='crime'){
    if(!state.mapReady){done(emptyFC(),'Map not ready','waiting');return;}
-   const meta=await crimeMetadata(),p={...(planner.routeResponse?.independent_preferences_used?.crime||planner.crime||{}),...(urbanData.crimeFilter||{})},b=state.map.getBounds(),coords=!urbanViewScope()?routeCoords():null;
+   const meta=await crimeMetadata(),p={...(planner.routeResponse?.independent_preferences_used?.crime||planner.crime||{}),...(urbanData.crimeFilter||{})},b=flatMapBounds(state.map),coords=!urbanViewScope()?routeCoords():null;
    const box=coords?UrbanGeo.lineBox(coords.map(UrbanGeo.xy),urbanData.corridor):null;
    const ll=box?[box[0]/urbanData.catalog.projection.mx,box[1]/urbanData.catalog.projection.my,box[2]/urbanData.catalog.projection.mx,box[3]/urbanData.catalog.projection.my]:[b.getWest(),b.getSouth(),b.getEast(),b.getNorth()];
    ll[0]=Math.max(-74.3,ll[0]);ll[1]=Math.max(40.45,ll[1]);ll[2]=Math.min(-73.68,ll[2]);ll[3]=Math.min(40.95,ll[3]);
@@ -338,7 +338,7 @@ async function loadUrbanDataset(id){
     hits.length?`Loaded · ${hits.length.toLocaleString()} within ${urbanData.corridor} m`:`No nearby features within ${urbanData.corridor} m`,hits.length?'loaded':'empty');
   }else{
    if(!state.mapReady){done(emptyFC(),'Map not ready','waiting');return}
-   const b=state.map.getBounds(),box=UrbanGeo.lonLatBox(b.getWest(),b.getSouth(),b.getEast(),b.getNorth()),n=tileRecordCount(d.tileset,box);
+   const b=flatMapBounds(state.map),box=UrbanGeo.lonLatBox(b.getWest(),b.getSouth(),b.getEast(),b.getNorth()),n=tileRecordCount(d.tileset,box);
    const tiles=tilesFor(d.tileset,box).length;
    // Sparse datasets load at any zoom (parks, landmarks, stations); dense ones wait for a closer view.
    if(n>1100&&(state.map.getZoom()<d.min_zoom_view&&n>5000||tiles>40)){done(emptyFC(),`Zoom in to load (${n.toLocaleString()} records in view)`,'waiting');return}
@@ -354,15 +354,15 @@ function urbanViewScope(){return urbanData.scope==='view'||!routeCoords();}
 function refreshUrbanLayers(){for(const id of urbanData.active.keys())loadUrbanDataset(id);}
 /** Route changed (planned, switched or cleared): keep the user's layers, re-filter them, update the summary. */
 function urbanLayersRouteChanged(){if(planner.crime&&urbanData.byId.has('reported_complaints')&&!urbanData.active.has('reported_complaints'))toggleUrbanDataset('reported_complaints',true,true);if(urbanData.scope==='route')refreshUrbanLayers();renderUrbanLegend();renderRouteUrbanData();closeUrbanInspector();}
-// Live navigation hides every udg-* layer (setDataLayersForNav in nav-ui.js) but never touched urbanData.active,
-// so this kept firing on every nav-mode camera move anyway — re-fetching all active datasets (often 50+) for a
-// viewport nobody could see, and a LARGER one than usual: a pitched nav camera's map.getBounds() covers ~3x the
-// ground area of the same flat view (measured: axis-aligned bbox area at pitch 50° vs pitch 0°, same center/
-// zoom), because a tilted camera sees out to the horizon. Confirmed with real request logging: a single pitched
-// jump fired 490+ tile requests across the active categories. That's the real cause behind "generating a route
-// is slow" and "navigation is laggy" — not route computation itself (measured at ~9ms server-side) or the 3D
-// buildings layer alone, but this fetch storm re-running on every GPS-driven camera move during nav, and again
-// whenever a freshly planned route's fitBounds pans/zooms onto new ground.
+// Two fixes for the same measured bug (a single pitched camera move fired 490+ tile requests; not route
+// computation itself, which is ~9ms server-side, and not the 3D buildings layer's own render cost):
+// 1. loadUrbanDataset's bbox now comes from flatMapBounds(), not map.getBounds() — a pitched camera's real bounds
+//    cover ~3x the ground area of the same flat view at the same center/zoom (measured directly) because a
+//    tilted camera sees toward the horizon, and every active dataset re-querying that inflated area on every
+//    camera move was most of the storm.
+// 2. Live navigation hides every udg-* layer (setDataLayersForNav in nav-ui.js) but never touched
+//    urbanData.active, so this kept firing on every nav-mode camera move anyway, for a viewport nobody could
+//    see. Skipped outright below — there is nothing to refresh for a hidden layer.
 function urbanViewMoved(){if(!urbanViewScope()||!urbanData.active.size||document.body.classList.contains('nav-mode'))return;clearTimeout(urbanData.viewTimer);urbanData.viewTimer=setTimeout(refreshUrbanLayers,400);}
 
 // --- legend: only what is visible now -------------------------------------------------------------------
