@@ -13,6 +13,11 @@ const nav={engine:null,watch:null,units:'metric',voice:true,voiceLang:'en',follo
  // Cumulative distance/time already spent on THIS journey, across reroutes and a resumed session (never reset by a
  // reroute): rerouting must deduct this from the original budget, not silently hand the walker a fresh one.
  totalWalkedM:0,totalVisitMin:0,journeyStart:null};
+const navLayerPriorityBackup=new Map(); // dataset id -> opacity before nav dimmed it, restored on exit
+// A real, honest signal only — hardwareConcurrency/deviceMemory are coarse and not supported everywhere, so this
+// under-detects rather than over-claims; it never blocks 3D buildings, only drops them to a flat footprint.
+const navLowPowerDevice=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory&&navigator.deviceMemory<=4);
+let navBuildingHeightBackup=null;
 const WALK_MPM=80; // metres/minute = routing/engine.py WALK_SPEED_M_PER_MIN (4.8 km/h); keeps budget math consistent with the server
 const NAV_ARROWS={depart:'M12 20V5m0 0-5 5m5-5 5 5',continue:'M12 20V5m0 0-5 5m5-5 5 5',turn_left:'M17 20v-7a4 4 0 0 0-4-4H5m0 0 4-4M5 9l4 4',
  turn_right:'M7 20v-7a4 4 0 0 1 4-4h8m0 0-4-4m4 4-4 4',slight_left:'M15 20v-6L8 7m0 0v5m0-5h5',slight_right:'M9 20v-6l7-7m0 0v5m0-5h-5',
@@ -108,16 +113,58 @@ function beginNavigation(route,opts={}){
  requestWakeLock();saveNavSession();renderNavStart();
  speak(route.maneuvers?.[0]?(nav.voiceLang==='zh'?route.maneuvers[0].instruction_zh:route.maneuvers[0].instruction_text):'');
 }
-/** During navigation the map shows the walk, not the data layers (restored on exit). */
+/** Buildings and city data layers stay visible during navigation (Apple Maps-style) — only the pre-navigation
+ * route-selection preview layers (candidate routes, the "found" marker) are irrelevant once a route is locked
+ * in. nav-ui.js's own layers (nav-walked/nav-dot/nav-cone/nav-arrow, added in setupNavMap after the urban
+ * layers exist) are always added last in the style with no beforeId, so MapLibre draws them on top of
+ * everything else, including 3D buildings — the route and GPS marker are never occluded, with no depth-order
+ * trick needed. Buildings are dimmed (not hidden) in nav mode purely so they read as context, not foreground. */
 function setDataLayersForNav(on){
- if(typeof urbanMapLayerIds!=='function'||!state.mapLayersReady)return;
- for(const id of urbanMapLayerIds())state.map.setLayoutProperty(id,'visibility',on?'none':'visible');
- for(const id of ['journey-found','poi-points','route-alts'])if(state.map.getLayer(id))state.map.setLayoutProperty(id,'visibility',on?'none':'visible');
- if(!on&&typeof applyEnvTheme==='function')applyEnvTheme();
- // urban-layers.js stops re-fetching entirely while nav-mode is on (see urbanViewMoved) — the walker may have
- // moved well away from wherever the data was last fetched for, so the layers just made visible again need a
- // real refresh, not whatever they last held before navigation started.
- if(!on&&typeof refreshUrbanLayers==='function')refreshUrbanLayers();
+ if(!state.mapLayersReady)return;
+ for(const id of ['journey-found','route-alts'])if(state.map.getLayer(id))state.map.setLayoutProperty(id,'visibility',on?'none':'visible');
+ if(state.map.getLayer('udg-buildings-fill')&&typeof UrbanStyle!=='undefined'){
+  const base=UrbanStyle.T.building.extrusionOpacity;
+  state.map.setPaintProperty('udg-buildings-fill','fill-extrusion-opacity',on?base*0.6:base);
+  if(on&&navLowPowerDevice){
+   navBuildingHeightBackup=state.map.getPaintProperty('udg-buildings-fill','fill-extrusion-height');
+   state.map.setPaintProperty('udg-buildings-fill','fill-extrusion-height',0); // flat 2D footprint, not hidden
+  }else if(!on&&navBuildingHeightBackup!=null){
+   state.map.setPaintProperty('udg-buildings-fill','fill-extrusion-height',navBuildingHeightBackup);navBuildingHeightBackup=null;
+  }
+ }
+ if(on){
+  applyNavLayerPriority();
+  // urban-layers.js stops re-fetching entirely once nav-mode is on (see urbanViewMoved) — camera moves while
+  // walking never trigger a refetch (that fetch storm is what PR #34/#35 fixed). This is the one real refresh
+  // for the route just started, in case the pre-nav view wasn't already scoped to it.
+  if(typeof urbanData!=='undefined'&&urbanData.active.size&&typeof refreshUrbanLayers==='function')refreshUrbanLayers();
+ }else{
+  restoreNavLayerPriority();
+  if(typeof applyEnvTheme==='function')applyEnvTheme();
+  if(typeof refreshUrbanLayers==='function')refreshUrbanLayers();
+ }
+}
+/** Dim (not hide) the city-data layers the walker hasn't expressed interest in, so the ones that match their
+ * selected City Walk dimensions (e.g. Architecture -> landmarks, Nature -> trees/parks, Food & Retail ->
+ * nearby food) stand out without inventing a second data-relevance system — it reads the same `scoring`
+ * metadata already shown in each dataset's info panel, and only touches opacity on layers already toggled on. */
+function applyNavLayerPriority(){
+ if(typeof urbanData==='undefined'||typeof planner==='undefined'||typeof ExperienceCore==='undefined')return;
+ const expressed=ExperienceCore.names.filter(n=>planner.origins?.[n]&&planner.origins[n]!=='default'&&(planner.weights?.[n]||0)>55);
+ const keys=new Set(expressed.map(n=>ExperienceCore.keys[ExperienceCore.names.indexOf(n)]));
+ navLayerPriorityBackup.clear();
+ if(!keys.size)return; // nothing expressed: leave every active layer at its own chosen opacity
+ for(const [id,a] of urbanData.active){
+  const d=urbanData.byId.get(id);if(!d)continue;
+  navLayerPriorityBackup.set(id,a.opacity);
+  const relevant=!d.used_in_scoring||(d.scoring||[]).some(s=>keys.has(s.dimension));
+  if(typeof setUrbanOpacity==='function')setUrbanOpacity(id,relevant?a.opacity:Math.min(a.opacity,0.3));
+ }
+}
+function restoreNavLayerPriority(){
+ if(typeof urbanData==='undefined'||typeof setUrbanOpacity!=='function')return;
+ for(const [id,op] of navLayerPriorityBackup)if(urbanData.active.has(id))setUrbanOpacity(id,op);
+ navLayerPriorityBackup.clear();
 }
 function stopWatch(){if(nav.watch!=null)navigator.geolocation.clearWatch(nav.watch);nav.watch=null;clearInterval(nav.tick);}
 
@@ -208,7 +255,7 @@ async function reroute(manual=false){
   if(!newRoute)throw new Error('no route returned');
   if(newRoute.validation&&!newRoute.validation.navigation_allowed)throw new Error('the new route failed its route check');
   nav.rerouteFails=0;
-  if(json){journey.plan=json.itinerary;applyRouteResponse(json);}else{state.routes=[adaptRoute(newRoute)];state.activeRoute=newRoute.route_id;}
+  if(json){journey.plan=json.itinerary;applyRouteResponse(json);}else{state.routes=[adaptRoute(newRoute)];state.activeRoute=newRoute.route_id;if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();}
   nav.totalWalkedM=(nav.totalWalkedM||0)+eng.progress; // the just-finished leg counts toward the journey's spent budget
   eng.transition('NAVIGATING','rerouted');stopWatch();nav.engine=null;beginNavigation(newRoute,{continuesJourney:true});
   if(typeof syncMapData==='function')syncMapData();
@@ -274,11 +321,12 @@ function updateCamera(force=false){
  const p=out.matched_coordinate&&out.confidence==='high'?out.matched_coordinate:out.raw;
  const small=window.innerWidth<=740;
  const h=m.getContainer().clientHeight||(small?520:700);
- // Perspective, walker's-eye camera (Section 4): pitched, with the walker low on screen so the road ahead — not
- // the ground behind — fills most of the view. A big top pad and a small bottom one does that: easeTo centers
- // `center` within the padded box, so padding the top heavily pushes that box (and the walker inside it) down.
+ // Perspective, walker's-eye camera: pitched, with the walker low on screen so the road ahead — not the ground
+ // behind — fills most of the view. easeTo centers `center` within the padded box, so a bigger top pad than
+ // bottom pad pushes that box (and the walker inside it) down. Tuned so the GPS dot sits ~35% up from the
+ // bottom edge (desktop: top .40h/bottom .10h -> center at .65h from top = .35h from bottom).
  m.easeTo({center:p,zoom:Math.max(m.getZoom(),17.3),bearing:navBearingFor(nav.viewMode),pitch:55,
-  padding:{top:Math.round(h*(small?.58:.54)),bottom:Math.round(h*(small?.1:.08)),left:24,right:24},
+  padding:{top:Math.round(h*(small?.44:.40)),bottom:Math.round(h*(small?.12:.10)),left:24,right:24},
   duration:force?500:900,essential:true});
 }
 
