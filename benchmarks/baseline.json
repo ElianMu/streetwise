@@ -1,0 +1,69 @@
+{
+  "generated_at": "2026-10-26T00:57:31Z",
+  "requests": [
+    {
+      "request": "find a burger place near me",
+      "lat": 40.758,
+      "lon": -73.9855,
+      "item": "burger"
+    },
+    {
+      "request": "I want a cheap slice of pizza nearby",
+      "lat": 40.7484,
+      "lon": -73.9857,
+      "item": "pizza"
+    },
+    {
+      "request": "find a coffee shop with vegan options near Union Square",
+      "lat": 40.7359,
+      "lon": -73.9911,
+      "item": "vegan"
+    },
+    {
+      "request": "a quiet cafe within a 10 minute walk",
+      "lat": 40.7614,
+      "lon": -73.9776,
+      "item": null
+    },
+    {
+      "request": "bakery with gluten free bread nearby",
+      "lat": 40.7295,
+      "lon": -73.9965,
+      "item": "gluten free"
+    }
+  ],
+  "deterministic_pipeline": {
+    "n": 5,
+    "p50_ms": 3723.321041004965,
+    "p95_ms": 6845.534332998795,
+    "mean_ms": 3308.8139329949627,
+    "peak_rss_mb_so_far": 504.5
+  },
+  "agent_runtime": {
+    "blocked": true,
+    "reason": "OPENAI_API_KEY not set in this environment; no agent-path latency/cost numbers were fabricated. Export a real key and re-run."
+  },
+  "admission_concurrency_sweep": {
+    "1": {
+      "attempted": 1,
+      "accepted_immediately": 1,
+      "rejected": 0
+    },
+    "5": {
+      "attempted": 5,
+      "accepted_immediately": 2,
+      "rejected": 3
+    },
+    "10": {
+      "attempted": 10,
+      "accepted_immediately": 2,
+      "rejected": 8
+    },
+    "20": {
+      "attempted": 20,
+      "accepted_immediately": 2,
+      "rejected": 18
+    }
+  },
+  "note": "LLM-enabled-vs-fallback comparison is the deterministic_pipeline (always real) vs agent_runtime (real only when OPENAI_API_KEY is set; otherwise honestly marked blocked, not estimated)."
+}

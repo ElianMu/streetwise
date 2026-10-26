@@ -47,6 +47,7 @@ def openai_key_problem(key):
 
 
 KEY = normalize_openai_api_key(os.environ.get('OPENAI_API_KEY', ''))
+AGENT_ENABLED = os.environ.get('AGENT_ENABLED') == '1'
 STREETS_DATA = ROOT / 'data' / 'manhattan-streets.json'
 REFRESH_DAYS = float(os.environ.get('STREETWISE_REFRESH_DAYS', '30'))
 GZIP_TYPES = ('.json', '.js', '.css', '.html')
@@ -177,7 +178,7 @@ def validate_journey(j):
     return out
 
 # Per-client rate limits (requests per rolling minute). Render puts the client address in X-Forwarded-For.
-RATE_LIMITS = {'interpret': 12, 'menu': 10, 'itinerary': 30, 'routes': 60, 'recommend': 6, 'places': 60, 'ratings': 20}
+RATE_LIMITS = {'interpret': 12, 'menu': 10, 'itinerary': 30, 'routes': 60, 'recommend': 6, 'places': 60, 'ratings': 20, 'agent': 3}
 _rate, _rate_lock = {}, threading.Lock()
 
 
@@ -573,12 +574,12 @@ class Handler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         bucket = {'/api/menu/verify': 'menu', '/api/itinerary': 'itinerary', '/api/routes': 'routes', '/api/detours': 'itinerary',
-                  '/api/interpret': 'interpret', '/api/recommend/food': 'recommend'}.get(self.path)
+                  '/api/interpret': 'interpret', '/api/recommend/food': 'recommend', '/api/agent/food-stop': 'agent'}.get(self.path)
         if bucket and not rate_ok(self, bucket):
             self.send_json(429, {'error': f'Too many requests; limit {RATE_LIMITS[bucket]} per minute.'})
             return
-        heavy = self.path in ('/api/routes','/api/itinerary','/api/detours','/api/recommend/food','/api/menu/verify','/api/pois')
-        if heavy and not HEAVY_REQUESTS.acquire(timeout=12 if self.path=='/api/routes' else 25):
+        heavy = self.path in ('/api/routes','/api/itinerary','/api/detours','/api/recommend/food','/api/menu/verify','/api/pois','/api/agent/food-stop')
+        if heavy and not HEAVY_REQUESTS.acquire(timeout=12 if self.path=='/api/routes' else 45 if self.path=='/api/agent/food-stop' else 25):
             # The body has not been consumed. Close this connection rather than
             # allowing unread bytes to become another request on a keep-alive socket.
             self.close_connection = True
@@ -611,6 +612,30 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(200, recommend_food(get_planner(), read_json(self, 8000)))
             except (ValueError, TypeError, json.JSONDecodeError) as e:
                 self.send_json(422 if isinstance(e, RoutingError) else 400, {'error': str(e)})
+            except RuntimeError as e:
+                self.send_json(503, {'error': str(e)})
+            return
+        if self.path == '/api/agent/food-stop':
+            try:
+                doc = read_json(self, 4000)
+                request_text = str(doc.get('request') or '').strip()[:500]
+                if not request_text:
+                    self.send_json(400, {'error': 'request (free text) is required'}); return
+                key_problem = openai_key_problem(KEY)
+                if not AGENT_ENABLED or key_problem:
+                    # Feature flag off, or no usable LLM key: fall back to the existing deterministic pipeline.
+                    fallback_doc = {'near': {'lat': doc.get('lat'), 'lon': doc.get('lon')}, 'item': doc.get('item'),
+                                     'cuisine': doc.get('cuisine')}
+                    result = recommend_food(get_planner(), fallback_doc)
+                    self.send_json(200, {'served_by': 'deterministic_fallback',
+                                          'reason': 'AGENT_ENABLED is off' if not AGENT_ENABLED else f'llm_unavailable: {key_problem}',
+                                          'result': result})
+                    return
+                from agent.runtime import run_food_stop_agent
+                agent_result = run_food_stop_agent(request_text)
+                self.send_json(200, {'served_by': 'agent', **agent_result})
+            except (ValueError, TypeError, json.JSONDecodeError) as e:
+                self.send_json(400, {'error': str(e)})
             except RuntimeError as e:
                 self.send_json(503, {'error': str(e)})
             return

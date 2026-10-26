@@ -1,0 +1,187 @@
+{
+  "tasks": 12,
+  "total_checks": 16,
+  "passed_checks": 16,
+  "pass_rate": 1.0,
+  "served_by_breakdown": {
+    "deterministic_fallback": 12
+  },
+  "results": [
+    {
+      "id": "t01",
+      "request": "find a burger place near me",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        }
+      ]
+    },
+    {
+      "id": "t02",
+      "request": "I want a cheap slice of pizza nearby",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        }
+      ]
+    },
+    {
+      "id": "t03",
+      "request": "find a coffee shop with vegan options near Union Square",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        },
+        {
+          "check": "item_status_is_known",
+          "passed": true,
+          "detail": "statuses seen: ['confirmed_menu_match', 'not_checked', 'not_checked', 'not_checked', 'not_checked']"
+        }
+      ]
+    },
+    {
+      "id": "t04",
+      "request": "a quiet cafe within a 10 minute walk",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        }
+      ]
+    },
+    {
+      "id": "t05",
+      "request": "bakery with gluten free bread nearby",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        },
+        {
+          "check": "item_status_is_known",
+          "passed": true,
+          "detail": "statuses seen: ['not_checked', 'not_checked', 'not_checked', 'unverified', 'not_checked']"
+        }
+      ]
+    },
+    {
+      "id": "t06",
+      "request": "sushi place close to Bryant Park",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        }
+      ]
+    },
+    {
+      "id": "t07",
+      "request": "ramen spot near Chelsea",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        },
+        {
+          "check": "item_status_is_known",
+          "passed": true,
+          "detail": "statuses seen: ['not_checked', 'not_checked', 'not_checked', 'not_checked', 'unverified']"
+        }
+      ]
+    },
+    {
+      "id": "t08",
+      "request": "bar with a good happy hour near Hell's Kitchen",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        }
+      ]
+    },
+    {
+      "id": "t09",
+      "request": "bagel shop near the Upper West Side",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        },
+        {
+          "check": "item_status_is_known",
+          "passed": true,
+          "detail": "statuses seen: ['unverified', 'unverified', 'not_checked', 'not_checked', 'not_checked']"
+        }
+      ]
+    },
+    {
+      "id": "t10",
+      "request": "taco place downtown",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        }
+      ]
+    },
+    {
+      "id": "t11",
+      "request": "a place outside New York City",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "no_candidates_outside_coverage",
+          "passed": true,
+          "detail": "0 candidates (expected 0 outside NYC coverage)"
+        }
+      ]
+    },
+    {
+      "id": "t12",
+      "request": "find me food",
+      "served_by": "deterministic_fallback",
+      "http_code": 200,
+      "checks": [
+        {
+          "check": "has_candidates",
+          "passed": true,
+          "detail": "12 candidates"
+        }
+      ]
+    }
+  ]
+}
