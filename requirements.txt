@@ -1,0 +1,13 @@
+# STROLLANE · NYC — Python dependencies.
+#
+# The server itself (server.py, routing/*) is intentionally stdlib-only (urllib, sqlite3, http.server) —
+# that design choice is unchanged. These packages are needed ONLY for the optional Agent Runtime
+# (agent/*, feature-flagged off by default via AGENT_ENABLED). If AGENT_ENABLED is not set, the server
+# runs exactly as before and these imports are never reached.
+#
+# Pin versions actually verified against this codebase (see AGENT_RUNTIME.md).
+openai==3.3.0
+langgraph==1.2.12
+langgraph-checkpoint-sqlite==3.1.2
+langchain-core==1.6.6
+langchain-openai==1.6.7

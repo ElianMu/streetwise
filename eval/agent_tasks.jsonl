@@ -1,0 +1,12 @@
+{"id": "t01", "request": "find a burger place near me", "lat": 40.758, "lon": -73.9855, "item": "burger", "checks": ["has_candidates"]}
+{"id": "t02", "request": "I want a cheap slice of pizza nearby", "lat": 40.7484, "lon": -73.9857, "item": "pizza", "checks": ["has_candidates"]}
+{"id": "t03", "request": "find a coffee shop with vegan options near Union Square", "lat": 40.7359, "lon": -73.9911, "item": "vegan", "checks": ["has_candidates", "item_status_is_known"]}
+{"id": "t04", "request": "a quiet cafe within a 10 minute walk", "lat": 40.7614, "lon": -73.9776, "item": null, "checks": ["has_candidates"]}
+{"id": "t05", "request": "bakery with gluten free bread nearby", "lat": 40.7295, "lon": -73.9965, "item": "gluten free", "checks": ["has_candidates", "item_status_is_known"]}
+{"id": "t06", "request": "sushi place close to Bryant Park", "lat": 40.7536, "lon": -73.9832, "item": "sushi", "checks": ["has_candidates"]}
+{"id": "t07", "request": "ramen spot near Chelsea", "lat": 40.7465, "lon": -74.0014, "item": "ramen", "checks": ["has_candidates", "item_status_is_known"]}
+{"id": "t08", "request": "bar with a good happy hour near Hell's Kitchen", "lat": 40.7638, "lon": -73.9918, "item": null, "checks": ["has_candidates"]}
+{"id": "t09", "request": "bagel shop near the Upper West Side", "lat": 40.7870, "lon": -73.9754, "item": "bagel", "checks": ["has_candidates", "item_status_is_known"]}
+{"id": "t10", "request": "taco place downtown", "lat": 40.7163, "lon": -74.0086, "item": "taco", "checks": ["has_candidates"]}
+{"id": "t11", "request": "a place outside New York City", "lat": 34.0522, "lon": -118.2437, "item": null, "checks": ["no_candidates_outside_coverage"]}
+{"id": "t12", "request": "find me food", "lat": 40.758, "lon": -73.9855, "item": null, "checks": ["has_candidates"]}
