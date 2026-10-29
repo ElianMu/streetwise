@@ -29,11 +29,12 @@ const T={
   countMinZoom:14,countText:'#c9d0d8',maxZoom:15,pixelRadius:48},
  label:{font:['Montserrat Medium','Open Sans Regular'],size:10,minZoom:17},
  building:{
-  neutral:'#161615',neutralLight:'#DCDBD4',outline:'#2C2C2A',
+  neutral:'#3E3D38',neutralLight:'#DCDBD4',outline:'#2A2926',
   heightLight:[[0,'#E6E5DF'],[40,'#DEDDD6'],[80,'#D4D3CB'],[150,'#C9C8C0'],[300,'#BCBBB3'],[600,'#AAA9A1']],fillOpacity:.62,extrusionOpacity:.84,
   // Capped below off-white: in the flat 2D fill this ramp's top end barely showed (rooftop only); extruded to full
   // height a skyscraper's whole face carries it, so a near-white top stop blew out and broke the dark theme.
-  height:{prop:'height_roof_ft',unit:'ft',stops:[[0,'#121211'],[40,'#171716'],[80,'#1D1D1C'],[150,'#252523'],[300,'#2F2F2D'],[600,'#3B3B38']]},
+  // stone greys: the 3D city must stand clear of the near-black land (the first round-9 ramp was too dark — 3D read as flat)
+  height:{prop:'height_roof_ft',unit:'ft',stops:[[0,'#34332F'],[40,'#3E3D38'],[80,'#4A4943'],[150,'#58574F'],[300,'#6A685F'],[600,'#838177']]},
   age:{prop:'construction_year',unit:'year built',stops:[[1800,'#5b4636'],[1880,'#6d5a44'],[1920,'#7b6f57'],[1950,'#5e6c6c'],[1980,'#4c6879'],[2015,'#3c6489']]},
   landuse:{prop:'landuse_name',classes:[['One & two family','#6f7f5b'],['Multi-family walk-up','#857d58'],['Multi-family elevator','#8c7552'],['Mixed residential & commercial','#8e6a5c'],['Commercial & office','#7a6070'],
    ['Industrial & manufacturing','#6a5f7c'],['Transportation & utility','#5b6a80'],['Public facilities & institutions','#4f7480'],['Open space & outdoor recreation','#4f7c66'],['Parking','#5e6468'],['Vacant land','#4a4f52']],other:'#3a4247'}},
