@@ -30,7 +30,7 @@ async function visibleText(page, re) { return page.evaluate((src) => { const r =
     await shot(page, '01-mobile-home.png');
     check('Home', 'view is home', (await mview(page)) === 'home');
     check('Home', 'no "Personalize your walk" visible', !(await visibleText(page, 'Personalize your walk')));
-    check('Home', 'no Customize panel / its chips on screen (only the optional home chip row)', (await page.locator('#quickPrefs .quick-pref:visible').count()) === 0 || await page.evaluate(() => $('quickPrefs').getBoundingClientRect().top >= innerHeight));
+    check('Home', 'Customize panel and its chips not on screen', (await page.locator('#quickPrefs .quick-pref:visible').count()) === 0 || await page.evaluate(() => $('quickPrefs').getBoundingClientRect().top >= innerHeight));
     check('Home', 'no sheet open (left/right/explore hidden)', await page.evaluate(() => ['leftPanel', 'rightPanel', 'exploreSheet'].every((id) => $(id).dataset.level === 'hidden')));
     check('Home', 'FROM/TO form not on screen (sheet off-canvas + inert)', await page.evaluate(() => $('searchStart').getBoundingClientRect().top >= innerHeight && $('leftPanel').inert));
     check('Home', '12-dimension panel not visible', !(await page.locator('#dimensionGrid').isVisible()));
@@ -40,14 +40,8 @@ async function visibleText(page, re) { return page.evaluate((src) => { const r =
     check('Home', 'map keeps most of the screen below the composer', mapShare >= 0.55, { uncoveredMapShareOfViewport: mapShare });
     check('Home', 'no horizontal overflow', (await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)) <= 1);
 
-    // Optional quick-preference row on the home composer (secondary to the text box)
-    const chipRow = await page.evaluate(() => ({ n: document.querySelectorAll('#mQuickPrefs .quick-pref').length, labels: [...document.querySelectorAll('#mQuickPrefs .quick-pref')].map((b) => b.textContent), h: Math.round($('mQuickPrefs').getBoundingClientRect().height), scroll: getComputedStyle($('mQuickPrefs')).overflowX }));
-    check('Home', 'compact horizontally scrollable chip row with verified chips only', chipRow.n === 6 && chipRow.h <= 44 && chipRow.scroll === 'auto' && !chipRow.labels.some((t) => /hidden gem/i.test(t)), chipRow);
-    await page.click('#mQuickPrefs .quick-pref:has-text("Nature")');
-    const chipSync = await page.evaluate(() => ({ w: planner.weights.Nature, o: planner.origins.Nature, homeOn: document.querySelector('#mQuickPrefs .quick-pref[aria-pressed="true"]')?.textContent, custOn: [...document.querySelectorAll('#quickPrefs .quick-pref[aria-pressed="true"]')].map((b) => b.textContent) }));
-    check('Home', 'home chip sets the real Nature dimension and the Customize chip shows the same state', chipSync.w === 80 && chipSync.o === 'manual' && chipSync.custOn.includes('Nature'), chipSync);
-    await page.click('#mQuickPrefs .quick-pref:has-text("Nature")');
-    check('Home', 'deselecting returns Nature to neutral default', await page.evaluate(() => planner.weights.Nature === 50 && planner.origins.Nature === 'default'));
+    // Quick-preference chips are NOT on the phone home — only in Customize.
+    check('Home', 'no quick-preference chips on the home screen', await page.evaluate(() => !document.getElementById('mQuickPrefs') && [...document.querySelectorAll('.quick-pref')].every((b) => !b.offsetParent || b.getBoundingClientRect().top >= innerHeight)));
 
     await page.click('#intentText');
     await page.waitForTimeout(250);
@@ -295,13 +289,12 @@ async function visibleText(page, re) { return page.evaluate((src) => { const r =
     await page.click('#mCreate');
     await waitView(page, 'results', 120000).catch(() => {});
     await page.waitForTimeout(800);
-    const m = await page.evaluate(() => ({ interp: planner.interpretation, start: getPlace('start')?.name, startSrc: getPlace('start')?.source, endMode: journey.endMode, cafe: journey.food.some((f) => f.category === 'cafes'), budget: state.budget, arch: planner.weights.Architecture, quiet: planner.weights['Quiet & Relax'], n: state.routes.length, stops: journey.plan?.stops?.map((s) => s.name), walkMin: journey.plan?.totals?.walk_min, chipsOn: [...document.querySelectorAll('#mQuickPrefs .quick-pref[aria-pressed="true"]')].map((b) => b.textContent), sig: state.routes.find((r) => r.id === state.activeRoute)?.raw.ordered_edge_ids.join(',') }));
+    const m = await page.evaluate(() => ({ interp: planner.interpretation, start: getPlace('start')?.name, startSrc: getPlace('start')?.source, endMode: journey.endMode, cafe: journey.food.some((f) => f.category === 'cafes'), budget: state.budget, arch: planner.weights.Architecture, quiet: planner.weights['Quiet & Relax'], n: state.routes.length, stops: journey.plan?.stops?.map((s) => s.name), walkMin: journey.plan?.totals?.walk_min, sig: state.routes.find((r) => r.id === state.activeRoute)?.raw.ordered_edge_ids.join(',') }));
     check('Mock E2E: LLM', 'client sends message + current state to /api/interpret (request construction)', interpretBodies.length === 1 && interpretBodies[0].message === fx.message && typeof interpretBodies[0].weights === 'object' && 'budget' in interpretBodies[0], interpretBodies[0] && Object.keys(interpretBodies[0]));
     check('Mock E2E: LLM', 'LLM branch taken (interpretation = llm, not local preview)', m.interp === 'llm', m.interp);
     check('Mock E2E: LLM', 'named origin resolved through the real place index, not LLM coordinates', /Columbia/i.test(m.start || '') && calls.includes('GET /api/places/search'), { start: m.start, source: m.startSrc });
     check('Mock E2E: LLM', 'Discover mode (no destination) + café stop + 45 min + preferences applied', m.endMode === 'open' && m.cafe && m.budget === 45 && m.arch === 85 && m.quiet === 80, m);
     check('Mock E2E: LLM', 'real itinerary engine produced the route', m.n > 0 && calls.includes('POST /api/itinerary'), { stops: m.stops, walkMin: m.walkMin });
-    check('Mock E2E: LLM', 'home chips reflect the parsed preferences (Architecture, Quiet, Coffee)', ['Architecture', 'Quiet'].every((t) => m.chipsOn.includes(t)) && m.chipsOn.some((t) => /Coffee/.test(t)), m.chipsOn);
     await shot(page, '15-mobile-llm-mock-results.png');
     // Refinement through the results sheet
     const nItin = calls.filter((c) => c === 'POST /api/itinerary').length;
