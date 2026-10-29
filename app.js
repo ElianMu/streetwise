@@ -415,8 +415,8 @@ function updateMapStyles(){
   if(!state.mapLayersReady||!state.map)return;
   const m=state.map, raw=false; // No incomplete raw-record proximity data masquerades as a global nature score.
   const [lo,hi]=state.thresholds;
-  const thresholdColor=['#395d63','#45b9c7','#d8f365'];
-  const streetColor=raw?['case', ['!', ['has','tree_records_per_km']], '#647479', ['<', ['get','tree_records_per_km'], lo||1], thresholdColor[0], ['<',['get','tree_records_per_km'],hi||2],thresholdColor[1],thresholdColor[2]]:'#476b72';
+  const thresholdColor=['#3f444a','#45b9c7','#d8f365'];
+  const streetColor=raw?['case', ['!', ['has','tree_records_per_km']], '#6b6e72', ['<', ['get','tree_records_per_km'], lo||1], thresholdColor[0], ['<',['get','tree_records_per_km'],hi||2],thresholdColor[1],thresholdColor[2]]:'#4c5057';
   if(m.getLayer('road-highlight'))m.setPaintProperty('road-highlight','line-color',streetColor);
   setMapLayerVisible('road-highlight',state.display.roads);
   setMapLayerVisible('road-underlay',state.display.roads);
@@ -439,16 +439,20 @@ function updateLegend(){ renderExperienceLegend(); }
  * udg-buildings-fill (real PLUTO footprints, see urban-layers.js) draws richer 3D buildings on top. */
 function tuneBasemap(m){
   const set=(id,prop,val)=>{if(m.getLayer(id))m.setPaintProperty(id,prop,val);};
-  set('background','background-color','#081114');
-  for(const id of ['landcover','landuse'])set(id,'fill-color','#0a1416');
-  set('water','fill-color','#0d2630');
-  set('water_shadow','fill-color','#061419');
-  set('road_mot_fill_noramp','line-color','#5c6a74');
-  set('road_mot_fill_ramp','line-color','#5c6a74');
-  set('road_pri_fill_noramp','line-color','#46525c');
-  set('road_pri_fill_ramp','line-color','#46525c');
-  set('road_sec_fill_noramp','line-color','#3a444c');
-  set('road_minor_fill','line-color','#2e363d');
+  // Black tech theme: pure black land, deep navy water, roads as cool graphite light lines (hierarchy by brightness).
+  set('background','background-color','#000000');
+  for(const id of ['landcover','landuse'])set(id,'fill-color','#050607');
+  set('water','fill-color','#06111d');
+  set('water_shadow','fill-color','#030810');
+  set('waterway','line-color','#0f2236');
+  for(const id of ['park_national_park','park_nature_reserve'])set(id,'fill-color','#07100b');
+  set('road_mot_fill_noramp','line-color','#4d5867');
+  set('road_mot_fill_ramp','line-color','#4d5867');
+  set('road_pri_fill_noramp','line-color','#38414d');
+  set('road_pri_fill_ramp','line-color','#38414d');
+  set('road_sec_fill_noramp','line-color','#2c333d');
+  set('road_minor_fill','line-color','#1f242b');
+  for(const id of ['road_minor_case','road_sec_case_noramp','tunnel_pri_fill','tunnel_mot_fill','bridge_trunk_fill','bridge_mot_fill','road_trunk_fill_noramp'])set(id,'line-color','#14181e');
   for(const id of ['building','building-top'])if(m.getLayer(id))m.setLayoutProperty(id,'visibility','none');
 }
 function setupMap(){
@@ -460,24 +464,24 @@ function setupMap(){
       state.mapReady=true;$('mapFallback').classList.add('hidden');m.fitBounds(MANHATTAN_BOUNDS,{padding:24,duration:0,maxZoom:11.1});
       tuneBasemap(m);
       for(const id of ['nyc-roads','nyc-trees','nyc-landmarks','candidate-routes','selected-route','points','route-pois'])m.addSource(id,{type:'geojson',data:emptyFC()});
-      m.addLayer({id:'road-underlay',type:'line',source:'nyc-roads',paint:{'line-color':'#0b141b','line-width':5.3,'line-opacity':.85}});
-      m.addLayer({id:'road-highlight',type:'line',source:'nyc-roads',paint:{'line-color':'#476b72','line-width':['interpolate',['linear'],['zoom'],11,.6,14,2,16,3.4],'line-opacity':.90}});
+      m.addLayer({id:'road-underlay',type:'line',source:'nyc-roads',paint:{'line-color':'#0a0b0d','line-width':5.3,'line-opacity':.85}});
+      m.addLayer({id:'road-highlight',type:'line',source:'nyc-roads',paint:{'line-color':'#4c5057','line-width':['interpolate',['linear'],['zoom'],11,.6,14,2,16,3.4],'line-opacity':.90}});
       m.addLayer({id:'landmark-fill',type:'fill',source:'nyc-landmarks',paint:{'fill-color':'#e89a5d','fill-opacity':.17}});
       m.addLayer({id:'landmark-outline',type:'line',source:'nyc-landmarks',paint:{'line-color':'#ffae70','line-width':1.5,'line-opacity':.88}});
       m.addLayer({id:'tree-points',type:'circle',source:'nyc-trees',paint:{'circle-color':'#a6e19a','circle-radius':['interpolate',['linear'],['zoom'],11,1.5,14,3,16,5],'circle-opacity':.82,'circle-stroke-color':'#0a2524','circle-stroke-width':.6}});
       // Route hierarchy: quiet dashed alternatives; the selected route is the only lime on the map, with a dark halo that separates it from data below.
-      m.addLayer({id:'route-alts',type:'line',source:'candidate-routes',paint:{'line-color':'#8a9e9c','line-width':['interpolate',['linear'],['zoom'],12,1.6,16,3],'line-opacity':.55,'line-dasharray':[2,1.6]},layout:{'line-cap':'round','line-join':'round'}});
+      m.addLayer({id:'route-alts',type:'line',source:'candidate-routes',paint:{'line-color':'#919397','line-width':['interpolate',['linear'],['zoom'],12,1.6,16,3],'line-opacity':.55,'line-dasharray':[2,1.6]},layout:{'line-cap':'round','line-join':'round'}});
       // Glow beneath the dark separator shadow: a wide, soft-blurred lime halo (Citymapper/Google night-mode
       // routing). The dark route-shadow above it still does its job of separating the line from data clutter.
       m.addLayer({id:'route-glow',type:'line',source:'selected-route',paint:{'line-color':'#d8f365','line-width':['interpolate',['linear'],['zoom'],12,14,16,22,19,30],'line-opacity':.22,'line-blur':6},layout:{'line-cap':'round','line-join':'round'}});
-      m.addLayer({id:'route-shadow',type:'line',source:'selected-route',paint:{'line-color':'#06110f','line-width':['interpolate',['linear'],['zoom'],12,6,16,11,19,16],'line-opacity':.82,'line-blur':1},layout:{'line-cap':'round','line-join':'round'}});
+      m.addLayer({id:'route-shadow',type:'line',source:'selected-route',paint:{'line-color':'#060708','line-width':['interpolate',['linear'],['zoom'],12,6,16,11,19,16],'line-opacity':.82,'line-blur':1},layout:{'line-cap':'round','line-join':'round'}});
       m.addLayer({id:'route-selected',type:'line',source:'selected-route',paint:{'line-color':'#d8f365','line-width':['interpolate',['linear'],['zoom'],12,2.6,16,5,19,8],'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
       m.addLayer({id:'poi-points-glow',type:'circle',source:'route-pois',paint:{'circle-color':'#b7a3e1','circle-radius':13,'circle-opacity':.3,'circle-blur':1}});
-      m.addLayer({id:'poi-points',type:'circle',source:'route-pois',paint:{'circle-color':'#b7a3e1','circle-radius':5,'circle-stroke-color':'#132529','circle-stroke-width':2}});
-      m.addLayer({id:'point-starts-glow',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#6fd2d8','circle-radius':['interpolate',['linear'],['zoom'],12,11,16,16],'circle-opacity':.35,'circle-blur':1}});
-      m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#6fd2d8','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
+      m.addLayer({id:'poi-points',type:'circle',source:'route-pois',paint:{'circle-color':'#b7a3e1','circle-radius':5,'circle-stroke-color':'#111215','circle-stroke-width':2}});
+      m.addLayer({id:'point-starts-glow',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#45d4e6','circle-radius':['interpolate',['linear'],['zoom'],12,11,16,16],'circle-opacity':.35,'circle-blur':1}});
+      m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#45d4e6','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0a0b0c','circle-stroke-width':2.5}});
       m.addLayer({id:'point-ends-glow',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,11,16,16],'circle-opacity':.35,'circle-blur':1}});
-      m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0b1418','circle-stroke-width':2.5}});
+      m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0a0b0c','circle-stroke-width':2.5}});
       m.addLayer({id:'point-gps-glow',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':16,'circle-opacity':.35,'circle-blur':1}});
       m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':7,'circle-stroke-color':'#fff','circle-stroke-width':3}});
       setupRouteEdgeLayer();setupUrbanMap();if(typeof setupJourneyMap==='function')setupJourneyMap();if(typeof setupNavMap==='function')setupNavMap();

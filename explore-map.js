@@ -8,7 +8,7 @@ const EXPLORE_VIEWS=[
  ...['Architecture','Nature','Culture','Quiet & Relax','Comfort','Vibrancy','Food & Retail','Scenic','Walkability','Safety','Environment','Transit'].map((label,i)=>({label,prop:'d'+i,dim:i}))
 ];
 const exploreMap={data:null,loading:null,active:false,view:0,opacity:.9,hover:null,selected:null,collapsed:false,thumbs:false,labels:[],stops:null};
-const EXPLORE_RAMP_COLORS=['#1d5b8e','#2389cc','#3fc7e8','#f0d23e','#ffe04a'],EXPLORE_NA='#5d686c';
+const EXPLORE_RAMP_COLORS=['#1d5b8e','#2389cc','#3fc7e8','#f0d23e','#ffe04a'],EXPLORE_NA='#56585a';
 const exploreView=()=>EXPLORE_VIEWS[exploreMap.view];
 // Dimension scores are already percentiles, so fixed stops; Overall is a mean that clusters near 50, so its stops follow its own quantiles.
 function exploreStops(view=exploreView()){if(view.dim!=null||!exploreMap.stops)return [0,35,60,78,100];return exploreMap.stops;}
