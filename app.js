@@ -722,8 +722,7 @@ function setupControls(){
   $('closeModal').addEventListener('click',closeModal);
   modalOverlay.addEventListener('click',e=>{if(e.target===modalOverlay)closeModal()});
   document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeModal();state.pick=null;$('pickNotice').classList.add('hidden');if(state.mapReady)state.map.getCanvas().style.cursor=''}});
-  $('mobilePlan').addEventListener('click',()=>{$('leftPanel').classList.toggle('mobile-active');$('rightPanel').classList.remove('mobile-active')});
-  $('mobileResults').addEventListener('click',()=>{$('rightPanel').classList.toggle('mobile-active');$('leftPanel').classList.remove('mobile-active')});
+  // mobilePlan/mobileResults are wired by mobile-ui.js (bottom-sheet shell, phones only).
 }
 
 // Initialization is shared with center-map.js after extension functions are loaded.
