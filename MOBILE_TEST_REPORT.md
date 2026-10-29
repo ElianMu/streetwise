@@ -20,16 +20,16 @@ run is reported as a real-device or real-service result.
 | JS, all | `JSDOM_PATH=… node --test tests/*.test.cjs` | Unit + DOM integration (network blocked by design) | **11/11 suites pass** |
 | Navigation GPS replay | `node tests/nav-gps.test.cjs` | Unit, deterministic synthetic tracks | **17/17** (incl. 2 new regression scenarios for the intermittent-error off-route bug; the first fails on the old engine) |
 | Repo Playwright spec | `npx playwright test tests/mobile-e2e.spec.js` (CDN fixture injected) | Real Routing E2E | **9 passed, 1 skipped** (the pre-existing `fixme` for the 741–1060 px drawer quirk) |
-| Mobile v2 flows | `SANDBOX_CDN=1 node tests/mobile-v2/flows.js` (needs `python3 server.py` running) | mixed, per check | **97/97 checks pass** |
+| Mobile v2 flows | `SANDBOX_CDN=1 node tests/mobile-v2/flows.js` (needs `python3 server.py` running) | mixed, per check | **94/94 checks pass** |
 | Service worker under a GitHub Pages-style subpath | static server at `/STREETWISE_NYC/`, Chromium with SW enabled | Integration (real browser SW) | pass: only `strollane-shell-v3` after activation (planted `v1` purged), page controlled, 23 shell files cached, **0** `data/` or `api/` entries, shell loads offline |
 | Install-banner overlap | browser geometry check at 1440, 1100, 768, iPad-Safari 834 | Real browser layout | pass: banner overlaps no button/input/summary at any width; Navigate/Explore always clear |
 
-`tests/mobile-v2/flows.js` checks by class (97 total, 0 failed):
+`tests/mobile-v2/flows.js` checks by class (94 total, 0 failed):
 
 | Class | Checks | What is real |
 |---|---|---|
-| Real Routing E2E — home, typing, Flow A (NL → local preview parser → `/api/itinerary`), refinement, Flow B (manual FROM/TO, pick on map, no text → itinerary with café stop), Flow C (Customize: chips, 60 min, 12 dimensions, back to Plan), Flow E (Urban Data, dimension switch, real street-segment tap → Street Inspector, route kept), Flow F (GPS denied, offline error, start confirmation), layers, viewports, desktop, tablet | 71 (incl. 2 "Refine" checks run inside the mocked-LLM block) | server.py engine, place index, itinerary, street scores; map rendering with the substituted basemap |
-| Mock E2E: LLM — `/api/status` + `/api/interpret` mocked with server-validated documents | 9 | everything after the parse: client LLM branch, place resolution (`GET /api/places/search`), Discover mode + café stop + 45 min, real `/api/itinerary`, chip sync, "Shorten it to 30 minutes" refinement (only the time changes, engine re-run, map redrawn), failed re-plan keeps the last route and leaves nothing stuck busy |
+| Real Routing E2E — home, typing, Flow A (NL → local preview parser → `/api/itinerary`), refinement, Flow B (manual FROM/TO, pick on map, no text → itinerary with café stop), Flow C (Customize: chips, 60 min, 12 dimensions, back to Plan), Flow E (Urban Data, dimension switch, real street-segment tap → Street Inspector, route kept), Flow F (GPS denied, offline error, start confirmation), layers, viewports, desktop, tablet | 69 (incl. 2 "Refine" checks run inside the mocked-LLM block) | server.py engine, place index, itinerary, street scores; map rendering with the substituted basemap |
+| Mock E2E: LLM — `/api/status` + `/api/interpret` mocked with server-validated documents | 8 | everything after the parse: client LLM branch, place resolution (`GET /api/places/search`), Discover mode + café stop + 45 min, real `/api/itinerary`, "Shorten it to 30 minutes" refinement (only the time changes, engine re-run, map redrawn), failed re-plan keeps the last route and leaves nothing stuck busy |
 | Simulated GPS (Playwright geolocation; Flow D + its own block) | 9 + 3 | navigation state machine, camera pitch 55°, 3D building layer present, instructions, pause/resume, sustained deviation → off-route → real reroute replaced the route; one wild fix → no reroute; reroute failure offline → still navigating the last route with message + Retry; back on route → NAVIGATING; reload → "Resume navigation?" |
 | Console | 5 | no uncaught page errors in any flow |
 

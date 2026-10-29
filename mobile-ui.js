@@ -182,7 +182,6 @@
       try { history.pushState({ strollaneMview: next }, ''); historyPushed = true; } catch (_) {}
     }
     renderComposer();
-    if (next === 'home' || next === 'typing') renderQuickPrefs();
   }
   /** Back from a secondary view (button, Escape, swipe-away or the phone's Back gesture). */
   function closeSecondary() {
@@ -313,7 +312,7 @@
     const toastNow = $('toast')?.textContent || '';
     // handlePlan() marks a clarification with "The displayed previous route has not been recalculated."
     const clarified = Boolean(lastMsg && /has not been recalculated/.test(lastMsg));
-    if (hasRoutes() && !clarified) { confirmStart(); showStatus(null); setView('results'); renderQuickPrefs(); return; }
+    if (hasRoutes() && !clarified) { confirmStart(); showStatus(null); setView('results'); return; }
     setView('home');
     const reason = lastMsg || (toastNow && toastNow !== toastBefore ? toastNow : '') || 'No route was calculated. Check the start and destination, then try again.';
     showStatus(reason, clarified ? 'clarify' : 'error');
@@ -388,12 +387,12 @@
   const QUICK_WEIGHT = 80;
   let coffeePrevActive = null;
   const coffeeOn = () => typeof journey !== 'undefined' && journey.food.some((f) => f.category === 'cafes');
-  // One renderer for both places the chips appear (home composer row and Customize), always drawn from the
+  // Quick-preference chips live only in Customize (not on the phone home). Always drawn from the
   // live planner/journey state — so a chip is "on" exactly when that preference is really set, whoever set it
   // (the chip, the Agent's parse of the request, or a dimension slider).
   function renderQuickPrefs() {
     if (typeof planner === 'undefined') return;
-    for (const root of [$('quickPrefs'), $('mQuickPrefs')]) {
+    for (const root of [$('quickPrefs')]) {
       if (!root) continue;
       root.innerHTML = '';
       for (const q of QUICK_DIMS) {

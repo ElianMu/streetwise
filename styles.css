@@ -500,12 +500,6 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
  .m-composer-slot #intentText::placeholder{color:#7f9693}
  body[data-mview="typing"] .m-composer-slot #intentText{height:min(128px,26vh)}
  .m-composer-row{display:flex;align-items:center;gap:8px;margin-top:8px}
- /* Optional quick preferences: one compact, horizontally scrollable line — secondary to the text box. */
- .m-quick-prefs{display:flex;flex-wrap:nowrap;gap:6px;margin:8px -12px 0;padding:0 12px 2px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-padding:0 12px}
- .m-quick-prefs::-webkit-scrollbar{display:none}
- .m-quick-prefs .quick-pref{flex:none;min-height:34px;padding:0 12px;font-size:12px;white-space:nowrap}
- .m-quick-prefs:empty{display:none}
- body[data-mview="busy"] .m-quick-prefs{opacity:.5;pointer-events:none}
  .m-mic-slot{display:flex;flex:none}
  .m-mic-slot .mic-btn{width:44px;height:44px;border-radius:12px;font-size:17px;margin:0}
  .m-context{width:100%;min-width:0;display:flex;align-items:center;gap:7px;min-height:36px;margin-top:6px;padding:0 4px;border:0;background:transparent;color:#a9bdb7;font-size:12px;text-align:left}

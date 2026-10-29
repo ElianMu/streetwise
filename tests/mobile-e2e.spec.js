@@ -63,7 +63,7 @@ for (const vp of WIDTHS) {
   });
 }
 
-test('mobile v2 home: natural-language composer + map, optional chip row only â€” no Personalize sheet, Customize panel or FROM/TO form', async ({ page }) => {
+test('mobile v2 home: natural-language composer + map, no chips, Personalize sheet, Customize panel or FROM/TO form', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 });
   await page.goto(BASE_URL, { waitUntil: 'load' });
   await page.waitForTimeout(2500);
@@ -73,8 +73,8 @@ test('mobile v2 home: natural-language composer + map, optional chip row only â€
   await expect(page.locator('#mCreate')).toBeVisible();
   await expect(page.locator('#mapLocate')).toBeVisible();
   for (const id of ['leftPanel', 'rightPanel', 'exploreSheet']) await expect(page.locator('#' + id)).toHaveAttribute('data-level', 'hidden');
-  // Only the optional home chip row (#mQuickPrefs) may show chips; the Customize panel (#quickPrefs) stays closed.
-  expect(await page.locator('#mQuickPrefs .quick-pref').count()).toBeGreaterThan(0);
+  // No quick-preference chips on the phone home; they live in Customize (#quickPrefs), which stays closed.
+  expect(await page.locator('#mQuickPrefs').count()).toBe(0);
   expect(await page.evaluate(() => document.getElementById('quickPrefs').getBoundingClientRect().top >= innerHeight)).toBe(true);
   expect(await page.getByText('Personalize your walk').count()).toBe(0);
   // Focusing the composer must never open Customize / the 12 dimensions.
