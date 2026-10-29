@@ -1,6 +1,18 @@
 # Mobile Implementation Report
 
-## iPhone Home Screen app — bottom-gap fix, round 2 (latest)
+## Round 3: hidden sheets after viewport changes (found on the live site)
+
+The production check of round 2, done on the live GitHub Pages URL in a real browser, found that the hidden bottom
+sheets showed a dark band at the bottom of the home screen whenever the viewport grew after load. A hidden sheet was
+pushed down by a pixel value measured once at load, and only the open sheet was re-measured on resize. This can
+happen on an iPhone with rotation, Safari's toolbars, or the Home Screen viewport settling.
+
+Fix (`mobile-ui.js`): hidden sheets use `translateY(calc(100% + 40px))`, which is relative to their own height, so it
+stays correct at any viewport size. Placing a sheet that wasn't on screen happens without the slide animation, so
+sheets no longer sweep across the screen after a rotation. Regression test: `tests/mobile-v2/ios-standalone-gap.js`
+now loads at one size and then resizes / rotates; it passes 28/28. Service worker cache `strollane-shell-v6`.
+
+## iPhone Home Screen app — bottom-gap fix, round 2
 
 **Measured root cause.** From the real iPhone 17 Pro Max screenshots (440×956 pt): with the previous code the
 map/shell ended at ≈895 pt, i.e. 61 pt above the screen bottom, with a 120 pt header. In a Home Screen app with the

@@ -66,14 +66,22 @@
     return 0; // full
   }
   function applyTransform(panel, px) { panel.style.transform = `translateY(${Math.max(0, px)}px)`; }
+  // A hidden sheet is pushed down by its OWN height (+40px), not by a pixel value measured once: a pixel offset
+  // taken at load went stale when the viewport later grew (rotation, Safari toolbars, the iOS Home Screen
+  // viewport settling), leaving the top of every "hidden" sheet visible as a dark band at the bottom.
+  function hideTransform(panel) { panel.style.transform = 'translateY(calc(100% + 40px))'; }
 
   function setLevel(which, level) {
     if (!mq.matches) return;
     const panel = panelFor(which);
     if (!panel) return;
+    // Placing a sheet that was not on screen (first layout, or back from the tablet layout after a rotation)
+    // must not animate it across the screen; only closing an open sheet slides.
+    const instant = level === 'hidden' && (!panel.dataset.level || panel.dataset.level === 'hidden');
     panel.dataset.level = level;
-    panel.style.transition = '';
-    applyTransform(panel, pxForLevel(panel, level));
+    panel.style.transition = instant ? 'none' : '';
+    if (level === 'hidden') hideTransform(panel); else applyTransform(panel, pxForLevel(panel, level));
+    if (instant) requestAnimationFrame(() => { if (panel.dataset.level === 'hidden') panel.style.transition = ''; });
     const open = level !== 'hidden';
     panel.inert = !open; panel.setAttribute('aria-hidden', String(!open));
     const btn = panel.querySelector('.sheet-toggle'); if (btn) btn.setAttribute('aria-expanded', String(level === 'full'));
@@ -83,7 +91,7 @@
       for (const other of Object.keys(PANEL_IDS)) {
         if (other === which) continue;
         const o = panelFor(other);
-        if (o && o.dataset.level !== 'hidden') { o.dataset.level = 'hidden'; applyTransform(o, pxForLevel(o, 'hidden')); o.inert = true; o.setAttribute('aria-hidden', 'true'); }
+        if (o && o.dataset.level !== 'hidden') { o.dataset.level = 'hidden'; hideTransform(o); o.inert = true; o.setAttribute('aria-hidden', 'true'); }
       }
     }
     document.body.dataset.msheet = active ? `${active}-${panelFor(active).dataset.level}` : 'none';
