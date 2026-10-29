@@ -721,7 +721,7 @@
   /* Map label density on phones: per-category cluster counts (61+ datasets, one cluster source each)
      stack into unreadable rows of numbers at city zoom. On phones the count NUMBERS appear from street
      zoom up; rings, data, tap-to-expand and desktop are unchanged. */
-  const PHONE_COUNT_MINZOOM = 13;
+  const PHONE_COUNT_MINZOOM = 14;
   const countMinZoom = new Map();
   let densityTimer = 0;
   function applyMapDensity() {
