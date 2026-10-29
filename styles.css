@@ -15,6 +15,17 @@
 .explore-sheet .sheet-toggle{font-size:0;width:28px;height:28px;top:4px}
 .explore-sheet .sheet-toggle::after{content:'⌄';font-size:16px}
 .explore-sheet[data-level="full"] .sheet-toggle::after{content:'⌃'}
+/* Swipeable route-result cards (§9 — Priority 3): a native horizontal scroller with
+   snap points, not a hand-rolled drag/physics implementation. Selecting a route by
+   swiping still goes through the same selectRoute() every tap already uses (see
+   mobile-ui.js's wireRouteCardSwipe) — no second route-selection code path, no
+   extra API calls (routes are already computed client-side). */
+.route-cards{scroll-snap-type:x mandatory;grid-auto-flow:column;grid-auto-columns:86%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 2px 6px}
+.route-cards::-webkit-scrollbar{display:none}
+.route-cards .route-card{scroll-snap-align:center;height:100%}
+.route-dots{display:flex;justify-content:center;gap:5px;margin:2px 0 10px}
+.route-dots span{width:5px;height:5px;border-radius:50%;background:#3c5558}
+.route-dots span.active{background:var(--lime);width:14px;border-radius:3px}
 .sheet-handle{display:flex;align-items:center;justify-content:center;flex:none;padding:10px 14px 4px;touch-action:none;cursor:grab}
 .sheet-grip{width:36px;height:4px;border-radius:2px;background:#3c5558}
 .sheet-toggle{position:absolute;right:10px;top:8px;border:0;background:transparent;color:#9fb6b2;font-size:11px;padding:8px}

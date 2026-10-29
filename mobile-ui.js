@@ -187,6 +187,43 @@
     }).observe(exploreInspector, { attributes: true, attributeFilter: ['class'] });
   }
 
+  // Priority 3: swipeable route cards. #routeCards is a native horizontal
+  // scroll-snap list (CSS only — see styles.css); this just (a) keeps a dots
+  // indicator in sync with however many cards route-client.js rendered, and
+  // (b) when a swipe settles on a different card, selects it the exact same
+  // way a tap already does — selectRoute() is the one real route-selection
+  // path, so no state can exist here that route-client.js doesn't already own.
+  let routeSwipeWired = false;
+  let routeScrollTimer = null;
+  function renderRouteDots() {
+    const cards = $('routeCards').querySelectorAll('.route-card');
+    const dots = $('routeDots');
+    if (!dots) return;
+    dots.classList.toggle('hidden', !mq.matches || cards.length < 2);
+    if (!mq.matches || cards.length < 2) return;
+    dots.innerHTML = Array.from(cards).map((c) => `<span class="${c.classList.contains('selected') ? 'active' : ''}"></span>`).join('');
+  }
+  function onRouteCardsScroll() {
+    clearTimeout(routeScrollTimer);
+    routeScrollTimer = setTimeout(() => {
+      const root = $('routeCards'); if (!mq.matches || !root) return;
+      const mid = root.scrollLeft + root.clientWidth / 2;
+      let closest = null, closestDist = Infinity;
+      root.querySelectorAll('.route-card').forEach((c) => {
+        const d = Math.abs((c.offsetLeft + c.offsetWidth / 2) - mid);
+        if (d < closestDist) { closestDist = d; closest = c; }
+      });
+      if (closest && !closest.classList.contains('selected') && typeof selectRoute === 'function') selectRoute(closest.dataset.route);
+    }, 120);
+  }
+  function wireRouteCardSwipe() {
+    if (routeSwipeWired) return; routeSwipeWired = true;
+    const root = $('routeCards'); if (!root) return;
+    root.addEventListener('scroll', onRouteCardsScroll, { passive: true });
+    new MutationObserver(renderRouteDots).observe(root, { childList: true, attributes: true, subtree: true, attributeFilter: ['class'] });
+    renderRouteDots();
+  }
+
   function wire() {
     if (wired) return; wired = true;
     wireMoreMenu();
@@ -195,6 +232,7 @@
     ensureHandle($('rightPanel'), 'Your routes');
     ensureHandle($('exploreSheet'), 'Explore Urban Data');
     wireExploreSheet();
+    wireRouteCardSwipe();
     $('mobilePlan').addEventListener('click', () => setLevel('left', $('leftPanel').dataset.level && $('leftPanel').dataset.level !== 'hidden' && $('leftPanel').dataset.level !== 'collapsed' ? 'collapsed' : 'half'));
     $('mobileResults').addEventListener('click', () => setLevel('right', $('rightPanel').dataset.level && $('rightPanel').dataset.level !== 'hidden' && $('rightPanel').dataset.level !== 'collapsed' ? 'collapsed' : 'half'));
     // Tapping the map collapses (not hides) whichever sheet is open — keeps the
@@ -215,6 +253,7 @@
     }
     moveExploreBack();
     active = null;
+    if (routeSwipeWired) renderRouteDots(); // re-hides immediately rather than waiting for the next card re-render
   }
 
   function init() {

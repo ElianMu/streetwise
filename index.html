@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=32" />
+  <link rel="stylesheet" href="./styles.css?v=33" />
 </head>
 <body>
 <div class="site-shell">
@@ -201,6 +201,7 @@
         <div id="routeValidation" class="route-validation hidden" aria-live="polite"></div>
         <button type="button" id="navStart" class="primary-cta nav-start hidden"><span>➤ Start Navigation</span><span class="cta-arrow">↗</span></button>
         <div class="route-cards" id="routeCards"><div class="empty-route"><strong>No routes generated yet</strong><p>Set your journey to compare real pedestrian paths.</p></div></div>
+        <div class="route-dots hidden" id="routeDots" aria-hidden="true"></div>
         <div class="subtle-divider"></div>
         <div class="section-overline">✦ WHY THIS ROUTE?</div><div class="why-box" id="whyRoute">Generate routes to see evidence-grounded reasons.</div>
         <div class="subtle-divider"></div>
@@ -261,7 +262,7 @@
 <script src="./explore-map.js?v=28"></script>
 <script src="./explore-analytics.js?v=28"></script>
 <script src="./center-map.js?v=28"></script>
-<script src="./mobile-ui.js?v=6"></script>
+<script src="./mobile-ui.js?v=8"></script>
 <script src="./pwa-register.js?v=1"></script>
 </body>
 </html>
