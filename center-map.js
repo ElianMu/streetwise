@@ -48,7 +48,7 @@ function updateExperienceStyles(){
  const lo=vals.length?vals[Math.floor((vals.length-1)*.33)]:0,hi=vals.length?vals[Math.floor((vals.length-1)*.67)]:0;
  mapExperience.breaks=[lo,hi];
  ExperienceCore.keys.forEach((k,i)=>{const id='experience-'+k;if(!state.map.getLayer(id))return;setMapLayerVisible(id,mapExperience.visible&&mapExperience.view!=='raw'&&i===index);
- const color=mapExperience.view==='score'||!key?'#707276':['case',['==',['get',key],null],'#707276',['<=',['get',key],lo],'#3c414a',['<=',['get',key],hi],'#6d7b8f','#d8f365'];
+ const color=mapExperience.view==='score'||!key?'#707276':['case',['==',['get',key],null],'#707276',['<=',['get',key],lo],'#3c414a',['<=',['get',key],hi],'#6d7b8f','#E3B55B'];
  state.map.setPaintProperty(id,'line-color',color);
  });
  setMapLayerVisible('experience-hit',mapExperience.visible&&mapExperience.view!=='raw');
@@ -64,7 +64,7 @@ function renderExperienceLegend(){
  const n=key?features.filter(f=>Number.isFinite(f.properties[key])).length:0;
  const source=key==='nature'?'NYC Open Data 2015 Tree Census · year 2015':key==='architecture'?'NYC LPC individual-landmark parcels (ArcGIS mirror) · observation year not provided':'No verified dataset loaded';
  $('legendTitle').textContent=state.dimension+' · '+(mapExperience.view==='score'?'NO VALIDATED SCORE':mapExperience.view==='raw'?'RAW DATA':'STREET EVIDENCE');
- $('legendDot').style.background=key?'#d8f365':'#707276';
+ $('legendDot').style.background=key?'#E3B55B':'#707276';
  $('legendSubtitle').textContent=(dimensionDefinitions[i]||'Choose an experience dimension.')+' '+source+'. '+(mapExperience.view==='score'?'0/12 calibrated; all score fields NULL. ':`${n}/${features.length} sections with this proxy. `)+'Coverage: analyzed pilot / route sections only; elsewhere No Data. '+(mapExperience.retrieved?'Pilot retrieved '+mapExperience.retrieved.slice(0,10)+'. ':'');
  const scale=$('legend-scale');scale.classList.toggle('hidden',mapExperience.view!=='evidence'||!n);
  if(n){const [lo,hi]=mapExperience.breaks||[0,0];scale.innerHTML=`<span><i style="background:#3c414a"></i>≤${lo.toFixed(1)}</span><span><i style="background:#6d7b8f"></i>≤${hi.toFixed(1)}</span><span><i style="background:#d8f365"></i>&gt;${hi.toFixed(1)}</span><span>records/km · local thirds</span><span><i style="background:#707276"></i>No Data</span>`;}

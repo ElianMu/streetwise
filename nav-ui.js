@@ -270,10 +270,10 @@ function setupNavMap(){
  const m=state.map;
  for(const id of ['nav-walked','nav-acc','nav-cone','nav-dot','nav-arrow','nav-next'])m.addSource(id,{type:'geojson',data:emptyFC()});
  m.addLayer({id:'nav-walked',type:'line',source:'nav-walked',paint:{'line-color':'#525457','line-width':['interpolate',['linear'],['zoom'],12,3,16,6,19,9],'line-opacity':.9},layout:{'line-cap':'round','line-join':'round'}});
- m.addLayer({id:'nav-acc',type:'fill',source:'nav-acc',paint:{'fill-color':'#4aa3ff','fill-opacity':.14,'fill-outline-color':'#4aa3ff'}});
- m.addLayer({id:'nav-cone',type:'fill',source:'nav-cone',paint:{'fill-color':'#4aa3ff','fill-opacity':.32}});
+ m.addLayer({id:'nav-acc',type:'fill',source:'nav-acc',paint:{'fill-color':'#D8F365','fill-opacity':.1,'fill-outline-color':'#D8F365'}});
+ m.addLayer({id:'nav-cone',type:'fill',source:'nav-cone',paint:{'fill-color':'#D8F365','fill-opacity':.22}});
  m.addLayer({id:'nav-next',type:'circle',source:'nav-next',paint:{'circle-radius':7,'circle-color':'rgba(0,0,0,0)','circle-stroke-color':'#ffffff','circle-stroke-width':2.5}});
- m.addLayer({id:'nav-dot',type:'circle',source:'nav-dot',paint:{'circle-radius':8,'circle-color':'#2f8cff','circle-stroke-color':'#ffffff','circle-stroke-width':3}});
+ m.addLayer({id:'nav-dot',type:'circle',source:'nav-dot',paint:{'circle-radius':8,'circle-color':'#D8F365','circle-stroke-color':'#F5F5F2','circle-stroke-width':3}});
  // A crisp heading chevron on the dot, distinct from the wide nav-cone fan: the cone shows the general
  // confidence spread, this shows one precise direction. Drawn only when a real heading exists (never guessed).
  m.addLayer({id:'nav-arrow',type:'fill',source:'nav-arrow',paint:{'fill-color':'#ffffff','fill-opacity':.95}});
@@ -296,7 +296,7 @@ function drawNavPosition(out){
  // the dot is the raw GPS position; it snaps to the route only when the match is confident
  const p=out.matched_coordinate&&out.confidence==='high'&&!weak?out.matched_coordinate:out.raw;
  m.getSource('nav-dot').setData(navFC([{type:'Feature',properties:{},geometry:{type:'Point',coordinates:p}}]));
- m.setPaintProperty('nav-dot','circle-color',weak?'#9aa0a8':'#2f8cff');
+ m.setPaintProperty('nav-dot','circle-color',weak?'#8C8C86':'#D8F365'); // uncertain fix = grey, never the confident signal colour
  m.getSource('nav-acc').setData(out.accuracy_m?navFC([{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[circlePoly(out.raw,out.accuracy_m)]}}]):emptyFC());
  m.getSource('nav-cone').setData(nav.heading!=null?navFC([{type:'Feature',properties:{},geometry:{type:'Polygon',coordinates:[conePoly(p,nav.heading)]}}]):emptyFC());
  // The crisp chevron only ever appears with a real device/GPS heading — never the route bearing, which would

@@ -4,8 +4,8 @@
 (function(root){
 'use strict';
 const T={
- bg:'#000000', stroke:'#000000', halo:'#000000',
- route:{selected:'#d8f365',halo:'#000000',alt:'#7d8794',start:'#45d4e6',end:'#f2a876'},
+ bg:'#0B0B0B', stroke:'#0B0B0B', halo:'#0B0B0B',
+ route:{selected:'#F3EFE4',halo:'#0B0B0B',alt:'#8C8C86',start:'#F5F5F2',end:'#F3EFE4'}, // warm-white walk on a dark casing (round 9)
  // Category colours for POINTS on the black basemap (round 7). Built in OKLCH at one lightness band (L .58–.66,
  // C .12–.17) so no hue shouts; no violet (it read as cheap next to the lime); warm/cool alternate in legend order.
  // Validator (dark, #000): lightness/chroma/contrast PASS, adjacent normal-vision ΔE ≥ 17.8, CVD ΔE 7.0 (secondary
@@ -29,10 +29,11 @@ const T={
   countMinZoom:14,countText:'#c9d0d8',maxZoom:15,pixelRadius:48},
  label:{font:['Montserrat Medium','Open Sans Regular'],size:10,minZoom:17},
  building:{
-  neutral:'#1a1e24',outline:'#3a414b',fillOpacity:.62,extrusionOpacity:.84,
+  neutral:'#161615',neutralLight:'#DCDBD4',outline:'#2C2C2A',
+  heightLight:[[0,'#E6E5DF'],[40,'#DEDDD6'],[80,'#D4D3CB'],[150,'#C9C8C0'],[300,'#BCBBB3'],[600,'#AAA9A1']],fillOpacity:.62,extrusionOpacity:.84,
   // Capped below off-white: in the flat 2D fill this ramp's top end barely showed (rooftop only); extruded to full
   // height a skyscraper's whole face carries it, so a near-white top stop blew out and broke the dark theme.
-  height:{prop:'height_roof_ft',unit:'ft',stops:[[0,'#0c0f13'],[40,'#12171d'],[80,'#182029'],[150,'#202b38'],[300,'#2a3849'],[600,'#364a61']]},
+  height:{prop:'height_roof_ft',unit:'ft',stops:[[0,'#121211'],[40,'#171716'],[80,'#1D1D1C'],[150,'#252523'],[300,'#2F2F2D'],[600,'#3B3B38']]},
   age:{prop:'construction_year',unit:'year built',stops:[[1800,'#5b4636'],[1880,'#6d5a44'],[1920,'#7b6f57'],[1950,'#5e6c6c'],[1980,'#4c6879'],[2015,'#3c6489']]},
   landuse:{prop:'landuse_name',classes:[['One & two family','#6f7f5b'],['Multi-family walk-up','#857d58'],['Multi-family elevator','#8c7552'],['Mixed residential & commercial','#8e6a5c'],['Commercial & office','#7a6070'],
    ['Industrial & manufacturing','#6a5f7c'],['Transportation & utility','#5b6a80'],['Public facilities & institutions','#4f7480'],['Open space & outdoor recreation','#4f7c66'],['Parking','#5e6468'],['Vacant land','#4a4f52']],other:'#3a4247'}},

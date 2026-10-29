@@ -244,6 +244,22 @@
     restoreNodes();
   }
 
+  /** Swap start and destination (Google/Apple Maps' ⇅). Only for a fixed destination — "Discover for me",
+   *  "Back to start" and "Back to hotel" have no single place to swap with. Routes are cleared, never re-scored. */
+  function swapEnds() {
+    if (typeof journey !== 'undefined' && journey.endMode && journey.endMode !== 'fixed') { toast('Swap works when the walk has a fixed destination.'); return; }
+    [state.start, state.end] = [state.end, state.start];
+    [state.customStart, state.customEnd] = [state.customEnd, state.customStart];
+    for (const kind of ['start', 'end']) {
+      const p = getPlace(kind), sel = $(kind === 'start' ? 'startSelect' : 'endSelect');
+      $(kind === 'start' ? 'searchStart' : 'searchEnd').value = p?.name || '';
+      if (typeof placeInputs !== 'undefined') placeInputs[kind]?.set(p);
+      if (sel && [...sel.options].some((o) => o.value === state[kind])) sel.value = state[kind];
+    }
+    if (typeof resetRoutes === 'function') resetRoutes();
+    if (typeof syncMapData === 'function') syncMapData();
+    renderComposer(); renderRouteFromTo?.();
+  }
   function contextText() {
     const a = typeof getPlace === 'function' ? getPlace('start') : null;
     const mode = typeof journey !== 'undefined' ? journey.endMode : 'fixed';
@@ -255,6 +271,7 @@
     if (!mq.matches) return;
     const c = contextText();
     $('mContextText').textContent = `${c.from} → ${c.to}`;
+    if ($('mContextFrom')) { $('mContextFrom').textContent = c.from; $('mContextTo').textContent = c.to; }
     const req = ($('intentText')?.value || lastSubmitted || '').trim();
     $('mCompactText').textContent = req || 'Refine or start a new walk';
   }
@@ -408,7 +425,7 @@
         const on = planner.origins[q.dim] !== 'default' && planner.weights[q.dim] >= 70 && planner.directions[q.dim] !== 'low';
         root.appendChild(chip(q.label, on, `Sets the ${q.dim} dimension to ${QUICK_WEIGHT}`, () => toggleDim(q.dim, !on)));
       }
-      if (typeof applyJourney === 'function') root.appendChild(chip('☕ Coffee stop', coffeeOn(), 'Adds a café stop through the journey planner (real NYC place data)', toggleCoffee));
+      if (typeof applyJourney === 'function') root.appendChild(chip('Coffee stop', coffeeOn(), 'Adds a café stop through the journey planner (real NYC place data)', toggleCoffee));
     }
   }
   function chip(label, on, title, onClick) {
@@ -561,6 +578,7 @@
     ta.addEventListener('input', renderComposer);
     $('mCreate').addEventListener('click', createFromText);
     $('mContext').addEventListener('click', () => setView('plan'));
+    document.querySelectorAll('.swap-ends').forEach((b) => b.addEventListener('click', swapEnds));
     $('mCompactEdit').addEventListener('click', () => { setView('typing'); ta.focus(); });
     $('mNewWalk').addEventListener('click', () => { ta.value = ''; lastSubmitted = ''; showStatus(null); setView('typing'); ta.focus(); });
     $('mSheetBack').addEventListener('click', closeSecondary);

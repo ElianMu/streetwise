@@ -426,7 +426,7 @@ function journeyMode(){return journey.active||journey.named.length>0||journey.en
 async function planJourney(isFollowUp=false){
  if(state.routingBusy)return;
  if(planner.constraints.stepFree){resetRoutes();$('rankingStatus').textContent='Step-free access cannot be verified with the current curb-ramp and elevator data. No route is recommended.';appendChat('assistant',$('rankingStatus').textContent);return;}
- const run=++planner.runId;state.routingBusy=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;$('ctaLabel').textContent='✦ Finding places & routing…';
+ const run=++planner.runId;state.routingBusy=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;$('ctaLabel').textContent='Finding places & routing…';
  try{
   var kept=isFollowUp?snapshotRoutes():null;
   resetRoutes(true);renderRouteCards();
@@ -446,7 +446,7 @@ async function planJourney(isFollowUp=false){
   if(run!==planner.runId)return;resetRoutes(true);renderRouteCards();
   const restored=restoreRoutes(kept);
   const msg=`Could not build the walk: ${err.message}${restored?' Your previous route is still shown and unchanged.':''}`;$('rankingStatus').textContent=msg;appendChat('assistant',msg);toast(msg);
- }finally{if(run===planner.runId){state.routingBusy=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false;$('ctaLabel').textContent='✦ Plan My Walk';}}
+ }finally{if(run===planner.runId){state.routingBusy=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false;$('ctaLabel').textContent='Plan My Walk';}}
 }
 function itinerarySummaryText(it){
  const t=it.totals,c=it.constraints;

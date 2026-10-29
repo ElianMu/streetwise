@@ -44,7 +44,7 @@ async function renderExploreAnalytics(){
  root.innerHTML=`<details ${exploreStats.open?'open':''} id="eaDetails"><summary>Analytics · ${esc(v.label)}</summary>
   <div class="ea-grid"><div><span>Segments with data</span><strong>${d.n.toLocaleString()}</strong><small>of ${total.toLocaleString()} (${Math.round(d.coverage*100)}%)</small></div>
    <div><span>Mean · median</span><strong>${f1(d.mean)} · ${f1(d.median)}</strong><small>P10 ${f1(d.p10)} · P25 ${f1(d.p25)} · P75 ${f1(d.p75)} · P90 ${f1(d.p90)}</small></div></div>
-  ${histSvg(histogram(viewValues(v)),'#d8f365')}
+  ${histSvg(histogram(viewValues(v)),'#E3B55B')}
   <label class="ea-compare">Compare with <select id="eaCompare">${EXPLORE_VIEWS.map((x,i)=>i===exploreMap.view?'':`<option value="${i}" ${x===other?'selected':''}>${esc(x.label)}</option>`).join('')}</select></label>
   ${histSvg(histogram(viewValues(other)),'#4aa3ff')}
   <p class="ea-note">${esc(other.label)}: ${d2.n.toLocaleString()} segments, median ${f1(d2.median)}. Spearman ρ = ${cor.rho==null?'N/A':cor.rho.toFixed(2)} over ${cor.n.toLocaleString()} segments where both are measured.</p>

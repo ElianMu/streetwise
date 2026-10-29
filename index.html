@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#000000" />
+  <meta name="theme-color" content="#0B0B0B" />
   <!-- iOS Home Screen app: mark it before first layout so the full-viewport rule in styles.css applies from the start
        (record the viewport iOS gave at launch for the layout diagnostics). -->
   <script>if(navigator.standalone===true){document.documentElement.classList.add('ios-standalone');}window.__strollaneLaunchViewport=[window.innerWidth,window.innerHeight];</script>
@@ -18,35 +18,26 @@
   <meta name="twitter:title" content="STROLLANE · NYC | Personalized City Walks" />
   <meta name="twitter:description" content="Personalized Manhattan city walks: real pedestrian routing, 12 walking-experience dimensions and live NYC urban data." />
   <meta name="twitter:image" content="./icon-512.png?v=2" />
-  <link rel="icon" href="./favicon.svg?v=2" type="image/svg+xml" />
-  <link rel="icon" href="./favicon-32x32.png?v=2" sizes="32x32" type="image/png" />
-  <link rel="icon" href="./favicon-16x16.png?v=2" sizes="16x16" type="image/png" />
+  <link rel="icon" href="./favicon.svg?v=3" type="image/svg+xml" />
+  <link rel="icon" href="./favicon-32x32.png?v=3" sizes="32x32" type="image/png" />
+  <link rel="icon" href="./favicon-16x16.png?v=3" sizes="16x16" type="image/png" />
   <link rel="shortcut icon" href="./favicon.ico?v=2" />
-  <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=2" />
+  <link rel="apple-touch-icon" href="./apple-touch-icon.png?v=3" />
   <link rel="manifest" href="./site.webmanifest?v=2" />
   <meta name="apple-mobile-web-app-title" content="Strollane" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=45" />
+  <link rel="stylesheet" href="./styles.css?v=46" />
 </head>
 <body>
 <div class="site-shell">
   <header class="topbar">
-    <div class="brand-zone"><svg class="brand-glyph" viewBox="0 0 38 45" role="img" aria-label="Strollane symbol">
-      <path class="glyph-motion" d="M2 17h5M1 22h6M3 27h4"/>
-      <rect class="glyph-leg" x="16.50" y="22.35" width="13.82" height="3.90" rx="1.95" transform="rotate(118.05 16.50 24.30)"/>
-      <rect class="glyph-leg" x="16.50" y="22.25" width="13.09" height="4.10" rx="2.05" transform="rotate(46.55 16.50 24.30)"/>
-      <rect class="glyph-torso" x="20.80" y="7.80" width="14.17" height="6.00" rx="3.00" transform="rotate(107.67 20.80 10.80)"/>
-      <rect class="glyph-arm" x="21.80" y="9.55" width="8.28" height="2.90" rx="1.45" transform="rotate(25.02 21.80 11.00)"/>
-      <rect class="glyph-arm" x="19.50" y="10.00" width="9.18" height="3.00" rx="1.50" transform="rotate(150.64 19.50 11.50)"/>
-      <circle class="glyph-head" cx="22" cy="6" r="4"/>
-    </svg><div class="brand-name">STROLLANE</div><span class="brand-location">MANHATTAN · NYC</span></div>
-    <div class="top-center"><span class="pulse-dot"></span><span>CITY WALK STUDIO IN NEW YORK</span></div>
-    <div class="top-actions"><span id="topWeather" class="top-weather"><span class="tiny-sun">☁</span> Weather loading…</span><button id="openInfo" class="icon-button" title="About the prototype" aria-label="About"><span>i</span></button><button id="openKepler" class="kepler-btn"><span class="kepler-mark">◈</span> Kepler studio <span>↗</span></button><details class="mobile-more" id="mobileMore"><summary class="icon-button" title="Menu" aria-label="Menu">☰</summary><div class="mobile-more-body"><button type="button" data-mview-go="plan">☷ Plan walk · start &amp; destination</button><button type="button" data-mview-go="customize">⚙ Customize walk · time &amp; 12 dimensions</button><button type="button" data-mview-go="urban">▦ Explore Urban Data</button><button type="button" data-mview-go="layers">◫ Map layers, weather &amp; legend</button><button type="button" data-more-proxy="mapReset">⤢ Reset map view</button><button type="button" data-more-proxy="toggleLegend">≡ Show / hide data legend</button><hr><button type="button" data-more-proxy="toggleData">≋ Data sources &amp; status</button><button type="button" data-more-proxy="openInfo">ⓘ About this prototype</button><button type="button" data-more-proxy="openKepler">◈ Export to Kepler Studio</button></div></details></div>
+    <div class="brand-zone"><svg class="brand-glyph brand-mark" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M13 7.6 11.7 13.2"/><path d="M12.8 8.7 14.7 11.1 16.6 12.1"/><path d="M12.6 8.8 10.6 10.9 9.2 12.8"/><path d="M11.7 13.2 13.7 16.6 14.5 20.6"/><path d="M11.7 13.2 10.4 17.1 7.9 19.8"/></g><circle cx="14" cy="4" r="2.15" fill="currentColor"/></svg><div class="brand-name" aria-label="STROLLANE · NYC">STROLLANE<span class="brand-sep" aria-hidden="true">·</span><span class="brand-city">NYC</span></div></div>
+        <div class="top-actions"><span id="topWeather" class="top-weather"><span class="tiny-sun">☁</span> Weather loading…</span><button id="openInfo" class="icon-button" title="About the prototype" aria-label="About"><span>i</span></button><button id="openKepler" class="kepler-btn"><span class="kepler-mark">◈</span> Kepler studio <span>↗</span></button><details class="mobile-more" id="mobileMore"><summary class="icon-button" title="Menu" aria-label="Menu"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary><div class="mobile-more-body"><button type="button" data-mview-go="plan"><span>Plan walk</span><small>Start &amp; destination</small></button><button type="button" data-mview-go="customize"><span>Customize walk</span><small>Time &amp; 12 dimensions</small></button><button type="button" data-mview-go="urban"><span>Explore urban data</span><small>NYC GIS layers</small></button><button type="button" data-mview-go="layers"><span>Map layers</span><small>Weather &amp; legend</small></button><div class="menu-segment" role="group" aria-label="Map style"><span>Map</span><button type="button" data-map-theme="dark" aria-pressed="true">Dark</button><button type="button" data-map-theme="light" aria-pressed="false">Light</button></div><button type="button" data-more-proxy="mapReset"><span>Reset map view</span><small>Back to Manhattan</small></button><button type="button" data-more-proxy="toggleLegend"><span>Data legend</span><small>Show or hide</small></button><hr><button type="button" data-more-proxy="toggleData"><span>Data sources</span><small>Status &amp; coverage</small></button><button type="button" data-more-proxy="openInfo"><span>About</span><small>This prototype</small></button><button type="button" data-more-proxy="openKepler"><span>Export to Kepler</span><small>GIS data</small></button></div></details></div>
   </header>
 
   <div class="app-layout">
@@ -60,13 +51,13 @@
           <div class="field-top"><label for="searchStart">FROM</label><button id="gpsStart" class="mini-text-button" title="Requires permission">◎ Use GPS</button></div>
           <div class="search-place"><span class="place-dot start"></span><input id="searchStart" aria-label="Search starting point or address" placeholder="Search address or landmark" autocomplete="off"><button id="pickStart" class="pick-pin" title="Pick start from map" aria-label="Pick start on map">⌖</button></div>
           <select id="startSelect" class="preset-select" aria-label="Or quick-pick a popular start"><option value="bryant">Bryant Park · selected</option><option value="times">Times Square</option><option value="rock">Rockefeller Center</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option><option value="gps">My current location</option></select>
-          <div class="field-top"><label for="searchEnd">TO</label><span>⌖ PICK ON MAP</span></div>
+          <button type="button" class="swap-ends swap-inline" aria-label="Swap start and destination"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4v15m0 0-3.5-3.5M8 19l3.5-3.5M16 20V5m0 0-3.5 3.5M16 5l3.5 3.5"/></svg><span>Swap</span></button><div class="field-top"><label for="searchEnd">TO</label><span>⌖ PICK ON MAP</span></div>
           <div class="end-modes" role="group" aria-label="Where the walk ends"><button type="button" data-end-mode="fixed" aria-pressed="true">Destination</button><button type="button" data-end-mode="open" aria-pressed="false">Discover for me</button><button type="button" data-end-mode="round" aria-pressed="false">Back to start</button><button type="button" data-end-mode="hotel" aria-pressed="false">Back to hotel</button></div>
           <div id="endFixedBox">
           <div class="search-place"><span class="place-dot end"></span><input id="searchEnd" aria-label="Search destination or address" placeholder="Search address or landmark" autocomplete="off"><button id="pickEnd" class="pick-pin" title="Pick destination on map" aria-label="Pick destination on map">⌖</button></div>
           <select id="endSelect" class="preset-select" aria-label="Or quick-pick a popular destination"><option value="rock">Rockefeller Center · selected</option><option value="carnegie">Carnegie Hall</option><option value="times">Times Square</option><option value="bryant">Bryant Park</option><option value="grand">Grand Central Terminal</option><option value="battery">The Battery</option><option value="wall">Wall Street</option><option value="washington">Washington Square Park</option><option value="union">Union Square</option><option value="columbus">Columbus Circle</option><option value="met">The Metropolitan Museum</option><option value="columbia">Columbia University</option><option value="apollo">Apollo Theater</option><option value="fort">Fort Tryon Park</option><option value="custom">Custom map / address point</option></select>
           </div>
-          <details class="hotel-box" id="hotelBox"><summary>🏨 My hotel · <span id="hotelName">not set</span></summary>
+          <details class="hotel-box" id="hotelBox"><summary>My hotel · <span id="hotelName">not set</span></summary>
             <div class="search-place"><span class="place-dot hotel"></span><input id="hotelSearch" aria-label="Search your hotel" autocomplete="off"></div>
             <div class="hotel-actions"><button type="button" class="mini-outline" id="hotelAsStart">Start here</button><button type="button" class="mini-outline" id="hotelReturn">Return here</button><button type="button" class="mini-outline" id="hotelNearby">Explore nearby</button></div>
             <label class="constraint-check"><input type="checkbox" id="rememberHotel"> Remember on this device <small>stored only in this browser</small></label>
@@ -79,9 +70,9 @@
         <div class="line-divider"></div>
         <div class="section-row"><div class="section-overline">02 / TELL STROLLANE WHAT YOU WANT</div><span class="subtag">NATURAL LANGUAGE</span></div>
         <p class="field-description">Describe the experience. You don't need to select any data layers.</p>
-        <div class="voice-row"><button type="button" class="mic-btn" data-mic="intentText" aria-pressed="false" aria-label="Speak your request">🎙</button><select id="voiceLang" aria-label="Voice language"><option value="en-US">EN</option><option value="zh-CN">中文</option></select><span id="voiceStatus" class="voice-status">Voice or text — you can edit the transcript.</span></div>
+        <div class="voice-row"><button type="button" class="mic-btn" data-mic="intentText" aria-pressed="false" aria-label="Speak your request"><svg class="mic-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button><select id="voiceLang" aria-label="Voice language"><option value="en-US">EN</option><option value="zh-CN">中文</option></select><span id="voiceStatus" class="voice-status">Voice or text — you can edit the transcript.</span></div>
         <textarea id="intentText" class="intent-box" rows="3" spellcheck="false" placeholder="I’d like a greener, quieter walk with interesting architecture.">I'd like a greener, quieter walk with interesting architecture.</textarea>
-        <button id="generateRoutes" class="primary-cta"><span id="ctaLabel">✦ Plan My Walk</span><span class="cta-arrow">↗</span></button>
+        <button id="generateRoutes" class="primary-cta"><span id="ctaLabel">Plan My Walk</span><span class="cta-arrow">↗</span></button>
         <div id="interpretMode" class="interpret-mode" aria-live="polite">Checking AI interpretation service…</div>
         </div>
         <section class="journey-section lp-plan" aria-label="Journey stops">
@@ -126,7 +117,7 @@
           <div class="section-row"><div class="section-overline">05 / REFINE YOUR WALK</div><span class="small-count">CONVERSATION</span></div>
           <p class="field-description">Ask for changes. New route results and the map are recomputed when possible.</p>
           <div id="chatHistory" class="chat-history" role="log" aria-live="polite"></div>
-          <form id="chatForm" class="chat-form"><button type="button" class="mic-btn" data-mic="chatInput" aria-pressed="false" aria-label="Speak a follow-up">🎙</button><textarea id="chatInput" rows="2" placeholder="Make it quieter, even if it takes five more minutes…" aria-label="Follow-up route instructions"></textarea><button id="chatSend" type="submit" aria-label="Send instruction">↗</button></form>
+          <form id="chatForm" class="chat-form"><button type="button" class="mic-btn" data-mic="chatInput" aria-pressed="false" aria-label="Speak a follow-up"><svg class="mic-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button><textarea id="chatInput" rows="2" placeholder="Make it quieter, even if it takes five more minutes…" aria-label="Follow-up route instructions"></textarea><button id="chatSend" type="submit" aria-label="Send instruction">↗</button></form>
           <div class="chat-hint">Enter to send · Shift + Enter for a new line</div>
         </section>
 
@@ -141,7 +132,7 @@
           <label class="m-composer-q" for="intentText">How would you like to explore New York?</label>
           <div id="mComposerSlot" class="m-composer-slot"></div>
           <div class="m-composer-row"><span id="mMicSlot" class="m-mic-slot"></span><button type="button" id="mCreate" class="m-create">Create My Walk <span aria-hidden="true">→</span></button></div>
-          <button type="button" id="mContext" class="m-context" aria-label="Start and destination — open Plan walk"><span class="place-dot start"></span><span id="mContextText">From …</span><span class="m-context-edit" aria-hidden="true">Change</span></button>
+          <div class="m-route-ends"><button type="button" id="mContext" class="m-context" aria-label="Start and destination — open Plan walk"><span class="m-ft"><span class="m-ft-row"><span class="place-dot start" aria-hidden="true"></span><span class="m-ft-k">From</span><span id="mContextFrom" class="m-ft-v">…</span></span><span class="m-ft-row"><span class="place-dot end" aria-hidden="true"></span><span class="m-ft-k">To</span><span id="mContextTo" class="m-ft-v">…</span></span></span><span id="mContextText" class="sr-only">From …</span><span class="m-context-edit" aria-hidden="true">Edit</span></button><button type="button" class="m-swap swap-ends" aria-label="Swap start and destination"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4v15m0 0-3.5-3.5M8 19l3.5-3.5M16 20V5m0 0-3.5 3.5M16 5l3.5 3.5"/></svg></button></div>
           <div id="mStatus" class="m-status hidden" role="status" aria-live="polite"></div>
         </div>
         <div class="m-composer-compact"><button type="button" id="mCompactEdit" class="m-compact-edit" aria-label="Edit your walk request"><span class="m-compact-spark">✦</span><span id="mCompactText">Your walk</span></button><button type="button" id="mNewWalk" class="m-compact-new" aria-label="Start a new walk">New</button></div>
@@ -203,7 +194,7 @@
         </div>
       </section>
       <div id="navChoice" class="nav-choice hidden" role="dialog" aria-modal="true"></div>
-      <div class="map-actions"><button id="mapLocate" title="Locate me" aria-label="Locate me">◎</button><button id="toggleLegend" title="Toggle legend" aria-label="Toggle legend" aria-pressed="true">≡</button><button id="mapReset" title="Reset map view" aria-label="Reset map view">⤢</button><button id="mUrbanBtn" class="m-only" title="Explore Urban Data" aria-label="Explore Urban Data">▦</button></div>
+      <div class="map-actions"><button id="mapLocate" title="Locate me" aria-label="Locate me"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4 4.5 10.6l6.8 2.1 2.1 6.8z"/></svg></button><button id="toggleLegend" title="Toggle legend" aria-label="Toggle legend" aria-pressed="true"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 7h11M9 12h11M9 17h11"/><circle cx="4.6" cy="7" r=".9"/><circle cx="4.6" cy="12" r=".9"/><circle cx="4.6" cy="17" r=".9"/></svg></button><button id="mapReset" title="Reset map view" aria-label="Reset map view"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button id="mapThemeBtn" class="d-only" title="Light or dark map" aria-label="Switch map style" data-map-theme-toggle><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7.5" class="ring"/><path d="M12 4.5v15a7.5 7.5 0 0 0 0-15z" class="fill"/></svg></button><button id="mUrbanBtn" class="m-only" title="Explore Urban Data" aria-label="Explore Urban Data"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3.5 8.5 4.6-8.5 4.6-8.5-4.6z"/><path d="m3.5 12.3 8.5 4.6 8.5-4.6"/><path d="m3.5 16.3 8.5 4.6 8.5-4.6"/></svg></button></div>
       <div id="pickNotice" class="pick-notice hidden">Click anywhere on the map to set a point. <button id="cancelPick">CANCEL</button></div>
       <div class="map-legend"><div class="legend-title"><span id="legendDot" class="legend-dot"></span><span id="legendTitle">MANHATTAN STREET NETWORK</span></div><p id="legendSubtitle">Official NYC centerlines (Manhattan borough filter); walkability not confirmed.</p><div id="legend-scale" class="legend-scale hidden"><span><i style="background:#365c64"></i>Lower</span><span><i style="background:#37bfc8"></i>Mid</span><span><i style="background:#d8f365"></i>Higher</span></div></div>
       <div class="map-footer"><span>© OpenStreetMap · CARTO basemap</span><span class="map-verified">● Manhattan-wide street geometries / Experimental layers</span><span id="mapCoords">40.758° N · 73.984° W</span></div>
@@ -228,7 +219,7 @@
         <div class="m-only m-route-fromto" id="mRouteFromTo"></div>
         <div class="m-only" id="mRefineSlot"></div>
         <div class="subtle-divider"></div>
-        <div class="section-overline">✦ WHY THIS ROUTE?</div><div class="why-box" id="whyRoute">Generate routes to see evidence-grounded reasons.</div>
+        <div class="section-overline">WHY THIS ROUTE?</div><div class="why-box" id="whyRoute">Generate routes to see evidence-grounded reasons.</div>
         <div class="subtle-divider"></div>
         <div class="section-row"><div class="section-overline">WEATHER &amp; YOUR WALK</div><span id="wxRouteStatus" class="small-count"></span></div>
         <div id="wxRoute" class="wx-route"><p class="soft-copy">Loading the forecast…</p></div>
@@ -273,23 +264,23 @@
 <script src="./weather.js?v=28"></script>
 <script src="./places.js?v=28"></script>
 <script src="./opening-hours.js?v=28"></script>
-<script src="./app.js?v=33"></script>
-<script src="./route-client.js?v=29"></script>
+<script src="./app.js?v=34"></script>
+<script src="./route-client.js?v=30"></script>
 <script src="./weather-ui.js?v=28"></script>
 <script src="./journey.js?v=29"></script>
 <script src="./journey-ui.js?v=30"></script>
 <script src="./voice.js?v=28"></script>
 <script src="./nav-engine.js?v=30"></script>
-<script src="./nav-ui.js?v=32"></script>
+<script src="./nav-ui.js?v=33"></script>
 <script src="./ar-nav.js?v=2"></script>
-<script src="./route-preview.js?v=1"></script>
+<script src="./route-preview.js?v=2"></script>
 <script src="./urban-geo.js?v=28"></script>
-<script src="./urban-style.js?v=31"></script>
-<script src="./urban-layers.js?v=32"></script>
+<script src="./urban-style.js?v=32"></script>
+<script src="./urban-layers.js?v=33"></script>
 <script src="./explore-map.js?v=29"></script>
-<script src="./explore-analytics.js?v=28"></script>
-<script src="./center-map.js?v=29"></script>
-<script src="./mobile-ui.js?v=20"></script>
+<script src="./explore-analytics.js?v=29"></script>
+<script src="./center-map.js?v=30"></script>
+<script src="./mobile-ui.js?v=21"></script>
 <script src="./pwa-register.js?v=1"></script>
 </body>
 </html>
