@@ -440,7 +440,7 @@ async function planJourney(isFollowUp=false){
   $('rankingStatus').textContent=planner.lastExplanation;
   renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();renderCityWalk();renderJourneyPanel();
   appendChat('assistant',planner.lastExplanation);
-  if(state.mapReady){const bx=routeBounds(state.routes,80);if(bx)state.map.fitBounds([[bx[0],bx[1]],[bx[2],bx[3]]],{padding:65,maxZoom:15.5,duration:700});}
+  if(state.mapReady){const bx=routeBounds(state.routes,80);if(bx)state.map.fitBounds([[bx[0],bx[1]],[bx[2],bx[3]]],{padding:routeFitPadding(65),maxZoom:15.5,duration:700});}
   autoVerifyMenus();cacheStopPlaces();
  }catch(err){
   if(run!==planner.runId)return;resetRoutes(true);renderRouteCards();

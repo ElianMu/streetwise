@@ -416,7 +416,7 @@ function updateMapStyles(){
   const m=state.map, raw=false; // No incomplete raw-record proximity data masquerades as a global nature score.
   const [lo,hi]=state.thresholds;
   const thresholdColor=['#3A3A38','#8C7348','#E3B55B'];
-  const streetColor=raw?['case', ['!', ['has','tree_records_per_km']], '#6b6e72', ['<', ['get','tree_records_per_km'], lo||1], thresholdColor[0], ['<',['get','tree_records_per_km'],hi||2],thresholdColor[1],thresholdColor[2]]:'#4c5057';
+  const streetColor=raw?['case', ['!', ['has','tree_records_per_km']], '#6b6e72', ['<', ['get','tree_records_per_km'], lo||1], thresholdColor[0], ['<',['get','tree_records_per_km'],hi||2],thresholdColor[1],thresholdColor[2]]:(state.mapTheme==='light'?'#CFCEC6':'#4A4A47');
   if(m.getLayer('road-highlight'))m.setPaintProperty('road-highlight','line-color',streetColor);
   setMapLayerVisible('road-highlight',state.display.roads);
   setMapLayerVisible('road-underlay',state.display.roads);
@@ -478,6 +478,10 @@ function applyMapTheme(m,theme){
   set('point-starts','circle-color',R.start);set('point-starts','circle-stroke-color',R.ring);
   set('point-ends','circle-color',R.route);set('point-ends','circle-stroke-color',R.casing);set('point-ends-core','circle-color',R.casing);
   if(m.getLayer('route-arrows'))try{m.setLayoutProperty('route-arrows','icon-image',theme==='light'?'route-arrow-light':'route-arrow-dark');}catch(e){}
+  // the NYC street-centerline overlay is part of the street fabric: it follows the theme too
+  set('road-underlay','line-color',theme==='light'?'#E9E8E2':'#0B0B0B');set('road-underlay','line-opacity',theme==='light'?.6:.85);
+  set('road-highlight','line-color',theme==='light'?'#CFCEC6':'#4A4A47');
+  set('udg-line-lion_centerline','line-color',theme==='light'?'#BDBDB5':(window.UrbanStyle?UrbanStyle.LINES.lion_centerline.color:'#6b7685'));
   // data areas that sit on the land colour need their own daylight tones
   const A=(window.UrbanStyle&&UrbanStyle.T.area)||null;
   if(A){set('udg-green-fill','fill-color',theme==='light'?'#CFDCC6':A.park.fill);set('udg-green-line','line-color',theme==='light'?'#93AE88':A.park.line);}
@@ -493,6 +497,17 @@ function setMapTheme(theme){
   state.mapTheme=theme==='light'?'light':'dark';try{localStorage.setItem('strollane.mapTheme',state.mapTheme);}catch(e){}
   if(state.map&&state.mapReady)applyMapTheme(state.map,state.mapTheme);
   document.querySelectorAll('[data-map-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mapTheme===state.mapTheme)));
+}
+/** Map padding for "show the whole route": on phones the request card covers the top and the results sheet the
+ * bottom, so the route is framed in the band of map that is actually visible (Google/Apple Maps behaviour);
+ * desktop keeps the uniform margin. */
+function routeFitPadding(base=65){
+  if(!window.matchMedia||!matchMedia('(max-width:740px)').matches)return base;
+  const H=innerHeight,card=document.getElementById('mComposer'),sheet=document.getElementById('rightPanel');
+  const cb=card&&card.offsetParent?card.getBoundingClientRect().bottom:(document.querySelector('.topbar')?.getBoundingClientRect().bottom||60);
+  const st=sheet&&sheet.offsetParent?sheet.getBoundingClientRect().top:H;
+  const bottom=st>H*.3&&st<H-40?H-st:H*.5;
+  return {top:Math.round(Math.min(cb+20,H*.35)),bottom:Math.round(Math.min(bottom+20,H*.6)),left:28,right:72};
 }
 /** Direction chevrons drawn inside the route line (Apple/Mapbox navigation style), one image per map theme. */
 function addRouteArrowImages(m){

@@ -79,7 +79,7 @@ async function generateRoutes(userText=null,isFollowUp=false){
   $('rankingStatus').textContent=planner.lastExplanation;
   renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
   appendChat('assistant',planner.lastExplanation);
-  if(state.mapReady&&!isFollowUp){const bx=routeBounds(state.routes,80);if(bx)state.map.fitBounds([[bx[0],bx[1]],[bx[2],bx[3]]],{padding:65,maxZoom:15.5,duration:700});}
+  if(state.mapReady&&!isFollowUp){const bx=routeBounds(state.routes,80);if(bx)state.map.fitBounds([[bx[0],bx[1]],[bx[2],bx[3]]],{padding:routeFitPadding(65),maxZoom:15.5,duration:700});}
   await loadRoutePOIs(run);
  }catch(err){
   if(run!==planner.runId)return;
@@ -95,7 +95,7 @@ function updateRoutesUI(){if(state.routes.length)queueMapReplan();else renderRou
 function selectRoute(id){
  const r=state.routes.find(x=>x.id===id);if(!r)return;
  state.activeRoute=id;routeNav.selectedEdge=null;urbanLayersRouteChanged();renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
- if(state.mapReady){const b=routeBounds([r],160);if(b)state.map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:70,maxZoom:16,duration:500})}
+ if(state.mapReady){const b=routeBounds([r],160);if(b)state.map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:routeFitPadding(70),maxZoom:16,duration:500})}
 }
 function scoreText(v){return v==null?'N/A':String(v);}
 /** The hard limits the engine actually applied to the current results (from the response, not the form). */

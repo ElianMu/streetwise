@@ -889,7 +889,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
 .rp-now small{color:var(--muted)}
 .rp-stop{border-left-color:var(--muted)}.rp-stop small{color:var(--muted)}
 @media(max-width:740px){
- .topbar{background:linear-gradient(180deg,rgba(11,11,11,.82) 0%,rgba(11,11,11,.6) 100%);border-bottom:1px solid var(--hair)}
+ .topbar{background:linear-gradient(180deg,rgba(11,11,11,.72) 0%,rgba(11,11,11,.5) 100%);border-bottom:1px solid var(--hair)}
  .topbar .brand-mark{width:20px;height:20px}
  .topbar .brand-name{font-size:14px;letter-spacing:.14em}
  .map-workspace .map-footer{background:linear-gradient(0deg,rgba(11,11,11,.72) 0%,rgba(11,11,11,.3) 70%,rgba(11,11,11,0) 100%)}

@@ -487,7 +487,7 @@ async function renderRouteUrbanData(){
 function showDatasetsOnRoute(ids){
  if(urbanData.scope!=='route'){urbanData.scope='route';document.querySelector('[name="urbanScope"][value="route"]').checked=true;}
  for(const id of ids)toggleUrbanDataset(id,true);
- const r=state.routes.find(x=>x.id===state.activeRoute);if(r&&state.mapReady){const b=routeBounds([r],urbanData.corridor);if(b)state.map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:70,maxZoom:16,duration:500});}
+ const r=state.routes.find(x=>x.id===state.activeRoute);if(r&&state.mapReady){const b=routeBounds([r],urbanData.corridor);if(b)state.map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:routeFitPadding(70),maxZoom:16,duration:500});}
 }
 
 // --- setup -----------------------------------------------------------------------------------------------------
