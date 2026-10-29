@@ -624,46 +624,65 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
    No 100vh/100dvh arithmetic is left in the phone layout. Insets go through --sat/--sab/--sal/--sar
    (= env(safe-area-inset-*) in every real browser; overridable in tests, Chromium cannot emulate them).
    ================================================================== */
-:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);--hdr:0px}
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);--hdr:0px;--vgap:0px}
+/* --vgap: the strip iOS leaves below the reported viewport in a Home Screen app (measured in mobile-ui.js; 0 elsewhere). */
 /* Tablet / landscape phone (741–1060px): the off-canvas results drawer was positioned against the page, so
    overflow clipping on .app-layout never applied and the page could scroll sideways by the drawer's width
    (also every iPhone in landscape). Anchor it to .app-layout instead; same on-screen position as before. */
 @media(min-width:741px) and (max-width:1060px){.app-layout{position:relative}.right-panel{top:14px}}
 /* Tablet / desktop keep their layout; the header just grows by the inset (0 outside iOS standalone). */
 .topbar{height:calc(68px + var(--sat));padding-top:var(--sat);padding-left:max(20px,var(--sal));padding-right:max(20px,var(--sar))}
-.app-layout{height:calc(100dvh - 68px - var(--sat))}
+.app-layout{height:calc(100dvh - 68px - var(--sat) + var(--vgap))}
 @media(max-width:740px){
- :root{--hdr:calc(58px + var(--sat))}
+ :root{--hdr:calc(48px + var(--sat))}
  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
- .site-shell{position:fixed;inset:0;min-height:0;height:auto;display:block}
+ /* Fixed to the top of the screen and as tall as the viewport PLUS the iOS Home Screen gap, so the shell
+    (and the map inside it) reaches the physical bottom edge. */
+ .site-shell{position:fixed;top:0;left:0;right:0;bottom:auto;min-height:0;height:calc(100% + var(--vgap));display:block}
  /* Header: overlay band over the map, sized from the status bar down. */
  .topbar{position:absolute;top:0;left:0;right:0;z-index:20;height:var(--hdr);padding-top:var(--sat);padding-left:max(14px,var(--sal));padding-right:max(10px,var(--sar));
   background:linear-gradient(180deg,rgba(9,21,23,.97) 0%,rgba(9,21,23,.9) 100%);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid rgba(32,50,55,.7)}
+ /* Compact header: 48px of content under the status bar (was 58); the menu keeps a 44px tap target with clearance. */
+ .topbar .brand-glyph{height:24px;width:20px}
+ .topbar .brand-name{font-size:18px}
+ .topbar .mobile-more summary{width:44px;height:44px;display:grid;place-items:center}
  /* Map: the full-screen base layer. */
  .app-layout{position:absolute;inset:0;height:auto;min-height:0}
  .map-workspace{height:100%}
  body.nav-mode .app-layout{height:auto}
  body.nav-mode .map-workspace{height:100%}
  /* Request card: below the header, fluid spacing (no per-device CSS, no scaling). */
- .m-composer{top:calc(var(--hdr) + clamp(8px,2.2vw,12px));left:max(clamp(8px,2.6vw,12px),var(--sal));right:max(clamp(8px,2.6vw,12px),var(--sar));padding:clamp(10px,3vw,14px) clamp(10px,3vw,14px) clamp(8px,2.4vw,10px)}
- .m-composer-q{font-size:clamp(15.5px,4.4vw,18px)}
+ /* Compact request card: same content, less chrome (input stays 16px text = no iOS zoom on focus). */
+ .m-composer{top:calc(var(--hdr) + 8px);left:max(clamp(8px,2.4vw,10px),var(--sal));right:max(clamp(8px,2.4vw,10px),var(--sar));padding:10px 10px 4px;border-radius:16px}
+ .m-composer-q{font-size:clamp(15px,4vw,16.5px);margin:0 2px 7px}
+ .m-composer-slot #intentText{height:44px;min-height:44px;padding:10px 12px}
+ .m-composer-row{margin-top:7px}
+ .m-create{height:44px;font-size:13.5px}
+ .m-mic-slot .mic-btn{width:44px;height:44px}
+ .m-context{min-height:32px;margin-top:3px}
  body[data-mview="results"] .m-composer{padding:6px}
  .m-view-exit{top:calc(var(--hdr) + 10px);left:max(10px,var(--sal))}
  .map-workspace .pick-notice{top:calc(var(--hdr) + 10px)}
  body[data-mview="layers"] .map-workspace .experience-controls,body[data-mview="layers"] .map-workspace .wx-panel{top:calc(var(--hdr) + 62px)}
  body[data-mview="layers"] .map-workspace .urban-layers{top:calc(var(--hdr) + 112px);max-height:calc(100% - var(--hdr) - 250px - var(--sab))}
  /* Map footer + MapLibre's own controls sit above the home indicator. */
- .map-workspace .map-footer{height:calc(25px + var(--sab));padding-bottom:var(--sab);padding-left:max(14px,var(--sal));padding-right:max(14px,var(--sar))}
- .map-workspace .maplibregl-ctrl-bottom-right,.map-workspace .maplibregl-ctrl-bottom-left{bottom:calc(25px + var(--sab))}
+ /* Footer: a transparent fade, not an opaque bar, so the map is visible down to the screen edge. */
+ .map-workspace .map-footer{height:calc(22px + var(--sab));padding-bottom:var(--sab);padding-left:max(14px,var(--sal));padding-right:max(14px,var(--sar));
+  background:linear-gradient(0deg,rgba(9,23,28,.72) 0%,rgba(9,23,28,.35) 70%,rgba(9,23,28,0) 100%);text-shadow:0 1px 2px #000}
+ .map-workspace .maplibregl-ctrl-bottom-right,.map-workspace .maplibregl-ctrl-bottom-left{bottom:calc(22px + var(--sab))}
  .map-workspace .maplibregl-ctrl-bottom-right{right:max(0px,var(--sar))}
  /* Map controls: GPS + Urban Data on the edge (44px, 8px apart); Reset view + Legend toggle live in the ☰ menu. */
  .map-workspace #mapReset,.map-workspace #toggleLegend{display:none}
  /* Stacked above MapLibre's zoom + attribution controls, which sit on the footer (25px + home indicator). */
  .map-workspace .map-actions{right:max(10px,var(--sar));bottom:calc(150px + var(--sab));gap:8px}
  .map-workspace .ud-legend{bottom:calc(150px + var(--sab));left:max(10px,var(--sal))}
- .install-banner{bottom:calc(16px + var(--sab))}
+ /* Layers fixed to the viewport bottom must also cover the iOS Home Screen gap. */
+ .install-banner{bottom:calc(16px + var(--sab) - var(--vgap))}
+ .toast{bottom:calc(60px + var(--sab) - var(--vgap));max-width:calc(100% - 32px)}
+ .toast.show{pointer-events:auto;cursor:pointer}
+ .modal-overlay{bottom:calc(0px - var(--vgap))}
  /* Sheets: a full sheet stops below the header; content clears the home indicator. */
- .left-panel,.right-panel,.explore-sheet{height:min(88dvh,calc(100% - 64px - var(--sat)));max-height:min(88dvh,calc(100% - 64px - var(--sat)));padding-bottom:var(--sab)}
+ .left-panel,.right-panel,.explore-sheet{bottom:calc(0px - var(--vgap));height:min(88dvh,calc(100% - 64px - var(--sat)));max-height:min(88dvh,calc(100% - 64px - var(--sat)));padding-bottom:var(--sab)}
  /* Live navigation hides the header: the instruction card clears the status bar / Dynamic Island,
     the bottom controls the home indicator. */
  .nav-top{top:calc(10px + var(--sat))}
@@ -672,3 +691,6 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
  .nav-bottom{bottom:calc(12px + var(--sab))}
  .nav-recenter,.nav-stop{bottom:calc(170px + var(--sab))}
 }
+
+/* Layout diagnostics panel (?debug=layout or 5 taps on the logo) — for real-device measurements. */
+.layout-debug{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:99;margin:0;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.88);color:#d8f365;font:11px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word;border:1px solid #d8f365}

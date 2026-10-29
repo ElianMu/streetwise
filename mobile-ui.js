@@ -640,6 +640,99 @@
       else setView(hasRoutes() ? 'results' : 'home');
     } else unwire();
   }
+  /* ------------------------------------------------------------------ */
+  /* iOS Home Screen app: viewport gap                                  */
+  /* ------------------------------------------------------------------ */
+  // Measured on a real iPhone 17 Pro Max (440x956pt) launched from the Home Screen with the
+  // black-translucent status bar: the page is drawn from the top of the screen, but WebKit reports a
+  // layout viewport that is shorter by the status-bar height (innerHeight / 100% / 100dvh / fixed inset:0
+  // = 894pt). Everything sized to the viewport therefore ends ~62pt above the screen bottom. We measure
+  // that missing strip (screen height - innerHeight) and extend the shell and the bottom-anchored layers by
+  // exactly that amount via --vgap. Only in an iOS Home Screen app (navigator.standalone is iOS-only), only
+  // when the difference is in the status-bar range; on a correct viewport it measures 0 and nothing changes.
+  function measureViewportGap() {
+    let gap = 0;
+    if (navigator.standalone === true) {
+      const portrait = window.innerHeight >= window.innerWidth;
+      const screenH = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+      const d = Math.round(screenH - window.innerHeight);
+      if (d > 0 && d <= 80) gap = d;
+    }
+    document.documentElement.style.setProperty('--vgap', `${gap}px`);
+    return gap;
+  }
+  measureViewportGap();
+  window.addEventListener('resize', measureViewportGap);
+  window.addEventListener('orientationchange', () => setTimeout(() => { measureViewportGap(); try { state.map && state.map.resize(); } catch (_) {} }, 300));
+
+  /* Layout diagnostics (for real-device checks): open with ?debug=layout, or tap the STROLLANE logo 5 times. */
+  function layoutReport() {
+    const R = (el) => { if (!el) return null; const r = el.getBoundingClientRect(); return `${Math.round(r.top)}→${Math.round(r.bottom)} (h ${Math.round(r.height)})`; };
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;left:0;visibility:hidden;padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)';
+    document.body.appendChild(probe); const ps = getComputedStyle(probe);
+    const insets = `top ${ps.paddingTop} · bottom ${ps.paddingBottom} · left ${ps.paddingLeft} · right ${ps.paddingRight}`; probe.remove();
+    const canvas = document.querySelector('#map canvas');
+    const mapBottom = document.getElementById('map')?.getBoundingClientRect().bottom || 0;
+    const screenH = window.innerHeight >= window.innerWidth ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+    return [
+      `standalone: ${navigator.standalone === true} · display-mode standalone: ${window.matchMedia('(display-mode: standalone)').matches}`,
+      `screen: ${screen.width}×${screen.height} @${window.devicePixelRatio}x · inner: ${window.innerWidth}×${window.innerHeight}`,
+      `visualViewport: ${window.visualViewport ? `${Math.round(window.visualViewport.width)}×${Math.round(window.visualViewport.height)} offTop ${Math.round(window.visualViewport.offsetTop)}` : 'n/a'} · docEl.clientHeight: ${document.documentElement.clientHeight}`,
+      `safe-area insets: ${insets}`,
+      `--vgap applied: ${getComputedStyle(document.documentElement).getPropertyValue('--vgap').trim()}`,
+      `body: ${R(document.body)} · shell: ${R(document.querySelector('.site-shell'))}`,
+      `header: ${R(document.querySelector('.topbar'))} · app-layout: ${R(document.querySelector('.app-layout'))}`,
+      `map-workspace: ${R(document.getElementById('mapWorkspace'))} · #map: ${R(document.getElementById('map'))}`,
+      `canvas: ${canvas ? `${canvas.clientWidth}×${canvas.clientHeight} css` : 'n/a'} · footer: ${R(document.querySelector('.map-footer'))}`,
+      `request card: ${R(document.getElementById('mComposer'))}`,
+      `GAP below map vs screen: ${Math.round(screenH - mapBottom)}pt (0 = map reaches the screen bottom)`,
+    ].join('\n');
+  }
+  function toggleLayoutDebug(force) {
+    let el = document.getElementById('layoutDebug');
+    if (el && force !== true) { el.remove(); return; }
+    if (!el) { el = document.createElement('pre'); el.id = 'layoutDebug'; el.className = 'layout-debug'; el.addEventListener('click', () => el.remove()); document.body.appendChild(el); }
+    el.textContent = `STROLLANE layout diagnostics (tap to close)\n${layoutReport()}`;
+  }
+  window.strollaneLayoutReport = layoutReport;
+  function wireLayoutDebug() {
+    if (/[?&]debug=layout\b/.test(location.search)) setTimeout(() => toggleLayoutDebug(true), 2500);
+    let taps = [], glyph = document.querySelector('.brand-glyph');
+    glyph?.addEventListener('click', () => { const t = Date.now(); taps = taps.filter((x) => t - x < 2000).concat(t); if (taps.length >= 5) { taps = []; toggleLayoutDebug(); } });
+    // Phones: a toast can be tapped away (it still auto-hides after 4.8 s as before).
+    document.getElementById('toast')?.addEventListener('click', (e) => e.currentTarget.classList.remove('show'));
+  }
+
+  /* Map label density on phones: per-category cluster counts (61+ datasets, one cluster source each)
+     stack into unreadable rows of numbers at city zoom. On phones the count NUMBERS appear from street
+     zoom up; rings, data, tap-to-expand and desktop are unchanged. */
+  const PHONE_COUNT_MINZOOM = 13;
+  const countMinZoom = new Map();
+  let densityTimer = 0;
+  function applyMapDensity() {
+    const m = typeof state !== 'undefined' ? state.map : null;
+    if (!m || !m.getStyle) return;
+    // Not gated on isStyleLoaded(): that stays false while urban tiles stream in, so the change never applied.
+    let layers; try { layers = m.getStyle()?.layers || []; } catch (_) { return; }
+    for (const l of layers) {
+      if (!/^udg-pts-.+-count$/.test(l.id)) continue;
+      if (!countMinZoom.has(l.id)) countMinZoom.set(l.id, l.minzoom || 0);
+      const want = mq.matches ? Math.max(countMinZoom.get(l.id), PHONE_COUNT_MINZOOM) : countMinZoom.get(l.id);
+      if ((l.minzoom || 0) !== want) { try { m.setLayerZoomRange(l.id, want, l.maxzoom ?? 24); } catch (_) {} }
+    }
+  }
+  function wireMapDensity() {
+    const t = setInterval(() => {
+      const m = typeof state !== 'undefined' ? state.map : null; if (!m) return; clearInterval(t);
+      const later = () => { clearTimeout(densityTimer); densityTimer = setTimeout(applyMapDensity, 250); };
+      m.on('styledata', later); m.on('idle', later);
+      applyMapDensity();
+    }, 300);
+    mq.addEventListener('change', applyMapDensity);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => { wireLayoutDebug(); wireMapDensity(); }); else { wireLayoutDebug(); wireMapDensity(); }
+
   // Tablet / landscape-phone drawers (741–1060px). The original app.js toggles for #mobilePlan / #mobileResults
   // were removed by the first mobile pass, which only re-wired them for phones — leaving the results drawer
   // impossible to open on iPad portrait and on every phone in landscape. Same behaviour as the original code.
