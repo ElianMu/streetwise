@@ -29,11 +29,17 @@ const check = (name, ok, d) => { total++; if (!ok) failed++; console.log(`${ok ?
       check(`[${w}] swap exchanges start and destination (state + UI)`, sw.from === 'Rockefeller Center' && sw.to === 'Bryant Park' && sw.start === 'Rockefeller Center' && sw.end === 'Bryant Park', sw);
       await page.click('.m-swap'); await page.waitForTimeout(200);
       // Map theme from the ☰ menu
-      await page.click('#mobileMore summary'); await page.click('[data-map-theme="light"]'); await page.waitForTimeout(400);
+      await page.click('#mobileMore summary'); await page.click('button[data-map-theme="light"]'); await page.waitForTimeout(400);
       const lt = await page.evaluate(() => ({ theme: document.documentElement.dataset.mapTheme, saved: localStorage.getItem('strollane.mapTheme'), route: state.map.getPaintProperty('route-selected', 'line-color'),
-        casing: state.map.getPaintProperty('route-shadow', 'line-color'), pressed: document.querySelector('[data-map-theme="light"]').getAttribute('aria-pressed') }));
+        casing: state.map.getPaintProperty('route-shadow', 'line-color'), pressed: document.querySelector('button[data-map-theme="light"]').getAttribute('aria-pressed') }));
       check(`[${w}] Light map: theme saved, route inverts to ink on a white casing, control shows the state`, lt.theme === 'light' && lt.saved === 'light' && lt.route === '#141413' && lt.casing === '#FFFFFF' && lt.pressed === 'true', lt);
-      await page.click('[data-map-theme="dark"]'); await page.click('#mobileMore summary'); await page.waitForTimeout(300);
+      await page.click('button[data-map-theme="dark"]'); await page.click('#mobileMore summary'); await page.waitForTimeout(300);
+      // a click anywhere else must not touch the theme (the <html> element also carries data-map-theme)
+      await page.evaluate(() => { localStorage.setItem('strollane.mapTheme', 'dark'); window.__applies = 0; const o = window.applyMapTheme; window.applyMapTheme = (...x) => { window.__applies++; return o(...x); }; });
+      await page.mouse.click(200, 520); await page.click('.m-context-edit').catch(() => {}); await page.evaluate(() => document.body.click()); await page.waitForTimeout(200);
+      const stray = await page.evaluate(() => ({ applies: window.__applies, saved: localStorage.getItem('strollane.mapTheme'), theme: document.documentElement.dataset.mapTheme }));
+      check(`[${w}] ordinary clicks never switch or re-apply the map theme`, stray.applies === 0 && stray.saved === 'dark' && stray.theme === 'dark', stray);
+      await page.evaluate(() => { if (document.body.dataset.mview !== 'home' && typeof setView === 'function') setView('home'); });
     }
     // Route styling + marks after a real plan
     await page.evaluate(() => (typeof generateRoutes === 'function' ? generateRoutes() : null)); await page.waitForFunction(() => state.routes.length > 0, null, { timeout: 90000 }).catch(() => {});
