@@ -63,6 +63,7 @@ async function generateRoutes(userText=null,isFollowUp=false){
  const run=++planner.runId;state.routingBusy=true;
  $('generateRoutes').disabled=true;$('chatSend').disabled=true;$('ctaLabel').textContent='✦ Planning your walk…';
  try{
+  var kept=isFollowUp?snapshotRoutes():null;
   resetRoutes(true);renderRouteCards();
   if(location.protocol==='file:')throw new Error('The routing engine runs in server.py; start it and open http://127.0.0.1:8080.');
   const request=buildRouteRequest(a,b);
@@ -82,8 +83,10 @@ async function generateRoutes(userText=null,isFollowUp=false){
   await loadRoutePOIs(run);
  }catch(err){
   if(run!==planner.runId)return;
-  planner.lastExplanation=`No route: ${err.message} No route was fabricated.`;
-  $('rankingStatus').textContent=planner.lastExplanation;appendChat('assistant',planner.lastExplanation);toast(planner.lastExplanation);
+  const restored=restoreRoutes(kept);
+  const failure=`No route: ${err.message} No route was fabricated.${restored?' Your previous route is still shown and unchanged.':''}`;
+  if(!restored)planner.lastExplanation=failure;
+  $('rankingStatus').textContent=failure;appendChat('assistant',failure);toast(failure);
  }finally{state.routingBusy=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false;$('ctaLabel').textContent='✦ Plan My Walk';renderRouteCards()}
 }
 // Ranking happens in the engine; a changed limit asks the engine again instead of re-ranking locally.

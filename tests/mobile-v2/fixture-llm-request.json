@@ -1,0 +1,46 @@
+{
+ "message": "I want a quiet 45-minute walk from Columbia University with beautiful architecture and a coffee stop.",
+ "response": {
+  "weights": {
+   "Architecture": 85,
+   "Quiet & Relax": 80
+  },
+  "directions": {
+   "Architecture": "high",
+   "Quiet & Relax": "high"
+  },
+  "crime": null,
+  "waterfront": null,
+  "time_minutes": 45,
+  "time_delta_minutes": null,
+  "max_detour_percent": null,
+  "constraints": {},
+  "clarification": null,
+  "weather": null,
+  "journey": {
+   "interests": [],
+   "services": [],
+   "named_stops": [],
+   "food": [
+    {
+     "category": "cafes",
+     "item": null,
+     "cuisine": null,
+     "required": true
+    }
+   ],
+   "service_scope": null,
+   "hotel": null,
+   "origin": "Columbia University",
+   "destination": null,
+   "end_mode": "open",
+   "walking_minutes": 45,
+   "outing_minutes": null,
+   "distance_km": null,
+   "more": {},
+   "remove": [],
+   "requirements": null,
+   "counts": {}
+  }
+ }
+}

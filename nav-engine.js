@@ -143,7 +143,12 @@ class NavEngine{
   else if(unc>this.cfg.offM){
    this.offCount++;this.offSince=this.offSince??t;
    if(this.state==='GPS_WEAK')this.transition('NAVIGATING','accuracy recovered');
-   if(this.offCount>=this.cfg.offFixes&&(t-this.offSince)/1000>=this.cfg.offSeconds){if(this.state!=='OFF_ROUTE'&&this.transition('OFF_ROUTE',`${Math.round(m.d)} m from route`))this.emit({type:'off_route',distance_m:m.d,at:[fix.lon,fix.lat]});}
+   if(this.offCount>=this.cfg.offFixes&&(t-this.offSince)/1000>=this.cfg.offSeconds){
+    // NAVIGATING may only reach OFF_ROUTE through POSSIBLY_OFF_ROUTE. An interleaved location error (GPS_WEAK, then
+    // "accuracy recovered" -> NAVIGATING on the next fix) used to leave the engine in NAVIGATING here, the direct
+    // transition was refused and off-route was never confirmed. The evidence rule (offFixes over offSeconds) is unchanged.
+    if(this.state==='NAVIGATING')this.transition('POSSIBLY_OFF_ROUTE',`${Math.round(m.d)} m from route`);
+    if(this.state!=='OFF_ROUTE'&&this.transition('OFF_ROUTE',`${Math.round(m.d)} m from route`))this.emit({type:'off_route',distance_m:m.d,at:[fix.lon,fix.lat]});}
    else if(this.state!=='OFF_ROUTE')this.transition('POSSIBLY_OFF_ROUTE',`${Math.round(m.d)} m from route`);
   }else{
    this.offCount=0;this.offSince=null;

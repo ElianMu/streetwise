@@ -1,0 +1,16 @@
+{
+ "message": "Shorten it to 30 minutes.",
+ "response": {
+  "weights": {},
+  "directions": {},
+  "crime": null,
+  "waterfront": null,
+  "time_minutes": 30,
+  "time_delta_minutes": null,
+  "max_detour_percent": null,
+  "constraints": {},
+  "clarification": null,
+  "weather": null,
+  "journey": null
+ }
+}

@@ -206,7 +206,7 @@ function onNavEvent(ev){
   clearNavSession();renderNav();
  }else if(ev.type==='off_route'){
   speak(nav.voiceLang==='zh'?'您已偏离路线，正在重新规划。':'You are off route. Recalculating.');reroute();
- }else if(ev.type==='state')renderNav();
+ }else if(ev.type==='state'){if(ev.to==='NAVIGATING')nav.rerouteFails=0;renderNav();}
 }
 /** What is left of the original City Walk budget after the distance/time already spent (this leg + every earlier
  * leg since the walk began). Never resets the total on reroute, and never silently relaxes it: if what is left
@@ -342,7 +342,8 @@ function renderNav(out=nav.engine?.lastOutput){
  $('navInstr').textContent=nm?(nav.voiceLang==='zh'?nm.instruction_zh:nm.instruction_text):'Follow the route';
  const after=out?.after_next;$('navThen').textContent=after?`Then: ${nav.voiceLang==='zh'?after.instruction_zh:after.instruction_text}`:'';
  $('navConf').textContent=nm?.confidence==='low'?'Low-confidence instruction — check the map':'';
- const msg=STATE_TEXT[st]||(st==='STARTING'?'Waiting for GPS…':'');
+ // After a failed recalculation the reason must stay on screen (the 3 s tick re-renders), not collapse to "Off route".
+ const msg=st==='OFF_ROUTE'&&nav.rerouteFails?'Could not recalculate — your last route is still shown. Tap Retry.':STATE_TEXT[st]||(st==='STARTING'?'Waiting for GPS…':'');
  $('navStatus').textContent=msg+(out?.accuracy_m&&['GPS_WEAK'].includes(st)?` (±${Math.round(out.accuracy_m)} m)`:'');$('navStatus').classList.toggle('hidden',!msg);
  $('navStatus').className='nav-status '+st.toLowerCase();
  $('navRemain').textContent=out?formatNavDistance(out.remaining_m,nav.units):formatNavDistance(eng.netLen,nav.units);
