@@ -21,8 +21,12 @@ const T={
  zoom:{neighbourhood:13,street:15,detail:17},
  point:{stops:[[13,1.8],[15,2.6],[17,4],[19,6]],ring:[3.4,4.8,7,10],strokeStops:[[13,0],[15,.4],[17,.8],[19,1]]},
  tree:{radius:['interpolate',['linear'],['zoom'],12,.5,15,1.4,18,3.2],opacity:.7},
- // Clusters shrink at city zoom so ten categories don't stack into a field of overlapping rings.
- cluster:{radius:['interpolate',['linear'],['zoom'],11,['interpolate',['linear'],['get','point_count'],2,2.5,40,4,400,6],14,['interpolate',['linear'],['get','point_count'],2,5,40,8,400,12]],fill:.14,stroke:.6,maxZoom:15,pixelRadius:48},
+ // Clusters are crisp solid dots (not translucent rings, which stacked into a coloured haze): small at city zoom,
+ // growing with zoom and record count; a black ring separates neighbours from street zoom on; street-infrastructure
+ // and building records stay faint. Counts are neutral text (never the series colour) and only from z14.
+ cluster:{radius:['interpolate',['linear'],['zoom'],11,['interpolate',['linear'],['get','point_count'],2,1.6,40,2.6,400,3.8],13.5,['interpolate',['linear'],['get','point_count'],2,2.4,40,3.6,400,5.2],15,['interpolate',['linear'],['get','point_count'],2,3.6,40,5.6,400,8]],
+  opacity:['interpolate',['linear'],['zoom'],12,.6,15,.95],opacityNeutral:['interpolate',['linear'],['zoom'],12,.3,15,.5],strokeWidth:['interpolate',['linear'],['zoom'],12,0,14,1],
+  countMinZoom:14,countText:'#c9d0d8',maxZoom:15,pixelRadius:48},
  label:{font:['Montserrat Medium','Open Sans Regular'],size:10,minZoom:17},
  building:{
   neutral:'#1a1e24',outline:'#3a414b',fillOpacity:.62,extrusionOpacity:.84,
@@ -32,7 +36,8 @@ const T={
   age:{prop:'construction_year',unit:'year built',stops:[[1800,'#5b4636'],[1880,'#6d5a44'],[1920,'#7b6f57'],[1950,'#5e6c6c'],[1980,'#4c6879'],[2015,'#3c6489']]},
   landuse:{prop:'landuse_name',classes:[['One & two family','#6f7f5b'],['Multi-family walk-up','#857d58'],['Multi-family elevator','#8c7552'],['Mixed residential & commercial','#8e6a5c'],['Commercial & office','#7a6070'],
    ['Industrial & manufacturing','#6a5f7c'],['Transportation & utility','#5b6a80'],['Public facilities & institutions','#4f7480'],['Open space & outdoor recreation','#4f7c66'],['Parking','#5e6468'],['Vacant land','#4a4f52']],other:'#3a4247'}},
- env:{noise:{label:'311 noise complaint density',unit:'relative density of complaints (12 months)',ramp:[[0,'rgba(0,0,0,0)'],[.2,'#33303f'],[.45,'#4d3b50'],[.7,'#6e4858'],[.9,'#94595f'],[1,'#b97a72']],opacity:.32,intensity:[12,.25,16,.6],radius:[12,6,16,15]}},
+ // Noise density as a faint cool glow (one hue, brighter = denser); the old mauve→rose ramp read as a pink haze.
+ env:{noise:{label:'311 noise complaint density',unit:'relative density of complaints (12 months)',ramp:[[0,'rgba(0,0,0,0)'],[.2,'rgba(40,60,90,.25)'],[.45,'rgba(55,85,125,.4)'],[.7,'rgba(70,110,160,.55)'],[.9,'rgba(90,140,200,.65)'],[1,'rgba(120,170,230,.75)']],opacity:.35,intensity:[12,.25,16,.6],radius:[12,6,16,15]}},
 };
 // Datasets with a dedicated render group; every other dataset is grouped by geometry and primary category.
 const SPECIAL={building_footprints:'buildings',building_heights:'buildings',building_age:'buildings',land_use:'buildings',parks:'green',community_gardens:'green',natural_areas:'green',waterfront_parks:'green',
@@ -45,8 +50,8 @@ const LINES={
  osm_paths:{color:'#86ad8f',width:[14,.5,18,1.6],opacity:.5,dash:[2,1.2],minzoom:13.5},
  pedestrian_bridges:{color:'#c3c9d1',width:[13,1,18,2.6],opacity:.6},
  bike_routes:{color:'#62a2d9',width:[13,.6,18,1.8],opacity:.45,dash:[3,1.5]},
- speed_limits:{color:'#d27b6c',width:[14,.5,18,1.4],opacity:.35,minzoom:14},
- expressways:{color:'#c96e60',width:[11,1,16,3],opacity:.45},
+ speed_limits:{color:'#6f7884',width:[14,.5,18,1.4],opacity:.35,minzoom:14},
+ expressways:{color:'#5d6672',width:[11,1,16,3],opacity:.45},
 };
 function hexToHsl(h){const r=parseInt(h.slice(1,3),16)/255,g=parseInt(h.slice(3,5),16)/255,b=parseInt(h.slice(5,7),16)/255,mx=Math.max(r,g,b),mn=Math.min(r,g,b);let H=0,S=0;const L=(mx+mn)/2;
  if(mx!==mn){const d=mx-mn;S=L>.5?d/(2-mx-mn):d/(mx+mn);H=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;H/=6;}return [H,S,L];}

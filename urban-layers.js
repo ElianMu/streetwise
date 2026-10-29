@@ -207,8 +207,9 @@ function addGroupLayers(){
  for(const c of UD_CATEGORY_IDS){
   const s='udg-pts-'+c,color=T.cat[c],wt=T.weight[c]||{size:1,opacity:1},sized=T.point.stops.map(([z,r])=>[z,r*wt.size]);
   src(s,{cluster:true,clusterRadius:T.cluster.pixelRadius,clusterMaxZoom:T.cluster.maxZoom-1});
-  layer({id:s+'-cluster',type:'circle',source:s,filter:['has','point_count'],paint:{'circle-color':color,'circle-opacity':T.cluster.fill,'circle-stroke-color':color,'circle-stroke-width':1,'circle-stroke-opacity':T.cluster.stroke,'circle-radius':T.cluster.radius}},'ud-z-points');
-  layer({id:s+'-count',type:'symbol',source:s,filter:['has','point_count'],layout:{'text-field':['get','point_count_abbreviated'],'text-font':T.label.font,'text-size':9,'text-allow-overlap':false},paint:{'text-color':color,'text-halo-color':T.halo,'text-halo-width':1}},'ud-z-labels');
+  const neutralCat=c==='streets'||c==='buildings';
+  layer({id:s+'-cluster',type:'circle',source:s,filter:['has','point_count'],paint:{'circle-color':color,'circle-opacity':neutralCat?T.cluster.opacityNeutral:T.cluster.opacity,'circle-stroke-color':T.stroke,'circle-stroke-width':T.cluster.strokeWidth,'circle-stroke-opacity':.9,'circle-radius':T.cluster.radius}},'ud-z-points');
+  layer({id:s+'-count',type:'symbol',source:s,filter:['has','point_count'],minzoom:T.cluster.countMinZoom,layout:{'text-field':['get','point_count_abbreviated'],'text-font':T.label.font,'text-size':8.5,'text-offset':[0,-1.1],'text-allow-overlap':false},paint:{'text-color':T.cluster.countText,'text-halo-color':T.halo,'text-halo-width':1.4}},'ud-z-labels');
   // Zoom must be the outermost expression in MapLibre, so the accessible-entrance ring is a case inside each zoom stop.
   const acc=['==',['get','ds'],'accessible_entrances'],byZoom=(stops,ring)=>['interpolate',['linear'],['zoom'],...stops.flatMap(([z,v],i)=>[z,['case',acc,ring[i],v]])];
   layer({id:s+'-pt',type:'circle',source:s,filter:['!',['has','point_count']],paint:{'circle-color':['case',acc,'rgba(0,0,0,0)',['get','_c']],'circle-radius':byZoom(sized,T.point.ring),

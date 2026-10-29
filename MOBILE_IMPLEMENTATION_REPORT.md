@@ -1,5 +1,35 @@
 # Mobile Implementation Report
 
+## Round 7: map palette v2 (from reference dark maps)
+
+**Feedback:** the legend's green and purple looked cheap.
+
+**Diagnosis on the live map:**
+- Parks were filled with saturated categorical green `#008300`.
+- Historic districts and landmark lots were violet `#9085e9`.
+- The 311 noise heatmap (mauve → rose) laid a pink-purple haze over Midtown.
+- Ten categories of translucent cluster rings, each with a number in its series colour, stacked into a coloured fog.
+
+**References:**
+- Google Maps Night Mode: parks `#263c3f` on a `#242f3e` base, i.e. a tonal shift, not a hue.
+- Mapbox cartography guidance: a neutral base, with colour reserved for data; background features muted.
+- kepler.gl: low-contrast base maps that recede behind the data.
+
+**Changes:**
+- **Areas are tonal, not saturated.**
+  - Parks: deep moss `#0f2018` with a fine sage edge.
+  - Historic districts: a brass dashed hairline with no fill.
+  - Landmark lots: a 9 % brass wash.
+- **Point palette rebuilt in OKLCH** at one lightness band, with no violet:
+  - azure, tangerine, sage, sky, raspberry, brass, teal, coral;
+  - dataviz validator on black: lightness, chroma and contrast PASS; adjacent normal-vision ΔE ≥ 17.8; CVD ΔE 7.0
+    (warn band, legal with the text legend and labels on tap).
+- **Clusters are crisp solid dots**, small at city zoom and growing with zoom; a black ring separates neighbours.
+  Street and building records stay faint. Counts are neutral text, from z14 only.
+- **Noise density** is a faint cool glow (one hue, brighter = denser).
+- **Expressway and speed-limit lines** are neutral graphite instead of salmon.
+- SW cache `strollane-shell-v10`.
+
 ## Round 6: black tech theme (UI + map)
 
 **Brief:** optimise the visual expression and colour of both the interface and the map, on a black background in a
