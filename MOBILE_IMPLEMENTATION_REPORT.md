@@ -1,5 +1,30 @@
 # Mobile Implementation Report
 
+## Round 8: AR walking view + 3D route preview (learned from Google and Apple)
+
+**What the reference products do, and what STROLLANE took from them:**
+
+| Reference | Pattern | In STROLLANE |
+|---|---|---|
+| Google Maps Live View | big arrows on the street; built for glances; safety prompt | chevrons on the ground toward the route ahead; turn pin at its real bearing and distance; one-time "look up / watch for traffic" notice; after 25 s a reminder to lower the phone |
+| Apple Maps AR walking | raise to view, lower for the map; arrows grow and glow near the turn; battery note | Raise to View (lowering always returns to the map; the setting, under More, decides whether raising re-opens AR); camera parked 60 s so raising again is instant without a new prompt; arrows brighten within 30 m; "now" banner within 10 m; battery note |
+| Live View street labels | labels never collide | turn and stop labels placed nearest-first and pushed apart; kept between the instruction card and the bottom bar |
+| Google Immersive View for routes | preview the route in 3D before you go | "Preview walk in 3D": first-person fly-through of the real route through the 3D city, with play/pause, scrubbing and 1×/2×/4× speed (desktop too) |
+
+**How it works on the web:**
+- iPhone Safari and Home Screen apps have no WebXR, so the AR view uses the rear camera (`getUserMedia`), GPS and the
+  compass (`webkitCompassHeading`, with iOS motion permission requested from the tap).
+- The compass is low-pass filtered.
+- GPS and compass error are shown honestly, with hints when either is weak and a figure-8 calibration hint.
+- The camera is released on Map view, on exit, and when the app goes to the background.
+- No frames are captured or sent.
+
+**Smaller fix:** route POI dots changed from violet to warm cream, to match round 7.
+
+**Tests:** `tests/mobile-v2/ar-preview.js` 33/33, using Chromium's fake camera and synthetic compass/tilt events with
+real routing and the nav engine. **REAL DEVICE VERIFICATION REQUIRED** for the camera field of view, magnetometer
+error and iOS permission prompts.
+
 ## Round 7: map palette v2 (from reference dark maps)
 
 **Feedback:** the legend's green and purple looked cheap.

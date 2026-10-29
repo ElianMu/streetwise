@@ -135,7 +135,7 @@ async function refineWalk(k){
 function setupJourneyMap(){
  const m=state.map;
  for(const id of ['journey-found','journey-stops','journey-hotel'])m.addSource(id,{type:'geojson',data:emptyFC()});
- m.addLayer({id:'journey-found',type:'circle',source:'journey-found',paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,3,16,6],'circle-color':'#b7a3e1','circle-stroke-color':'#0a0b0c','circle-stroke-width':1.5,'circle-opacity':.9}});
+ m.addLayer({id:'journey-found',type:'circle',source:'journey-found',paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,3,16,6],'circle-color':'#e6dcc2','circle-stroke-color':'#0a0b0c','circle-stroke-width':1.5,'circle-opacity':.9}});
  m.addLayer({id:'journey-hotel',type:'circle',source:'journey-hotel',paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,6,16,10],'circle-color':'#f2a876','circle-stroke-color':'#0a0b0c','circle-stroke-width':2.5}});
  m.addLayer({id:'journey-hotel-label',type:'symbol',source:'journey-hotel',layout:{'text-field':'H','text-font':['Montserrat Medium','Open Sans Regular'],'text-size':11,'text-allow-overlap':true},paint:{'text-color':'#0a0b0c'}});
  m.addLayer({id:'journey-stops',type:'circle',source:'journey-stops',paint:{'circle-radius':['interpolate',['linear'],['zoom'],12,7,16,11],'circle-color':'#0a0b0c','circle-stroke-color':['case',['get','planned'],'#d8f365','#919397'],'circle-stroke-width':2.5}});
