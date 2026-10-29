@@ -487,16 +487,18 @@ function applyMapTheme(m,theme){
   if(A){set('udg-green-fill','fill-color',theme==='light'?'#CFDCC6':A.park.fill);set('udg-green-line','line-color',theme==='light'?'#93AE88':A.park.line);}
   set('udg-buildings-line','line-color',theme==='light'?'#C9C8C0':'#2C2C2A');
   document.documentElement.dataset.mapTheme=theme;
+  document.querySelectorAll('button[data-map-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mapTheme===theme)));
   if(typeof applyBuildingTheme==='function')try{applyBuildingTheme();}catch(e){}
 }
 document.addEventListener('click',e=>{
-  const b=e.target.closest?.('[data-map-theme],[data-map-theme-toggle]');if(!b)return;
+  // buttons only: <html> also carries data-map-theme (the active theme), and must not turn every click into a switch
+  const b=e.target.closest?.('button[data-map-theme],button[data-map-theme-toggle]');if(!b)return;
   setMapTheme(b.hasAttribute('data-map-theme-toggle')?(state.mapTheme==='light'?'dark':'light'):b.dataset.mapTheme);
 });
 function setMapTheme(theme){
   state.mapTheme=theme==='light'?'light':'dark';try{localStorage.setItem('strollane.mapTheme',state.mapTheme);}catch(e){}
   if(state.map&&state.mapReady)applyMapTheme(state.map,state.mapTheme);
-  document.querySelectorAll('[data-map-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mapTheme===state.mapTheme)));
+  document.querySelectorAll('button[data-map-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mapTheme===state.mapTheme)));
 }
 /** Map padding for "show the whole route": on phones the request card covers the top and the results sheet the
  * bottom, so the route is framed in the band of map that is actually visible (Google/Apple Maps behaviour);
