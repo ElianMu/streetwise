@@ -728,3 +728,5 @@ html.ios-standalone{min-height:min(100lvh,calc(100% + var(--sat)))}
  .topbar{background:linear-gradient(180deg,rgba(0,0,0,.66) 0%,rgba(0,0,0,.42) 100%);border-bottom:1px solid var(--hair)}
  .map-workspace .map-footer{background:linear-gradient(0deg,rgba(0,0,0,.7) 0%,rgba(0,0,0,.3) 70%,rgba(0,0,0,0) 100%)}
 }
+/* MapLibre's attribution links default to dark ink (rgba(0,0,0,.75)) — invisible on black. */
+.maplibregl-ctrl-attrib a{color:var(--muted)!important}
