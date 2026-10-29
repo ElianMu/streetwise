@@ -1,5 +1,42 @@
 # Mobile Implementation Report
 
+## Round 5: the real root cause of the iOS Home Screen bands — document height
+
+**Evidence (real iPhone 17 Pro Max, round-4 build, screenshot at 12:09):**
+- Still 0 → 894 pt of page, then a flat strip from 894 to 956 pt.
+- The round-4 fade made the dark area at the bottom taller, not smaller.
+- At the top, the status bar plus the opaque header formed a 110 pt solid band.
+- The Legend chip floated in the middle of the left edge.
+
+**Root cause.** iOS 26 Home Screen apps with `viewport-fit=cover` + `black-translucent` (WebKit 301108 / 301994)
+shorten the viewport by the status-bar height **only while the document is no taller than that short viewport**.
+- The frappe-ui team measured this in the iOS 26.2 simulator (frappe-ui #1284/#1289). Our phone CSS pinned
+  `html, body { height:100% }`, so the document was always exactly the short height, and iOS kept it short.
+- Round 2 stretched a fixed element and round 4 blended the edge. Neither changes the *document* height, so neither
+  could work.
+- This also matches our round-2 evidence: content inside a fixed element below the short edge was never drawn.
+
+**Fix:**
+- `styles.css`: in Home Screen mode, make the document at least screen-tall. The rule applies under
+  `@media (display-mode: standalone)` and to `html.ios-standalone`, set by an inline head script before first
+  layout:
+  ```css
+  html{min-height:min(100lvh,calc(100% + var(--sat)))}
+  ```
+  `min()` caps it at the screen, so once iOS gives the full viewport there is nothing to scroll. With an opaque
+  status bar the inset is 0 and the rule computes to 100%. Safari tabs, Android and desktop don't match.
+- Removed the round-4 fade band. The strip detector stays only as a fallback: `--sab: 0`, plus diagnostics.
+- Translucent, frosted header (alpha .72 → .5 with blur), so the map continues under the status bar and the header.
+- Legend chip moved to the bottom-left corner, level with the map attribution button in the bottom-right corner.
+- Diagnostics now also show:
+  - the viewport at launch and the viewport now;
+  - the html height, min-height and scrollHeight;
+  - `100lvh` in px.
+- `styles.css?v=43`, `mobile-ui.js?v=19`, SW `strollane-shell-v8`.
+
+**REAL DEVICE VERIFICATION REQUIRED.** Chromium cannot reproduce how iOS decides the viewport size. The fix is
+verified by others in the iOS 26.2 simulator only.
+
 ## Round 4: the iOS Home Screen bottom strip — root cause and fix
 
 **Evidence.** The real screenshot came from an iPhone 17 Pro Max Home Screen app running the deployed round-3

@@ -1,5 +1,26 @@
 # Mobile Implementation — Test Report
 
+## Round 5 test results (latest)
+
+| Test | Result |
+|---|---|
+| `tests/mobile-v2/ios-standalone-gap.js`: short viewport (5 iPhones) + **full viewport after the fix** (3 iPhones) + rotation, resize, Safari tab | 82/82 |
+| `tests/mobile-v2/iphone-shell.js` | 127/127 |
+| `tests/mobile-v2/flows.js` | 94/94 |
+| `tests/mobile-e2e.spec.js` | 10/10 |
+| `tests/nav-gps.test.cjs` | 17/17 |
+
+New assertions:
+- **Short viewport:** html gets `min(100lvh, 100% + status bar)` in Home Screen mode, and the page does not scroll.
+- **Full viewport:**
+  - html = viewport = screen;
+  - map and canvas run from the top edge to the bottom edge;
+  - the header is translucent;
+  - the controls clear the home indicator;
+  - the Legend is level with the attribution button.
+
+Chromium can't reproduce iOS 26's viewport decision: **REAL DEVICE VERIFICATION REQUIRED**.
+
 ## Round 4 test results (latest) — iOS Home Screen system strip
 
 | Test | Class | Result |
