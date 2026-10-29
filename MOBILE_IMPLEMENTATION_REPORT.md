@@ -1,6 +1,34 @@
 # Mobile Implementation Report
 
-## iPhone Home Screen app — full-screen shell fix (latest)
+## iPhone Home Screen app — bottom-gap fix, round 2 (latest)
+
+**Measured root cause.** From the real iPhone 17 Pro Max screenshots (440×956 pt): with the previous code the
+map/shell ended at ≈895 pt, i.e. 61 pt above the screen bottom, with a 120 pt header. In a Home Screen app with the
+`black-translucent` status bar, WebKit draws the page from the top of the screen but reports a layout viewport that is
+shorter by the status-bar height (innerHeight / `100%` / `100dvh` / `position:fixed; inset:0` = 956 − 62 = 894). The
+round-1 fix sized the shell to that viewport, so it still ended 62 pt short. In the original code, the inset was
+also subtracted a second time, which gave the ≈121 pt gap in the first screenshot. A Chromium simulation of
+exactly this viewport reproduces both real screenshots: the map/shell ends at 894 and the header bottom is at 120.
+
+**Fixes**
+- **Bottom gap.** `mobile-ui.js` measures the missing strip (screen height − `innerHeight`) only in an iOS Home Screen
+  app (`navigator.standalone`, which is iOS-only), and only within the status-bar range (1–80 pt). It exposes the value
+  as `--vgap`. The shell is `height: calc(100% + var(--vgap))`, and bottom-anchored fixed layers (sheets, toast,
+  install banner, modal) are moved down by the same amount. On a correct viewport the gap measures 0, so nothing
+  changes; Android and desktop are never affected.
+- **Header:** 48 pt of content below the status bar (was 58). The menu keeps a 44 pt tap target.
+- **Request card:** tighter padding; 44 pt input and button heights. The map footer is a transparent fade, so the map
+  is visible to the bottom edge.
+- **Map labels on phones:** per-category cluster count numbers appear from zoom 13 up. Cluster rings, data,
+  tap-to-expand and desktop are unchanged.
+- **Toast:** can be tapped away on phones; it still auto-hides after 4.8 s. The street-data disclaimer also stays in
+  the map legend and the Data panel.
+- **Diagnostics:** on a real device, open `?debug=layout` or tap the logo 5 times. The panel prints the real
+  `innerHeight`, `visualViewport`, `screen`, safe-area insets, `--vgap`, the shell / map / canvas rectangles and the
+  remaining gap below the map.
+- **Service worker** cache: `strollane-shell-v5`.
+
+## iPhone Home Screen app — full-screen shell fix (round 1)
 
 Reported on a real iPhone 17 Pro Max opened from the Home Screen: the map stopped short with a black band at the
 bottom, and the STROLLANE header sat under the status bar, covered by the request card. Safari tabs looked fine.

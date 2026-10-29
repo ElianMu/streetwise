@@ -1,6 +1,20 @@
 # Mobile Implementation — Test Report
 
-## iPhone full-screen shell — test results (latest)
+## iPhone Home Screen bottom gap — round 2 test results (latest)
+
+| Test | Class | Result |
+|---|---|---|
+| `node tests/mobile-v2/ios-standalone-gap.js` | **Simulated** iOS Home Screen viewport: `navigator.standalone` and `screen` injected, viewport = screen − status bar, insets via `--sat/--sab` | **25/25**. The shell, map, canvas, footer and a full sheet all end at the physical screen bottom on 17 Pro Max, 14 Pro/15/16, 13/14 and SE; no compensation in a normal tab. Against the previous live code (`70a011e`) the same test gives **4/25** (map ends at 894, header 120), matching the real screenshot. |
+| `node tests/mobile-v2/iphone-shell.js` | Simulated insets, 9 iPhone sizes | **127/127** (header now inset + 48) |
+| Map label density (phone 440 px vs desktop 1440 px) | Real map | count-label minzoom 13 on phone, 0 on desktop; all 10 cluster-ring layers unchanged |
+| `tests/mobile-v2/flows.js` | Real routing / mocked LLM reply / simulated GPS | **94/94** |
+| `tests/mobile-e2e.spec.js` | Real routing E2E | **10/10** |
+| `tests/nav-gps.test.cjs` + JS unit suites | Unit | 17/17; pass |
+
+Real iPhone Home Screen verification is still pending: use `?debug=layout`, or tap the logo 5 times, and read
+"GAP below map vs screen".
+
+## iPhone full-screen shell — test results (round 1)
 
 | Test | Class | Result |
 |---|---|---|
