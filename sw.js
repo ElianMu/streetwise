@@ -8,7 +8,7 @@
    with "?v=NN" query strings in index.html, so a version bump naturally fetches
    a new URL — this worker does not need its own version string to avoid stale
    JS running against new HTML. */
-const CACHE = 'strollane-shell-v6'; // v6: hidden sheets stay off-screen after viewport changes; v5: iOS Home Screen viewport gap fix; v4: full-screen iPhone app shell (safe areas); v3: NL-first mobile UI + subpath-safe exclusions — bumping the name purges every older shell entry on activate
+const CACHE = 'strollane-shell-v7'; // v7: iOS system strip handling (no layout extension); v6: hidden sheets stay off-screen after viewport changes; v5: iOS Home Screen viewport gap fix; v4: full-screen iPhone app shell (safe areas); v3: NL-first mobile UI + subpath-safe exclusions — bumping the name purges every older shell entry on activate
 
 // Paths are compared relative to this worker's own scope, so the exclusions also hold when the site is served
 // from a GitHub Pages project subpath (https://<user>.github.io/<repo>/data/...), not only from the domain root.

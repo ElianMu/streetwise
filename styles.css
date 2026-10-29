@@ -624,21 +624,20 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
    No 100vh/100dvh arithmetic is left in the phone layout. Insets go through --sat/--sab/--sal/--sar
    (= env(safe-area-inset-*) in every real browser; overridable in tests, Chromium cannot emulate them).
    ================================================================== */
-:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);--hdr:0px;--vgap:0px}
-/* --vgap: the strip iOS leaves below the reported viewport in a Home Screen app (measured in mobile-ui.js; 0 elsewhere). */
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);--hdr:0px}
 /* Tablet / landscape phone (741–1060px): the off-canvas results drawer was positioned against the page, so
    overflow clipping on .app-layout never applied and the page could scroll sideways by the drawer's width
    (also every iPhone in landscape). Anchor it to .app-layout instead; same on-screen position as before. */
 @media(min-width:741px) and (max-width:1060px){.app-layout{position:relative}.right-panel{top:14px}}
 /* Tablet / desktop keep their layout; the header just grows by the inset (0 outside iOS standalone). */
 .topbar{height:calc(68px + var(--sat));padding-top:var(--sat);padding-left:max(20px,var(--sal));padding-right:max(20px,var(--sar))}
-.app-layout{height:calc(100dvh - 68px - var(--sat) + var(--vgap))}
+.app-layout{height:calc(100dvh - 68px - var(--sat))}
 @media(max-width:740px){
  :root{--hdr:calc(48px + var(--sat))}
  html,body{height:100%;overflow:hidden;overscroll-behavior:none}
- /* Fixed to the top of the screen and as tall as the viewport PLUS the iOS Home Screen gap, so the shell
-    (and the map inside it) reaches the physical bottom edge. */
- .site-shell{position:fixed;top:0;left:0;right:0;bottom:auto;min-height:0;height:calc(100% + var(--vgap));display:block}
+ /* Exactly the viewport iOS gives the page. (Round 2 extended it by the iOS Home Screen strip; measured on a
+    real iPhone, nothing the page draws is shown in that strip, so that only hid bottom UI — removed.) */
+ .site-shell{position:fixed;inset:0;min-height:0;height:auto;display:block}
  /* Header: overlay band over the map, sized from the status bar down. */
  .topbar{position:absolute;top:0;left:0;right:0;z-index:20;height:var(--hdr);padding-top:var(--sat);padding-left:max(14px,var(--sal));padding-right:max(10px,var(--sar));
   background:linear-gradient(180deg,rgba(9,21,23,.97) 0%,rgba(9,21,23,.9) 100%);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid rgba(32,50,55,.7)}
@@ -676,13 +675,11 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
  /* Stacked above MapLibre's zoom + attribution controls, which sit on the footer (25px + home indicator). */
  .map-workspace .map-actions{right:max(10px,var(--sar));bottom:calc(150px + var(--sab));gap:8px}
  .map-workspace .ud-legend{bottom:calc(150px + var(--sab));left:max(10px,var(--sal))}
- /* Layers fixed to the viewport bottom must also cover the iOS Home Screen gap. */
- .install-banner{bottom:calc(16px + var(--sab) - var(--vgap))}
- .toast{bottom:calc(60px + var(--sab) - var(--vgap));max-width:calc(100% - 32px)}
+ .install-banner{bottom:calc(16px + var(--sab))}
+ .toast{bottom:calc(60px + var(--sab));max-width:calc(100% - 32px)}
  .toast.show{pointer-events:auto;cursor:pointer}
- .modal-overlay{bottom:calc(0px - var(--vgap))}
  /* Sheets: a full sheet stops below the header; content clears the home indicator. */
- .left-panel,.right-panel,.explore-sheet{bottom:calc(0px - var(--vgap));height:min(88dvh,calc(100% - 64px - var(--sat)));max-height:min(88dvh,calc(100% - 64px - var(--sat)));padding-bottom:var(--sab)}
+ .left-panel,.right-panel,.explore-sheet{bottom:0;height:min(88dvh,calc(100% - 64px - var(--sat)));max-height:min(88dvh,calc(100% - 64px - var(--sat)));padding-bottom:var(--sab)}
  /* Live navigation hides the header: the instruction card clears the status bar / Dynamic Island,
     the bottom controls the home indicator. */
  .nav-top{top:calc(10px + var(--sat))}
@@ -694,3 +691,16 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
 
 /* Layout diagnostics panel (?debug=layout or 5 taps on the logo) — for real-device measurements. */
 .layout-debug{position:fixed;left:8px;right:8px;top:calc(env(safe-area-inset-top,0px) + 8px);z-index:99;margin:0;padding:10px 12px;border-radius:10px;background:rgba(0,0,0,.88);color:#d8f365;font:11px/1.45 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word;border:1px solid #d8f365}
+
+/* iOS Home Screen system strip (WebKit bug 301994, iOS 26.1+; detected in mobile-ui.js → html.ios-system-strip).
+   Measured on a real iPhone 17 Pro Max: iOS shows the page only down to 894pt and fills the remaining 61pt with a
+   flat strip in the page background colour, cached at launch; the page cannot draw there. So: the map fades into
+   exactly that colour at the bottom of the visible area (no hard edge), and because the home indicator sits inside
+   the strip, bottom controls don't reserve another home-indicator inset above it. */
+@media(max-width:740px){
+ html.ios-system-strip{--sab:0px}
+ html.ios-system-strip .map-workspace .map-footer{height:40px;padding-bottom:4px;background:linear-gradient(0deg,var(--bg) 0%,rgba(8,17,20,.82) 30%,rgba(8,17,20,.35) 70%,rgba(8,17,20,0) 100%)}
+ html.ios-system-strip .map-workspace .maplibregl-ctrl-bottom-right,html.ios-system-strip .map-workspace .maplibregl-ctrl-bottom-left{bottom:34px}
+}
+.layout-debug-edge{position:fixed;left:0;right:0;bottom:0;height:3px;background:#ff3b5c;z-index:99;pointer-events:none}
+.layout-debug-edge span{position:absolute;right:8px;bottom:5px;font:10px/1 ui-monospace,Menlo,monospace;color:#ff3b5c;background:#000c;padding:2px 4px;border-radius:3px}
