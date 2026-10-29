@@ -415,8 +415,8 @@ function updateMapStyles(){
   if(!state.mapLayersReady||!state.map)return;
   const m=state.map, raw=false; // No incomplete raw-record proximity data masquerades as a global nature score.
   const [lo,hi]=state.thresholds;
-  const thresholdColor=['#3f444a','#45b9c7','#d8f365'];
-  const streetColor=raw?['case', ['!', ['has','tree_records_per_km']], '#6b6e72', ['<', ['get','tree_records_per_km'], lo||1], thresholdColor[0], ['<',['get','tree_records_per_km'],hi||2],thresholdColor[1],thresholdColor[2]]:'#4c5057';
+  const thresholdColor=['#3A3A38','#8C7348','#E3B55B'];
+  const streetColor=raw?['case', ['!', ['has','tree_records_per_km']], '#6b6e72', ['<', ['get','tree_records_per_km'], lo||1], thresholdColor[0], ['<',['get','tree_records_per_km'],hi||2],thresholdColor[1],thresholdColor[2]]:(state.mapTheme==='light'?'#CFCEC6':'#4A4A47');
   if(m.getLayer('road-highlight'))m.setPaintProperty('road-highlight','line-color',streetColor);
   setMapLayerVisible('road-highlight',state.display.roads);
   setMapLayerVisible('road-underlay',state.display.roads);
@@ -438,54 +438,122 @@ function updateLegend(){ renderExperienceLegend(); }
  * void; the road hierarchy gets more contrast; CARTO's own flat building fill is hidden because
  * udg-buildings-fill (real PLUTO footprints, see urban-layers.js) draws richer 3D buildings on top. */
 function tuneBasemap(m){
-  const set=(id,prop,val)=>{if(m.getLayer(id))m.setPaintProperty(id,prop,val);};
-  // Black tech theme: pure black land, deep navy water, roads as cool graphite light lines (hierarchy by brightness).
-  set('background','background-color','#000000');
-  for(const id of ['landcover','landuse'])set(id,'fill-color','#050607');
-  set('water','fill-color','#06111d');
-  set('water_shadow','fill-color','#030810');
-  set('waterway','line-color','#0f2236');
-  for(const id of ['park_national_park','park_nature_reserve'])set(id,'fill-color','#07100b');
-  set('road_mot_fill_noramp','line-color','#4d5867');
-  set('road_mot_fill_ramp','line-color','#4d5867');
-  set('road_pri_fill_noramp','line-color','#38414d');
-  set('road_pri_fill_ramp','line-color','#38414d');
-  set('road_sec_fill_noramp','line-color','#2c333d');
-  set('road_minor_fill','line-color','#1f242b');
-  for(const id of ['road_minor_case','road_sec_case_noramp','tunnel_pri_fill','tunnel_mot_fill','bridge_trunk_fill','bridge_mot_fill','road_trunk_fill_noramp'])set(id,'line-color','#14181e');
+  applyMapTheme(m,state.mapTheme||'dark');
   for(const id of ['building','building-top'])if(m.getLayer(id))m.setLayoutProperty(id,'visibility','none');
+}
+/** Editorial dark cartography (round 9) and a daylight variant over the SAME CARTO tiles and the same data — only
+ * paint properties change, so routes and scores are identical in both. Hierarchy is carried by lightness and
+ * width: land darkest, minor streets just above it, avenues and highways brightest; water a cool step apart so the
+ * shoreline reads; labels quiet (towns across the river recede behind Manhattan's own names). */
+const MAP_THEMES={
+ dark:{bg:'#0D0D0C',land:'#111110',park:'#141A15',water:'#0A0F14',waterShadow:'#080B0F',waterway:'#1A2530',
+  mot:'#4E4E4A',pri:'#3C3C39',sec:'#30302E',minor:'#252523',service:'#1B1B1A',casing:'#0D0D0C',
+  label:'#8E8E88',labelMajor:'#C9C9C2',labelMinor:'#6E6E69',water_label:'#4F5E6B',halo:'#0B0B0B'},
+ light:{bg:'#F2F1EC',land:'#EEEDE7',park:'#DDE5D6',water:'#C9D7E0',waterShadow:'#BCCBD5',waterway:'#AFC3CF',
+  mot:'#FFFFFF',pri:'#FFFFFF',sec:'#FBFBF8',minor:'#F7F7F3',service:'#F2F2EE',casing:'#D9D8D0',
+  label:'#5C5C57',labelMajor:'#2A2A27',labelMinor:'#8A8A84',water_label:'#5D7584',halo:'#F2F1EC'}};
+function applyMapTheme(m,theme){
+  const P=MAP_THEMES[theme]||MAP_THEMES.dark;
+  const set=(id,prop,val)=>{if(m.getLayer(id))try{m.setPaintProperty(id,prop,val);}catch(e){}};
+  set('background','background-color',P.bg);
+  for(const id of ['landcover','landuse','landuse_residential'])set(id,'fill-color',P.land);
+  for(const id of ['park_national_park','park_nature_reserve'])set(id,'fill-color',P.park);
+  set('water','fill-color',P.water);set('water_shadow','fill-color',P.waterShadow);set('waterway','line-color',P.waterway);
+  for(const id of ['road_mot_fill_noramp','road_mot_fill_ramp','bridge_mot_fill','tunnel_mot_fill'])set(id,'line-color',P.mot);
+  for(const id of ['road_pri_fill_noramp','road_pri_fill_ramp','road_trunk_fill_noramp','road_trunk_fill_ramp','bridge_pri_fill','bridge_trunk_fill','tunnel_pri_fill','tunnel_trunk_fill'])set(id,'line-color',P.pri);
+  for(const id of ['road_sec_fill_noramp','bridge_sec_fill','tunnel_sec_fill'])set(id,'line-color',P.sec);
+  for(const id of ['road_minor_fill','bridge_minor_fill','tunnel_minor_fill'])set(id,'line-color',P.minor);
+  for(const id of ['road_service_fill','bridge_service_fill','tunnel_service_fill','road_path','road_path_areas'])set(id,'line-color',P.service);
+  for(const l of m.getStyle().layers){
+   if(l.type==='line'&&/_case/.test(l.id))set(l.id,'line-color',P.casing);
+   if(l.type!=='symbol'||!m.getLayer(l.id)||l.source==null||/^(ud|udg|journey|route|nav|preview|experience|explore)/.test(l.id))continue;
+   const major=/place_city|place_state|place_country|place_continent/.test(l.id),water=/water/.test(l.id),minor=/place_hamlet|place_villages|place_suburbs|poi_|housenumber/.test(l.id);
+   set(l.id,'text-color',water?P.water_label:major?P.labelMajor:minor?P.labelMinor:P.label);
+   set(l.id,'text-halo-color',P.halo);set(l.id,'text-halo-width',1.2);
+   if(/place_town|place_villages|place_hamlet|place_suburbs/.test(l.id))set(l.id,'text-opacity',theme==='light'?.85:.72);
+  }
+  // overlays that sit on the basemap
+  const R=theme==='light'?{route:'#141413',casing:'#FFFFFF',alt:'#7A7A74',ink:'#FFFFFF',start:'#141413',ring:'#FFFFFF'}:{route:'#F3EFE4',casing:'#0B0B0B',alt:'#8C8C86',ink:'#0B0B0B',start:'#0B0B0B',ring:'#F5F5F2'};
+  set('route-selected','line-color',R.route);set('route-shadow','line-color',R.casing);set('route-alts','line-color',R.alt);
+  set('point-starts','circle-color',R.start);set('point-starts','circle-stroke-color',R.ring);
+  set('point-ends','circle-color',R.route);set('point-ends','circle-stroke-color',R.casing);set('point-ends-core','circle-color',R.casing);
+  if(m.getLayer('route-arrows'))try{m.setLayoutProperty('route-arrows','icon-image',theme==='light'?'route-arrow-light':'route-arrow-dark');}catch(e){}
+  // the NYC street-centerline overlay is part of the street fabric: it follows the theme too
+  set('road-underlay','line-color',theme==='light'?'#E9E8E2':'#0B0B0B');set('road-underlay','line-opacity',theme==='light'?.6:.85);
+  set('road-highlight','line-color',theme==='light'?'#CFCEC6':'#4A4A47');
+  set('udg-line-lion_centerline','line-color',theme==='light'?'#BDBDB5':(window.UrbanStyle?UrbanStyle.LINES.lion_centerline.color:'#6b7685'));
+  // data areas that sit on the land colour need their own daylight tones
+  const A=(window.UrbanStyle&&UrbanStyle.T.area)||null;
+  if(A){set('udg-green-fill','fill-color',theme==='light'?'#CFDCC6':A.park.fill);set('udg-green-line','line-color',theme==='light'?'#93AE88':A.park.line);}
+  set('udg-buildings-line','line-color',theme==='light'?'#C9C8C0':'#2C2C2A');
+  document.documentElement.dataset.mapTheme=theme;
+  if(typeof applyBuildingTheme==='function')try{applyBuildingTheme();}catch(e){}
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest?.('[data-map-theme],[data-map-theme-toggle]');if(!b)return;
+  setMapTheme(b.hasAttribute('data-map-theme-toggle')?(state.mapTheme==='light'?'dark':'light'):b.dataset.mapTheme);
+});
+function setMapTheme(theme){
+  state.mapTheme=theme==='light'?'light':'dark';try{localStorage.setItem('strollane.mapTheme',state.mapTheme);}catch(e){}
+  if(state.map&&state.mapReady)applyMapTheme(state.map,state.mapTheme);
+  document.querySelectorAll('[data-map-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mapTheme===state.mapTheme)));
+}
+/** Map padding for "show the whole route": on phones the request card covers the top and the results sheet the
+ * bottom, so the route is framed in the band of map that is actually visible (Google/Apple Maps behaviour);
+ * desktop keeps the uniform margin. */
+function routeFitPadding(base=65){
+  if(!window.matchMedia||!matchMedia('(max-width:740px)').matches)return base;
+  const H=innerHeight,card=document.getElementById('mComposer'),sheet=document.getElementById('rightPanel');
+  const cb=card&&card.offsetParent?card.getBoundingClientRect().bottom:(document.querySelector('.topbar')?.getBoundingClientRect().bottom||60);
+  const st=sheet&&sheet.offsetParent?sheet.getBoundingClientRect().top:H;
+  const bottom=st>H*.3&&st<H-40?H-st:H*.5;
+  return {top:Math.round(Math.min(cb+20,H*.35)),bottom:Math.round(Math.min(bottom+20,H*.6)),left:28,right:72};
+}
+/** Direction chevrons drawn inside the route line (Apple/Mapbox navigation style), one image per map theme. */
+function addRouteArrowImages(m){
+  for(const [name,ink] of [['route-arrow-dark','#0B0B0B'],['route-arrow-light','#FFFFFF']]){
+   if(m.hasImage(name))continue;const c=document.createElement('canvas');c.width=c.height=32;const x=c.getContext('2d');
+   x.strokeStyle=ink;x.lineWidth=4;x.lineCap='round';x.lineJoin='round';x.beginPath();x.moveTo(11,8);x.lineTo(20,16);x.lineTo(11,24);x.stroke();
+   m.addImage(name,x.getImageData(0,0,32,32),{pixelRatio:2});
+  }
 }
 function setupMap(){
   if(!window.maplibregl){ $('mapFallback').querySelector('h2').textContent='Map library unavailable';$('mapFallback').querySelector('p').textContent='Internet access is required to load the live map library. The interface remains accessible.';setSourceStatus('MAP LIBRARY OFFLINE');return;}
   try{
     const m=state.map=new maplibregl.Map({container:'map',style:'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',center:CENTER,zoom:10.7,pitch:0,bearing:0,attributionControl:true});
-    m.addControl(new maplibregl.NavigationControl({showCompass:false}), 'bottom-right');
+    m.addControl(new maplibregl.NavigationControl({showCompass:true,visualizePitch:true}), 'bottom-right');
     m.on('load',()=>{
       state.mapReady=true;$('mapFallback').classList.add('hidden');m.fitBounds(MANHATTAN_BOUNDS,{padding:24,duration:0,maxZoom:11.1});
+      try{state.mapTheme=localStorage.getItem('strollane.mapTheme')==='light'?'light':'dark';}catch(e){state.mapTheme='dark';}
       tuneBasemap(m);
       for(const id of ['nyc-roads','nyc-trees','nyc-landmarks','candidate-routes','selected-route','points','route-pois'])m.addSource(id,{type:'geojson',data:emptyFC()});
-      m.addLayer({id:'road-underlay',type:'line',source:'nyc-roads',paint:{'line-color':'#0a0b0d','line-width':5.3,'line-opacity':.85}});
+      m.addLayer({id:'road-underlay',type:'line',source:'nyc-roads',paint:{'line-color':'#0B0B0B','line-width':5.3,'line-opacity':.85}});
       m.addLayer({id:'road-highlight',type:'line',source:'nyc-roads',paint:{'line-color':'#4c5057','line-width':['interpolate',['linear'],['zoom'],11,.6,14,2,16,3.4],'line-opacity':.90}});
-      m.addLayer({id:'landmark-fill',type:'fill',source:'nyc-landmarks',paint:{'fill-color':'#e89a5d','fill-opacity':.17}});
-      m.addLayer({id:'landmark-outline',type:'line',source:'nyc-landmarks',paint:{'line-color':'#ffae70','line-width':1.5,'line-opacity':.88}});
-      m.addLayer({id:'tree-points',type:'circle',source:'nyc-trees',paint:{'circle-color':'#a6e19a','circle-radius':['interpolate',['linear'],['zoom'],11,1.5,14,3,16,5],'circle-opacity':.82,'circle-stroke-color':'#0a2524','circle-stroke-width':.6}});
-      // Route hierarchy: quiet dashed alternatives; the selected route is the only lime on the map, with a dark halo that separates it from data below.
-      m.addLayer({id:'route-alts',type:'line',source:'candidate-routes',paint:{'line-color':'#919397','line-width':['interpolate',['linear'],['zoom'],12,1.6,16,3],'line-opacity':.55,'line-dasharray':[2,1.6]},layout:{'line-cap':'round','line-join':'round'}});
-      // Glow beneath the dark separator shadow: a wide, soft-blurred lime halo (Citymapper/Google night-mode
-      // routing). The dark route-shadow above it still does its job of separating the line from data clutter.
-      m.addLayer({id:'route-glow',type:'line',source:'selected-route',paint:{'line-color':'#d8f365','line-width':['interpolate',['linear'],['zoom'],12,14,16,22,19,30],'line-opacity':.22,'line-blur':6},layout:{'line-cap':'round','line-join':'round'}});
-      m.addLayer({id:'route-shadow',type:'line',source:'selected-route',paint:{'line-color':'#060708','line-width':['interpolate',['linear'],['zoom'],12,6,16,11,19,16],'line-opacity':.82,'line-blur':1},layout:{'line-cap':'round','line-join':'round'}});
-      m.addLayer({id:'route-selected',type:'line',source:'selected-route',paint:{'line-color':'#d8f365','line-width':['interpolate',['linear'],['zoom'],12,2.6,16,5,19,8],'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
-      m.addLayer({id:'poi-points-glow',type:'circle',source:'route-pois',paint:{'circle-color':'#e6dcc2','circle-radius':13,'circle-opacity':.3,'circle-blur':1}});
+      m.addLayer({id:'landmark-fill',type:'fill',source:'nyc-landmarks',paint:{'fill-color':'#B48C2B','fill-opacity':.1}});
+      m.addLayer({id:'landmark-outline',type:'line',source:'nyc-landmarks',paint:{'line-color':'#B48C2B','line-width':1.2,'line-opacity':.6}});
+      m.addLayer({id:'tree-points',type:'circle',source:'nyc-trees',paint:{'circle-color':'#54a058','circle-radius':['interpolate',['linear'],['zoom'],11,1.5,14,3,16,5],'circle-opacity':.82,'circle-stroke-color':'#0a2524','circle-stroke-width':.6}});
+      // Route hierarchy (after Apple Maps / Mapbox Navigation): alternatives are quiet dashed grey; the selected walk is a
+      // warm-white line on a dark casing, with direction chevrons inside it — no glow. Light map mode inverts it.
+      m.addLayer({id:'route-alts',type:'line',source:'candidate-routes',paint:{'line-color':'#8C8C86','line-width':['interpolate',['linear'],['zoom'],12,1.8,16,3.2],'line-opacity':.75,'line-dasharray':[1.4,1.4]},layout:{'line-cap':'round','line-join':'round'}});
+      m.addLayer({id:'route-glow',type:'line',source:'selected-route',paint:{'line-color':'#F3EFE4','line-width':1,'line-opacity':0},layout:{'line-cap':'round','line-join':'round'}}); // kept (toggled elsewhere), not drawn
+      m.addLayer({id:'route-shadow',type:'line',source:'selected-route',paint:{'line-color':'#0B0B0B','line-width':['interpolate',['linear'],['zoom'],12,6.5,16,10.5,19,15],'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
+      m.addLayer({id:'route-selected',type:'line',source:'selected-route',paint:{'line-color':'#F3EFE4','line-width':['interpolate',['linear'],['zoom'],12,3,16,6,19,9],'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
+      addRouteArrowImages(m);
+      m.addLayer({id:'route-arrows',type:'symbol',source:'selected-route',minzoom:13.5,layout:{'symbol-placement':'line','symbol-spacing':['interpolate',['linear'],['zoom'],14,70,18,120],'icon-image':'route-arrow-dark','icon-size':['interpolate',['linear'],['zoom'],14,.55,17,.8,19,1],'icon-allow-overlap':true,'icon-ignore-placement':true,'icon-rotation-alignment':'map'}});
+      m.addLayer({id:'poi-points-glow',type:'circle',source:'route-pois',paint:{'circle-color':'#e6dcc2','circle-radius':13,'circle-opacity':0,'circle-blur':1}});
       m.addLayer({id:'poi-points',type:'circle',source:'route-pois',paint:{'circle-color':'#e6dcc2','circle-radius':5,'circle-stroke-color':'#111215','circle-stroke-width':2}});
-      m.addLayer({id:'point-starts-glow',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#45d4e6','circle-radius':['interpolate',['linear'],['zoom'],12,11,16,16],'circle-opacity':.35,'circle-blur':1}});
-      m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#45d4e6','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0a0b0c','circle-stroke-width':2.5}});
-      m.addLayer({id:'point-ends-glow',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,11,16,16],'circle-opacity':.35,'circle-blur':1}});
-      m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#f2a876','circle-radius':['interpolate',['linear'],['zoom'],12,4.5,16,7],'circle-stroke-color':'#0a0b0c','circle-stroke-width':2.5}});
-      m.addLayer({id:'point-gps-glow',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':16,'circle-opacity':.35,'circle-blur':1}});
-      m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#6dd2ff','circle-radius':7,'circle-stroke-color':'#fff','circle-stroke-width':3}});
+      // Start = hollow ring, destination = solid bullseye: told apart by shape, not only colour.
+      m.addLayer({id:'point-starts-glow',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#F5F5F2','circle-radius':1,'circle-opacity':0}});
+      m.addLayer({id:'point-starts',type:'circle',source:'points',filter:['==',['get','role'],'start'],paint:{'circle-color':'#0B0B0B','circle-radius':['interpolate',['linear'],['zoom'],12,5,16,7.5],'circle-stroke-color':'#F5F5F2','circle-stroke-width':['interpolate',['linear'],['zoom'],12,2.5,16,3]}});
+      m.addLayer({id:'point-ends-glow',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#F5F5F2','circle-radius':1,'circle-opacity':0}});
+      m.addLayer({id:'point-ends',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#F3EFE4','circle-radius':['interpolate',['linear'],['zoom'],12,6,16,9],'circle-stroke-color':'#0B0B0B','circle-stroke-width':2}});
+      m.addLayer({id:'point-ends-core',type:'circle',source:'points',filter:['==',['get','role'],'end'],paint:{'circle-color':'#0B0B0B','circle-radius':['interpolate',['linear'],['zoom'],12,2,16,3]}});
+      // Live position: the signal colour with a white ring; its accuracy halo is drawn by the nav layer when known.
+      m.addLayer({id:'point-gps-glow',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#D8F365','circle-radius':16,'circle-opacity':.16}});
+      m.addLayer({id:'point-gps',type:'circle',source:'points',filter:['==',['get','role'],'gps'],paint:{'circle-color':'#D8F365','circle-radius':7,'circle-stroke-color':'#F5F5F2','circle-stroke-width':2.5}});
       setupRouteEdgeLayer();setupUrbanMap();if(typeof setupJourneyMap==='function')setupJourneyMap();if(typeof setupNavMap==='function')setupNavMap();
       state.mapLayersReady=true; setupExperienceMap(); syncMapData();updateMapStyles();
+      applyMapTheme(m,state.mapTheme); // overlays now exist: route, markers and buildings take the active map theme
       m.on('click','road-highlight',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit',...urbanMapLayerIds()]}).length)return;const feat=e.features?.[0];if(!feat)return;const fid=feat.properties?.FID;const real=state.streetsById.get(String(fid));state.selectedStreet=real||feat;updateSegmentDetails();});
       m.on('click','route-alts',(e)=>{if(state.pick||m.queryRenderedFeatures(e.point,{layers:['route-edge-hit']}).length)return;  // a click on the selected route's segment opens its evidence instead
       const name=e.features?.[0]?.properties?.id;if(name)selectRoute(name)});
@@ -504,7 +572,12 @@ function setupMap(){
       });
     });
     m.on('error',(event)=>{if(event?.error)console.warn(state.mapReady?'MapLibre style/data error:':'MapLibre loading issue:',event.error.message)});
-    setTimeout(()=>{if(!state.mapReady){$('mapFallback').querySelector('h2').textContent='Map tiles not reachable';$('mapFallback').querySelector('p').textContent='The web prototype is ready, but external basemap tiles require a network connection. The GIS layers can be explored when online.'}},16000);
+    // A slow network is not an outage: say "still loading" first, and only call the tiles unreachable when the
+    // device is offline or the style itself failed to load (previously a slow load showed "not reachable").
+    let styleFailed=false;m.on('error',e=>{if(!state.mapReady&&/style|Failed to fetch|NetworkError/i.test(e?.error?.message||''))styleFailed=true;});
+    const fbMsg=(h,p)=>{$('mapFallback').querySelector('h2').textContent=h;$('mapFallback').querySelector('p').textContent=p;};
+    setTimeout(()=>{if(!state.mapReady)fbMsg('Loading the map…','The street map is taking longer than usual on this connection. Everything else already works.');},12000);
+    setTimeout(()=>{if(!state.mapReady&&(navigator.onLine===false||styleFailed))fbMsg('Map tiles not reachable','The basemap needs a network connection. Planning and the GIS layers work again as soon as you are online.');},25000);
   }catch(err){ $('mapFallback').querySelector('h2').textContent='Map initialization failed';$('mapFallback').querySelector('p').textContent=err.message;}
 }
 

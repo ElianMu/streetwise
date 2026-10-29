@@ -102,7 +102,7 @@ const measure = (page) => page.evaluate(() => {
     await shot(page, `ios-standalone-full-${dev.replace(/[^A-Za-z0-9]+/g, '-').toLowerCase()}.png`);
     check(tag, 'no strip; html = viewport = screen, nothing to scroll', !m.strip && m.htmlH === sh && m.scrollH === sh && m.innerHeight === sh, { strip: m.strip, htmlH: m.htmlH, scrollH: m.scrollH });
     check(tag, 'map + canvas run from the top edge to the bottom edge of the screen', m.map.top === 0 && m.map.bottom === sh && Math.abs(m.canvasH - sh) <= 1, { map: m.map, canvasH: m.canvasH });
-    check(tag, 'header translucent (map visible under the status bar and the header)', /rgba\(0, 0, 0, 0\.[0-7]\d*\)/.test(m.hdrBg), m.hdrBg);
+    check(tag, 'header translucent (map visible under the status bar and the header)', /rgba\((0, 0, 0|11, 11, 11), 0\.[0-7]\d*\)/.test(m.hdrBg), m.hdrBg);
     check(tag, 'controls and footer text clear the home indicator', [m.zoom, m.gps, m.urban, m.legend, m.attrib].every((r) => r && r.bottom <= sh - sab), { zoom: m.zoom, legend: m.legend, attrib: m.attrib });
     check(tag, 'Legend in the bottom-left corner, level with the attribution button opposite', m.legend.bottom === m.attrib.bottom && m.legend.top > m.urban.bottom, { legend: m.legend, attrib: m.attrib, urban: m.urban });
     check(tag, 'no page errors', log.errors.length === 0, log.errors);

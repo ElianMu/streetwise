@@ -1,5 +1,74 @@
 # Mobile Implementation Report
 
+## Round 9: editorial design system, brand, cartography (Editorial Minimalism × Dark Cartography)
+
+**Audit (live site, before):**
+- P0: a slow map load showed "Map tiles not reachable" after 16 s.
+- P0: 19 `Space Grotesk` declarations had no fallback font, so text fell back to Times when the font failed (e.g. offline).
+- P1 brand:
+  - white Home Screen icon;
+  - lime walker;
+  - "STROLLANE | MANHATTAN · NYC" with a stray bar and a duplicated city.
+- P1 color: lime with glows on every element, plus single-word accents.
+- P1 icons: 🎙 / 🏨 / ☕ emoji, and Unicode glyphs as map tools.
+- P1 map:
+  - New Jersey labels louder than Manhattan;
+  - the default white MapLibre zoom control;
+  - the route told apart by glow only;
+  - start and end markers told apart only by colour;
+  - the route hidden under the results sheet on phones.
+- P1 results: metric boxes inside a box.
+- Photography: none in the product. None was added — no AI-generated or unlicensed "NYC" images.
+
+**References:**
+- Apple Maps and Mapbox Navigation: route line + casing, vanishing traveled part, location dot + accuracy halo + heading
+  beam.
+- Google Maps Night Mode: tonal areas.
+- Mapbox dark-style patterns: road hierarchy by lightness.
+- Editorial travel and architecture sites: monochrome, whitespace, a serif display face over a grotesk.
+
+**Brand:**
+- New walker mark: a 24-unit grid with uniform 2.1 round strokes, `currentColor`, legible at 14 px.
+- `brand/` holds the mark, dark and light lockups, and full-bleed and light icons.
+- Header lockup is "STROLLANE · NYC": one line, never truncated, separate from the menu button.
+- Favicon, Apple touch icon, 192/512 and a maskable 512 icon are now a black tile with the white walker.
+
+**Tokens:**
+- Neutral: `#0B0B0B` / `#171717` / `#242424`, text `#F5F5F2` / `#A8A8A5`, hairline `#2E2E2E`.
+- `--accent` warm white for the primary action.
+- `--signal` lime only for the live position, the active navigation step and AR guidance.
+- Radius scale 6/8/12/16/20 and spacing 4/8/12/16/20/24/32.
+- Type: DM Sans for the UI; Instrument Serif for display and headlines (desktop hero, route title, the phone request
+  question); full fallback stacks.
+- 108 lime shades → warm whites, and 566 tinted greys → neutral, all at the same lightness.
+
+**Components:**
+- Primary action: white with black type, no glow. Chips: 8 px hairline.
+- Results metrics sit on hairlines.
+- Menu rows are text + a quiet second line.
+- One line-icon set (locate, legend, reset, layers, map style, menu, mic, swap).
+- Map controls share one 44 px, 12 px-radius style. On phones the zoom buttons give way to pinch + compass.
+
+**Map:**
+- Warm-grey dark cartography over the same CARTO tiles: land < minor < secondary < primary < motorway by lightness, a
+  cool water step, quieter labels.
+- **Light map** (☰ › Map, or the desktop map tool) uses the same tiles and data with only paint changes, so routes and
+  scores are identical.
+- Route: warm white on a dark casing with direction chevrons; it inverts in the light map. Alternatives are dashed grey.
+- Start: a hollow ring. Destination: a solid bullseye.
+- Live position: the signal colour, a white ring, an accuracy halo and a heading beam; grey when uncertain.
+- Buildings use a neutral height ramp, with a light-map variant.
+- Experience-score streets use one amber ramp, so they can't be confused with the white route.
+
+**Phone:**
+- From and To are two rows with the same marks as the map, plus Edit and ⇅ swap. Swap is also on desktop.
+- "Show the whole route" frames the route between the request card and the sheet.
+
+**Tests:**
+- New `tests/mobile-v2/design-system.js`: 25/25.
+- `tests/urban-style.test.cjs` rule updated: the route is now the only warm-white line (was lime).
+- **REAL DEVICE VERIFICATION REQUIRED** for Home Screen icon rendering and daylight readability of the light map.
+
 ## Round 8: AR walking view + 3D route preview (learned from Google and Apple)
 
 **What the reference products do, and what STROLLANE took from them:**

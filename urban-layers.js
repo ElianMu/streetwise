@@ -278,8 +278,10 @@ function composeUrbanGroups(){
  renderUrbanLegend();
 }
 function applyBuildingTheme(){
- if(!state.mapLayersReady)return;const B=UrbanStyle.T.building,t=urbanData.buildingTheme;
- const color=t==='height'?UrbanStyle.rampExpr(B.height.prop,B.height.stops):t==='age'?['case',['has',B.age.prop],UrbanStyle.rampExpr(B.age.prop,B.age.stops),B.neutral]:t==='landuse'?UrbanStyle.categoricalExpr(B.landuse.prop,B.landuse.classes,B.landuse.other):B.neutral;
+ if(!state.mapLayersReady)return;const B=UrbanStyle.T.building,t=urbanData.buildingTheme,light=document.documentElement.dataset.mapTheme==='light';
+ // daylight map: the same height ramp, light to mid grey (the dark ramp would read as holes in a light city)
+ const hStops=light?B.heightLight:B.height.stops,neutral=light?B.neutralLight:B.neutral;
+ const color=t==='height'?UrbanStyle.rampExpr(B.height.prop,hStops):t==='landuse'?UrbanStyle.categoricalExpr(B.landuse.prop,B.landuse.classes,B.landuse.other):t==='age'?['case',['has',B.age.prop],UrbanStyle.rampExpr(B.age.prop,B.age.stops),neutral]:neutral;
  state.map.setPaintProperty('udg-buildings-fill','fill-extrusion-color',color);
  if(t==='landuse'&&!urbanData.active.has('land_use'))toast('Land use theme needs the Land use (tax lots) dataset; it has been switched on.');
  if(t==='landuse'&&!urbanData.active.has('land_use'))toggleUrbanDataset('land_use',true);
@@ -485,7 +487,7 @@ async function renderRouteUrbanData(){
 function showDatasetsOnRoute(ids){
  if(urbanData.scope!=='route'){urbanData.scope='route';document.querySelector('[name="urbanScope"][value="route"]').checked=true;}
  for(const id of ids)toggleUrbanDataset(id,true);
- const r=state.routes.find(x=>x.id===state.activeRoute);if(r&&state.mapReady){const b=routeBounds([r],urbanData.corridor);if(b)state.map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:70,maxZoom:16,duration:500});}
+ const r=state.routes.find(x=>x.id===state.activeRoute);if(r&&state.mapReady){const b=routeBounds([r],urbanData.corridor);if(b)state.map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:routeFitPadding(70),maxZoom:16,duration:500});}
 }
 
 // --- setup -----------------------------------------------------------------------------------------------------

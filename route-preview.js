@@ -48,7 +48,7 @@ function previewStart(){
  document.body.classList.add('preview-mode');els.root.classList.remove('hidden');
  m.resize(); // desktop: side panels collapse, the map takes the window
  previewEnsureLayers();
- if(typeof m.setSky==='function'){try{preview.saved.sky=m.getSky?.();m.setSky({'sky-color':'#03050a','horizon-color':'#0a1220','fog-color':'#020306','sky-horizon-blend':.9,'horizon-fog-blend':.9,'fog-ground-blend':.35,'atmosphere-blend':0});}catch(e){}}
+ if(typeof m.setSky==='function'){try{preview.saved.sky=m.getSky?.();m.setSky({'sky-color':'#0B0B0B','horizon-color':'#161615','fog-color':'#0B0B0B','sky-horizon-blend':.9,'horizon-fog-blend':.9,'fog-ground-blend':.35,'atmosphere-blend':0});}catch(e){}}
  previewApply(true);
  // reduced motion: start paused, the walker scrubs instead of watching an animation
  previewSetPlaying(!preview.reduced);
@@ -68,8 +68,8 @@ function previewStop(){
 function previewEnsureLayers(){
  const m=state.map;if(m.getSource('preview-walker'))return;
  m.addSource('preview-walker',{type:'geojson',data:emptyFC()});
- m.addLayer({id:'preview-walker-glow',type:'circle',source:'preview-walker',paint:{'circle-radius':18,'circle-color':'#d8f365','circle-opacity':.18,'circle-blur':.8,'circle-pitch-alignment':'map'}});
- m.addLayer({id:'preview-walker',type:'circle',source:'preview-walker',paint:{'circle-radius':7,'circle-color':'#d8f365','circle-stroke-color':'#000000','circle-stroke-width':2,'circle-pitch-alignment':'map'}});
+ m.addLayer({id:'preview-walker-glow',type:'circle',source:'preview-walker',paint:{'circle-radius':16,'circle-color':'#F5F5F2','circle-opacity':.1,'circle-pitch-alignment':'map'}});
+ m.addLayer({id:'preview-walker',type:'circle',source:'preview-walker',paint:{'circle-radius':7,'circle-color':'#F5F5F2','circle-stroke-color':'#0B0B0B','circle-stroke-width':2.5,'circle-pitch-alignment':'map'}});
 }
 function previewFrame(t){
  if(!preview.on)return;

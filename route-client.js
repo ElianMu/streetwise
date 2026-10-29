@@ -61,7 +61,7 @@ async function generateRoutes(userText=null,isFollowUp=false){
  chooseIntentLayer();
  const previous=state.routes.find(r=>r.id===state.activeRoute)?.raw.ordered_edge_ids.join(',');
  const run=++planner.runId;state.routingBusy=true;
- $('generateRoutes').disabled=true;$('chatSend').disabled=true;$('ctaLabel').textContent='✦ Planning your walk…';
+ $('generateRoutes').disabled=true;$('chatSend').disabled=true;$('ctaLabel').textContent='Planning your walk…';
  try{
   var kept=isFollowUp?snapshotRoutes():null;
   resetRoutes(true);renderRouteCards();
@@ -79,7 +79,7 @@ async function generateRoutes(userText=null,isFollowUp=false){
   $('rankingStatus').textContent=planner.lastExplanation;
   renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
   appendChat('assistant',planner.lastExplanation);
-  if(state.mapReady&&!isFollowUp){const bx=routeBounds(state.routes,80);if(bx)state.map.fitBounds([[bx[0],bx[1]],[bx[2],bx[3]]],{padding:65,maxZoom:15.5,duration:700});}
+  if(state.mapReady&&!isFollowUp){const bx=routeBounds(state.routes,80);if(bx)state.map.fitBounds([[bx[0],bx[1]],[bx[2],bx[3]]],{padding:routeFitPadding(65),maxZoom:15.5,duration:700});}
   await loadRoutePOIs(run);
  }catch(err){
   if(run!==planner.runId)return;
@@ -87,7 +87,7 @@ async function generateRoutes(userText=null,isFollowUp=false){
   const failure=`No route: ${err.message} No route was fabricated.${restored?' Your previous route is still shown and unchanged.':''}`;
   if(!restored)planner.lastExplanation=failure;
   $('rankingStatus').textContent=failure;appendChat('assistant',failure);toast(failure);
- }finally{state.routingBusy=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false;$('ctaLabel').textContent='✦ Plan My Walk';renderRouteCards()}
+ }finally{state.routingBusy=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false;$('ctaLabel').textContent='Plan My Walk';renderRouteCards()}
 }
 // Ranking happens in the engine; a changed limit asks the engine again instead of re-ranking locally.
 function rankRoutes(){if(state.routes.length)queueMapReplan();}
@@ -95,7 +95,7 @@ function updateRoutesUI(){if(state.routes.length)queueMapReplan();else renderRou
 function selectRoute(id){
  const r=state.routes.find(x=>x.id===id);if(!r)return;
  state.activeRoute=id;routeNav.selectedEdge=null;urbanLayersRouteChanged();renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
- if(state.mapReady){const b=routeBounds([r],160);if(b)state.map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:70,maxZoom:16,duration:500})}
+ if(state.mapReady){const b=routeBounds([r],160);if(b)state.map.fitBounds([[b[0],b[1]],[b[2],b[3]]],{padding:routeFitPadding(70),maxZoom:16,duration:500})}
 }
 function scoreText(v){return v==null?'N/A':String(v);}
 /** The hard limits the engine actually applied to the current results (from the response, not the form). */
@@ -174,7 +174,7 @@ function selectRouteEdge(seq,fly=false){
 /** Street Segment Evidence for one route edge: stable IDs and scores (engine) + nearby real records (urban-layers.js). */
 function showRouteEdgeInspector(e){return showSegmentEvidence(e,routeEdgeInspectorHtml(e));}
 function routeEdgeInspectorHtml(e){
- const rows=DIMENSIONS.map(d=>{const v=e.dimension_scores[d.name];return `<div class="explore-row"><span>${esc(dimLabel(d.name))}</span><i>${v==null?'':`<b style="width:${v}%;background:${typeof exploreColor==='function'?exploreColor(v,EXPLORE_VIEWS[1]):'#d8f365'}"></b>`}</i><em>${scoreText(v)}</em></div>`;}).join('');
+ const rows=DIMENSIONS.map(d=>{const v=e.dimension_scores[d.name];return `<div class="explore-row"><span>${esc(dimLabel(d.name))}</span><i>${v==null?'':`<b style="width:${v}%;background:${typeof exploreColor==='function'?exploreColor(v,EXPLORE_VIEWS[1]):'#E3B55B'}"></b>`}</i><em>${scoreText(v)}</em></div>`;}).join('');
  const lion=e.matched_segments?.length?e.matched_segments.map(m=>`<span class="seg-id">${esc(m.segment_id)}</span> · LION physicalid ${esc(m.source_segment_id??'—')}`).join('<br>')
   :e.score_source==='direct_osm'?'<strong>Unmatched</strong> — no reliable LION segment; scores measured directly on this OSM geometry':'<strong>Unmatched</strong> — not scored (outside the routable network)';
  return `<dl class="inspector-ids"><dt>Street</dt><dd>${esc(e.street_name||'Unnamed')} · ${esc([].concat(e.highway||[]).join('/'))}${e.pedestrian_access.footway?` · ${esc([].concat(e.pedestrian_access.footway).join('/'))}`:''}</dd><dt>Segment ID (OSM edge u-v-key)</dt><dd>${esc(e.edge_id)}</dd><dt>Matched LION segment</dt><dd>${lion}</dd><dt>OSM way ID(s)</dt><dd>${esc(e.osm_way_ids.join(', '))}</dd><dt>Segment length</dt><dd>${Math.round(e.length_m)} m${e.partial?` (${Math.round(e.traversed_length_m)} m on this route)`:''}</dd><dt>Route</dt><dd>${esc(state.routes.find(x=>x.id===state.activeRoute)?.label||'')}</dd></dl><details class="all-dims"><summary>12 experience scores of this edge</summary><div class="explore-rows">${rows}</div><small>${esc(e.score_source==='lion_match'?`Borrowed from matched LION segment(s), ${Math.round(e.lion_match_share*100)}% of the edge matched`:e.score_source==='direct_osm'?'Measured directly on the OSM geometry':'Not scored')} · ${esc(e.network_version)} · ${esc(e.score_version)}</small></details>`;
