@@ -420,10 +420,10 @@ button.place-option:hover{background:#31473c;color:#e8fca0}
 .nav-stats{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}.nav-stats strong{font-family:'Space Grotesk';font-size:22px;color:#f4fbef}.nav-stats span{font-size:14px;color:var(--lime);font-weight:700}
 .nav-stats small{font-size:11px;color:#9fb4ae;margin-left:auto}
 .nav-buttons{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.nav-pill{min-height:40px;padding:0 14px;border-radius:12px;border:1px solid #3d5651;background:#132529;color:#e6efe9;font-size:12px;font-weight:700}
+.nav-pill{min-height:44px;padding:0 14px;border-radius:12px;border:1px solid #3d5651;background:#132529;color:#e6efe9;font-size:12px;font-weight:700}
 .nav-pill.primary{background:var(--lime);color:#0b1418;border-color:var(--lime)}.nav-pill.danger{border-color:#7a3c36;color:#f6b4ab}
 .nav-pill[aria-pressed=false]{color:#8fa6a1}
-.nav-buttons select{min-height:40px;border-radius:12px;border:1px solid #3d5651;background:#132529;color:#e6efe9;padding:0 8px}
+.nav-buttons select{min-height:44px;border-radius:12px;border:1px solid #3d5651;background:#132529;color:#e6efe9;padding:0 8px}
 .nav-note{display:block;margin-top:6px;font-size:9.5px;color:#6f8a86}
 .nav-recenter{position:absolute;right:16px;bottom:190px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--lime);background:rgba(8,20,22,.92);color:var(--lime);font-weight:800;font-size:12px;opacity:0;pointer-events:none;transition:opacity .2s}
 .nav-recenter.show{opacity:1;pointer-events:auto}
