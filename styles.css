@@ -730,3 +730,90 @@ html.ios-standalone{min-height:min(100lvh,calc(100% + var(--sat)))}
 }
 /* MapLibre's attribution links default to dark ink (rgba(0,0,0,.75)) — invisible on black. */
 .maplibregl-ctrl-attrib a{color:var(--muted)!important}
+
+/* ==================================================================
+   AR walking view (ar-nav.js): rear camera + GPS + compass overlay. Sits under the nav cards, over the map.
+   ================================================================== */
+.ar-view{position:absolute;inset:0;z-index:19;overflow:hidden;background:#000}
+.ar-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.ar-scrim{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(0,0,0,.45) 0%,rgba(0,0,0,0) 30%,rgba(0,0,0,0) 62%,rgba(0,0,0,.5) 100%)}
+.ar-layer{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .25s ease}
+.ar-view.ar-ready .ar-layer{opacity:1}
+/* Floor arrow: three chevrons laid on the pavement plane, turned toward the route ahead. */
+.ar-floor{position:absolute;left:50%;bottom:calc(150px + var(--sab));width:150px;height:230px;margin-left:-75px;
+ transform:perspective(520px) rotateX(64deg) rotateZ(var(--rot,0deg));transform-origin:50% 100%;transition:transform .12s linear}
+.ar-floor.behind{opacity:.35}
+.ar-chevrons{position:absolute;inset:0;display:flex;flex-direction:column-reverse;align-items:center;justify-content:flex-start;gap:10px}
+.ar-chevrons i{display:block;width:96px;height:56px;background:var(--lime);clip-path:polygon(50% 0,100% 62%,100% 100%,50% 38%,0 100%,0 62%);
+ filter:drop-shadow(0 0 10px rgba(216,243,101,.75));opacity:.9;animation:arFlow 1.6s ease-in-out infinite}
+.ar-chevrons i:nth-child(2){animation-delay:.2s;opacity:.7}.ar-chevrons i:nth-child(3){animation-delay:.4s;opacity:.5}
+@keyframes arFlow{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@media(prefers-reduced-motion:reduce){.ar-chevrons i{animation:none}.ar-floor{transition:none}}
+/* Next-turn pin standing on the street */
+.ar-target{position:absolute;transform:translate(-50%,-100%);display:flex;flex-direction:column;align-items:center;gap:6px;transition:left .1s linear,top .1s linear}
+.ar-target-label{order:-1;max-width:min(270px,80vw);text-wrap:balance;padding:7px 11px;border-radius:12px;background:rgba(0,0,0,.72);border:1px solid rgba(216,243,101,.55);color:#fff;font-size:13px;font-weight:700;
+ text-align:center;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.ar-target-pin{width:16px;height:16px;border-radius:50%;background:var(--lime);border:3px solid #000;box-shadow:0 0 0 2px var(--lime),0 0 18px rgba(216,243,101,.8)}
+.ar-target-pin::after{content:"";position:absolute;left:50%;top:100%;width:2px;height:28px;margin-left:-1px;background:linear-gradient(180deg,var(--lime),rgba(216,243,101,0))}
+/* Stops on the walk, labelled where they really are */
+.ar-stop{position:absolute;transform:translate(-50%,-100%);padding:6px 10px 6px 22px;border-radius:10px;background:rgba(0,0,0,.66);border:1px solid rgba(180,140,43,.6);
+ color:#fff;white-space:nowrap;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+.ar-stop::before{content:"";position:absolute;left:8px;top:50%;width:8px;height:8px;margin-top:-4px;border-radius:50%;background:#b48c2b}
+.ar-stop strong{display:block;font-size:12.5px}.ar-stop small{display:block;font-size:11px;color:#c9d0d8}
+/* Off-screen direction: the way to turn when the route is outside the camera's view */
+.ar-edge{position:absolute;top:46%;display:none;align-items:center;gap:4px;padding:10px 12px;border-radius:14px;background:rgba(0,0,0,.7);color:var(--lime);font-weight:800;font-size:13px}
+.ar-edge svg{width:26px;height:26px;fill:none;stroke:var(--lime);stroke-width:3;stroke-linecap:round;stroke-linejoin:round}
+.ar-edge.show{display:flex}.ar-edge-left{left:max(10px,var(--sal))}.ar-edge-right{right:max(10px,var(--sar))}
+.ar-hint{position:absolute;left:50%;top:44%;transform:translateX(-50%);max-width:min(320px,calc(100% - 32px));margin:0;padding:10px 14px;border-radius:14px;
+ background:rgba(0,0,0,.78);color:#fff;font-size:13.5px;line-height:1.35;text-align:center;opacity:0;transition:opacity .2s ease;pointer-events:none}
+.ar-hint.show{opacity:1}
+.ar-quality{position:absolute;right:max(12px,var(--sar));top:calc(var(--sat) + 118px);padding:4px 8px;border-radius:8px;background:rgba(0,0,0,.6);color:#c9d0d8;font-size:11px}
+.ar-quality:empty{display:none}.ar-quality.weak{color:#ffad73}
+body.ar-mode .nav-recenter{display:none}
+body.ar-mode .nav-top,body.ar-mode .nav-bottom{background:rgba(0,0,0,.72);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+.nav-pill.nav-ar{border-color:rgba(216,243,101,.55);color:var(--lime)}
+.nav-pill.nav-ar[aria-pressed="true"]{background:var(--lime);color:#000}
+
+/* ==================================================================
+   3D route preview (route-preview.js): first-person fly-through before you go.
+   ================================================================== */
+.route-preview-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:46px;margin:8px 0 2px;border-radius:14px;
+ border:1px solid rgba(69,212,230,.45);background:rgba(69,212,230,.07);color:var(--cyan);font-weight:800;font-size:14px}
+.route-preview-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linejoin:round}
+.route-preview{position:absolute;inset:0;z-index:30;pointer-events:none}
+.route-preview>*{pointer-events:auto}
+.rp-top{position:absolute;left:max(12px,var(--sal));right:max(12px,var(--sar));top:calc(12px + var(--sat));display:flex;gap:10px;align-items:flex-start}
+.rp-now{flex:1;min-width:0;padding:11px 14px;border-radius:16px;background:var(--glass);border:1px solid var(--hair);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.rp-now small{display:block;color:var(--cyan);font-size:12px;font-weight:700}
+.rp-now strong{display:block;margin-top:2px;color:#fff;font-size:16px;line-height:1.25;font-family:'Space Grotesk',sans-serif}
+.rp-close{flex:none;width:46px;height:46px;border-radius:14px;border:1px solid var(--hair);background:var(--glass);display:grid;place-items:center;-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.rp-close svg{width:20px;height:20px;stroke:#fff;stroke-width:2.2;stroke-linecap:round}
+.rp-stop{position:absolute;left:50%;top:38%;transform:translateX(-50%);max-width:min(300px,calc(100% - 32px));padding:10px 14px 10px 16px;border-radius:14px;
+ background:rgba(0,0,0,.74);border-left:3px solid #b48c2b;color:#fff;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.rp-stop small{display:block;color:#c9a24a;font-size:11.5px;font-weight:700}.rp-stop strong{display:block;font-size:15px}.rp-stop span{display:block;font-size:12px;color:#c9d0d8}
+.rp-bar{position:absolute;left:max(12px,var(--sal));right:max(12px,var(--sar));bottom:calc(14px + var(--sab));display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:18px;
+ background:var(--glass);border:1px solid var(--hair);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px)}
+.rp-play{flex:none;width:46px;height:46px;border-radius:50%;border:0;background:var(--lime);display:grid;place-items:center}
+.rp-play svg{width:20px;height:20px;fill:#000;stroke:#000;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.rp-track{flex:1;min-width:0}
+.rp-track input{width:100%;accent-color:var(--lime);height:28px;margin:0}
+.rp-meta{display:flex;justify-content:space-between;gap:8px;font-size:11.5px;color:#aab2bd}
+.rp-speed{flex:none;min-width:46px;height:40px;border-radius:12px;border:1px solid var(--hair);background:#07080a;color:#fff;font-weight:800}
+body.preview-mode .topbar,body.preview-mode .m-composer,body.preview-mode .left-panel,body.preview-mode .right-panel,body.preview-mode .explore-sheet,
+body.preview-mode .map-actions,body.preview-mode .ud-legend,body.preview-mode .m-view-exit,body.preview-mode .maplibregl-ctrl-bottom-right,
+body.preview-mode .maplibregl-ctrl-bottom-left,body.preview-mode .map-footer,body.preview-mode .map-mode-control,body.preview-mode .map-top-left,
+body.preview-mode .experience-controls,body.preview-mode .wx-panel,body.preview-mode .map-layer-switch,body.preview-mode .urban-inspector{display:none!important}
+@media(min-width:741px){body.preview-mode .app-layout{grid-template-columns:1fr!important;height:100dvh}}
+@media(min-width:741px){.rp-top{left:50%;right:auto;width:min(640px,calc(100% - 48px));transform:translateX(-50%)}.rp-bar{left:50%;right:auto;width:min(760px,calc(100% - 48px));transform:translateX(-50%)}}
+/* AR: glance + safety messages, approach emphasis (after Apple Maps: arrows brighten and grow as the turn nears) */
+.ar-flash{position:absolute;left:50%;top:calc(var(--sat) + 150px);transform:translateX(-50%);max-width:min(330px,calc(100% - 32px));margin:0;padding:10px 14px;border-radius:14px;
+ background:rgba(0,0,0,.8);border:1px solid var(--hair);color:#fff;font-size:13px;line-height:1.35;text-align:center;opacity:0;transition:opacity .25s ease;pointer-events:none}
+.ar-flash.show{opacity:1}
+.ar-now{position:absolute;left:50%;bottom:calc(400px + var(--sab));transform:translateX(-50%);max-width:calc(100% - 40px);padding:10px 18px;border-radius:999px;
+ background:var(--lime);color:#000;font-weight:800;font-size:17px;text-align:center;box-shadow:0 0 28px rgba(216,243,101,.55);opacity:0;transition:opacity .2s ease;pointer-events:none}
+.ar-now.show{opacity:1}
+.ar-view.ar-near .ar-floor{width:180px;margin-left:-90px}
+.ar-view.ar-near .ar-chevrons i{width:116px;height:66px;filter:drop-shadow(0 0 16px rgba(216,243,101,.95));opacity:1}
+.ar-view.ar-near .ar-target-pin{animation:arPulse 1s ease-in-out infinite}
+@keyframes arPulse{0%,100%{box-shadow:0 0 0 2px var(--lime),0 0 18px rgba(216,243,101,.8)}50%{box-shadow:0 0 0 6px rgba(216,243,101,.35),0 0 30px rgba(216,243,101,1)}}
+@media(prefers-reduced-motion:reduce){.ar-view.ar-near .ar-target-pin{animation:none}}

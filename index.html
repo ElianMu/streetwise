@@ -31,7 +31,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=44" />
+  <link rel="stylesheet" href="./styles.css?v=45" />
 </head>
 <body>
 <div class="site-shell">
@@ -195,7 +195,7 @@
         <button type="button" id="navRecenter" class="nav-recenter">◎ Recenter</button>
         <div class="nav-bottom">
           <div class="nav-stats"><strong id="navRemain">—</strong><span id="navTime">—</span><small id="navStop"></small></div>
-          <div class="nav-buttons"><button type="button" class="nav-pill" id="navVoice" aria-pressed="true">Voice on</button><button type="button" class="nav-pill" id="navPause">Pause</button>
+          <div class="nav-buttons"><button type="button" class="nav-pill nav-ar" id="navAr" aria-pressed="false">AR view</button><button type="button" class="nav-pill" id="navVoice" aria-pressed="true">Voice on</button><button type="button" class="nav-pill" id="navPause">Pause</button>
             <details class="nav-more"><summary class="nav-pill">More</summary><div class="nav-more-body"><button type="button" class="nav-pill" id="navRepeat">Repeat</button>
             <select id="navLang" aria-label="Voice language"><option value="en">EN</option><option value="zh">中文</option></select><button type="button" class="nav-pill" id="navUnits">m</button>
             <button type="button" class="nav-pill" id="navMode">North up</button></div></details><button type="button" class="nav-pill danger" id="navExit">Exit</button></div>
@@ -222,6 +222,7 @@
         <div id="rankingStatus" class="ranking-status">No route data yet.</div>
         <div id="routeValidation" class="route-validation hidden" aria-live="polite"></div>
         <button type="button" id="navStart" class="primary-cta nav-start hidden"><span>➤ Start Navigation</span><span class="cta-arrow">↗</span></button>
+        <button type="button" id="routePreviewBtn" class="route-preview-btn hidden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18l6-12 4 7 3-4 5 9z"/></svg><span>Preview walk in 3D</span></button>
         <div class="route-cards" id="routeCards"><div class="empty-route"><strong>No routes generated yet</strong><p>Set your journey to compare real pedestrian paths.</p></div></div>
         <div class="route-dots hidden" id="routeDots" aria-hidden="true"></div>
         <div class="m-only m-route-fromto" id="mRouteFromTo"></div>
@@ -272,14 +273,16 @@
 <script src="./weather.js?v=28"></script>
 <script src="./places.js?v=28"></script>
 <script src="./opening-hours.js?v=28"></script>
-<script src="./app.js?v=32"></script>
+<script src="./app.js?v=33"></script>
 <script src="./route-client.js?v=29"></script>
 <script src="./weather-ui.js?v=28"></script>
 <script src="./journey.js?v=29"></script>
-<script src="./journey-ui.js?v=29"></script>
+<script src="./journey-ui.js?v=30"></script>
 <script src="./voice.js?v=28"></script>
 <script src="./nav-engine.js?v=30"></script>
 <script src="./nav-ui.js?v=32"></script>
+<script src="./ar-nav.js?v=2"></script>
+<script src="./route-preview.js?v=1"></script>
 <script src="./urban-geo.js?v=28"></script>
 <script src="./urban-style.js?v=31"></script>
 <script src="./urban-layers.js?v=32"></script>
