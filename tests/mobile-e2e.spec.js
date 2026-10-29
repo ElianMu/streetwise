@@ -52,7 +52,8 @@ const WIDTHS = [
 for (const vp of WIDTHS) {
   const isKnownTabletDrawerWidth = vp.width > 740 && vp.width <= 1060;
   test(`no horizontal overflow at ${vp.name}`, async ({ page }) => {
-    test.fixme(isKnownTabletDrawerWidth, 'pre-existing 741-1060px tablet drawer scrollWidth/scrollTo quirk — see comment above, out of scope for this change');
+    // Fixed in Mobile v2: the drawer is now anchored to .app-layout (position:relative), so it is clipped.
+    if (isKnownTabletDrawerWidth) { await page.setViewportSize({ width: vp.width, height: vp.height }); }
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto(BASE_URL, { waitUntil: 'load' });
     await page.waitForTimeout(2500); // real map/data load, not a fixed-size asset
@@ -60,6 +61,9 @@ for (const vp of WIDTHS) {
     await page.screenshot({ path: path.join(SHOT_DIR, `viewport-${vp.name}.png`) });
     // 1px tolerance for sub-pixel layout rounding, not a silent pass on real overflow.
     expect(overflow, `${vp.name}: document is ${overflow}px wider than the viewport`).toBeLessThanOrEqual(1);
+    // and the page cannot actually be scrolled sideways
+    const scrolled = await page.evaluate(() => { window.scrollTo(400, 0); const x = window.scrollX; window.scrollTo(0, 0); return x; });
+    expect(scrolled, `${vp.name}: page scrolled sideways by ${scrolled}px`).toBe(0);
   });
 }
 

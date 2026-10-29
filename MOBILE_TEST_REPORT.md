@@ -1,5 +1,32 @@
 # Mobile Implementation — Test Report
 
+## iPhone full-screen shell — test results (latest)
+
+| Test | Class | Result |
+|---|---|---|
+| `node tests/mobile-v2/iphone-shell.js`: 9 iPhone sizes, from SE 375×667 to 16/17 Pro Max 440×956, plus a Safari tab with no insets | **Simulated**: device CSS sizes + each device's status-bar / home-indicator insets injected through `--sat/--sab` (Chromium cannot emulate `env(safe-area-inset-*)`); page, map and routing are real | **127/127** |
+| `tests/mobile-v2/flows.js` | Real routing E2E / mocked LLM reply / simulated GPS | **94/94** |
+| `npx playwright test tests/mobile-e2e.spec.js` | Real routing E2E | **10/10**: the 768×1024 overflow test is no longer skipped and now also asserts that the page cannot be scrolled sideways |
+
+Checks per size:
+- the map covers 0..width × 0..height and its canvas matches the container;
+- the header is inset + 58 px, with the brand and menu below the status bar;
+- the request card is below the header, and the map keeps ≥50% of the screen below it;
+- no horizontal overflow and no scaled shell;
+- the footer sits on the bottom edge, with its text above the home indicator;
+- the controls are ≥44 px and don't overlap the card, zoom, footer, legend or home indicator;
+- Create My Walk produces real routes;
+- a full sheet stays below the header;
+- navigation clears the Dynamic Island and the home indicator, with the 55° camera kept.
+
+Keyboard open/close (approximated by resizing the viewport), rotation to landscape and back, and
+`pageshow`/`visibilitychange` were checked on SE and 17 Pro Max.
+
+**Not verified on a real iPhone:** the Home Screen launch itself, the real Dynamic Island and status-bar insets, the
+real iOS keyboard, Safari's toolbar behaviour, and PWA restart from the app switcher. These need a check on the
+device. Before/after: `screenshots/mobile-v2/before-after-iphone17promax.png` (before = your real screenshot,
+after = simulated).
+
 ## Mobile v2 — Natural Language First (current branch, final source tree)
 
 A result is listed only for a command that was actually run on the final tree. Every row is classified; no simulated
