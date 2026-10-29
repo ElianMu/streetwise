@@ -8,12 +8,16 @@
    with "?v=NN" query strings in index.html, so a version bump naturally fetches
    a new URL — this worker does not need its own version string to avoid stale
    JS running against new HTML. */
-const CACHE = 'strollane-shell-v1';
+const CACHE = 'strollane-shell-v3'; // v3: Natural-Language-first mobile UI + subpath-safe exclusions — bumping the name purges every older shell entry on activate
 
+// Paths are compared relative to this worker's own scope, so the exclusions also hold when the site is served
+// from a GitHub Pages project subpath (https://<user>.github.io/<repo>/data/...), not only from the domain root.
+const SCOPE_PATH = new URL(self.registration ? self.registration.scope : './', self.location.href).pathname;
 function isShellRequest(url) {
   if (url.origin !== self.location.origin) return false;
-  if (url.pathname.startsWith('/api/')) return false;
-  if (url.pathname.startsWith('/data/')) return false;
+  const rel = url.pathname.startsWith(SCOPE_PATH) ? url.pathname.slice(SCOPE_PATH.length) : url.pathname.replace(/^\//, '');
+  if (rel.startsWith('api/')) return false;
+  if (rel.startsWith('data/')) return false;
   return true;
 }
 

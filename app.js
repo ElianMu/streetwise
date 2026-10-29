@@ -505,6 +505,17 @@ function setupMap(){
 }
 
 function resetRoutes(keepRun=false){if(!keepRun)planner.runId++; planner.routeResponse=null;if(typeof journey!=='undefined'){journey.plan=null;renderCityWalk();}state.routes=[];state.activeRoute=null;planner.routePois=[];planner.poiStatus='Not loaded';renderPOIs();updateWhyRoute();renderRouteEdges();if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();$('rankingStatus').textContent='Journey changed. Plan again to update route geometry.';renderRouteCards();updateProfile();syncMapData();}
+/** A follow-up re-plan (refinement, preference change, map/nav re-plan) that fails must not leave the user with
+    nothing: the last valid engine response is kept and put back exactly as it was. Never a fabricated route. */
+function snapshotRoutes(){if(!state.routes.length)return null;return {routes:state.routes,active:state.activeRoute,resp:planner.routeResponse,expl:planner.lastExplanation,pois:planner.routePois,plan:typeof journey!=='undefined'?journey.plan:null,request:typeof journey!=='undefined'?journey.request:null};}
+function restoreRoutes(k){
+  if(!k)return false;
+  state.routes=k.routes;state.activeRoute=k.active;planner.routeResponse=k.resp;planner.lastExplanation=k.expl;planner.routePois=k.pois||[];
+  if(typeof journey!=='undefined'){journey.plan=k.plan;journey.request=k.request;if(typeof renderCityWalk==='function')renderCityWalk();}
+  if(typeof urbanLayersRouteChanged==='function')urbanLayersRouteChanged();
+  renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();if(typeof renderNavStart==='function')renderNavStart();
+  return true;
+}
 function routeBounds(routes,extraMeters=100){
   const all=routes.flatMap(r=>r.coords);
   if(!all.length)return null;

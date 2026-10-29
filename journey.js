@@ -428,6 +428,7 @@ async function planJourney(isFollowUp=false){
  if(planner.constraints.stepFree){resetRoutes();$('rankingStatus').textContent='Step-free access cannot be verified with the current curb-ramp and elevator data. No route is recommended.';appendChat('assistant',$('rankingStatus').textContent);return;}
  const run=++planner.runId;state.routingBusy=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;$('ctaLabel').textContent='✦ Finding places & routing…';
  try{
+  var kept=isFollowUp?snapshotRoutes():null;
   resetRoutes(true);renderRouteCards();
   const req=await itineraryRequest();
   const res=await streetwiseFetch('/api/itinerary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req),signal:AbortSignal.timeout(45000)});
@@ -442,8 +443,9 @@ async function planJourney(isFollowUp=false){
   if(state.mapReady){const bx=routeBounds(state.routes,80);if(bx)state.map.fitBounds([[bx[0],bx[1]],[bx[2],bx[3]]],{padding:65,maxZoom:15.5,duration:700});}
   autoVerifyMenus();cacheStopPlaces();
  }catch(err){
-  if(run!==planner.runId)return;resetRoutes();renderRouteCards();
-  const msg=`Could not build the walk: ${err.message}`;$('rankingStatus').textContent=msg;appendChat('assistant',msg);toast(msg);
+  if(run!==planner.runId)return;resetRoutes(true);renderRouteCards();
+  const restored=restoreRoutes(kept);
+  const msg=`Could not build the walk: ${err.message}${restored?' Your previous route is still shown and unchanged.':''}`;$('rankingStatus').textContent=msg;appendChat('assistant',msg);toast(msg);
  }finally{if(run===planner.runId){state.routingBusy=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false;$('ctaLabel').textContent='✦ Plan My Walk';}}
 }
 function itinerarySummaryText(it){

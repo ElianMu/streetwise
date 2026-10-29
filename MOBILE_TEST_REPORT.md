@@ -1,4 +1,76 @@
-# Mobile-First Implementation — Test Report
+# Mobile Implementation — Test Report
+
+## Mobile v2 — Natural Language First (current branch, final source tree)
+
+A result is listed only for a command that was actually run on the final tree. Every row is classified; no simulated
+run is reported as a real-device or real-service result.
+
+### Environments
+
+| Where | Used for | Notes |
+|---|---|---|
+| Your Mac, Linux shell of the Claude desktop app | Python + JS unit / integration suites on the final files | Python **3.12.16** in an isolated venv (the shell's system Python 3.10 cannot load the network: `routing/engine.py` uses `hashlib.file_digest`, 3.11+; CI pins 3.12). `pyproj 3.8.0` installed in that venv for the one geodesic test. Python suite run from a scratch copy of the tree, because the menu-verification tests create and delete `tests/.tmp-verified-items.json` and deletes are blocked inside the connected folder. `jsdom@24` from a folder outside the repo (`JSDOM_PATH`). |
+| Cloud workspace (same files, checksum-verified) | Browser tests: Playwright Chromium against the real `server.py` | Outbound network limited to package registries: MapLibre CDN, CARTO basemap, Google Fonts, live geocoders, Open-Meteo, ArcGIS street service unreachable. With `SANDBOX_CDN=1`, MapLibre 4.7.1 is served from the identical npm build and the basemap style is a plain dark background — test fixture only, production config unchanged. |
+
+### Results
+
+| Suite | Command | Class | Result |
+|---|---|---|---|
+| Python, all | `python -m pytest -q tests` (3.12, scratch copy) | Unit + Integration (real routing engine, real data files) | **262 passed, 1 skipped, 0 failed** — skip: `tests/test_agent.py:68` needs live Open-Meteo (403 at the proxy) → **Blocked** |
+| JS, all | `JSDOM_PATH=… node --test tests/*.test.cjs` | Unit + DOM integration (network blocked by design) | **11/11 suites pass** |
+| Navigation GPS replay | `node tests/nav-gps.test.cjs` | Unit, deterministic synthetic tracks | **17/17** (incl. 2 new regression scenarios for the intermittent-error off-route bug; the first fails on the old engine) |
+| Repo Playwright spec | `npx playwright test tests/mobile-e2e.spec.js` (CDN fixture injected) | Real Routing E2E | **9 passed, 1 skipped** (the pre-existing `fixme` for the 741–1060 px drawer quirk) |
+| Mobile v2 flows | `SANDBOX_CDN=1 node tests/mobile-v2/flows.js` (needs `python3 server.py` running) | mixed, per check | **97/97 checks pass** |
+| Service worker under a GitHub Pages-style subpath | static server at `/STREETWISE_NYC/`, Chromium with SW enabled | Integration (real browser SW) | pass: only `strollane-shell-v3` after activation (planted `v1` purged), page controlled, 23 shell files cached, **0** `data/` or `api/` entries, shell loads offline |
+| Install-banner overlap | browser geometry check at 1440, 1100, 768, iPad-Safari 834 | Real browser layout | pass: banner overlaps no button/input/summary at any width; Navigate/Explore always clear |
+
+`tests/mobile-v2/flows.js` checks by class (97 total, 0 failed):
+
+| Class | Checks | What is real |
+|---|---|---|
+| Real Routing E2E — home, typing, Flow A (NL → local preview parser → `/api/itinerary`), refinement, Flow B (manual FROM/TO, pick on map, no text → itinerary with café stop), Flow C (Customize: chips, 60 min, 12 dimensions, back to Plan), Flow E (Urban Data, dimension switch, real street-segment tap → Street Inspector, route kept), Flow F (GPS denied, offline error, start confirmation), layers, viewports, desktop, tablet | 71 (incl. 2 "Refine" checks run inside the mocked-LLM block) | server.py engine, place index, itinerary, street scores; map rendering with the substituted basemap |
+| Mock E2E: LLM — `/api/status` + `/api/interpret` mocked with server-validated documents | 9 | everything after the parse: client LLM branch, place resolution (`GET /api/places/search`), Discover mode + café stop + 45 min, real `/api/itinerary`, chip sync, "Shorten it to 30 minutes" refinement (only the time changes, engine re-run, map redrawn), failed re-plan keeps the last route and leaves nothing stuck busy |
+| Simulated GPS (Playwright geolocation; Flow D + its own block) | 9 + 3 | navigation state machine, camera pitch 55°, 3D building layer present, instructions, pause/resume, sustained deviation → off-route → real reroute replaced the route; one wild fix → no reroute; reroute failure offline → still navigating the last route with message + Retry; back on route → NAVIGATING; reload → "Resume navigation?" |
+| Console | 5 | no uncaught page errors in any flow |
+
+### Not verified (blocked or out of reach)
+
+| Item | Status |
+|---|---|
+| Real LLM parsing (`OPENAI_API_KEY`) | **Blocked** — no key; the app correctly reported `llm:false` and used the labelled local preview |
+| Real basemap rendering (CARTO tiles), MapLibre from unpkg, Google Fonts | **Blocked** in every environment used — screenshots show a plain dark background instead of basemap streets/labels |
+| Live address/POI autocomplete (Photon, NYC GeoSearch, Mapbox) | **Blocked** — FROM tested via pick on map + preset list instead |
+| Open-Meteo weather (UI + `test_agent.py`) | **Blocked** |
+| Real devices (iOS Safari, Android Chrome, compass, background behaviour, soft keyboard) | **Not tested** — all phone sizes are Chromium emulation |
+| Note on time of day | Feasibility depends on opening hours at the test time: the late-night mocked-LLM run produced an honestly "NOT FEASIBLE" walk (café closed at estimated arrival); the check asserts the engine ran and the UI shows its verdict, not that a walk is feasible |
+
+### Screenshots (real browser, final code) — `screenshots/mobile-v2/`
+
+`01-mobile-home` · `02-mobile-natural-language-focused` · `03-mobile-plan-from-to` · `03b-mobile-pick-on-map` ·
+`04-mobile-customize-walk` · `05-mobile-agent-processing` (backend reply delayed 1.5 s, response untouched, so the
+in-flight state is visible) · `06-mobile-route-results` · `06b-mobile-route-results-manual` · `07-mobile-route-refinement` ·
+`08-mobile-3d-navigation` · `08b-mobile-nav-off-route` · `08c-mobile-nav-reroute-failed` · `09-mobile-urban-data` ·
+`10-mobile-street-inspector` · `11-desktop-regression` · `11b-desktop-routes` · `12-mobile-network-error` ·
+`13-mobile-map-layers` · `14-mobile-start-confirmation` · `15-mobile-llm-mock-results` · `16-mobile-llm-mock-refined` ·
+`17-tablet-768-routes` · `viewport-{360x800,375x667,390x844,393x852,430x932,768x1024,1440x900}` · `results.json`
+(every check with its detail). All taken with the basemap substitution described above.
+
+### How to re-run
+
+```
+# Python (3.11+; CI uses 3.12)            # JS
+python3.12 -m venv .venv && .venv/bin/pip install pytest pyproj -r requirements.txt
+.venv/bin/python -m pytest -q tests        node --test tests/*.test.cjs     # needs jsdom installed
+# Browser (with a normal internet connection no substitution is needed)
+python3 server.py &
+npx playwright test tests/mobile-e2e.spec.js
+node tests/mobile-v2/flows.js              # add SANDBOX_CDN=1 only in a network-restricted sandbox
+```
+
+---
+
+## Earlier pass (v1 — first mobile-first pass, historical)
+
 
 Honest status only: a row says "Passed" only where a command was actually run and
 its real output is shown or summarized below. Nothing here is inferred or assumed.

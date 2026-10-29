@@ -54,6 +54,20 @@ test('GPS loss then stale: GPS_WEAK; recovery resumes navigation',()=>{
  e.tick(100*1000+20000);assert.equal(e.state,'GPS_WEAK');
  for(const {fix} of walk(e,180,260,{t0:130}))e.update(fix);assert.equal(e.state,'NAVIGATING');assert(e.progress>170);
 });
+test('off-route still confirmed when intermittent location errors interleave the off-route fixes',()=>{
+ // Regression (Mobile v2 E2E): a watchPosition error between fixes puts the engine in GPS_WEAK (nav-ui onFixError),
+ // the next good fix returns it to NAVIGATING ("accuracy recovered") — and NAVIGATING may not jump straight to
+ // OFF_ROUTE in NAV_TRANSITIONS, so the confirmation used to fail silently forever and no reroute ever happened.
+ const [e,ev]=fresh();for(const {fix} of walk(e,0,450))e.update(fix);
+ const p=e.pointAt(450);
+ for(let i=1;i<=12;i++){e.transition('GPS_WEAK','');e.update({...lonlat(offset(p,300+i*2,0)),accuracy:8,timestamp:(340+i*1.6)*1000});}
+ assert.equal(ev.filter(x=>x.type==='off_route').length,1,'off-route raised exactly once');assert.equal(e.state,'OFF_ROUTE');
+});
+test('a single off-route fix after an error is still only "possibly" off route',()=>{
+ const [e,ev]=fresh();for(const {fix} of walk(e,0,450))e.update(fix);
+ e.transition('GPS_WEAK','');e.update({...lonlat(offset(e.pointAt(450),300,0)),accuracy:8,timestamp:341000});
+ assert(!ev.some(x=>x.type==='off_route'));assert.notEqual(e.state,'OFF_ROUTE');
+});
 test('poor accuracy (80 m): GPS_WEAK and no off-route decision',()=>{
  const [e,ev]=fresh();for(const {fix} of walk(e,0,200,{acc:80,noise:30}))e.update(fix);
  assert.equal(e.state,'GPS_WEAK');assert(!ev.some(x=>x.type==='off_route'));

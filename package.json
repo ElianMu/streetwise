@@ -1,0 +1,13 @@
+{
+  "name": "strollane-nyc",
+  "private": true,
+  "version": "0.0.0",
+  "description": "STROLLANE · NYC — dev-only Node tooling. The app itself ships zero-build vanilla JS/CSS/HTML; nothing here is served to users. Python backend deps are in requirements.txt.",
+  "scripts": {
+    "test:e2e": "playwright test tests/mobile-e2e.spec.js",
+    "test:e2e:install": "playwright install chromium"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.48.0"
+  }
+}

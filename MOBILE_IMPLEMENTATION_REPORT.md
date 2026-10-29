@@ -1,4 +1,88 @@
-# Mobile-First Web App Implementation Report
+# Mobile Implementation Report
+
+## Mobile v2 — Natural Language First (branch `feature/mobile-screens-v2`, current)
+
+Status as of the final source tree on this branch. Everything below was checked against the code and the test runs
+listed in `MOBILE_TEST_REPORT.md`. Nothing has been committed, pushed, merged or deployed.
+
+### What the phone UI (≤740 px) now does
+
+| Area | Behaviour | How (reuse, not re-implementation) |
+|---|---|---|
+| Home | Brand + `MANHATTAN · NYC`, "How would you like to explore New York?", the request box ("Describe your ideal walk..."), an optional one-line row of quick-preference chips, mic, **Create My Walk**, a start → destination line, and the map. No sheet, Customize panel, FROM/TO form or 12-dimension list on load. | The request box **is** the existing `#intentText` (and its mic), moved into `#mComposer` by `mobile-ui.js` on phones and moved back above 740 px. |
+| Create My Walk | Same call as desktop "Plan My Walk": `handlePlan()` → `/api/interpret` (LLM) or the labelled local preview → `applyInterpretation` / `applyJourney` → `/api/routes` or `/api/itinerary`. Button disabled while in flight; progress labels read from `planner.parsing` / `state.routingBusy`. | `mobile-ui.js` `createFromText()` → `runPlan(handlePlan)` |
+| Start point (§4.4) | 1) start named in the request, 2) start the user chose (preset list, search, map pick, GPS fix, Plan walk), 3) GPS only after the user taps it, 4) otherwise the app **asks** ("Start at Bryant Park" / "Use my location" / "Choose start"). The shipped preset start is never used silently. | `askForStart()`; GPS goes through the existing `#gpsStart` → `requestGPS()` |
+| Plan walk | The existing FROM/TO form in the existing bottom sheet: GPS, search, pick on map, Destination / Discover for me / Back to start / Back to hotel, journey stops. **Find routes** works with no text (same place checks as `handlePlan`, then `planJourney` or `generateRoutes`). | `#leftPanel` with `data-lp="plan"` |
+| Customize | Time and distance limits, detour, constraints, all 12 dimensions, quick chips. | `#leftPanel` with `data-lp="customize"` |
+| Quick chips | Architecture, Quiet (= `Quiet & Relax`), Nature, Scenic (= `Scenic & Visual`), Culture set the existing dimension weight (80, origin `manual`); **Coffee stop** adds a journey café stop via `applyJourney({food:[{category:'cafes'}]})`, never a dimension. "Hidden gems" is not offered (no data). One renderer draws the home row and the Customize row from live state, so a chip is on exactly when the preference is set (by the chip, the Agent's parse, or a slider). | `renderQuickPrefs()` |
+| Results | Request box collapses to a one-line bar; the existing results sheet shows start → destination, route cards (swipe = `selectRoute`), Start Navigation, and the follow-up conversation (`#conversationSection`, moved in). | `#rightPanel`, `#mRefineSlot` |
+| Refinement | Follow-ups go through `handlePlan(q, true)`; only the mentioned constraints change; the map is redrawn from the new engine response. **New:** if the re-plan fails, the last valid route is restored and the message says so. | `snapshotRoutes()` / `restoreRoutes()` in `app.js`, used by `generateRoutes` and `planJourney` for follow-ups |
+| Urban Data / Map layers | Menu or ▦ button → the existing Explore panel + Street Inspector in the explore sheet; "Map layers" shows the existing layer catalog, Street evidence, weather and legend. Leaving returns to results with the route kept. | `#modeExplore` / `#modeNavigate` clicks, `#urbanLayers` |
+| Navigation | Unchanged UI and camera (pitch 55°, building extrusions, heading fallback). Phone chrome hides while `body.nav-mode` is set; exit returns to results. | `nav-ui.js`, `nav-engine.js` |
+| Back | Back buttons, Escape, swiping a sheet away, and the phone's Back gesture (one history entry per secondary view). | `closeSecondary()`, `popstate` |
+
+### Bugs found and fixed in this branch
+
+| Bug | Severity | Fix |
+|---|---|---|
+| Off-route never confirmed after an intermittent location error (`GPS_WEAK` → `NAVIGATING`, then the refused `NAVIGATING → OFF_ROUTE` transition), so a walker who strayed was never rerouted | High | `nav-engine.js`: step through `POSSIBLY_OFF_ROUTE` first; evidence rule (3 fixes over 8 s) unchanged. Regression tests in `tests/nav-gps.test.cjs`. |
+| `planJourney` failure left planning stuck "busy" (`resetRoutes()` bumped the run id inside the error handler, so `finally` skipped clearing `state.routingBusy`; all plan buttons stayed disabled until reload) | High | `journey.js`: `resetRoutes(true)` in the error handler, plus restore of the last valid route on follow-ups |
+| Failed follow-up re-plan wiped the displayed route | Medium | `app.js` `snapshotRoutes` / `restoreRoutes` |
+| Failed reroute message was replaced by "Off route" at the next 3 s refresh | Medium | `nav-ui.js` `renderNav()` keeps "Could not recalculate — your last route is still shown. Tap Retry." while the failure lasts; counter resets when back on route |
+| Pick on map: the notice box covered the centre of the phone map, so the tap hit the notice | Medium | phone CSS: notice is a top bar |
+| Install banner covered Navigate / Explore, GPS, legend (and hotel search ~1100 px) on tablet/desktop after the first route; on phones it covered the request bar / back pill | Medium | CSS: ≥1061 px in the top bar's free centre; 741–1060 px a compact "Install ✕" pill (iPad Safari instructions sit between brand and ⓘ, the header weather label steps aside); phones: bottom of the map, home view only |
+| Service worker cached `data/` (large GIS) and `api/` responses when served from a GitHub Pages project subpath — exclusions compared `pathname.startsWith('/data/')` | Medium | `sw.js`: paths compared relative to the worker's scope; cache renamed `strollane-shell-v3` (purges older caches on activate) |
+
+### Agent integration (verified as far as possible without a key)
+
+`Natural language → POST /api/interpret (server.py interpret(): one schema-constrained OpenAI call, strict
+validate_interpretation() — closed keys, canonical 12 dimension names only, integer 0..100, journey schema with
+names only, never coordinates — plus validate_intent_bindings(), one model self-repair retry) → client
+applyInterpretation() (weights, time, constraints) + applyJourney() (origin/destination/stops resolved through the
+app's own place index /api/places/search; unresolved names are reported, never invented) → /api/routes or
+/api/itinerary (Python engine on the OSM pedestrian graph) → map layers from the response geometry.`
+
+| Path | Verified how |
+|---|---|
+| Real LLM (`OPENAI_API_KEY`) | **Not verified** — no key in any environment used. `/api/status` reports `llm:false`. |
+| Server-side validation of LLM output | Python unit tests with `call_llm` mocked (`tests/test_interpret.py`, `tests/test_interpretation_contract.py`) — pass |
+| Client LLM branch end to end | **Mock E2E**: `/api/status` + `/api/interpret` replies mocked in the browser with documents that pass the server's own `validate_interpretation()` (`tests/mobile-v2/fixture-llm-*.json`); place resolution, itinerary routing and map rendering are real |
+| Local fallback parser | Real E2E (labelled "LIMITED LOCAL PREVIEW" in the UI) |
+
+No Agent schema fields were added. The 12 dimensions (`app.js DIMENSIONS`, `routing/engine.py DIMENSIONS`) are unchanged.
+
+### Files
+
+Modified: `index.html` (composer, menu, plan/customize grouping wrappers, chip row, results slots, cache-bust query
+strings), `mobile-ui.js` (view state, composer, chips, start confirmation, back handling), `styles.css` (phone block +
+tablet/desktop install banner), `app.js` (route snapshot/restore), `route-client.js` and `journey.js` (keep last route on
+failed follow-up; journey busy fix), `nav-engine.js` (off-route fix), `nav-ui.js` (failed-reroute message), `sw.js`
+(subpath-safe exclusions, cache v3), `tests/nav-gps.test.cjs` (2 regression tests), `tests/mobile-e2e.spec.js` (updated to
+the v2 UI). Pre-existing uncommitted edits kept: `.gitignore`.
+
+Added: `tests/mobile-v2/harness.js`, `tests/mobile-v2/flows.js`, `tests/mobile-v2/fixture-llm-request.json`,
+`tests/mobile-v2/fixture-llm-refine.json`, `screenshots/mobile-v2/*` (real browser screenshots + `results.json`).
+
+Not changed: Python routing engine, Agent runtime, place/GIS data, 12 dimensions and scoring, MapLibre and the CARTO
+basemap, API contracts, desktop layout.
+
+### Known limitations / open issues
+
+| Issue | Severity |
+|---|---|
+| Real LLM parsing not verified (no `OPENAI_API_KEY`) | High (verification gap) |
+| Real basemap tiles, MapLibre CDN, live geocoders (Photon, NYC GeoSearch, Mapbox) and Open-Meteo unreachable from every test environment used; browser tests substitute MapLibre with the identical npm build and the basemap with a plain background **only** under `SANDBOX_CDN=1` | Medium (verification gap) |
+| No real-device test (GPS, compass, iOS sensor permission, soft keyboard, Safari bars) | Medium (verification gap) |
+| A "45-minute walk" can return a much shorter walk: the walking time is a hard maximum, not a target length (observed: 3.5 min to one café in Discover mode) | Medium (product / engine behaviour, unchanged) |
+| Place index can prefer a smaller feature with the same name ("Columbia University" → "Columbia University Well Garden") | Medium (place ranking, unchanged) |
+| Start-point detection in the request is a conservative pattern (e.g. "from Columbia"); a request it misses only triggers the confirmation prompt, never a wrong start | Low |
+| 741–1060 px tablet drawer horizontal-scroll quirk (pre-existing, documented in v1) | Low |
+| No reliable background GPS in a mobile browser/PWA (foreground navigation only) | Inherent |
+
+---
+
+## Earlier pass (v1 — first mobile-first pass, historical)
+
 
 Branch: `feature/mobile-first-pwa`. Scope actually delivered in this pass, against the
 full brief in the originating prompt — this report says plainly which parts of that
