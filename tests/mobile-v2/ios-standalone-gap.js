@@ -47,6 +47,18 @@ const check = (dev, name, ok, d) => { total++; if (!ok) failed++; console.log(`$
     check(dev, 'no page errors', log.errors.length === 0, log.errors);
     await context.close();
   }
+  // Regression found on the live site: viewport grows AFTER load (rotation / Safari toolbars / Home Screen
+  // viewport settling) — hidden sheets must stay fully below the screen, never peek in as a dark band.
+  {
+    const { page, context } = await newPage(b, { width: 440, height: 600 });
+    await openApp(page, 1500);
+    for (const [w, h] of [[440, 956], [440, 700], [956, 440], [440, 956]]) {
+      await page.setViewportSize({ width: w, height: h }); await page.waitForTimeout(700);
+      const r = await page.evaluate(() => ({ ih: innerHeight, mview: document.body.dataset.mview, tops: ['leftPanel', 'rightPanel', 'exploreSheet'].map((id) => { const e = document.getElementById(id); return { id, level: e.dataset.level, top: Math.round(e.getBoundingClientRect().top) }; }) }));
+      if (w <= 740) check(`resize → ${w}x${h}`, 'hidden sheets stay completely off-screen', r.tops.every((t) => t.level !== 'hidden' || t.top >= r.ih), r);
+    }
+    await context.close();
+  }
   // Safari tab / non-iOS: no gap must be applied
   const { page, context } = await newPage(b, { width: 440, height: 830 });
   await openApp(page, 1200);

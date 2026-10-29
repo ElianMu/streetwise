@@ -1,6 +1,21 @@
 # Mobile Implementation — Test Report
 
-## iPhone Home Screen bottom gap — round 2 test results (latest)
+## Round 3 test results (latest)
+
+| Test | Result |
+|---|---|
+| `tests/mobile-v2/ios-standalone-gap.js` (now also resizes / rotates after load) | 28/28 |
+| `tests/mobile-v2/iphone-shell.js` | 127/127 |
+| `tests/mobile-v2/flows.js` | 94/94 |
+| `tests/mobile-e2e.spec.js` | 10/10 |
+
+**Live production check** (built-in browser on the real `elianmu.github.io` URL, 440×956):
+- new assets served, no console errors;
+- service worker active with the new cache;
+- header 48, map 0→956, no horizontal overflow, count labels only from z13 on phones;
+- the hidden-sheet band found there is fixed in this round.
+
+## iPhone Home Screen bottom gap — round 2 test results
 
 | Test | Class | Result |
 |---|---|---|
