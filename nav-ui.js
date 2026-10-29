@@ -16,7 +16,9 @@ const nav={engine:null,watch:null,units:'metric',voice:true,voiceLang:'en',follo
 const navLayerPriorityBackup=new Map(); // dataset id -> opacity before nav dimmed it, restored on exit
 // A real, honest signal only — hardwareConcurrency/deviceMemory are coarse and not supported everywhere, so this
 // under-detects rather than over-claims; it never blocks 3D buildings, only drops them to a flat footprint.
-const navLowPowerDevice=(navigator.hardwareConcurrency||8)<=4||(navigator.deviceMemory&&navigator.deviceMemory<=4);
+// Only clearly weak devices lose 3D buildings in navigation. Safari reports few cores even on flagship iPhones and no
+// deviceMemory, so "≤ 4 cores" flattened the 3D city on fast phones; use reported memory, or ≤ 2 cores.
+const navLowPowerDevice=(navigator.deviceMemory&&navigator.deviceMemory<=4)||(navigator.hardwareConcurrency||8)<=2;
 let navBuildingHeightBackup=null;
 const WALK_MPM=80; // metres/minute = routing/engine.py WALK_SPEED_M_PER_MIN (4.8 km/h); keeps budget math consistent with the server
 const NAV_ARROWS={depart:'M12 20V5m0 0-5 5m5-5 5 5',continue:'M12 20V5m0 0-5 5m5-5 5 5',turn_left:'M17 20v-7a4 4 0 0 0-4-4H5m0 0 4-4M5 9l4 4',
@@ -124,7 +126,7 @@ function setDataLayersForNav(on){
  for(const id of ['journey-found','route-alts'])if(state.map.getLayer(id))state.map.setLayoutProperty(id,'visibility',on?'none':'visible');
  if(state.map.getLayer('udg-buildings-fill')&&typeof UrbanStyle!=='undefined'){
   const base=UrbanStyle.T.building.extrusionOpacity;
-  state.map.setPaintProperty('udg-buildings-fill','fill-extrusion-opacity',on?base*0.6:base);
+  state.map.setPaintProperty('udg-buildings-fill','fill-extrusion-opacity',on?base*0.8:base); // context, but still clearly 3D
   if(on&&navLowPowerDevice){
    navBuildingHeightBackup=state.map.getPaintProperty('udg-buildings-fill','fill-extrusion-height');
    state.map.setPaintProperty('udg-buildings-fill','fill-extrusion-height',0); // flat 2D footprint, not hidden
