@@ -28,7 +28,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=29" />
+  <link rel="stylesheet" href="./styles.css?v=32" />
 </head>
 <body>
 <div class="site-shell">
@@ -43,7 +43,7 @@
       <circle class="glyph-head" cx="22" cy="6" r="4"/>
     </svg><div class="brand-name">STROLLANE</div><span class="brand-location">MANHATTAN · NYC</span></div>
     <div class="top-center"><span class="pulse-dot"></span><span>CITY WALK STUDIO IN NEW YORK</span></div>
-    <div class="top-actions"><span id="topWeather" class="top-weather"><span class="tiny-sun">☁</span> Weather loading…</span><button id="openInfo" class="icon-button" title="About the prototype" aria-label="About"><span>i</span></button><button id="openKepler" class="kepler-btn"><span class="kepler-mark">◈</span> Kepler studio <span>↗</span></button></div>
+    <div class="top-actions"><span id="topWeather" class="top-weather"><span class="tiny-sun">☁</span> Weather loading…</span><button id="openInfo" class="icon-button" title="About the prototype" aria-label="About"><span>i</span></button><button id="openKepler" class="kepler-btn"><span class="kepler-mark">◈</span> Kepler studio <span>↗</span></button><details class="mobile-more" id="mobileMore"><summary class="icon-button" title="More" aria-label="More options">⋯</summary><div class="mobile-more-body"><button type="button" data-more-proxy="openInfo">ⓘ About this prototype</button><button type="button" data-more-proxy="openKepler">◈ Export to Kepler Studio</button></div></details></div>
   </header>
 
   <div class="app-layout">
@@ -233,6 +233,10 @@
       </div>
       <div class="right-bottom"><button id="exportKepler" class="export-button"><span>◈</span> Export GIS data for Kepler.gl <span>↗</span></button></div>
     </aside>
+
+    <aside class="explore-sheet" id="exploreSheet" aria-label="Explore Urban Data">
+      <div class="explore-sheet-scroll"></div>
+    </aside>
   </div>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -257,7 +261,7 @@
 <script src="./explore-map.js?v=28"></script>
 <script src="./explore-analytics.js?v=28"></script>
 <script src="./center-map.js?v=28"></script>
-<script src="./mobile-ui.js?v=1"></script>
+<script src="./mobile-ui.js?v=6"></script>
 <script src="./pwa-register.js?v=1"></script>
 </body>
 </html>
