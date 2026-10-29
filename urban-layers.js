@@ -72,7 +72,7 @@ function udGroup(d){
 }
 /** Colour of a dataset: its primary category's family, shaded by its position within that category. */
 function udColor(id){
- const d=urbanData.byId.get(id);if(!d)return '#8a979c';
+ const d=urbanData.byId.get(id);if(!d)return '#909296';
  if(UrbanStyle.LINES[id])return UrbanStyle.LINES[id].color;
  const cat=d.categories[0],peers=urbanData.catalog.datasets.filter(x=>x.status==='CONNECTED'&&x.categories[0]===cat&&udGroup(x)===udGroup(d));
  return UrbanStyle.shade(UrbanStyle.T.cat[cat],peers.indexOf(d),peers.length);

@@ -1,5 +1,37 @@
 # Mobile Implementation Report
 
+## Round 6: black tech theme (UI + map)
+
+**Brief:** optimise the visual expression and colour of both the interface and the map, on a black background in a
+tech style.
+
+**Interface:**
+- **Tokens:** pure black `--bg #000`; cool graphite surfaces `#07080a` / `#0b0d10` / `#12151a` and hairline
+  `#1f242c`.
+- **Recolour:** all 286 ink-green-tinted greys in `styles.css` were recoloured to neutral graphite at the same
+  lightness, so the hierarchy is unchanged.
+- **Accents:** the brand lime stays for the primary action and the selected route; electric cyan `#45d4e6` is the
+  secondary signal.
+- **Request card:** the one bold element. It is black glass with a lime → cyan light edge and a lime focus ring on
+  the input.
+- **Header:** black frosted glass.
+- **Fix:** MapLibre attribution links were dark ink, which was invisible on black.
+
+**Map:**
+- **Basemap:** CARTO dark-matter re-tinted to pure black land, deep navy water and cool graphite roads, brighter by
+  road class.
+- **Data categories:** a new categorical set, validated with the dataviz palette validator on black:
+  - adjacent-pair colourblind ΔE ≥ 8.4;
+  - normal-vision ΔE ≥ 19.3;
+  - all colours ≥ 3:1 contrast.
+  Street infrastructure and building records stay neutral so they recede.
+- **Clusters:** shrink at city zoom (radius ∝ zoom), so ten categories no longer stack into a field of overlapping
+  rings.
+- **Buildings:** the height ramp is cool graphite → slate.
+- **Other layers:** start marker cyan; the route halo and point strokes are black.
+- **Meta and versions:** `theme-color` and the manifest colours are `#000`; asset versions are bumped; SW cache
+  `strollane-shell-v9`.
+
 ## Round 5: the real root cause of the iOS Home Screen bands — document height
 
 **Evidence (real iPhone 17 Pro Max, round-4 build, screenshot at 12:09):**
