@@ -1,5 +1,34 @@
 # Mobile Implementation — Test Report
 
+## Round 4 test results (latest) — iOS Home Screen system strip
+
+| Test | Class | Result |
+|---|---|---|
+| `tests/mobile-v2/ios-standalone-gap.js` | Simulated iOS 26 Home Screen viewport (screen − status bar), 5 iPhones + rotation + resize + Safari tab | 56/56 |
+| `tests/mobile-v2/iphone-shell.js` | 9 iPhone sizes, injected safe areas, real routing | 127/127 |
+| `tests/mobile-v2/flows.js` | NL / manual / customize / GPS-denied / network-failure flows | 94/94 |
+| `tests/mobile-e2e.spec.js` (Playwright test) | overflow at 7 widths, home, user flow, desktop regression | 10/10 |
+| `tests/nav-gps.test.cjs` | replayed GPS navigation scenarios | 17/17 |
+| other `tests/*.test.cjs` | places, food discovery, place cards, opening hours, spatial, real-route, urban geo/style, weather | all pass |
+| `tests/dom.test.cjs` | jsdom app test | **fails, pre-existing**. The GPS off-route re-plan assertion (line 201) already fails on `043133e`, before any mobile-v2 work, and is not run by CI. Not caused by this round. |
+
+**What ios-standalone-gap.js now asserts.** It replaces the round-2 assertions, which required content in the strip:
+- the strip is detected with the right size on Notch and Dynamic Island iPhones, and not on the SE or in a Safari tab;
+- the map and its canvas fill exactly 0..innerHeight, with no page scroll;
+- `--sab` is 0 in the strip;
+- the footer fades into `--bg`, the strip colour;
+- the zoom, GPS and Urban Data controls sit inside the viewport and above the fade;
+- the diagnostics report the strip, and the red line sits on the viewport bottom;
+- the header is the inset + 48 and the card starts 8 px below it;
+- the full results sheet ends at the viewport bottom;
+- in navigation, the bottom bar is inside the viewport and the map is at full height;
+- landscape re-evaluates the strip;
+- there are no page errors.
+
+**Not covered by any automated test:** what iOS paints *outside* the page's viewport. Chromium and desktop WebKit
+cannot reproduce the iOS Home Screen strip. **REAL DEVICE VERIFICATION REQUIRED**: open the Home Screen app, tap
+the logo 5 times, and screenshot it.
+
 ## Round 3 test results (latest)
 
 | Test | Result |

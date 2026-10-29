@@ -649,29 +649,31 @@
     } else unwire();
   }
   /* ------------------------------------------------------------------ */
-  /* iOS Home Screen app: viewport gap                                  */
+  /* iOS Home Screen app: system strip (WebKit bug 301994)              */
   /* ------------------------------------------------------------------ */
-  // Measured on a real iPhone 17 Pro Max (440x956pt) launched from the Home Screen with the
-  // black-translucent status bar: the page is drawn from the top of the screen, but WebKit reports a
-  // layout viewport that is shorter by the status-bar height (innerHeight / 100% / 100dvh / fixed inset:0
-  // = 894pt). Everything sized to the viewport therefore ends ~62pt above the screen bottom. We measure
-  // that missing strip (screen height - innerHeight) and extend the shell and the bottom-anchored layers by
-  // exactly that amount via --vgap. Only in an iOS Home Screen app (navigator.standalone is iOS-only), only
-  // when the difference is in the status-bar range; on a correct viewport it measures 0 and nothing changes.
-  function measureViewportGap() {
-    let gap = 0;
+  // Measured on a real iPhone 17 Pro Max Home Screen app (screenshot, 2.909 px/pt): the page is shown only from
+  // 0 to 894pt; the remaining 61pt down to the screen edge are a perfectly flat strip in the page background
+  // colour (std-dev 0), and page content placed there (our map footer) never appears. iOS reports the matching
+  // short viewport (innerHeight = screen − ~62pt). This is the iOS 26.1+ regression WebKit bug 301994 (still open
+  // as of iOS 26.5 / 27 beta); the page cannot paint that strip. Round 2 tried to extend the layout into it, which
+  // only moved bottom UI out of sight — removed. We now only DETECT it (iOS-only navigator.standalone + a
+  // status-bar-sized difference) so CSS can blend the map into the strip colour and stop reserving a second
+  // home-indicator inset. Nothing changes in a Safari tab, on Android, on desktop, or once Apple fixes the bug.
+  function detectIosSystemStrip() {
+    let strip = 0;
     if (navigator.standalone === true) {
       const portrait = window.innerHeight >= window.innerWidth;
       const screenH = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
       const d = Math.round(screenH - window.innerHeight);
-      if (d > 0 && d <= 80) gap = d;
+      if (d >= 40 && d <= 80) strip = d;
     }
-    document.documentElement.style.setProperty('--vgap', `${gap}px`);
-    return gap;
+    document.documentElement.classList.toggle('ios-system-strip', strip > 0);
+    document.documentElement.dataset.iosStrip = String(strip);
+    return strip;
   }
-  measureViewportGap();
-  window.addEventListener('resize', measureViewportGap);
-  window.addEventListener('orientationchange', () => setTimeout(() => { measureViewportGap(); try { state.map && state.map.resize(); } catch (_) {} }, 300));
+  detectIosSystemStrip();
+  window.addEventListener('resize', detectIosSystemStrip);
+  window.addEventListener('orientationchange', () => setTimeout(() => { detectIosSystemStrip(); try { state.map && state.map.resize(); } catch (_) {} }, 300));
 
   /* Layout diagnostics (for real-device checks): open with ?debug=layout, or tap the STROLLANE logo 5 times. */
   function layoutReport() {
@@ -688,22 +690,25 @@
       `screen: ${screen.width}×${screen.height} @${window.devicePixelRatio}x · inner: ${window.innerWidth}×${window.innerHeight}`,
       `visualViewport: ${window.visualViewport ? `${Math.round(window.visualViewport.width)}×${Math.round(window.visualViewport.height)} offTop ${Math.round(window.visualViewport.offsetTop)}` : 'n/a'} · docEl.clientHeight: ${document.documentElement.clientHeight}`,
       `safe-area insets: ${insets}`,
-      `--vgap applied: ${getComputedStyle(document.documentElement).getPropertyValue('--vgap').trim()}`,
+      `iOS system strip detected: ${document.documentElement.dataset.iosStrip || '0'}pt (WebKit bug 301994; 0 = none)`,
       `body: ${R(document.body)} · shell: ${R(document.querySelector('.site-shell'))}`,
       `header: ${R(document.querySelector('.topbar'))} · app-layout: ${R(document.querySelector('.app-layout'))}`,
       `map-workspace: ${R(document.getElementById('mapWorkspace'))} · #map: ${R(document.getElementById('map'))}`,
       `canvas: ${canvas ? `${canvas.clientWidth}×${canvas.clientHeight} css` : 'n/a'} · footer: ${R(document.querySelector('.map-footer'))}`,
       `request card: ${R(document.getElementById('mComposer'))}`,
-      `GAP below map vs screen: ${Math.round(screenH - mapBottom)}pt (0 = map reaches the screen bottom)`,
+      `GAP below map vs screen: ${Math.round(screenH - mapBottom)}pt (0 = map reaches the screen bottom; = strip when iOS withholds it)`,
+      `red line = bottom of the page's viewport (${window.innerHeight}pt)`,
     ].join('\n');
   }
   function toggleLayoutDebug(force) {
     let el = document.getElementById('layoutDebug');
-    if (el && force !== true) { el.remove(); return; }
-    if (!el) { el = document.createElement('pre'); el.id = 'layoutDebug'; el.className = 'layout-debug'; el.addEventListener('click', () => el.remove()); document.body.appendChild(el); }
+    if (el && force !== true) { el.remove(); document.getElementById('layoutDebugEdge')?.remove(); return; }
+    if (!el) { el = document.createElement('pre'); el.id = 'layoutDebug'; el.className = 'layout-debug'; el.addEventListener('click', () => { el.remove(); document.getElementById('layoutDebugEdge')?.remove(); }); document.body.appendChild(el); }
+    if (!document.getElementById('layoutDebugEdge')) { const edge = document.createElement('div'); edge.id = 'layoutDebugEdge'; edge.className = 'layout-debug-edge'; edge.innerHTML = `<span>viewport bottom ${window.innerHeight}pt</span>`; document.body.appendChild(edge); }
     el.textContent = `STROLLANE layout diagnostics (tap to close)\n${layoutReport()}`;
   }
   window.strollaneLayoutReport = layoutReport;
+  window.strollaneToggleLayoutDebug = toggleLayoutDebug;
   function wireLayoutDebug() {
     if (/[?&]debug=layout\b/.test(location.search)) setTimeout(() => toggleLayoutDebug(true), 2500);
     let taps = [], glyph = document.querySelector('.brand-glyph');

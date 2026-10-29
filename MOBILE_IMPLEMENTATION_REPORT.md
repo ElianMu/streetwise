@@ -1,5 +1,51 @@
 # Mobile Implementation Report
 
+## Round 4: the iOS Home Screen bottom strip — root cause and fix
+
+**Evidence.** The real screenshot came from an iPhone 17 Pro Max Home Screen app running the deployed round-3
+build (`c7a7888`), 1280×2781 px, which is 2.909 px per point.
+- From 0 to 895 pt, the page paints normally: map, header and controls.
+- From 896 to 956 pt (61 pt), the screen is one perfectly flat colour, rgb(7,18,20), with a standard deviation of 0.
+  That equals the page background `--bg` #081114.
+- Round 2 placed the map footer (with its attribution text) inside that band. It is **not visible** on the device.
+- The status-bar area, rgb(12,22,24), already matches the header, rgb(13,24,26), so the top is continuous.
+
+**Root cause.** In a Home Screen web app with `apple-mobile-web-app-status-bar-style: black-translucent`, iOS 26.1+
+does three things:
+- it reports a viewport shortened by the status-bar height (`innerHeight` = 894 on a 956 pt screen);
+- it shows the page only inside that viewport;
+- it fills the rest of the screen with the page background colour.
+
+This is WebKit bug 301994. It was reopened and still reproduces on iOS 26.5 and the 27 beta. Content cannot be drawn
+into the strip, and no CSS or JS workaround is known: `100vh`, `100dvh`, `100lvh`, `screen.height` and
+`position:fixed; bottom:0` all stop at the viewport edge. The strip is therefore **not a layout bug in our page**.
+Round 2's compensation (`--vgap`, extending the shell by the measured difference) was based on the wrong assumption
+that the strip was drawable. All it did was move bottom UI out of sight.
+
+**What the page controls, and what round 4 does:**
+- **Reverted the round-2 `--vgap` compensation** in `styles.css` and `mobile-ui.js`. The shell is `position:fixed;
+  inset:0` again, so the map fills exactly the drawable viewport, and its canvas is re-measured on resize,
+  orientation, pageshow, visibility and visualViewport changes.
+- **Strip detection.** `detectIosSystemStrip()` in `mobile-ui.js` checks for `navigator.standalone === true`, which
+  is iOS-only, and a 40–80 pt difference between the screen and the viewport. When both hold, it adds
+  `html.ios-system-strip` and records the size in `data-ios-strip`. Nothing changes in a Safari tab, on Android or on
+  desktop, or once Apple fixes the bug, because the difference then disappears.
+- **In that mode:**
+  - `--sab: 0`, because the home indicator lies inside the system strip, so a second 34 pt inset would only waste
+    map space;
+  - the map footer fades into exactly `--bg`, which is the colour iOS uses for the strip, so map and strip read as
+    one edge instead of a hard black band;
+  - the MapLibre controls sit above that fade.
+- **Diagnostics.** Tap the logo 5 times, or open `?debug=layout`. The panel now reports `iOS system strip detected:
+  N pt` and draws a red line at the bottom of the page's viewport. A real-device screenshot then shows directly where
+  iOS stops drawing the page.
+- `styles.css?v=42`, `mobile-ui.js?v=18`, service worker cache `strollane-shell-v7`.
+- No per-device pixel values and no solid cover layers. All 12 dimensions, routing, GIS, navigation and desktop are
+  unchanged.
+
+**What is still not possible from the page:** painting map pixels into the bottom 61 pt of an iOS 26.1+ Home Screen
+app. **REAL DEVICE VERIFICATION REQUIRED** to confirm that the fade blends with the strip on the device.
+
 ## Round 3: hidden sheets after viewport changes (found on the live site)
 
 The production check of round 2, done on the live GitHub Pages URL in a real browser, found that the hidden bottom
