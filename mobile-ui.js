@@ -651,14 +651,11 @@
   /* ------------------------------------------------------------------ */
   /* iOS Home Screen app: system strip (WebKit bug 301994)              */
   /* ------------------------------------------------------------------ */
-  // Measured on a real iPhone 17 Pro Max Home Screen app (screenshot, 2.909 px/pt): the page is shown only from
-  // 0 to 894pt; the remaining 61pt down to the screen edge are a perfectly flat strip in the page background
-  // colour (std-dev 0), and page content placed there (our map footer) never appears. iOS reports the matching
-  // short viewport (innerHeight = screen − ~62pt). This is the iOS 26.1+ regression WebKit bug 301994 (still open
-  // as of iOS 26.5 / 27 beta); the page cannot paint that strip. Round 2 tried to extend the layout into it, which
-  // only moved bottom UI out of sight — removed. We now only DETECT it (iOS-only navigator.standalone + a
-  // status-bar-sized difference) so CSS can blend the map into the strip colour and stop reserving a second
-  // home-indicator inset. Nothing changes in a Safari tab, on Android, on desktop, or once Apple fixes the bug.
+  // Real iPhone 17 Pro Max Home Screen app: iOS showed the page only from 0 to 894pt and painted the last 62pt
+  // itself. iOS 26 does this only while the DOCUMENT is no taller than that short viewport; styles.css now makes
+  // html at least screen-tall in Home Screen mode (the actual fix). This detector stays as a fallback signal: if
+  // iOS still withholds the strip, html.ios-system-strip stops a second home-indicator inset being reserved, and the
+  // diagnostics show it. Every resize (incl. the viewport growing to full height) re-runs it and the map re-measures.
   function detectIosSystemStrip() {
     let strip = 0;
     if (navigator.standalone === true) {
@@ -667,6 +664,7 @@
       const d = Math.round(screenH - window.innerHeight);
       if (d >= 40 && d <= 80) strip = d;
     }
+    if (navigator.standalone === true) document.documentElement.classList.add('ios-standalone');
     document.documentElement.classList.toggle('ios-system-strip', strip > 0);
     document.documentElement.dataset.iosStrip = String(strip);
     return strip;
@@ -676,6 +674,7 @@
   window.addEventListener('orientationchange', () => setTimeout(() => { detectIosSystemStrip(); try { state.map && state.map.resize(); } catch (_) {} }, 300));
 
   /* Layout diagnostics (for real-device checks): open with ?debug=layout, or tap the STROLLANE logo 5 times. */
+  function lvhPx() { const d = document.createElement('div'); d.style.cssText = 'position:absolute;top:0;height:100lvh;width:1px;visibility:hidden'; document.body.appendChild(d); const h = Math.round(d.getBoundingClientRect().height); d.remove(); return h; }
   function layoutReport() {
     const R = (el) => { if (!el) return null; const r = el.getBoundingClientRect(); return `${Math.round(r.top)}→${Math.round(r.bottom)} (h ${Math.round(r.height)})`; };
     const probe = document.createElement('div');
@@ -691,6 +690,8 @@
       `visualViewport: ${window.visualViewport ? `${Math.round(window.visualViewport.width)}×${Math.round(window.visualViewport.height)} offTop ${Math.round(window.visualViewport.offsetTop)}` : 'n/a'} · docEl.clientHeight: ${document.documentElement.clientHeight}`,
       `safe-area insets: ${insets}`,
       `iOS system strip detected: ${document.documentElement.dataset.iosStrip || '0'}pt (WebKit bug 301994; 0 = none)`,
+      `viewport at launch: ${(window.__strollaneLaunchViewport || []).join('×') || 'n/a'} · now: ${window.innerWidth}×${window.innerHeight}`,
+      `html: h ${Math.round(document.documentElement.getBoundingClientRect().height)} · min-height ${getComputedStyle(document.documentElement).minHeight} · scrollHeight ${document.documentElement.scrollHeight} · 100lvh ${lvhPx()}px`,
       `body: ${R(document.body)} · shell: ${R(document.querySelector('.site-shell'))}`,
       `header: ${R(document.querySelector('.topbar'))} · app-layout: ${R(document.querySelector('.app-layout'))}`,
       `map-workspace: ${R(document.getElementById('mapWorkspace'))} · #map: ${R(document.getElementById('map'))}`,
