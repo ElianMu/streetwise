@@ -6,10 +6,15 @@
 const T={
  bg:'#000000', stroke:'#000000', halo:'#000000',
  route:{selected:'#d8f365',halo:'#000000',alt:'#7d8794',start:'#45d4e6',end:'#f2a876'},
- // Category families on the black basemap. The eight data categories use one validated categorical set (dark steps,
- // adjacent-pair CVD ΔE ≥ 8, normal-vision ΔE ≥ 15, ≥ 3:1 on black; run the palette validator before changing it);
- // street infrastructure and building records are neutral graphite so they recede. Never lime (the route's colour).
- cat:{streets:'#7d8794',buildings:'#6b7380',waterfront:'#3987e5',transit:'#d95926',services:'#199e70',activities:'#c98500',environment:'#d55181',nature:'#008300',heritage:'#9085e9',safety:'#e66767'},
+ // Category colours for POINTS on the black basemap (round 7). Built in OKLCH at one lightness band (L .58–.66,
+ // C .12–.17) so no hue shouts; no violet (it read as cheap next to the lime); warm/cool alternate in legend order.
+ // Validator (dark, #000): lightness/chroma/contrast PASS, adjacent normal-vision ΔE ≥ 17.8, CVD ΔE 7.0 (secondary
+ // encoding present: text legend + labels on tap). Street infrastructure and buildings stay neutral graphite.
+ // Never lime (the route's colour). Large AREAS never use these saturated hues — see `area` below.
+ cat:{streets:'#7d8794',buildings:'#6b7380',waterfront:'#4087de',activities:'#d67523',nature:'#54a058',environment:'#0086b3',transit:'#c5547c',heritage:'#b48c2b',services:'#00a396',safety:'#d24c49'},
+ // Area treatments, after Google Maps Night Mode / Mapbox guidance: big polygons are tonal shifts of the base,
+ // not saturated fills. Parks = deep moss with a fine sage edge; heritage = a brass hairline, almost no fill.
+ area:{park:{fill:'#0f2018',fillOpacity:.9,line:'#2f5d43',lineOpacity:.75},district:{line:'#b48c2b',lineOpacity:.5,fillOpacity:0},landmark:{fill:'#b48c2b',fillOpacity:.09,line:'#b48c2b',lineOpacity:.6}},
  // Visual weight per point category: street infrastructure (ramps, signals, corners) recedes; destinations lead.
  weight:{streets:{size:.7,opacity:.55},services:{size:.85,opacity:.8},safety:{size:.9,opacity:.85}},
  // Zoom tiers (MapLibre zoom), tuned on Midtown screenshots: city < 13 ≤ neighbourhood < 15 ≤ street < 17 ≤ detail.

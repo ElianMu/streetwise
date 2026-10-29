@@ -171,22 +171,22 @@ function addGroupLayers(){
  layer({id:'udg-buildings-line',type:'line',source:'udg-buildings',minzoom:T.zoom.street,paint:{'line-color':T.building.outline,'line-width':['interpolate',['linear'],['zoom'],15,.3,18,.8],'line-opacity':.55}},'ud-z-polys');
  // Green: parks and gardens as soft fills with fine edges; classification subsets as dashed outlines.
  src('udg-green');
- layer({id:'udg-green-fill',type:'fill',source:'udg-green',filter:['in',['get','ds'],['literal',['parks','community_gardens']]],paint:{'fill-color':T.cat.nature,'fill-opacity':op(.22)}},'ud-z-polys');
- layer({id:'udg-green-line',type:'line',source:'udg-green',filter:['in',['get','ds'],['literal',['parks','community_gardens']]],paint:{'line-color':T.cat.nature,'line-width':['interpolate',['linear'],['zoom'],12,.4,17,1.1],'line-opacity':op(.6)}},'ud-z-polys');
+ layer({id:'udg-green-fill',type:'fill',source:'udg-green',filter:['in',['get','ds'],['literal',['parks','community_gardens']]],paint:{'fill-color':T.area.park.fill,'fill-opacity':op(T.area.park.fillOpacity)}},'ud-z-polys');
+ layer({id:'udg-green-line',type:'line',source:'udg-green',filter:['in',['get','ds'],['literal',['parks','community_gardens']]],paint:{'line-color':T.area.park.line,'line-width':['interpolate',['linear'],['zoom'],12,.4,17,1.1],'line-opacity':op(T.area.park.lineOpacity)}},'ud-z-polys');
  layer({id:'udg-green-sub',type:'line',source:'udg-green',filter:['in',['get','ds'],['literal',['natural_areas','waterfront_parks']]],paint:{'line-color':['get','_c'],'line-width':1.2,'line-dasharray':[2,1.5],'line-opacity':op(.8)}},'ud-z-polys');
  // Surfaces: sidewalks and plazas as quiet ground textures.
  src('udg-surface');
  layer({id:'udg-surface-fill',type:'fill',source:'udg-surface',paint:{'fill-color':['get','_c'],'fill-opacity':['*',['case',['==',['get','ds'],'sidewalk_surface'],.09,.2],['coalesce',['get','_op'],1]]}},'ud-z-polys');
  layer({id:'udg-surface-line',type:'line',source:'udg-surface',filter:['!=',['get','ds'],'sidewalk_surface'],paint:{'line-color':['get','_c'],'line-width':.8,'line-opacity':op(.6)}},'ud-z-polys');
  m.setLayerZoomRange('udg-surface-fill',T.zoom.neighbourhood,24);
- // Heritage: districts as light dashed boundaries with an italic name; landmark lots as thin violet outlines.
+ // Heritage: districts as brass dashed hairlines with an italic name; landmark lots as thin brass outlines.
  src('udg-districts');
- layer({id:'udg-districts-fill',type:'fill',source:'udg-districts',paint:{'fill-color':T.cat.heritage,'fill-opacity':op(.05)}},'ud-z-polys');
- layer({id:'udg-districts-line',type:'line',source:'udg-districts',paint:{'line-color':T.cat.heritage,'line-width':['interpolate',['linear'],['zoom'],12,.6,17,1.4],'line-dasharray':[3,2],'line-opacity':op(.7)}},'ud-z-polys');
+ layer({id:'udg-districts-fill',type:'fill',source:'udg-districts',paint:{'fill-color':T.area.district.line,'fill-opacity':op(T.area.district.fillOpacity)}},'ud-z-polys');
+ layer({id:'udg-districts-line',type:'line',source:'udg-districts',paint:{'line-color':T.area.district.line,'line-width':['interpolate',['linear'],['zoom'],12,.6,17,1.2],'line-dasharray':[3,2],'line-opacity':op(T.area.district.lineOpacity)}},'ud-z-polys');
  layer({id:'udg-districts-label',type:'symbol',source:'udg-districts',minzoom:14,layout:{'text-field':['get','area_name'],'text-font':['Montserrat Regular Italic','Open Sans Italic'],'text-size':10,'text-max-width':10,'text-optional':true},paint:{'text-color':T.cat.heritage,'text-halo-color':T.halo,'text-halo-width':1.2,'text-opacity':.85}},'ud-z-labels');
  src('udg-landmarks');
- layer({id:'udg-landmarks-fill',type:'fill',source:'udg-landmarks',paint:{'fill-color':T.cat.heritage,'fill-opacity':op(.14)}},'ud-z-polys');
- layer({id:'udg-landmarks-line',type:'line',source:'udg-landmarks',paint:{'line-color':T.cat.heritage,'line-width':['interpolate',['linear'],['zoom'],13,.5,17,1.3],'line-opacity':op(.85)}},'ud-z-polys');
+ layer({id:'udg-landmarks-fill',type:'fill',source:'udg-landmarks',paint:{'fill-color':T.area.landmark.fill,'fill-opacity':op(T.area.landmark.fillOpacity)}},'ud-z-polys');
+ layer({id:'udg-landmarks-line',type:'line',source:'udg-landmarks',paint:{'line-color':T.area.landmark.line,'line-width':['interpolate',['linear'],['zoom'],13,.5,17,1.1],'line-opacity':op(T.area.landmark.lineOpacity)}},'ud-z-polys');
  // Lines: one layer per line dataset with its token style (thin, low contrast, never yellow).
  src('udg-lines');
  for(const [id,L] of Object.entries(UrbanStyle.LINES)){
@@ -378,7 +378,7 @@ function renderUrbanLegend(){
   else if(t==='landuse')rows.push(`<div class="lg-block"><span>Buildings · land use (PLUTO lot)</span><div class="lg-classes">${B.landuse.classes.slice(0,11).map(([n,c])=>`<span>${sw(c,'fill')}${esc(n)}</span>`).join('')}</div></div>`);
   else rows.push(`<div class="lg-row">${sw(B.neutral,'fill')}<span>Buildings</span></div>`);
  }
- if(has('parks')||has('community_gardens'))rows.push(`<div class="lg-row">${sw(T.cat.nature,'fill')}<span>Parks & gardens</span></div>`);
+ if(has('parks')||has('community_gardens'))rows.push(`<div class="lg-row">${sw(T.area.park.line,'fill')}<span>Parks & gardens</span></div>`);
  if(has('reported_complaints'))rows.push(`<div class="lg-row">${sw('#b17a83','fill')}<span>Historical reported complaint density · not a crime rate</span></div>`);
  if(has('street_trees')&&z>=12)rows.push(`<div class="lg-row">${sw(T.cat.nature,'tiny')}<span>Street trees</span></div>`);
  if(has('historic_districts'))rows.push(`<div class="lg-row">${sw(T.cat.heritage,'dash')}<span>Historic districts</span></div>`);
