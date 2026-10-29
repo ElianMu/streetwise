@@ -607,6 +607,15 @@
       else if (document.body.classList.contains('nav-mode')) { document.body.dataset.wasNav = '1'; for (const w of Object.keys(PANEL_IDS)) setLevel(w, 'hidden'); }
     }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
     window.addEventListener('resize', () => { if (mq.matches && active) setLevel(active, panelFor(active).dataset.level); });
+    // iOS (Safari tab and Home Screen app) can change the visible area without a normal resize: rotation,
+    // returning from the background (pageshow), the keyboard closing (visualViewport). MapLibre must
+    // re-measure its canvas or it keeps the old size and leaves an unpainted band.
+    let resizeRaf = 0;
+    const remeasure = () => { cancelAnimationFrame(resizeRaf); resizeRaf = requestAnimationFrame(() => { try { if (typeof state !== 'undefined' && state.map) state.map.resize(); } catch (_) {} if (mq.matches && active) setLevel(active, panelFor(active).dataset.level); }); };
+    window.addEventListener('orientationchange', () => setTimeout(remeasure, 250));
+    window.addEventListener('pageshow', remeasure);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) remeasure(); });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', remeasure);
   }
   function unwire() {
     if (!wired) return; wired = false;
@@ -631,6 +640,15 @@
       else setView(hasRoutes() ? 'results' : 'home');
     } else unwire();
   }
+  // Tablet / landscape-phone drawers (741–1060px). The original app.js toggles for #mobilePlan / #mobileResults
+  // were removed by the first mobile pass, which only re-wired them for phones — leaving the results drawer
+  // impossible to open on iPad portrait and on every phone in landscape. Same behaviour as the original code.
+  const tabletMq = window.matchMedia('(min-width: 741px) and (max-width: 1060px)');
+  function wireTabletDrawers() {
+    $('mobilePlan')?.addEventListener('click', () => { if (!tabletMq.matches) return; $('leftPanel').classList.toggle('mobile-active'); $('rightPanel').classList.remove('mobile-active'); });
+    $('mobileResults')?.addEventListener('click', () => { if (!tabletMq.matches) return; $('rightPanel').classList.toggle('mobile-active'); $('leftPanel').classList.remove('mobile-active'); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', wireTabletDrawers); else wireTabletDrawers();
   mq.addEventListener('change', init);
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();

@@ -1,5 +1,50 @@
 # Mobile Implementation Report
 
+## iPhone Home Screen app — full-screen shell fix (latest)
+
+Reported on a real iPhone 17 Pro Max opened from the Home Screen: the map stopped short with a black band at the
+bottom, and the STROLLANE header sat under the status bar, covered by the request card. Safari tabs looked fine.
+
+**Root cause** (this was not a generic `100vh` problem). The page uses `viewport-fit=cover` with the
+`black-translucent` status bar, so a Home Screen app draws under the status bar and `env(safe-area-inset-top)`
+is about 47–62 pt; in a Safari tab it is 0, which is why the tab looked fine.
+1. The phone header had `height:58px` plus `padding-top:env(safe-area-inset-top)` with `box-sizing:border-box`. The
+   inset (~62) was larger than the header, so the header could not grow: the brand spilled down, the map started at
+   58 px, and the request card was drawn over the brand.
+2. The map area was `height:calc(100dvh - 58px - env(safe-area-inset-top))`, which subtracted the inset a second time
+   although the header never grew. The map ended about one inset short of the bottom edge: the black band.
+3. Live navigation hid the header, but its instruction card was `top:10px` and its bottom bar `bottom:12px`, so in
+   Home Screen mode they would sit under the Dynamic Island and the home indicator.
+Not involved: there is no `transform: scale()`, no fixed-size phone frame, and no JS viewport arithmetic. The
+service worker uses network-first for the page and versioned assets, and the cache was bumped to
+`strollane-shell-v4`. MapLibre is not resized by our code on iOS viewport changes, so explicit `map.resize()` hooks
+were added.
+
+**Fix (phones ≤740 px)**
+- **App shell:** `.site-shell` is one fixed full-screen layer (`inset:0`). The MAP is the full-screen base layer,
+  from the top edge to the bottom edge. The header, request card, map controls and navigation are overlays. No
+  `100vh`/`100dvh` arithmetic is left in the phone layout.
+- **Insets:** they go through `--sat/--sab/--sal/--sar` (= `env(safe-area-inset-*)`).
+  - The header height is `58px + inset`, and the request card sits below it with fluid `clamp()` spacing.
+  - The map footer and MapLibre's own controls sit above the home indicator.
+  - A full sheet stops below the header.
+  - Navigation clears the Dynamic Island and the home indicator.
+  - Left/right insets are respected in landscape.
+- **Map controls:** the right edge keeps GPS and Urban Data (44 px, 8 px apart, stacked above zoom). Reset view and
+  the legend toggle moved into the ☰ menu; no function was removed.
+- **Viewport changes:** `map.resize()` runs on `orientationchange`, `pageshow`, `visibilitychange` and
+  `visualViewport` resize (keyboard, rotation, returning from the background).
+- **Status bar:** `black-translucent` is kept on purpose. It is what makes the dark map run under the status bar
+  (the full-screen look); `default` would add a separate light status-bar strip.
+- **Also fixed:**
+  - Tablet / landscape phone (741–1060 px): the off-canvas results drawer was positioned against the page, so the
+    page could scroll sideways by ~355 px. It is now anchored to `.app-layout` and clipped.
+  - The Plan/Results drawer buttons had been unwired at those widths since the first mobile pass, so the results
+    drawer could not be opened. The original toggle behaviour is restored there.
+
+Files: `styles.css`, `mobile-ui.js`, `index.html` (menu entries, cache-busting), `sw.js` (cache v4), new
+`tests/mobile-v2/iphone-shell.js`, `tests/mobile-e2e.spec.js` (tablet overflow test enabled; it is no longer skipped).
+
 ## Mobile v2 — Natural Language First (branch `feature/mobile-screens-v2`, current)
 
 Status as of the final source tree on this branch. Everything below was checked against the code and the test runs

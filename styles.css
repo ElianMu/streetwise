@@ -610,3 +610,65 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
  .install-banner:not(:has(.install-banner-btn)){right:213px;top:calc(4px + env(safe-area-inset-top));padding:4px 6px 4px 10px;font-size:10.5px;line-height:1.3}
  body:has(.install-banner:not(:has(.install-banner-btn))) .top-weather{visibility:hidden}
 }
+
+/* ==================================================================
+   Full-screen app shell + safe areas (iPhone Safari tab AND Home Screen app; every iPhone size).
+   Root cause of the Home Screen breakage (viewport-fit=cover + black-translucent status bar, so iOS
+   draws the page under the status bar and env(safe-area-inset-top) becomes ~47–62pt instead of 0):
+   1) the header had a fixed 58px height AND padding-top:env(safe-area-inset-top) with border-box,
+      so the inset ate the whole header and the brand spilled under the map/request card;
+   2) the map area was height:calc(100dvh - 58px - inset) — subtracting the inset again although
+      the header never grew — so the map stopped ~one inset short: the black band at the bottom.
+   Now (phones): one fixed full-screen shell; the MAP is the full-screen base layer (top edge to bottom
+   edge); header, request card, controls and navigation are overlays positioned from the safe areas.
+   No 100vh/100dvh arithmetic is left in the phone layout. Insets go through --sat/--sab/--sal/--sar
+   (= env(safe-area-inset-*) in every real browser; overridable in tests, Chromium cannot emulate them).
+   ================================================================== */
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px);--hdr:0px}
+/* Tablet / landscape phone (741–1060px): the off-canvas results drawer was positioned against the page, so
+   overflow clipping on .app-layout never applied and the page could scroll sideways by the drawer's width
+   (also every iPhone in landscape). Anchor it to .app-layout instead; same on-screen position as before. */
+@media(min-width:741px) and (max-width:1060px){.app-layout{position:relative}.right-panel{top:14px}}
+/* Tablet / desktop keep their layout; the header just grows by the inset (0 outside iOS standalone). */
+.topbar{height:calc(68px + var(--sat));padding-top:var(--sat);padding-left:max(20px,var(--sal));padding-right:max(20px,var(--sar))}
+.app-layout{height:calc(100dvh - 68px - var(--sat))}
+@media(max-width:740px){
+ :root{--hdr:calc(58px + var(--sat))}
+ html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+ .site-shell{position:fixed;inset:0;min-height:0;height:auto;display:block}
+ /* Header: overlay band over the map, sized from the status bar down. */
+ .topbar{position:absolute;top:0;left:0;right:0;z-index:20;height:var(--hdr);padding-top:var(--sat);padding-left:max(14px,var(--sal));padding-right:max(10px,var(--sar));
+  background:linear-gradient(180deg,rgba(9,21,23,.97) 0%,rgba(9,21,23,.9) 100%);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);border-bottom:1px solid rgba(32,50,55,.7)}
+ /* Map: the full-screen base layer. */
+ .app-layout{position:absolute;inset:0;height:auto;min-height:0}
+ .map-workspace{height:100%}
+ body.nav-mode .app-layout{height:auto}
+ body.nav-mode .map-workspace{height:100%}
+ /* Request card: below the header, fluid spacing (no per-device CSS, no scaling). */
+ .m-composer{top:calc(var(--hdr) + clamp(8px,2.2vw,12px));left:max(clamp(8px,2.6vw,12px),var(--sal));right:max(clamp(8px,2.6vw,12px),var(--sar));padding:clamp(10px,3vw,14px) clamp(10px,3vw,14px) clamp(8px,2.4vw,10px)}
+ .m-composer-q{font-size:clamp(15.5px,4.4vw,18px)}
+ body[data-mview="results"] .m-composer{padding:6px}
+ .m-view-exit{top:calc(var(--hdr) + 10px);left:max(10px,var(--sal))}
+ .map-workspace .pick-notice{top:calc(var(--hdr) + 10px)}
+ body[data-mview="layers"] .map-workspace .experience-controls,body[data-mview="layers"] .map-workspace .wx-panel{top:calc(var(--hdr) + 62px)}
+ body[data-mview="layers"] .map-workspace .urban-layers{top:calc(var(--hdr) + 112px);max-height:calc(100% - var(--hdr) - 250px - var(--sab))}
+ /* Map footer + MapLibre's own controls sit above the home indicator. */
+ .map-workspace .map-footer{height:calc(25px + var(--sab));padding-bottom:var(--sab);padding-left:max(14px,var(--sal));padding-right:max(14px,var(--sar))}
+ .map-workspace .maplibregl-ctrl-bottom-right,.map-workspace .maplibregl-ctrl-bottom-left{bottom:calc(25px + var(--sab))}
+ .map-workspace .maplibregl-ctrl-bottom-right{right:max(0px,var(--sar))}
+ /* Map controls: GPS + Urban Data on the edge (44px, 8px apart); Reset view + Legend toggle live in the ☰ menu. */
+ .map-workspace #mapReset,.map-workspace #toggleLegend{display:none}
+ /* Stacked above MapLibre's zoom + attribution controls, which sit on the footer (25px + home indicator). */
+ .map-workspace .map-actions{right:max(10px,var(--sar));bottom:calc(150px + var(--sab));gap:8px}
+ .map-workspace .ud-legend{bottom:calc(150px + var(--sab));left:max(10px,var(--sal))}
+ .install-banner{bottom:calc(16px + var(--sab))}
+ /* Sheets: a full sheet stops below the header; content clears the home indicator. */
+ .left-panel,.right-panel,.explore-sheet{height:min(88dvh,calc(100% - 64px - var(--sat)));max-height:min(88dvh,calc(100% - 64px - var(--sat)));padding-bottom:var(--sab)}
+ /* Live navigation hides the header: the instruction card clears the status bar / Dynamic Island,
+    the bottom controls the home indicator. */
+ .nav-top{top:calc(10px + var(--sat))}
+ .nav-status{top:calc(102px + var(--sat))}
+ #navRetry{top:calc(140px + var(--sat))}
+ .nav-bottom{bottom:calc(12px + var(--sab))}
+ .nav-recenter,.nav-stop{bottom:calc(170px + var(--sab))}
+}
