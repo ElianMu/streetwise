@@ -931,3 +931,29 @@ body[data-mview="typing"] .m-route-ends{display:none}
 .swap-inline{width:auto;align-self:flex-start;justify-self:start}
 .cw-seq{border-color:var(--text);color:var(--text);background:var(--bg)}
 .cw-stop.end .cw-seq{border-color:var(--text);background:var(--text);color:var(--accent-ink)}
+
+/* ==================================================================
+   iOS input auto-zoom + keyboard (round 10).
+   iOS Safari and Home Screen apps zoom the whole page when a focused text field's computed font-size is under
+   16px, and keep that zoom after the keyboard closes — the Plan walk From/To fields were 12px and the place
+   pickers 10px, so tapping From enlarged the page and pushed Prefs / Find routes off screen. Fix the real
+   cause on touch devices: every text-entry control renders at 16px. Pinch zoom stays enabled (no
+   maximum-scale / user-scalable in the viewport meta).
+   ================================================================== */
+@media (pointer:coarse){
+ input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]):not([type=color]),
+ textarea,select{font-size:16px!important}
+ .search-place{min-height:46px}
+ .search-place input{padding:11px 0}
+}
+/* Keyboard open (--kb = keyboard overlap from visualViewport, set in mobile-ui.js): the open sheet's content can
+   scroll clear of the keyboard, and the place suggestions stay inside the visible area. */
+:root{--kb:0px}
+@media(max-width:740px){
+ html.kb-open .left-panel .panel-scroll,html.kb-open .right-panel .right-scroll,html.kb-open .explore-sheet .explore-sheet-scroll{padding-bottom:calc(var(--kb) + 24px)}
+ .ps-list{max-height:min(300px,calc(100dvh - var(--kb) - 200px))}
+ .ps-item{min-height:44px}
+}
+/* Focus on a place field: the whole field frame lights up (no inner focus box inside the frame) */
+.search-place input:focus,.search-place input:focus-visible{outline:none}
+.search-place:focus-within{border-color:#8A8A86;box-shadow:0 0 0 3px rgba(245,245,242,.08)}
