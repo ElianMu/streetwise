@@ -642,6 +642,65 @@
     window.addEventListener('pageshow', remeasure);
     document.addEventListener('visibilitychange', () => { if (!document.hidden) remeasure(); });
     if (window.visualViewport) window.visualViewport.addEventListener('resize', remeasure);
+    wireKeyboard();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /* Virtual keyboard (iOS Safari, iOS Home Screen app, Android)         */
+  /* ------------------------------------------------------------------ */
+  // iOS does not shrink the layout viewport for the keyboard — only the visual viewport — and pans the page to
+  // keep a focused field visible. Because the shell is position:fixed, that pan can strand the sheet half under
+  // the keyboard. So, like a native maps app: focusing a field inside a sheet raises that sheet to full height
+  // and scrolls the field to the top of the sheet; --kb (keyboard overlap) pads the sheet so everything below
+  // the field can be scrolled above the keyboard; when the keyboard closes, any leftover pan is undone and the
+  // map is re-measured. The overlap is measured, never assumed, so it is not subtracted twice on Android, where
+  // the layout viewport itself shrinks (overlap stays ~0 there).
+  let kbWired = false, kbRaf = 0;
+  const TEXT_FIELD = 'input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=button]):not([type=submit]), textarea';
+  function keyboardOverlap() {
+    const vv = window.visualViewport; if (!vv) return 0;
+    return Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop));
+  }
+  function updateKeyboard() {
+    cancelAnimationFrame(kbRaf);
+    kbRaf = requestAnimationFrame(() => {
+      const kb = keyboardOverlap(), open = kb > 80;
+      const root = document.documentElement;
+      root.style.setProperty('--kb', `${open ? kb : 0}px`);
+      const was = root.classList.contains('kb-open');
+      root.classList.toggle('kb-open', open);
+      if (was && !open) {
+        // keyboard closed: undo any pan iOS left behind and let MapLibre re-measure
+        if (window.scrollY || window.scrollX) window.scrollTo(0, 0);
+        try { if (typeof state !== 'undefined' && state.map) state.map.resize(); } catch (_) {}
+      }
+    });
+  }
+  function revealField(el) {
+    const panel = el.closest('#leftPanel, #rightPanel, #exploreSheet');
+    if (!panel || !mq.matches) return;
+    const which = Object.keys(PANEL_IDS).find((w) => panelFor(w) === panel);
+    if (which && panel.dataset.level !== 'full') setLevel(which, 'full');
+    // after the sheet has moved: bring the field (and the room for its suggestions) to the top of the sheet
+    setTimeout(() => {
+      const scroller = el.closest('.panel-scroll, .right-scroll, .explore-sheet-scroll');
+      if (!scroller) return;
+      // land the field's box 16px below the sheet's sticky title bar (its real height, not a guess)
+      const box = el.closest('.search-place') || el, bar = panel.querySelector('.m-sheet-bar');
+      const barBottom = bar && bar.offsetParent ? bar.getBoundingClientRect().bottom : scroller.getBoundingClientRect().top;
+      const top = scroller.scrollTop + box.getBoundingClientRect().top - barBottom - 16;
+      scroller.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+      if (window.scrollY || window.scrollX) window.scrollTo(0, 0);
+    }, 320);
+  }
+  function wireKeyboard() {
+    if (kbWired) return; kbWired = true;
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateKeyboard);
+      window.visualViewport.addEventListener('scroll', updateKeyboard);
+    }
+    document.addEventListener('focusin', (e) => { if (mq.matches && e.target.matches?.(TEXT_FIELD)) revealField(e.target); });
+    document.addEventListener('focusout', () => setTimeout(updateKeyboard, 60));
   }
   function unwire() {
     if (!wired) return; wired = false;
@@ -727,6 +786,7 @@
     el.textContent = `STROLLANE layout diagnostics (tap to close)\n${layoutReport()}`;
   }
   window.strollaneLayoutReport = layoutReport;
+  window.strollaneKeyboard = { overlap: keyboardOverlap, update: updateKeyboard };
   window.strollaneToggleLayoutDebug = toggleLayoutDebug;
   function wireLayoutDebug() {
     if (/[?&]debug=layout\b/.test(location.search)) setTimeout(() => toggleLayoutDebug(true), 2500);

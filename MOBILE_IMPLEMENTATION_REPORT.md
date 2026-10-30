@@ -1,5 +1,38 @@
 # Mobile Implementation Report
 
+## Round 10: iOS input auto-zoom + keyboard layout
+
+**Root cause (measured at phone width):**
+- On touch devices, the Plan walk text fields computed to 12 px: From (`#searchStart`), To (`#searchEnd`), hotel and
+  add-stop.
+- The place pickers (`#startSelect`, `#endSelect`) were 10 px, and other hidden fields 10–11 px.
+- iOS (Safari and Home Screen apps) zooms the whole page when a focused field's font-size is below 16 px, and keeps
+  the zoom after the keyboard closes. The enlarged page pushed Prefs / Find routes off screen.
+- At 1× the bar fits: at 375 px, Find routes ends at 359 px and there is no overflow. The cut-off buttons were a
+  consequence of the zoom, not a layout bug.
+- The viewport meta was already correct (`width=device-width, initial-scale=1, viewport-fit=cover`) and is unchanged.
+  Pinch zoom stays enabled: no `maximum-scale` and no `user-scalable`.
+
+**Fix:**
+- `styles.css`: under `@media (pointer:coarse)`, every text-entry `input`, `textarea` and `select` is set to 16 px.
+  Place fields are 46 px tall with a focus ring on the whole field. Mouse devices keep the compact 12 px.
+- `mobile-ui.js` keyboard handling:
+  - the keyboard overlap is measured from `visualViewport` (`innerHeight − vv.height − vv.offsetTop`), never assumed,
+    so it is not subtracted twice on Android, where the layout viewport itself shrinks;
+  - while the keyboard is open, `--kb` and `html.kb-open` pad the open sheet so content below the field can scroll
+    above the keyboard;
+  - focusing a field in a sheet raises the sheet to full and places the field just below the sheet's title bar;
+  - when the keyboard closes, any iOS pan is undone and the map re-measured.
+- `places.js`: choosing a suggestion on a touch device blurs the field, so the keyboard closes. Start, destination,
+  preferences and the map are untouched.
+
+**Tests:** new `tests/mobile-v2/input-keyboard.js`, 61/61.
+- Devices: iPhone SE, 13/14, 15 Pro and 17 Pro Max, plus Android (Pixel 8). The desktop check confirms the compact
+  field size is unchanged.
+- The keyboard is simulated by shrinking `visualViewport`.
+- The place providers (Photon, NYC GeoSearch) are mocked with the two parks' real coordinates; routing is real.
+- **REAL IPHONE VERIFICATION REQUIRED** in both a Safari tab and the Home Screen app.
+
 ## Round 9: editorial design system, brand, cartography (Editorial Minimalism × Dark Cartography)
 
 **Audit (live site, before):**
