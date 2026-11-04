@@ -1,5 +1,27 @@
 # Mobile Implementation Report
 
+## Round 14: solid header again; translucent but readable request card
+
+**Feedback:** the STROLLANE · NYC header should be solid, as it was originally. The transparency belongs to the request
+card, and the card must stay easy to read: map labels were showing through behind "From / To".
+
+**Fix (phones):**
+- Header: solid page colour again (`#FFFFFF` light / `#0B0B0B` dark).
+  - It stays sharp: no backdrop blur and no text-shadow.
+  - html, body and `theme-color` use the same colour, so the opaque status bar continues the header.
+  - The `--map-bg` page colour from round 13 is removed.
+- Request card: 86 % opaque, no blur. The map shows faintly around its contents.
+  - The text field, the From/To block, the mic and the swap button are opaque surfaces (`--bg-card`), so no map
+    label ever shows behind text.
+  - Round 13's compact sizes are kept; the card sits 6 px under the header.
+
+**Tests:**
+- `design-system.js` 38/38, including a new check: solid header with no blur; card translucent ≥ 80 % with no blur;
+  field, From/To, mic and swap opaque; theme-color `#FFFFFF` / `#0B0B0B`.
+- `ios-standalone-gap.js`: solid header = html = body = theme-color in both themes.
+
+**REAL DEVICE / IPHONE VERIFICATION REQUIRED.**
+
 ## Round 13: phones — full-screen map, transparent header, compact floating card
 
 **Problem (real iPhone, Home Screen app):**

@@ -66,7 +66,7 @@ const measure = (page) => page.evaluate(() => {
       check(dev, 'zoom, GPS and Urban Data inside the drawable viewport', [m.zoom, m.gps, m.urban].every((r) => r && r.bottom <= ih - 20), { zoom: m.zoom, gps: m.gps, urban: m.urban });
       check(dev, 'diagnostics report the strip size and the viewport edge', m.diag.includes(`iOS system strip detected: ${sat}pt`) && m.diag.includes(`red line = bottom of the page's viewport (${ih}pt)`), m.diag.split('\n').slice(-4));
     }
-    check(dev, 'compact header = inset + 48; card starts 4px below it (compact floating card)', m.header.h === sat + 48 && m.card.top === sat + 48 + 4, { header: m.header, card: m.card });
+    check(dev, 'compact header = inset + 48; card starts 6px below it (compact floating card)', m.header.h === sat + 48 && m.card.top === sat + 48 + 6, { header: m.header, card: m.card });
     // Diagnostics overlay draws the red edge exactly at the viewport bottom
     await page.evaluate(() => window.strollaneToggleLayoutDebug ? window.strollaneToggleLayoutDebug(true) : null);
     const edge = await page.evaluate(() => { const e = document.getElementById('layoutDebugEdge'); return e ? Math.round(e.getBoundingClientRect().bottom) : null; });
@@ -108,7 +108,7 @@ const measure = (page) => page.evaluate(() => {
     await shot(page, `ios-standalone-full-${dev.replace(/[^A-Za-z0-9]+/g, '-').toLowerCase()}.png`);
     check(tag, 'no strip; html = viewport = screen, nothing to scroll', !m.strip && m.htmlH === sh && m.scrollH === sh && m.innerHeight === sh, { strip: m.strip, htmlH: m.htmlH, scrollH: m.scrollH });
     check(tag, 'map + canvas run from the top edge to the bottom edge of the screen', m.map.top === 0 && m.map.bottom === sh && Math.abs(m.canvasH - sh) <= 1, { map: m.map, canvasH: m.canvasH });
-    check(tag, 'header transparent over the map (fade of the map colour only, no blur, no text shadow)', m.hdrColor === 'rgba(0, 0, 0, 0)' && /gradient/.test(m.hdrBg) && m.hdrBlur === 'none' && m.hdrShadow === 'none', { hdrBg: m.hdrBg, hdr: m.hdrColor, blur: m.hdrBlur, ts: m.hdrShadow });
+    check(tag, 'header is the solid page colour, sharp (no gradient, no blur, no text shadow)', m.hdrBg === 'none' && m.hdrColor === m.pageColor && m.hdrBlur === 'none' && m.hdrShadow === 'none', { hdrBg: m.hdrBg, hdr: m.hdrColor, page: m.pageColor, blur: m.hdrBlur, ts: m.hdrShadow });
     check(tag, 'controls and footer text clear the home indicator', [m.zoom, m.gps, m.urban, m.legend, m.attrib].every((r) => r && r.bottom <= sh - sab), { zoom: m.zoom, legend: m.legend, attrib: m.attrib });
     check(tag, 'Legend in the bottom-left corner, level with the attribution button opposite', m.legend.bottom === m.attrib.bottom && m.legend.top > m.urban.bottom, { legend: m.legend, attrib: m.attrib, urban: m.urban });
     check(tag, 'no page errors', log.errors.length === 0, log.errors);
@@ -128,8 +128,7 @@ const measure = (page) => page.evaluate(() => {
   }
   // NEW icons (no black-translucent): iOS shows an opaque status bar ABOVE the page and colours it from the page.
   // viewport = screen − status bar, top inset 0. That difference is not a missing strip: no ios-system-strip, the
-  // home-indicator inset is kept, the header is not padded twice, and page / theme-color = the map's background colour
-  // (so status bar, transparent header and map read as one surface) in each theme.
+  // home-indicator inset is kept, the header is not padded twice, and header / page / theme-color agree in each theme.
   for (const [dev, sw, sh, bar] of [['iPhone 16/17 Pro Max', 440, 956, 62], ['iPhone 13/14', 390, 844, 47]]) {
     for (const theme of ['light', 'dark']) {
       const ih = sh - bar;
@@ -145,10 +144,10 @@ const measure = (page) => page.evaluate(() => {
           page: getComputedStyle(document.body).backgroundColor, html: getComputedStyle(document.documentElement).backgroundColor, meta: document.querySelector('meta[name="theme-color"]').getAttribute('content'),
           noTranslucentTag: !document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]'), map: Math.round(document.getElementById('map').getBoundingClientRect().bottom), scrollH: document.documentElement.scrollHeight, ih: innerHeight }; });
       const tag = `${dev} · opaque status bar · ${theme}`;
-      const want = theme === 'light' ? ['rgb(242, 241, 236)', '#F2F1EC'] : ['rgb(13, 13, 12)', '#0D0D0C']; // the map's background colour
+      const want = theme === 'light' ? ['rgb(255, 255, 255)', '#FFFFFF'] : ['rgb(11, 11, 11)', '#0B0B0B'];
       check(tag, 'no black-translucent tag; status bar height not mistaken for a system strip; home-indicator inset kept', o.noTranslucentTag && !o.strip && o.stripPt === '0' && o.sab === '34px', o);
       check(tag, 'header starts at the top with no safe-area padding, brand inside it; map fills the viewport, no scroll', o.hdrTop === 0 && o.hdrH >= 44 && o.hdrH <= 60 && o.brandTop > 0 && o.brandTop < o.hdrH && o.map === o.ih && o.scrollH <= o.ih, o);
-      check(tag, `html = body = theme-color = map background ${want[1]} (the status bar takes this colour); header transparent over the map`, o.hdr === 'rgba(0, 0, 0, 0)' && o.page === want[0] && o.html === want[0] && /gradient/.test(o.hdrImg) && o.meta === want[1], o);
+      check(tag, `solid header = html = body = theme-color = ${want[1]} (the status bar continues the header)`, o.hdr === want[0] && o.page === want[0] && o.html === want[0] && o.hdrImg === 'none' && o.meta === want[1], o);
       await shot(page, `ios-opaque-bar-${theme}-${sw}.png`);
       check(tag, 'no page errors', log.errors.length === 0, log.errors);
       await context.close();
