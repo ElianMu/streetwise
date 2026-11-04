@@ -1000,3 +1000,7 @@ body[data-mview="typing"] .m-route-ends{display:none}
  .m-ft{gap:3px}
  .m-ft-row{grid-template-columns:12px 34px 1fr}
 }
+/* One-time notice for Home Screen icons added with the old black-translucent status bar (pwa-register.js). */
+.readd-tip{position:fixed;left:max(10px,var(--sal));right:max(10px,var(--sar));top:calc(var(--hdr,0px) + 6px);z-index:40;display:flex;flex-direction:column;gap:6px;padding:12px 14px;background:var(--bg-panel);color:var(--text-primary);border:1px solid var(--border-primary);border-radius:var(--r-md);box-shadow:0 8px 24px color-mix(in srgb,var(--shadow) 35%,transparent);font-size:13px;line-height:1.4}
+.readd-tip p{margin:0}.readd-tip p[lang="en"]{color:var(--text-secondary);font-size:12px}
+.readd-tip-close{align-self:flex-end;min-height:44px;padding:0 16px;border:0;border-radius:var(--r-sm);background:var(--accent);color:var(--accent-ink);font-weight:600}

@@ -1,5 +1,22 @@
 # Mobile Implementation Report
 
+## Round 16: notice for old Home Screen icons (the remaining blur)
+
+**Finding:** the screenshots after round 15 still show the page drawn under the status bar. The header is 48 pt plus
+the status bar, and a haze sits at the status bar's lower edge. That is the black-translucent style of an icon added
+before round 12: iOS keeps the style the icon was added with, and on iOS 26+ it lays its own blur over the top of
+the page, header text included. CSS cannot remove it. Only removing the icon and adding it again gives the opaque,
+sharp status bar.
+
+**Change:** `pwa-register.js` checks for this case: a Home Screen app (`navigator.standalone`) whose top inset is
+above 0, meaning the page is under the status bar.
+- In that case it shows a one-time notice in Chinese and English, below the header, asking the user to remove the
+  icon and add it again (Safari → Share → Add to Home Screen). "知道了 / OK" dismisses it.
+- It sets `html[data-status-bar]` to `translucent` or `opaque`.
+- New icons never see the notice. Nothing else changes.
+
+**Tests:** `ios-standalone-gap.js` 103/103. Old-icon cases show the notice; opaque-bar cases do not.
+
 ## Round 15: crisp top on iPhone, clearer wordmark, lighter card
 
 **Feedback:** the STROLLANE · NYC wordmark was not clear enough, the top of the screen looked blurred when the app was
