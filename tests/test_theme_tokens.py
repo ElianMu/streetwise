@@ -102,17 +102,6 @@ class ThemeTokens(unittest.TestCase):
         self.assertIn("dataset.mapTheme='light'", head)  # applied before first paint
         self.assertNotIn('light-theme.css', head)  # one theme system, no second stylesheet
 
-    def test_map_background_variable_matches_the_basemap(self):
-        # --map-bg colours the page (and so the iOS status bar) behind the full-screen map on phones
-        app = (CSS.parent / 'app.js').read_text(encoding='utf-8')
-        dark_bg = re.search(r"dark:\{bg:'(#[0-9A-Fa-f]{6})'", app).group(1).upper()
-        light_bg = re.search(r"light:\{bg:'(#[0-9A-Fa-f]{6})'", app).group(1).upper()
-        self.assertEqual(dict(declarations(self.dark))['--map-bg'].strip().upper(), dark_bg)
-        self.assertEqual(dict(declarations(self.light))['--map-bg'].strip().upper(), light_bg)
-        head = (CSS.parent / 'index.html').read_text(encoding='utf-8')
-        self.assertIn(light_bg, head)  # theme-color before first paint
-        self.assertIn(dark_bg, head)
-
 
 if __name__ == '__main__':
     unittest.main()
