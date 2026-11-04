@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#0B0B0B" />
   <!-- iOS Home Screen app: mark it before first layout so the full-viewport rule in styles.css applies from the start
        (record the viewport iOS gave at launch for the layout diagnostics). -->
-  <script>if(navigator.standalone===true){document.documentElement.classList.add('ios-standalone');}try{if(localStorage.getItem('strollane.mapTheme')==='light'){document.documentElement.dataset.mapTheme='light';document.querySelector('meta[name="theme-color"]').setAttribute('content','#FFFFFF');}}catch(e){}window.__strollaneLaunchViewport=[window.innerWidth,window.innerHeight];</script>
+  <script>if(navigator.standalone===true){document.documentElement.classList.add('ios-standalone');}try{var lt=localStorage.getItem('strollane.mapTheme')==='light',ph=matchMedia('(max-width:740px)').matches;if(lt)document.documentElement.dataset.mapTheme='light';document.querySelector('meta[name="theme-color"]').setAttribute('content',ph?(lt?'#F2F1EC':'#0D0D0C'):(lt?'#FFFFFF':'#0B0B0B'));}catch(e){}window.__strollaneLaunchViewport=[window.innerWidth,window.innerHeight];</script>
   <meta name="description" content="Strollane: personalized Manhattan city walks — real pedestrian routing, 12 walking-experience dimensions and live NYC urban data in an early interactive prototype." />
   <title>STROLLANE · NYC | Personalized City Walks</title>
   <meta property="og:type" content="website" />
@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=51" />
+  <link rel="stylesheet" href="./styles.css?v=52" />
 </head>
 <body>
 <div class="site-shell">
@@ -267,7 +267,7 @@
 <script src="./weather.js?v=28"></script>
 <script src="./places.js?v=29"></script>
 <script src="./opening-hours.js?v=28"></script>
-<script src="./app.js?v=38"></script>
+<script src="./app.js?v=39"></script>
 <script src="./route-client.js?v=30"></script>
 <script src="./weather-ui.js?v=28"></script>
 <script src="./journey.js?v=30"></script>
