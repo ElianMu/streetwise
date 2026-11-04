@@ -1,5 +1,24 @@
 # Mobile Implementation Report
 
+## Round 19: default destination Columbia University (W 116th St)
+
+- The preset destination is now **Columbia University**: the main gate at Broadway & W 116th St (College Walk),
+  40.8075, −73.9636. It was Rockefeller Center.
+  - `app.js`: `state.end = 'columbia'`.
+  - The Plan field shows "Columbia University".
+  - The quick-pick list puts "Columbia University · W 116th St" first and selected.
+  - Rockefeller Center stays in the list.
+- While making this change, two timing problems in the live From/To recognition came up and were fixed:
+  - **Create no longer races the typing timer.** `handlePlan()` first applies what the request names
+    (`flushLiveEnds`), then plans. The 650 ms timer never changes the ends while a walk is being planned. Before,
+    tapping Create right after typing could change the destination mid-plan and abort the request in flight.
+  - **A name ends at "on / for / along / while / …"**, so "to Rockefeller Center on a quiet walk" finds Rockefeller
+    Center.
+  - A recognised place that is one of the quick picks is now used as that preset, so the Plan view's list stays in
+    step.
+
+**Tests:** `design-system.js` checks the new default and the swap. flows 94/94 twice, plus the other suites.
+
 ## Round 18: multi-stop walks — From → Stops → To
 
 The planner already supported stops (`journey.named` → `planJourney` → `/api/itinerary`), but the interface hid them:

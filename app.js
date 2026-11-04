@@ -24,7 +24,7 @@ const PLACES = {
   union:{name:'Union Square',lon:-73.9903,lat:40.7359},
   columbus:{name:'Columbus Circle',lon:-73.9819,lat:40.7681},
   met:{name:'The Metropolitan Museum',lon:-73.9632,lat:40.7794},
-  columbia:{name:'Columbia University',lon:-73.9636,lat:40.8075},
+  columbia:{name:'Columbia University',lon:-73.9636,lat:40.8075}, // main gate, Broadway & W 116th St (College Walk)
   apollo:{name:'Apollo Theater',lon:-73.9501,lat:40.8100},
   fort:{name:'Fort Tryon Park',lon:-73.9319,lat:40.8638}
 };
@@ -72,7 +72,7 @@ const DEFAULT_WALK_MINUTES = 100, MIN_WALK_MINUTES = 10, SLIDER_BASE_MAX = 150; 
 const WALK_QUICK_MINUTES = [60, 100, 120, 150], WALK_QUICK_KM = [2, 5, 8, 10], KM_PER_MILE = 1.609344;
 const state = {
   map: null, mapReady: false, mapLayersReady:false,
-  start:'bryant', end:'rock', customStart:null, customEnd:null, gps:null, gpsWatch:null,
+  start:'bryant', end:'columbia', customStart:null, customEnd:null, gps:null, gpsWatch:null,
   pick:null, dimension:'Streets', budget:DEFAULT_WALK_MINUTES, maxKm:null, distUnit:'km', outingMin:null,
   datasets:{streets:null, trees:null, lpc:null}, dataComplete:{streets:false,trees:false,lpc:false},
   dataErrors:{}, loading:{}, routes:[], activeRoute:null, selectedStreet:null,
@@ -646,6 +646,8 @@ async function fetchCompleteEvidence(kind,bbox,maxRecords){
 async function handlePlan(text,isFollowUp=false){
   if(state.routingBusy||planner.parsing)return;
   const q=(text||'').trim();if(!q){toast('Describe the walk you want.');return}
+  // the start / stops / destination the request names are settled BEFORE planning (not by the typing timer mid-plan)
+  if(!isFollowUp&&typeof flushLiveEnds==='function'){planner.parsing=true;try{await flushLiveEnds(q);}finally{planner.parsing=false;}}
   for(const kind of ['start','end']){if(kind==='end'&&typeof journey!=='undefined'&&journey.endMode!=='fixed')continue;const typed=$(kind==='start'?'searchStart':'searchEnd').value.trim(),chosen=getPlace(kind);if(typed!==chosen?.name){toast(`Search and choose a ${kind==='start'?'starting point':'destination'} result first, or use a preset.`);return}}
   planner.parsing=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;
   appendChat('user',q);
@@ -775,7 +777,7 @@ function renderMethodology(){
 function closeModal(){modalOverlay.classList.add('hidden')}
 function setupControls(){
   renderPreferenceSummary();updateLegend();checkInterpreter();renderPOIs();updateWhyRoute();
-  $('searchStart').value='Bryant Park';$('searchEnd').value='Rockefeller Center';
+  $('searchStart').value='Bryant Park';$('searchEnd').value='Columbia University';
   for(const kind of ['start','end']){
     $(kind==='start'?'startSelect':'endSelect').addEventListener('change',e=>{
       state[kind]=e.target.value;const p=getPlace(kind);$(kind==='start'?'searchStart':'searchEnd').value=p?.name||'';if(typeof placeInputs!=='undefined')placeInputs[kind]?.set(p);if(kind==='end'&&typeof setEndMode==='function'){journey.userSetDestination=true;setEndMode('fixed');}resetRoutes();syncMapData();

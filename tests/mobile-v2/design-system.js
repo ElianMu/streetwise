@@ -28,10 +28,10 @@ const check = (name, ok, d) => { total++; if (!ok) failed++; console.log(`${ok ?
         return { card: a('#mComposer'), field: a('#intentText'), ends: a('#mContext'), swap: a('.m-swap'), mic: a('.m-mic-slot .mic-btn'), header: a('.topbar'), hdrBlur: h.backdropFilter, hdrPos: h.position, brand: [getComputedStyle(document.querySelector('.brand-name')).fontSize, getComputedStyle(document.querySelector('.brand-name')).fontWeight], cardBlur: getComputedStyle(document.querySelector('#mComposer')).backdropFilter }; });
       check(`[${w}] solid FIXED header (iOS samples it for the status bar), 16px/700 wordmark; request card translucent (no blur) with opaque field, From/To, mic and swap`, card.header === 1 && card.hdrBlur === 'none' && card.hdrPos === 'fixed' && card.brand[0] === '16px' && card.brand[1] === '700' && card.card >= 0.65 && card.card <= 0.8 && card.cardBlur === 'none' && [card.field, card.ends, card.swap, card.mic].every((x) => x === 1), card);
       const ends = await page.evaluate(() => ({ from: $('mContextFrom').textContent, to: $('mContextTo').textContent, card: $('mComposer').getBoundingClientRect().bottom, H: innerHeight }));
-      check(`[${w}] home shows From and To as two rows; map keeps ≥ 40 % of the screen`, ends.from === 'Bryant Park' && ends.to === 'Rockefeller Center' && (ends.H - ends.card) / ends.H >= 0.4, ends);
+      check(`[${w}] home shows From and To as two rows (default destination Columbia University, W 116th St); map keeps ≥ 40 % of the screen`, ends.from === 'Bryant Park' && ends.to === 'Columbia University' && (ends.H - ends.card) / ends.H >= 0.4, ends);
       await page.click('.m-swap'); await page.waitForTimeout(300);
       const sw = await page.evaluate(() => ({ from: $('mContextFrom').textContent, to: $('mContextTo').textContent, start: getPlace('start')?.name, end: getPlace('end')?.name }));
-      check(`[${w}] swap exchanges start and destination (state + UI)`, sw.from === 'Rockefeller Center' && sw.to === 'Bryant Park' && sw.start === 'Rockefeller Center' && sw.end === 'Bryant Park', sw);
+      check(`[${w}] swap exchanges start and destination (state + UI)`, sw.from === 'Columbia University' && sw.to === 'Bryant Park' && sw.start === 'Columbia University' && sw.end === 'Bryant Park', sw);
       await page.click('.m-swap'); await page.waitForTimeout(200);
       // Map theme from the ☰ menu
       await page.click('#mobileMore summary'); await page.click('button[data-map-theme="light"]'); await page.waitForTimeout(400);
