@@ -557,7 +557,7 @@ async function findServices(type,scope){
    uses and shown in From / To as soon as it resolves; a name that does not resolve leaves the end unchanged (nothing
    is invented). "from here / my location / 从这里" uses the GPS position. Create My Walk still sends the full request. */
 const LIVE_HERE=/^(here|my (current )?location|where i am|me|这里|这儿|我的位置|我现在的位置|当前位置)$/i;
-const LIVE_STOP='(?=\\s+(?:(?:from|starting|via|through|passing|with|and|then|before|after|by)\\b|in\\s+(?:about\\s+|under\\s+)?\\d|for\\s+\\d)|[,，。.;；!?！？]|$)';
+const LIVE_STOP='(?=\\s+(?:(?:from|starting|via|through|passing|with|and|then|before|after|by|on|along|for|while|so|but|because|which|that|please)\\b|in\\s+(?:about\\s+|under\\s+)?\\d|for\\s+\\d)|[,，。.;；!?！？]|$)';
 function extractEnds(q){
  const t=String(q||'').replace(/\s+/g,' ').trim(),out={from:null,to:null};
  if(!t)return out;
@@ -636,14 +636,24 @@ async function applyLiveEnds(text){
   if(!p||!(normName(p.name).includes(normName(query))||normName(query).includes(normName(p.name))))continue;
   liveEnds.last[kind]=name;
   if(normName(getPlace(kind)?.name||'')===normName(p.name))continue;
-  setJourneyPlace(kind,p);
+  // a quick-pick place (Bryant Park, Rockefeller Center, Columbia University …) is used as that preset, so the
+  // Plan view's quick-pick list stays in step and nothing else changes for it
+  const preset=Object.entries(PLACES).find(([,q])=>normName(q.name)===normName(p.name)&&kmBetween(q,p)<.4)?.[0];
+  if(preset&&[...$(kind==='start'?'startSelect':'endSelect').options].some(o=>o.value===preset)){
+   state[kind]=preset;$(kind==='start'?'startSelect':'endSelect').value=preset;$(kind==='start'?'searchStart':'searchEnd').value=PLACES[preset].name;
+   placeInputs[kind]?.set(PLACES[preset]);if(kind==='end')journey.userSetDestination=true;syncMapData();
+  }else setJourneyPlace(kind,p);
   if(kind==='end'&&typeof setEndMode==='function')setEndMode('fixed');
   document.dispatchEvent(new CustomEvent('strollane:ends-changed',{detail:{kind,place:p,source:'text'}}));
  }
 }
 function wireLiveEnds(){
  const ta=$('intentText');if(!ta||ta.dataset.liveEnds)return;ta.dataset.liveEnds='1';
- ta.addEventListener('input',()=>{clearTimeout(liveEnds.timer);liveEnds.timer=setTimeout(()=>applyLiveEnds(ta.value),650);});
+ ta.addEventListener('input',()=>{clearTimeout(liveEnds.timer);
+  // never change the ends under a walk that is being planned; Create flushes the text first (flushLiveEnds)
+  liveEnds.timer=setTimeout(()=>{if(!(state.routingBusy||planner.parsing))applyLiveEnds(ta.value);},650);});
 }
-if(typeof window!=='undefined'){window.strollaneLiveEnds={extract:extractEnds,apply:applyLiveEnds};
+/** Create / Plan: apply what the text names right now (instead of 650 ms later, in the middle of the plan). */
+async function flushLiveEnds(text){clearTimeout(liveEnds.timer);try{await applyLiveEnds(text);}catch(e){}}
+if(typeof window!=='undefined'){window.strollaneLiveEnds={extract:extractEnds,apply:applyLiveEnds,flush:flushLiveEnds};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireLiveEnds);else wireLiveEnds();}

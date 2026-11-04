@@ -52,6 +52,8 @@ const tilt = async (page, beta) => {
   check('scrubbing jumps to that point and pauses', Math.abs(p3.s - p3.len / 2) < p3.len * 0.01 && !p3.playing, p3);
   await shot(page, 'preview-phone-mid.png');
   await page.click('#rpClose'); await page.waitForTimeout(900);
+  // the restore is a 700 ms camera ease; on a busy machine it can still be finishing — wait for the map to settle
+  await page.waitForFunction(() => !state.map.isMoving(), null, { timeout: 4000 }).catch(() => {});
   const p4 = await page.evaluate(() => ({ mode: document.body.classList.contains('preview-mode'), pitch: Math.round(state.map.getPitch()), view: document.body.dataset.mview,
     sheet: getComputedStyle(document.querySelector('.right-panel')).display }));
   check('closing restores the previous camera and the results view', !p4.mode && Math.abs(p4.pitch - cam0.pitch) <= 2 && p4.view === 'results' && p4.sheet !== 'none', { p4, cam0 });

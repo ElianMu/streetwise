@@ -40,8 +40,10 @@ let failed = 0, total = 0; const check = (n, ok, d) => { total++; if (!ok) faile
     await page.context().close(); }
   // 4) location outside Manhattan: preset kept, user told why
   { const { page } = await newPage(b, { width: 440, height: 956, geo: { latitude: 40.6782, longitude: -73.9442, accuracy: 10 } });
+    await page.addInitScript(() => { window.__toasts = []; document.addEventListener('DOMContentLoaded', () => { const t = document.querySelector('.toast') || document.getElementById('toast'); if (t) new MutationObserver(() => { const x = t.textContent.trim(); if (x) window.__toasts.push(x); }).observe(t, { childList: true, characterData: true, subtree: true }); }); });
     await openApp(page, 2500); await page.waitForTimeout(800);
-    const r = await page.evaluate(() => ({ start: state.start, gps: !!state.gps, toast: document.querySelector('.toast')?.textContent || '' }));
+    // the note is a toast; another toast can replace it a moment later, so record every toast text that appears
+    const r = await page.evaluate(() => ({ start: state.start, gps: !!state.gps, toast: (window.__toasts || []).join(' | ') || document.querySelector('.toast')?.textContent || '' }));
     check('location outside Manhattan: start stays the preset, with a note', r.start === 'bryant' && r.gps && /outside Manhattan/.test(r.toast), r);
     await page.context().close(); }
   // 5) results sheet (phone): ONE "01 / Refine your walk" section under the routes = quick options + conversation
