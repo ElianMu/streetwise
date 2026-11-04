@@ -16,7 +16,33 @@
   const zh = (navigator.language || '').toLowerCase().startsWith('zh');
   const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
-  if (isStandalone) return; // already installed
+  if (isStandalone) { // already installed
+    // navigator.standalone exists only in iOS Home Screen apps
+    if (navigator.standalone === true) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', legacyIconTip); else legacyIconTip(); }
+    return;
+  }
+
+  /* Home Screen icons added before the status-bar change (round 12) keep the old black-translucent style: iOS stores
+     it when the icon is added. The page is then drawn UNDER the status bar (top inset > 0) and iOS 26+ lays its own
+     blur over the top of the page, header included — the page cannot remove it. Only re-adding the icon fixes it, so
+     say so once, plainly. New icons (opaque status bar, top inset 0) never see this. */
+  function legacyIconTip() {
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:absolute;visibility:hidden;padding-top:var(--sat,env(safe-area-inset-top,0px))';
+    document.body.appendChild(probe); const top = parseFloat(getComputedStyle(probe).paddingTop) || 0; probe.remove();
+    document.documentElement.dataset.statusBar = top > 0 ? 'translucent' : 'opaque';
+    if (top <= 0) return;
+    try { if (localStorage.getItem('strollane.readdTip.dismissed') === '1') return; } catch (_) {}
+    const tip = document.createElement('div');
+    tip.id = 'readdTip'; tip.className = 'readd-tip'; tip.setAttribute('role', 'status');
+    tip.innerHTML = '<p><strong>这个主屏幕图标是旧版本添加的，iOS 会让顶部变模糊。</strong>请删除此图标，再在 Safari 中「分享 → 添加到主屏幕」。</p>'
+      + '<p lang="en">This icon was added with an older version, so iOS blurs the top of the screen. Remove it and add it again from Safari (Share → Add to Home Screen).</p>';
+    const close = document.createElement('button');
+    close.type = 'button'; close.className = 'readd-tip-close'; close.textContent = '知道了 / OK';
+    close.addEventListener('click', () => { tip.remove(); try { localStorage.setItem('strollane.readdTip.dismissed', '1'); } catch (_) {} });
+    tip.appendChild(close);
+    document.body.appendChild(tip);
+  }
 
   let deferredPrompt = null;
   window.addEventListener('beforeinstallprompt', (e) => {

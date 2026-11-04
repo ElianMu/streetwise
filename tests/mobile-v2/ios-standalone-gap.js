@@ -56,6 +56,9 @@ const measure = (page) => page.evaluate(() => {
     const m = await measure(page);
     const slug = dev.replace(/[^A-Za-z0-9]+/g, '-').toLowerCase();
     await shot(page, `ios-standalone-${slug}.png`);
+    const tip = await page.evaluate(() => ({ shown: !!document.getElementById('readdTip'), bar: document.documentElement.dataset.statusBar, text: document.getElementById('readdTip')?.innerText || '' }));
+    check(dev, 'old icon (page under the status bar): one-time notice to remove and re-add the icon (zh + en)', tip.shown && tip.bar === 'translucent' && /删除此图标/.test(tip.text) && /Add to Home Screen/.test(tip.text), tip);
+    await page.evaluate(() => document.querySelector('.readd-tip-close')?.click());
     check(dev, `system strip ${stripExpected ? 'detected (' + sat + 'pt)' : 'not detected'}`, m.strip === stripExpected && m.stripPt === String(stripExpected ? sat : 0), { strip: m.strip, stripPt: m.stripPt, ih: m.innerHeight });
     check(dev, 'map + canvas fill the whole drawable viewport (0..innerHeight); no page scroll', m.map.top === 0 && m.map.bottom === ih && m.shell.bottom === ih && Math.abs(m.canvasH - ih) <= 1 && m.scrollH <= ih, { map: m.map, shell: m.shell, canvasH: m.canvasH, scrollH: m.scrollH });
     if (stripExpected) {
@@ -142,10 +145,10 @@ const measure = (page) => page.evaluate(() => {
         return { strip: document.documentElement.classList.contains('ios-system-strip'), stripPt: document.documentElement.dataset.iosStrip, sab: getComputedStyle(document.documentElement).getPropertyValue('--sab').trim(),
           hdrTop: Math.round(t.top), hdrH: Math.round(t.height), brandTop: Math.round(b.top), hdr: getComputedStyle(document.querySelector('.topbar')).backgroundColor, hdrImg: getComputedStyle(document.querySelector('.topbar')).backgroundImage,
           page: getComputedStyle(document.body).backgroundColor, html: getComputedStyle(document.documentElement).backgroundColor, meta: document.querySelector('meta[name="theme-color"]').getAttribute('content'),
-          noTranslucentTag: !document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]'), map: Math.round(document.getElementById('map').getBoundingClientRect().bottom), scrollH: document.documentElement.scrollHeight, ih: innerHeight }; });
+          noTranslucentTag: !document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]'), tip: !!document.getElementById('readdTip'), bar: document.documentElement.dataset.statusBar, map: Math.round(document.getElementById('map').getBoundingClientRect().bottom), scrollH: document.documentElement.scrollHeight, ih: innerHeight }; });
       const tag = `${dev} · opaque status bar · ${theme}`;
       const want = theme === 'light' ? ['rgb(255, 255, 255)', '#FFFFFF'] : ['rgb(11, 11, 11)', '#0B0B0B'];
-      check(tag, 'no black-translucent tag; status bar height not mistaken for a system strip; home-indicator inset kept', o.noTranslucentTag && !o.strip && o.stripPt === '0' && o.sab === '34px', o);
+      check(tag, 'no black-translucent tag; status bar height not mistaken for a system strip; home-indicator inset kept; no re-add notice', o.noTranslucentTag && !o.strip && o.stripPt === '0' && o.sab === '34px' && !o.tip && o.bar === 'opaque', o);
       check(tag, 'header starts at the top with no safe-area padding, brand inside it; map fills the viewport, no scroll', o.hdrTop === 0 && o.hdrH >= 44 && o.hdrH <= 60 && o.brandTop > 0 && o.brandTop < o.hdrH && o.map === o.ih && o.scrollH <= o.ih, o);
       check(tag, `solid header = html = body = theme-color = ${want[1]} (the status bar continues the header)`, o.hdr === want[0] && o.page === want[0] && o.html === want[0] && o.hdrImg === 'none' && o.meta === want[1], o);
       await shot(page, `ios-opaque-bar-${theme}-${sw}.png`);
