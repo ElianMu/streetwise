@@ -143,11 +143,15 @@ async function foodRecordsNearPath(cats,path,radiusKm,cuisine){
 }
 async function findNamedPlace(name){
  // Index first (real records with provenance), then the five-borough search providers.
- const n=normName(name);
+ // An exact name anywhere in the index beats a longer name that merely starts with it ("Union Square" is the square,
+ // not "Union Square Drinking Fountain"); among longer names the shortest wins, Wikidata-linked records first.
+ const n=normName(name),exact=[],longer=[];
  for(const c of ['attractions','museums','historic','historic_lpc','culture','parks','hotels','shopping']){
-  const hit=(await loadPlaces(c).catch(()=>[])).filter(r=>normName(r.name)===n||normName(r.name).startsWith(n+' ')).sort((a,b)=>Boolean(b.wd)-Boolean(a.wd))[0];
-  if(hit)return poiPlace(hit);
+  for(const r of await loadPlaces(c).catch(()=>[])){const rn=normName(r.name);if(rn===n)exact.push(r);else if(rn.startsWith(n+' '))longer.push(r);}
  }
+ const pick=(a)=>a.sort((x,y)=>Boolean(y.wd)-Boolean(x.wd)||x.name.length-y.name.length)[0];
+ const hit=exact.length?pick(exact):pick(longer);
+ if(hit)return poiPlace(hit);
  try{const {places}=await searchPlaces(name,{near:{lat:40.758,lon:-73.985},limit:3});return places.find(p=>!p.pending)||null;}catch(e){return null;}
 }
 
@@ -546,3 +550,63 @@ async function findServices(type,scope){
  const res=await discoverPlaces([type],{near:anchor,limit:6,radiusKm:1.2});
  return {places:res,note:`${citywideError?'Citywide source unavailable; partial local snapshot only. ':''}Nearest by straight-line distance to ${anchor?.name||'the start'}; add one as a stop to get the real walking route.`};
 }
+
+/* ---------- live start / destination from the request text, while the user types ----------
+   "Walk from Bryant Park to Rockefeller Center", "start at …", "walk to …", "end at …",
+   "从布莱恩特公园到洛克菲勒中心", "从…出发，去…". Each named end is looked up with the same findNamedPlace() the planner
+   uses and shown in From / To as soon as it resolves; a name that does not resolve leaves the end unchanged (nothing
+   is invented). "from here / my location / 从这里" uses the GPS position. Create My Walk still sends the full request. */
+const LIVE_HERE=/^(here|my (current )?location|where i am|me|这里|这儿|我的位置|我现在的位置|当前位置)$/i;
+const LIVE_STOP='(?=\\s+(?:(?:from|starting|via|through|passing|with|and|then|before|after|by)\\b|in\\s+(?:about\\s+|under\\s+)?\\d|for\\s+\\d)|[,，。.;；!?！？]|$)';
+function extractEnds(q){
+ const t=String(q||'').replace(/\s+/g,' ').trim(),out={from:null,to:null};
+ if(!t)return out;
+ let m;
+ // Chinese: 从 A (出发) 到/去/走到 B
+ if((m=t.match(/从\s*(.+?)\s*(?:出发|开始)?\s*[，,]?\s*(?:走到|走去|到|去|前往)\s*(.+?)(?=[，,。.;；！？!?]|走走|逛逛|散步|$)/))){out.from=m[1];out.to=m[2];}
+ else{
+  if((m=t.match(/从\s*(.+?)\s*(?:出发|开始)/)))out.from=m[1];
+  if((m=t.match(/(?:最后(?:到|去)|终点(?:是|在)?|走到|前往)\s*(.+?)(?=[，,。.;；！？!?]|$)/)))out.to=m[1];
+ }
+ // English ("form" = the common typo of "from")
+ if(!out.from&&(m=t.match(new RegExp('\\b(?:from|form|start(?:ing)?\\s+(?:at|from|in)|begin(?:ning)?\\s+(?:at|from)|leaving\\s+from)\\s+(.+?)(?=\\s+(?:to|towards?|and\\s+(?:end|finish|go)|ending|via|through|then)\\b|[,，.;!?]|$)','i'))))out.from=m[1];
+ if(!out.to){
+  const verbs='(?!(?:walk|go|see|visit|explore|be|have|get|find|eat|stop|spend|take|do|try|enjoy)\\b)';
+  m=t.match(new RegExp('\\b(?:from|form)\\s+.+?\\s+to(?:wards?)?\\s+'+verbs+'(.+?)'+LIVE_STOP,'i'))
+   ||t.match(new RegExp('\\b(?:walk|go|head|get|stroll|way)(?:\\s+(?:over|back|down|up))?\\s+to\\s+'+verbs+'(.+?)'+LIVE_STOP,'i'))
+   ||t.match(new RegExp('\\b(?:end|finish)(?:ing)?\\s+(?:at|in|by)\\s+(.+?)'+LIVE_STOP,'i'));
+  if(m)out.to=m[1];
+ }
+ const clean=s=>s?s.replace(/^["“'‘]|["”'’]$/g,'').replace(/^the\s+/i,'').trim()||null:null;
+ out.from=clean(out.from);out.to=clean(out.to);
+ return out;
+}
+const liveEnds={timer:0,seq:0,last:{start:'',end:''}};
+async function applyLiveEnds(text){
+ const seq=++liveEnds.seq,{from,to}=extractEnds(text);
+ for(const [kind,name] of [['start',from],['end',to]]){
+  if(!name||normName(name)===normName(liveEnds.last[kind]))continue;
+  if(kind==='start'&&LIVE_HERE.test(name)){
+   liveEnds.last.start=name;
+   if(state.gps&&latLonInsideManhattanEnvelope(state.gps)){if(state.start!=='gps'){state.start='gps';$('startSelect').value='gps';$('searchStart').value=state.gps.name;syncMapData();document.dispatchEvent(new CustomEvent('strollane:ends-changed',{detail:{kind,source:'text'}}));}}
+   else if(!state.gps&&typeof requestGPS==='function')requestGPS(true); // "from my location" asks for it (the browser's own prompt)
+   continue;
+  }
+  const query=ZH_PLACES[name]||name;
+  const p=await findNamedPlace(query).catch(()=>null);
+  if(seq!==liveEnds.seq)return; // the user kept typing: a newer lookup owns the result
+  // accept only a place whose name matches what was typed (partial names while typing are fine)
+  if(!p||!(normName(p.name).includes(normName(query))||normName(query).includes(normName(p.name))))continue;
+  liveEnds.last[kind]=name;
+  if(normName(getPlace(kind)?.name||'')===normName(p.name))continue;
+  setJourneyPlace(kind,p);
+  if(kind==='end'&&typeof setEndMode==='function')setEndMode('fixed');
+  document.dispatchEvent(new CustomEvent('strollane:ends-changed',{detail:{kind,place:p,source:'text'}}));
+ }
+}
+function wireLiveEnds(){
+ const ta=$('intentText');if(!ta||ta.dataset.liveEnds)return;ta.dataset.liveEnds='1';
+ ta.addEventListener('input',()=>{clearTimeout(liveEnds.timer);liveEnds.timer=setTimeout(()=>applyLiveEnds(ta.value),650);});
+}
+if(typeof window!=='undefined'){window.strollaneLiveEnds={extract:extractEnds,apply:applyLiveEnds};
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',wireLiveEnds);else wireLiveEnds();}

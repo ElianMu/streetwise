@@ -1,5 +1,44 @@
 # Mobile Implementation Report
 
+## Round 17: start = your location; From/To follow the request as you type; one "01 / Refine your walk"
+
+**1. Default start = the user's location.**
+- `app.js` `autoLocateStart()` asks for the location once on load; the browser shows its own permission prompt.
+- When the fix is inside Manhattan (the area the walking graph covers), the start becomes "My current location"
+  and the map eases to it.
+- A start the user picked, or named in the request, always wins.
+- If permission is refused or times out, the start stays the preset and the existing "Where should this walk start?"
+  question still asks. Nothing is invented.
+- Outside Manhattan, the preset stays and a short note says why.
+- §4.4 in `mobile-ui.js` is updated to match.
+
+**2. From / To follow the request while typing.**
+- `journey.js` `extractEnds()` reads the start and destination from the text:
+  - English: "from A to B", "start at A", "walk to B", "end at B";
+  - Chinese: "从A到B", "从A出发，去B";
+  - "from here" / "from my location" / "从这里" means the user's location (asked for if not known yet);
+  - "form" is accepted as the common typo of "from".
+- 650 ms after typing stops, each name is resolved with the planner's own `findNamedPlace()` and shown in From / To,
+  in the Plan fields and on the map. A name that does not resolve leaves that end unchanged.
+- From / To now stay visible while typing.
+- `findNamedPlace()` now prefers an exact name over a longer one that merely starts with it: "Union Square" no longer
+  resolves to "Union Square Drinking Fountain". This also improves planning.
+
+**3. Phones: one "01 / Refine your walk" section, right after the routes.**
+- It holds the one-tap options (More Nature, Quieter Streets, More Architecture, Shorter Walk) and then the
+  follow-up conversation (text + voice).
+- It replaces "05 / Refine your walk" and the second "Refine your walk" at the bottom of the sheet.
+- The "Your routes" sheet label no longer overlaps the first line of the sheet.
+- Desktop is unchanged.
+
+**Tests:** new `tests/mobile-v2/live-ends.js` 13/13, covering:
+- GPS start, plus permission refused and outside-Manhattan cases;
+- English, Chinese and "from here" requests updating From / To;
+- a request without places leaving From / To as they are;
+- the merged refine section, and an unchanged desktop.
+
+**REAL DEVICE / IPHONE VERIFICATION REQUIRED:** the location prompt and accuracy.
+
 ## Round 16: notice for old Home Screen icons (the remaining blur)
 
 **Finding:** the screenshots after round 15 still show the page drawn under the status bar. The header is 48 pt plus

@@ -724,7 +724,7 @@ function requestGPS(useAsStart=false,follow=false){
   $('gpsMain').textContent='REQUESTING';
   const good=(p)=>{
     setGpsPosition(p.coords);
-    if(useAsStart){if(!latLonInsideManhattanEnvelope(state.gps))toast('GPS is outside the Manhattan study envelope. You may explore the map, but routing here targets Manhattan.');else{state.start='gps';$('startSelect').value='gps';$('searchStart').value='My current location';resetRoutes();syncMapData()}}
+    if(useAsStart){if(!latLonInsideManhattanEnvelope(state.gps))toast('GPS is outside the Manhattan study envelope. You may explore the map, but routing here targets Manhattan.');else{state.start='gps';$('startSelect').value='gps';$('searchStart').value='My current location';resetRoutes();syncMapData();document.dispatchEvent(new CustomEvent('strollane:ends-changed',{detail:{kind:'start',source:'gps'}}))}}
     if(state.mapReady)state.map.flyTo({center:[state.gps.lon,state.gps.lat],zoom:15.5,duration:800});
     if(!follow)toast('GPS location acquired. It is not transmitted to our own server.');
     loadWeather();
@@ -732,6 +732,23 @@ function requestGPS(useAsStart=false,follow=false){
   const bad=(err)=>{toast(`Unable to access GPS: ${err.message||'location denied or timed out'}`);$('gpsMain').textContent=({1:'DENIED',2:'UNAVAILABLE',3:'TIMED OUT'})[err.code]||'UNAVAILABLE'};
   if(follow){if(state.gpsWatch!==null){navigator.geolocation.clearWatch(state.gpsWatch);state.gpsWatch=null;$('gpsMain').textContent='STOPPED';toast('Continuous GPS updates stopped.');return} state.gpsWatch=navigator.geolocation.watchPosition(good,bad,{enableHighAccuracy:true,maximumAge:4000,timeout:15000});toast('Foreground-only location updates enabled.');}
   else navigator.geolocation.getCurrentPosition(good,bad,{enableHighAccuracy:true,maximumAge:0,timeout:14000});
+}
+/** Default start = where the user is. Asked once on load (the browser shows its own permission prompt; nothing is
+    assumed if it is refused or times out). Used only while the start is still the untouched preset — a start the user
+    picked, or named in the request, always wins — and only inside Manhattan, the area the walking graph covers. */
+async function autoLocateStart(){
+  if(!navigator.geolocation||(!window.isSecureContext&&!['localhost','127.0.0.1'].includes(location.hostname)))return;
+  try{const st=await navigator.permissions?.query({name:'geolocation'});if(st?.state==='denied')return;}catch(e){}
+  const presetStart=state.start;
+  navigator.geolocation.getCurrentPosition(p=>{
+    setGpsPosition(p.coords);loadWeather();
+    if(state.start!==presetStart||state.start==='gps'||state.start==='custom')return; // the user already chose a start
+    if(!latLonInsideManhattanEnvelope(state.gps)){toast(`Your location is outside Manhattan, where walking routes are available — the start stays ${getPlace('start')?.name||'the preset'}.`);return;}
+    state.start='gps';$('startSelect').value='gps';$('searchStart').value=state.gps.name;
+    syncMapData();
+    if(state.mapReady)state.map.easeTo({center:[state.gps.lon,state.gps.lat],zoom:Math.max(state.map.getZoom(),14),duration:800});
+    document.dispatchEvent(new CustomEvent('strollane:ends-changed',{detail:{kind:'start',source:'gps'}}));
+  },()=>{},{enableHighAccuracy:true,maximumAge:60000,timeout:12000});
 }
 function downloadGeoJSON(name,fc){const blob=new Blob([JSON.stringify(fc,null,2)],{type:'application/geo+json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),3000)}
 const modalOverlay=$('modalOverlay');
