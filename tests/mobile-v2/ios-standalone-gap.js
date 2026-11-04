@@ -8,6 +8,9 @@
 // Root cause: iOS keeps the viewport short only while the DOCUMENT is no taller than it; our html was exactly 100%.
 // Pass criteria: html is made screen-tall in Home Screen mode (capped so nothing scrolls); while iOS still reports the
 // short viewport everything stays inside it; once iOS gives the full screen the map fills it edge to edge.
+// Since round 11 index.html no longer sets black-translucent: NEW icons get the default opaque status bar (page below
+// it, top inset 0), covered at the end. The black-translucent cases below stay for icons added before that change
+// (iOS keeps the status-bar style chosen when the icon was added).
 // This is NOT a real-device test: REAL DEVICE VERIFICATION REQUIRED.
 const { launch, newPage, openApp, shot } = require('./harness');
 const CASES = [
@@ -29,7 +32,7 @@ const measure = (page) => page.evaluate(() => {
     shell: R('.site-shell'), map: R('#map'), canvasH: c && c.clientHeight, footer: R('.map-footer'),
     footerBg: getComputedStyle(document.querySelector('.map-footer')).backgroundImage, standaloneCls: document.documentElement.classList.contains('ios-standalone'),
     htmlMin: getComputedStyle(document.documentElement).minHeight, htmlH: Math.round(document.documentElement.getBoundingClientRect().height),
-    legend: R('#udLegend'), attrib: R('.maplibregl-ctrl-attrib'), hdrBg: getComputedStyle(document.querySelector('.topbar')).backgroundImage,
+    legend: R('#udLegend'), attrib: R('.maplibregl-ctrl-attrib'), hdrBg: getComputedStyle(document.querySelector('.topbar')).backgroundImage, hdrColor: getComputedStyle(document.querySelector('.topbar')).backgroundColor, pageColor: getComputedStyle(document.body).backgroundColor,
     zoom: R('.maplibregl-ctrl-bottom-right .maplibregl-ctrl-group'), gps: R('#mapLocate'), urban: R('#mUrbanBtn'),
     header: R('.topbar'), card: R('#mComposer'),
     diag: window.strollaneLayoutReport ? window.strollaneLayoutReport() : '' };
@@ -39,10 +42,13 @@ const measure = (page) => page.evaluate(() => {
   for (const [dev, sw, sh, sat, stripExpected] of CASES) {
     const ih = sh - sat; // what iOS reports (and shows) as the viewport in the Home Screen app
     const { page, context, log } = await newPage(b, { width: sw, height: ih, geo: { latitude: 40.7536, longitude: -73.9832, accuracy: 10 } });
-    await context.addInitScript(([w, h]) => {
+    await context.addInitScript(([w, h, t]) => {
       Object.defineProperty(navigator, 'standalone', { get: () => true });
       Object.defineProperty(screen, 'width', { get: () => w }); Object.defineProperty(screen, 'height', { get: () => h });
-    }, [sw, sh]);
+      // black-translucent: the page is drawn under the status bar (set as soon as <html> exists, before the app's scripts run)
+      const set = () => { const r = document.documentElement; if (r) r.style.setProperty('--sat', t + 'px'); return !!r; };
+      if (!set()) { const mo = new MutationObserver(() => { if (set()) mo.disconnect(); }); mo.observe(document, { childList: true }); }
+    }, [sw, sh, sat]);
     await openApp(page, 1500);
     await page.evaluate((t) => document.documentElement.style.setProperty('--sat', t + 'px'), sat);
     if (!stripExpected) await page.evaluate(() => document.documentElement.style.setProperty('--sab', '0px'));
@@ -102,7 +108,7 @@ const measure = (page) => page.evaluate(() => {
     await shot(page, `ios-standalone-full-${dev.replace(/[^A-Za-z0-9]+/g, '-').toLowerCase()}.png`);
     check(tag, 'no strip; html = viewport = screen, nothing to scroll', !m.strip && m.htmlH === sh && m.scrollH === sh && m.innerHeight === sh, { strip: m.strip, htmlH: m.htmlH, scrollH: m.scrollH });
     check(tag, 'map + canvas run from the top edge to the bottom edge of the screen', m.map.top === 0 && m.map.bottom === sh && Math.abs(m.canvasH - sh) <= 1, { map: m.map, canvasH: m.canvasH });
-    check(tag, 'header translucent (map visible under the status bar and the header)', /rgba\((0, 0, 0|11, 11, 11), 0\.[0-7]\d*\)/.test(m.hdrBg), m.hdrBg);
+    check(tag, 'header is the solid page colour (one continuous band with the status bar; no gradient)', m.hdrBg === 'none' && m.hdrColor === m.pageColor, { hdrBg: m.hdrBg, hdr: m.hdrColor, page: m.pageColor });
     check(tag, 'controls and footer text clear the home indicator', [m.zoom, m.gps, m.urban, m.legend, m.attrib].every((r) => r && r.bottom <= sh - sab), { zoom: m.zoom, legend: m.legend, attrib: m.attrib });
     check(tag, 'Legend in the bottom-left corner, level with the attribution button opposite', m.legend.bottom === m.attrib.bottom && m.legend.top > m.urban.bottom, { legend: m.legend, attrib: m.attrib, urban: m.urban });
     check(tag, 'no page errors', log.errors.length === 0, log.errors);
@@ -120,6 +126,34 @@ const measure = (page) => page.evaluate(() => {
     }
     await context.close();
   }
+  // NEW icons (no black-translucent): iOS shows an opaque status bar ABOVE the page and colours it from the page.
+  // viewport = screen − status bar, top inset 0. That difference is not a missing strip: no ios-system-strip, the
+  // home-indicator inset is kept, the header is not padded twice, and header / page / theme-color agree in each theme.
+  for (const [dev, sw, sh, bar] of [['iPhone 16/17 Pro Max', 440, 956, 62], ['iPhone 13/14', 390, 844, 47]]) {
+    for (const theme of ['light', 'dark']) {
+      const ih = sh - bar;
+      const { page, context, log } = await newPage(b, { width: sw, height: ih });
+      await context.addInitScript(([w, h, t]) => { Object.defineProperty(navigator, 'standalone', { get: () => true }); Object.defineProperty(screen, 'width', { get: () => w }); Object.defineProperty(screen, 'height', { get: () => h });
+        try { localStorage.setItem('strollane.mapTheme', t); } catch (e) {}
+        const set = () => { const r = document.documentElement; if (r) { r.style.setProperty('--sat', '0px'); r.style.setProperty('--sab', '34px'); } return !!r; };
+        if (!set()) { const mo = new MutationObserver(() => { if (set()) mo.disconnect(); }); mo.observe(document, { childList: true }); } }, [sw, sh, theme]);
+      await openApp(page, 1500);
+      const o = await page.evaluate(() => { const t = document.querySelector('.topbar').getBoundingClientRect(), b = document.querySelector('.brand-name').getBoundingClientRect();
+        return { strip: document.documentElement.classList.contains('ios-system-strip'), stripPt: document.documentElement.dataset.iosStrip, sab: getComputedStyle(document.documentElement).getPropertyValue('--sab').trim(),
+          hdrTop: Math.round(t.top), hdrH: Math.round(t.height), brandTop: Math.round(b.top), hdr: getComputedStyle(document.querySelector('.topbar')).backgroundColor, hdrImg: getComputedStyle(document.querySelector('.topbar')).backgroundImage,
+          page: getComputedStyle(document.body).backgroundColor, html: getComputedStyle(document.documentElement).backgroundColor, meta: document.querySelector('meta[name="theme-color"]').getAttribute('content'),
+          noTranslucentTag: !document.querySelector('meta[name="apple-mobile-web-app-status-bar-style"]'), map: Math.round(document.getElementById('map').getBoundingClientRect().bottom), scrollH: document.documentElement.scrollHeight, ih: innerHeight }; });
+      const tag = `${dev} · opaque status bar · ${theme}`;
+      const want = theme === 'light' ? ['rgb(255, 255, 255)', '#FFFFFF'] : ['rgb(11, 11, 11)', '#0B0B0B'];
+      check(tag, 'no black-translucent tag; status bar height not mistaken for a system strip; home-indicator inset kept', o.noTranslucentTag && !o.strip && o.stripPt === '0' && o.sab === '34px', o);
+      check(tag, 'header starts at the top with no safe-area padding, brand inside it; map fills the viewport, no scroll', o.hdrTop === 0 && o.hdrH >= 44 && o.hdrH <= 60 && o.brandTop > 0 && o.brandTop < o.hdrH && o.map === o.ih && o.scrollH <= o.ih, o);
+      check(tag, `top of the page = html = body = header = theme-color = ${want[1]} (the status bar takes this colour)`, o.hdr === want[0] && o.page === want[0] && o.html === want[0] && o.hdrImg === 'none' && o.meta === want[1], o);
+      await shot(page, `ios-opaque-bar-${theme}-${sw}.png`);
+      check(tag, 'no page errors', log.errors.length === 0, log.errors);
+      await context.close();
+    }
+  }
+
   // Safari tab / non-iOS: nothing detected, map ends at the viewport bottom, real home-indicator inset kept
   const { page, context } = await newPage(b, { width: 440, height: 830 });
   await openApp(page, 1200);

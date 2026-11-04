@@ -499,10 +499,12 @@ function setMapTheme(theme){
   applyUiTheme(state.mapTheme); // the interface follows at once, even before the map has loaded
   if(state.map&&state.mapReady)applyMapTheme(state.map,state.mapTheme);
 }
-/** The interface follows the map theme: light-theme.css restyles everything under html[data-map-theme="light"];
+/** The interface follows the map theme: html[data-map-theme] selects the light or dark values of the theme variables at the top of styles.css;
     the browser chrome (Safari's bar / Android's status bar) takes the page colour too. */
 function applyUiTheme(theme){
   const root=document.documentElement;root.dataset.mapTheme=theme==='light'?'light':'dark';
+  // the 3D route preview's sky, if it is open, switches with the theme too
+  if(window.strollanePreview?.state?.on&&state.map&&typeof state.map.setSky==='function'){try{state.map.setSky(window.strollanePreview.sky());}catch(e){}}
   const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',theme==='light'?'#FFFFFF':'#0B0B0B');
   document.querySelectorAll('button[data-map-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mapTheme===root.dataset.mapTheme)));
 }

@@ -33,18 +33,20 @@ const check = (name, ok, d) => { total++; if (!ok) failed++; console.log(`${ok ?
       const lt = await page.evaluate(() => ({ theme: document.documentElement.dataset.mapTheme, saved: localStorage.getItem('strollane.mapTheme'), route: state.map.getPaintProperty('route-selected', 'line-color'),
         casing: state.map.getPaintProperty('route-shadow', 'line-color'), pressed: document.querySelector('button[data-map-theme="light"]').getAttribute('aria-pressed') }));
       check(`[${w}] Light map: theme saved, route inverts to ink on a white casing, control shows the state`, lt.theme === 'light' && lt.saved === 'light' && lt.route === '#141413' && lt.casing === '#FFFFFF' && lt.pressed === 'true', lt);
-      // the whole interface follows the light map (the phone header is transparent over the map, null = no fill): white surfaces, dark text, black turn-arrow box with a white arrow
-      const uiProbe = () => { const lum = (c) => { const m = c.match(/[\d.]+/g).map(Number); if (m.length > 3 && m[3] === 0) return null; return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255; };
+      // the whole interface follows the light map (the phone header is transparent over the map, null = no fill): white surfaces, dark text; the turn box is white with a black arrow
+      const uiProbe = () => { const lum = (c) => { const m = c.match(/[\d.]+/g).map(Number); if (m.length > 3 && m[3] === 0) return null; const k = c.startsWith('color(') ? 1 : 255; return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / k; };
         const bg = (sel) => { const e = document.querySelector(sel); return e ? lum(getComputedStyle(e).backgroundColor) : null; };
-        const a = document.createElement('div'); a.className = 'nav-arrow'; document.body.appendChild(a); const ac = getComputedStyle(a); const arrow = [lum(ac.backgroundColor), lum(ac.color)]; a.remove();
+        const probe = (cls, tag = 'div') => { const e = document.createElement(tag); e.className = cls; document.querySelector('.map-workspace').appendChild(e); const c = getComputedStyle(e); const v = [lum(c.backgroundColor), lum(c.color), lum(c.borderTopColor)]; e.remove(); return v; };
+        const arrow = probe('nav-arrow'), navCard = probe('nav-top'), chip = probe('explore-chip', 'button');
         return { topbar: bg('.topbar'), menu: bg('.mobile-more-body'), field: bg('#intentText'), panel: bg('#leftPanel'), text: lum(getComputedStyle(document.querySelector('#intentText')).color),
-          arrow, meta: document.querySelector('meta[name="theme-color"]').getAttribute('content') }; };
+          arrow, navCard, chip, meta: document.querySelector('meta[name="theme-color"]').getAttribute('content') }; };
       const lu = await page.evaluate(`(${uiProbe})()`);
       check(`[${w}] Light map: header, menu, panel and text fields are white with dark text; browser bar white`, (lu.topbar === null || lu.topbar > 0.95) && lu.menu > 0.95 && lu.field > 0.95 && lu.panel > 0.95 && lu.text < 0.15 && lu.meta === '#FFFFFF', lu);
-      check(`[${w}] Light map: navigation turn box is black with a white arrow`, lu.arrow[0] < 0.1 && lu.arrow[1] > 0.95, lu.arrow);
+      check(`[${w}] Light map: navigation card and turn box white, black arrow and text, light-grey border (no green)`, lu.navCard[0] > 0.95 && lu.navCard[1] < 0.1 && lu.arrow[0] > 0.95 && lu.arrow[1] < 0.1 && lu.arrow[2] > 0.7 && lu.arrow[2] < 0.95, lu);
+      check(`[${w}] Light map: Experience Dimension chips white with dark text`, lu.chip[0] > 0.95 && lu.chip[1] < 0.35, lu.chip);
       await page.click('button[data-map-theme="dark"]'); await page.click('#mobileMore summary'); await page.waitForTimeout(300);
       const du = await page.evaluate(`(${uiProbe})()`);
-      check(`[${w}] Dark map: interface back to dark; navigation turn box is white with a black arrow (no lime)`, (du.topbar === null || du.topbar < 0.1) && du.field < 0.15 && du.text > 0.85 && du.meta === '#0B0B0B' && du.arrow[0] > 0.9 && du.arrow[1] < 0.05, du);
+      check(`[${w}] Dark map: interface back to dark; navigation card and turn box dark with a white arrow (no lime)`, (du.topbar === null || du.topbar < 0.1) && du.field < 0.15 && du.text > 0.85 && du.meta === '#0B0B0B' && du.navCard[0] < 0.12 && du.arrow[0] < 0.12 && du.arrow[1] > 0.9 && du.chip[1] > 0.6, du);
       // a click anywhere else must not touch the theme (the <html> element also carries data-map-theme)
       await page.evaluate(() => { localStorage.setItem('strollane.mapTheme', 'dark'); window.__applies = 0; const o = window.applyMapTheme; window.applyMapTheme = (...x) => { window.__applies++; return o(...x); }; });
       await page.mouse.click(200, 520); await page.click('.m-context-edit').catch(() => {}); await page.evaluate(() => document.body.click()); await page.waitForTimeout(200);
@@ -63,6 +65,26 @@ const check = (name, ok, d) => { total++; if (!ok) failed++; console.log(`${ok ?
     check(`[${label} ${w}] start = hollow ring, destination = solid bullseye (shape, not only colour)`, rs.start[0] === '#0B0B0B' && rs.start[1] === '#F5F5F2' && rs.end[0] === '#F3EFE4' && rs.end[1], rs);
     await shot(page, `design-${label}-${w}.png`);
     check(`[${label} ${w}] no page errors`, log.errors.length === 0, log.errors.slice(0, 3));
+    await page.context().close();
+  }
+  {
+    const w = 440;
+    const { page } = await newPage(b, { width: 440, height: 956, geo: { latitude: 40.7536, longitude: -73.9832, accuracy: 10 } });
+    await openApp(page, 1500);
+    await page.evaluate(() => (typeof generateRoutes === 'function' ? generateRoutes() : null)); await page.waitForFunction(() => state.routes.length > 0, null, { timeout: 90000 }).catch(() => {});
+    await page.waitForTimeout(600);
+      // switching the theme in the middle of a walk: the turn card, the bottom panel and the route all follow at once
+      await page.evaluate(() => $('navStart')?.click()); await page.waitForTimeout(1200);
+      const navTheme = async () => page.evaluate(() => { const lum = (c) => { const m = c.match(/[\d.]+/g).map(Number); const k = c.startsWith('color(') ? 1 : 255; return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / k; };
+        const g = (sel, p) => lum(getComputedStyle(document.querySelector(sel))[p]);
+        return { on: !document.getElementById('navOverlay').classList.contains('hidden'), top: g('.nav-top', 'backgroundColor'), arrowBg: g('#navArrow', 'backgroundColor'), arrow: g('#navArrow', 'color'), bottom: document.querySelector('.nav-bottom') ? lum(getComputedStyle(document.querySelector('.nav-bottom')).backgroundColor) : null,
+          route: state.map.getPaintProperty('route-selected', 'line-color') }; });
+      await page.evaluate(() => setMapTheme('light')); await page.waitForTimeout(300);
+      const nl = await navTheme();
+      await page.evaluate(() => setMapTheme('dark')); await page.waitForTimeout(300);
+      const nd = await navTheme();
+      check(`[${w}] theme switched during navigation: turn card, arrow, bottom panel and route follow without a reload`, nl.on && nl.top > 0.95 && nl.arrowBg > 0.95 && nl.arrow < 0.1 && nl.bottom > 0.95 && nl.route === '#141413' && nd.top < 0.12 && nd.arrow > 0.9 && nd.bottom < 0.12 && nd.route !== '#141413', { nl, nd });
+      await page.evaluate(() => $('navExit')?.click()); await page.waitForTimeout(300);
     await page.context().close();
   }
   // PWA icons: black tile + white walker, maskable variant listed

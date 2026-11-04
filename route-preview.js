@@ -48,11 +48,17 @@ function previewStart(){
  document.body.classList.add('preview-mode');els.root.classList.remove('hidden');
  m.resize(); // desktop: side panels collapse, the map takes the window
  previewEnsureLayers();
- if(typeof m.setSky==='function'){try{preview.saved.sky=m.getSky?.();m.setSky({'sky-color':'#0B0B0B','horizon-color':'#161615','fog-color':'#0B0B0B','sky-horizon-blend':.9,'horizon-fog-blend':.9,'fog-ground-blend':.35,'atmosphere-blend':0});}catch(e){}}
+ if(typeof m.setSky==='function'){try{preview.saved.sky=m.getSky?.();m.setSky(previewSky());}catch(e){}}
  previewApply(true);
  // reduced motion: start paused, the walker scrubs instead of watching an animation
  previewSetPlaying(!preview.reduced);
  preview.raf=requestAnimationFrame(previewFrame);
+}
+/** Sky and fog behind the pitched 3D view follow the theme (dark night sky / white daylight sky). */
+function previewSky(){
+ const light=document.documentElement.dataset.mapTheme==='light';
+ return light?{'sky-color':'#FFFFFF','horizon-color':'#F1F1F1','fog-color':'#FFFFFF','sky-horizon-blend':.9,'horizon-fog-blend':.9,'fog-ground-blend':.35,'atmosphere-blend':0}
+  :{'sky-color':'#0B0B0B','horizon-color':'#161615','fog-color':'#0B0B0B','sky-horizon-blend':.9,'horizon-fog-blend':.9,'fog-ground-blend':.35,'atmosphere-blend':0};
 }
 function previewStop(){
  if(!preview.on)return;
@@ -117,5 +123,5 @@ function setupRoutePreview(){
  const target=$('navStart');if(target)new MutationObserver(renderPreviewButton).observe(target,{attributes:true,attributeFilter:['class','disabled']});
  renderPreviewButton();
 }
-if(typeof window!=='undefined'){window.strollanePreview={start:previewStart,stop:previewStop,state:preview,apply:previewApply,setPlaying:previewSetPlaying};
+if(typeof window!=='undefined'){window.strollanePreview={start:previewStart,stop:previewStop,sky:previewSky,state:preview,apply:previewApply,setPlaying:previewSetPlaying};
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setupRoutePreview);else setupRoutePreview();}
