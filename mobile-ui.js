@@ -284,30 +284,20 @@
     const req = ($('intentText')?.value || lastSubmitted || '').trim();
     $('mCompactText').textContent = req || 'Refine or start a new walk';
   }
-  /** Stops between From and To, in visiting order (Google / Apple Maps style). Up to 3 rows, then "+N more". */
+  /** Stops between From and To: one compact "Via" line on the home block (all of them, in visiting order).
+   *  Adding, reordering and removing stops happens in Edit (the Plan view), not on the control panel. */
   function renderStopRows() {
     const box = $('mContextStops'); if (!box) return;
     const stops = typeof journey !== 'undefined' ? journey.named.filter((n) => !journey.removed.has(n.place.id)) : [];
     box.innerHTML = '';
-    const shown = stops.length > 3 ? stops.slice(0, 2) : stops;
-    shown.forEach((n, i) => {
-      const row = document.createElement('span'); row.className = 'm-ft-row m-ft-stop';
-      row.innerHTML = '<span class="place-dot stop" aria-hidden="true"></span><span class="m-ft-k"></span><span class="m-ft-v"></span>';
-      row.querySelector('.m-ft-k').textContent = `Stop ${i + 1}`; row.querySelector('.m-ft-v').textContent = n.place.name;
+    if (stops.length) {
+      const row = document.createElement('span'); row.className = 'm-ft-row m-ft-via';
+      row.innerHTML = '<span class="place-dot stop" aria-hidden="true"></span><span class="m-ft-k">Via</span><span class="m-ft-v"></span>';
+      const names = stops.map((n) => n.place.name).join(', ');
+      row.querySelector('.m-ft-v').textContent = stops.length > 1 ? `${stops.length} stops · ${names}` : names;
       box.appendChild(row);
-    });
-    if (stops.length > shown.length) {
-      const more = document.createElement('span'); more.className = 'm-ft-row m-ft-stop m-ft-more';
-      more.innerHTML = '<span class="place-dot stop" aria-hidden="true"></span><span class="m-ft-k"></span><span class="m-ft-v"></span>';
-      more.querySelector('.m-ft-v').textContent = `+${stops.length - shown.length} more stops`;
-      box.appendChild(more);
     }
     $('mContextText').textContent = [contextText().from, ...stops.map((n) => n.place.name), contextText().to].join(' → ');
-  }
-  /** "+ Add stop": the Plan view, straight into the stop search (between From and To). */
-  function openAddStop() {
-    setView('plan');
-    setTimeout(() => { const el = $('addStopSearch'); if (el) { el.scrollIntoView({ block: 'center' }); el.focus(); } }, 380);
   }
   function renderRouteFromTo() {
     const el = $('mRouteFromTo'); if (!el) return;
@@ -614,7 +604,6 @@
     $('mCreate').addEventListener('click', createFromText);
     $('mContext').addEventListener('click', () => setView('plan'));
     document.querySelectorAll('.swap-ends').forEach((b) => b.addEventListener('click', swapEnds));
-    $('mAddStop')?.addEventListener('click', openAddStop);
     $('mCompactEdit').addEventListener('click', () => { setView('typing'); ta.focus(); });
     $('mNewWalk').addEventListener('click', () => { ta.value = ''; lastSubmitted = ''; showStatus(null); setView('typing'); ta.focus(); });
     $('mSheetBack').addEventListener('click', closeSecondary);
