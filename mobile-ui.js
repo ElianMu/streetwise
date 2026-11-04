@@ -733,9 +733,16 @@
   // html at least screen-tall in Home Screen mode (the actual fix). This detector stays as a fallback signal: if
   // iOS still withholds the strip, html.ios-system-strip stops a second home-indicator inset being reserved, and the
   // diagnostics show it. Every resize (incl. the viewport growing to full height) re-runs it and the map re-measures.
+  function safeTopInset() {
+    const d = document.createElement('div'); d.style.cssText = 'position:absolute;visibility:hidden;padding-top:var(--sat)';
+    document.body.appendChild(d); const v = parseFloat(getComputedStyle(d).paddingTop) || 0; d.remove(); return v;
+  }
   function detectIosSystemStrip() {
     let strip = 0;
-    if (navigator.standalone === true) {
+    // Only a page drawn UNDER the status bar (black-translucent, kept by icons added before that tag was removed) can
+    // be short of the screen. With the default opaque bar the page legitimately starts below it (top inset 0), and
+    // screen height − innerHeight is just the status bar — not a missing strip.
+    if (navigator.standalone === true && safeTopInset() > 0) {
       const portrait = window.innerHeight >= window.innerWidth;
       const screenH = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
       const d = Math.round(screenH - window.innerHeight);
