@@ -33,7 +33,18 @@ const check = (name, ok, d) => { total++; if (!ok) failed++; console.log(`${ok ?
       const lt = await page.evaluate(() => ({ theme: document.documentElement.dataset.mapTheme, saved: localStorage.getItem('strollane.mapTheme'), route: state.map.getPaintProperty('route-selected', 'line-color'),
         casing: state.map.getPaintProperty('route-shadow', 'line-color'), pressed: document.querySelector('button[data-map-theme="light"]').getAttribute('aria-pressed') }));
       check(`[${w}] Light map: theme saved, route inverts to ink on a white casing, control shows the state`, lt.theme === 'light' && lt.saved === 'light' && lt.route === '#141413' && lt.casing === '#FFFFFF' && lt.pressed === 'true', lt);
+      // the whole interface follows the light map (the phone header is transparent over the map, null = no fill): white surfaces, dark text, black turn-arrow box with a white arrow
+      const uiProbe = () => { const lum = (c) => { const m = c.match(/[\d.]+/g).map(Number); if (m.length > 3 && m[3] === 0) return null; return (0.2126 * m[0] + 0.7152 * m[1] + 0.0722 * m[2]) / 255; };
+        const bg = (sel) => { const e = document.querySelector(sel); return e ? lum(getComputedStyle(e).backgroundColor) : null; };
+        const a = document.createElement('div'); a.className = 'nav-arrow'; document.body.appendChild(a); const ac = getComputedStyle(a); const arrow = [lum(ac.backgroundColor), lum(ac.color)]; a.remove();
+        return { topbar: bg('.topbar'), menu: bg('.mobile-more-body'), field: bg('#intentText'), panel: bg('#leftPanel'), text: lum(getComputedStyle(document.querySelector('#intentText')).color),
+          arrow, meta: document.querySelector('meta[name="theme-color"]').getAttribute('content') }; };
+      const lu = await page.evaluate(`(${uiProbe})()`);
+      check(`[${w}] Light map: header, menu, panel and text fields are white with dark text; browser bar white`, (lu.topbar === null || lu.topbar > 0.95) && lu.menu > 0.95 && lu.field > 0.95 && lu.panel > 0.95 && lu.text < 0.15 && lu.meta === '#FFFFFF', lu);
+      check(`[${w}] Light map: navigation turn box is black with a white arrow`, lu.arrow[0] < 0.1 && lu.arrow[1] > 0.95, lu.arrow);
       await page.click('button[data-map-theme="dark"]'); await page.click('#mobileMore summary'); await page.waitForTimeout(300);
+      const du = await page.evaluate(`(${uiProbe})()`);
+      check(`[${w}] Dark map: interface back to dark; navigation turn box is white with a black arrow (no lime)`, (du.topbar === null || du.topbar < 0.1) && du.field < 0.15 && du.text > 0.85 && du.meta === '#0B0B0B' && du.arrow[0] > 0.9 && du.arrow[1] < 0.05, du);
       // a click anywhere else must not touch the theme (the <html> element also carries data-map-theme)
       await page.evaluate(() => { localStorage.setItem('strollane.mapTheme', 'dark'); window.__applies = 0; const o = window.applyMapTheme; window.applyMapTheme = (...x) => { window.__applies++; return o(...x); }; });
       await page.mouse.click(200, 520); await page.click('.m-context-edit').catch(() => {}); await page.evaluate(() => document.body.click()); await page.waitForTimeout(200);
