@@ -41,12 +41,12 @@ const check = (name, ok, d) => { total++; if (!ok) failed++; console.log(`${ok ?
         return { topbar: bg('.topbar'), menu: bg('.mobile-more-body'), field: bg('#intentText'), panel: bg('#leftPanel'), text: lum(getComputedStyle(document.querySelector('#intentText')).color),
           arrow, navCard, chip, meta: document.querySelector('meta[name="theme-color"]').getAttribute('content') }; };
       const lu = await page.evaluate(`(${uiProbe})()`);
-      check(`[${w}] Light map: header, menu, panel and text fields are white with dark text; browser bar white`, (lu.topbar === null || lu.topbar > 0.95) && lu.menu > 0.95 && lu.field > 0.95 && lu.panel > 0.95 && lu.text < 0.15 && lu.meta === '#FFFFFF', lu);
+      check(`[${w}] Light map: header, menu, panel and text fields are white with dark text; browser / status bar = light map background`, (lu.topbar === null || lu.topbar > 0.95) && lu.menu > 0.95 && lu.field > 0.95 && lu.panel > 0.95 && lu.text < 0.15 && lu.meta === '#F2F1EC', lu);
       check(`[${w}] Light map: navigation card and turn box white, black arrow and text, light-grey border (no green)`, lu.navCard[0] > 0.95 && lu.navCard[1] < 0.1 && lu.arrow[0] > 0.95 && lu.arrow[1] < 0.1 && lu.arrow[2] > 0.7 && lu.arrow[2] < 0.95, lu);
       check(`[${w}] Light map: Experience Dimension chips white with dark text`, lu.chip[0] > 0.95 && lu.chip[1] < 0.35, lu.chip);
       await page.click('button[data-map-theme="dark"]'); await page.click('#mobileMore summary'); await page.waitForTimeout(300);
       const du = await page.evaluate(`(${uiProbe})()`);
-      check(`[${w}] Dark map: interface back to dark; navigation card and turn box dark with a white arrow (no lime)`, (du.topbar === null || du.topbar < 0.1) && du.field < 0.15 && du.text > 0.85 && du.meta === '#0B0B0B' && du.navCard[0] < 0.12 && du.arrow[0] < 0.12 && du.arrow[1] > 0.9 && du.chip[1] > 0.6, du);
+      check(`[${w}] Dark map: interface back to dark; navigation card and turn box dark with a white arrow (no lime)`, (du.topbar === null || du.topbar < 0.1) && du.field < 0.15 && du.text > 0.85 && du.meta === '#0D0D0C' && du.navCard[0] < 0.12 && du.arrow[0] < 0.12 && du.arrow[1] > 0.9 && du.chip[1] > 0.6, du);
       // a click anywhere else must not touch the theme (the <html> element also carries data-map-theme)
       await page.evaluate(() => { localStorage.setItem('strollane.mapTheme', 'dark'); window.__applies = 0; const o = window.applyMapTheme; window.applyMapTheme = (...x) => { window.__applies++; return o(...x); }; });
       await page.mouse.click(200, 520); await page.click('.m-context-edit').catch(() => {}); await page.evaluate(() => document.body.click()); await page.waitForTimeout(200);

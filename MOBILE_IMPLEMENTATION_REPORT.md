@@ -1,5 +1,41 @@
 # Mobile Implementation Report
 
+## Round 13: phones — full-screen map, transparent header, compact floating card
+
+**Problem (real iPhone, Home Screen app):**
+- The logo and status-bar area looked soft, because the header used `backdrop-filter: blur(14px)` and a dark
+  `text-shadow`, which became a grey halo on the light theme.
+- A solid white or black header band covered the top of the map.
+- The request card was large.
+
+**Fix (phones only; desktop unchanged):**
+- **Header:** transparent. No blur, no text-shadow and no bottom border. Only a short fade of the map's own background
+  colour sits behind the logo for legibility. The menu button is a small round card.
+- **Status bar:** the page background is the map's background colour (`--map-bg`, which equals `MAP_THEMES.bg`):
+  `#F2F1EC` light, `#0D0D0C` dark. `theme-color` matches it, before first paint and on every switch. The opaque
+  status bar therefore takes the map colour, so status bar, header and map read as one surface.
+- **Request card:** about 8 % shorter.
+  - Title 23 → 21 px, keeping the serif and a tighter line height.
+  - Smaller paddings and gaps; the card sits 4 px under the header.
+  - The From/To block shrank from 54 to 47 px.
+  - The field, Create My Walk, mic and swap stay 44 px tall.
+- **Card background:** 91 % opaque in both themes, with no blur. The map shows through faintly; fields and buttons
+  are opaque.
+
+**Why the map does not run under the status bar on new icons:** that needs `black-translucent`. On iOS 26.1+ the
+system then draws its own scrim and blur over that strip, which pages cannot turn off. That was the grey band and
+the soft top edge. With the opaque bar, the status-bar strip is filled with the map's colour instead. Icons added
+before round 12 still use `black-translucent`; for them the map now shows through the transparent header under the
+status bar, with the system scrim on top.
+
+**Tests:**
+- `ios-standalone-gap.js`: html, body and theme-color equal the map background; the header is transparent with no
+  blur or shadow; the card starts 4 px under the header.
+- `design-system.js`: theme-color follows the map in both themes.
+- `test_theme_tokens.py`: `--map-bg` must match the basemap colours.
+
+**REAL DEVICE / IPHONE VERIFICATION REQUIRED:** status-bar colour and sharpness, after re-adding the icon.
+
 ## Round 12: Home Screen app status bar matches the header (no grey band)
 
 **Problem (real iPhone, Home Screen icon):**

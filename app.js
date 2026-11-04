@@ -501,11 +501,16 @@ function setMapTheme(theme){
 }
 /** The interface follows the map theme: html[data-map-theme] selects the light or dark values of the theme variables at the top of styles.css;
     the browser chrome (Safari's bar / Android's status bar) takes the page colour too. */
+window.matchMedia?.('(max-width:740px)').addEventListener?.('change',()=>applyUiTheme(document.documentElement.dataset.mapTheme||'dark'));
 function applyUiTheme(theme){
   const root=document.documentElement;root.dataset.mapTheme=theme==='light'?'light':'dark';
   // the 3D route preview's sky, if it is open, switches with the theme too
   if(window.strollanePreview?.state?.on&&state.map&&typeof state.map.setSky==='function'){try{state.map.setSky(window.strollanePreview.sky());}catch(e){}}
-  const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',theme==='light'?'#FFFFFF':'#0B0B0B');
+  // phones: the map is full-screen, so the browser / status bar takes the map's background colour (--map-bg);
+  // larger screens: the page colour behind the header
+  const phone=window.matchMedia('(max-width:740px)').matches;
+  const color=phone?(getComputedStyle(root).getPropertyValue('--map-bg').trim()||(theme==='light'?'#F2F1EC':'#0D0D0C')):(theme==='light'?'#FFFFFF':'#0B0B0B');
+  const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',color.toUpperCase());
   document.querySelectorAll('button[data-map-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mapTheme===root.dataset.mapTheme)));
 }
 /** Map padding for "show the whole route": on phones the request card covers the top and the results sheet the
