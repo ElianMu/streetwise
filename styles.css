@@ -975,14 +975,21 @@ body[data-mview="typing"] .m-route-ends{display:none}
    Header: the solid page colour (white in light, #0B0B0B in dark) — the original solid STROLLANE · NYC bar. The page
    background and theme-color are the same colour, so the opaque iOS status bar above it continues the header. No
    backdrop-filter and no text-shadow in the header (they made the logo and the status-bar area look soft).
-   Request card: lightly translucent so the map shows faintly around its contents, but everything you read or tap —
+   Request card: translucent (72 %) so the map shows through around its contents, but everything you read or tap —
    the text field, the From/To block, the mic and swap buttons — sits on an opaque surface, so map labels never
    show through behind text. No blur. Fields and buttons stay ≥ 44px. */
 @media(max-width:740px){
  html,body{background:var(--bg-primary)}
- .topbar{background:var(--bg-primary);-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:1px solid var(--hair);text-shadow:none}
+ /* position:fixed (not absolute): Safari 26 / iOS colour the status-bar area from a FIXED or sticky element touching
+    the top edge with an opaque background; an absolutely positioned header is never sampled, so iOS fell back to the
+    page content there — the blurred look at the top. Same box as before (fixed parent, inset 0). */
+ .topbar{position:fixed;background:var(--bg-primary);-webkit-backdrop-filter:none;backdrop-filter:none;border-bottom:1px solid var(--hair);text-shadow:none}
  .topbar .brand-glyph,.topbar .brand-mark{filter:none}
- .m-composer{top:calc(var(--hdr) + 6px);padding:8px 8px 4px;background:color-mix(in srgb,var(--bg-panel) 86%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 6px 20px color-mix(in srgb,var(--shadow) 28%,transparent)}
+ /* a clearer wordmark: larger, heavier, full-contrast text */
+ .topbar .brand-name{font-size:16px;font-weight:700;letter-spacing:.12em;color:var(--text-primary);-webkit-font-smoothing:antialiased}
+ .topbar .brand-mark{width:22px;height:22px}
+ .topbar .brand-sep{opacity:.6}
+ .m-composer{top:calc(var(--hdr) + 6px);padding:8px 8px 4px;background:color-mix(in srgb,var(--bg-panel) 72%,transparent);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:0 6px 20px color-mix(in srgb,var(--shadow) 28%,transparent)}
  .m-composer-q{font-size:21px;line-height:1.08;margin:1px 2px 7px}
  .m-composer-slot #intentText{padding:9px 12px;background:var(--bg-card)}
  .m-composer-row{margin-top:6px}
