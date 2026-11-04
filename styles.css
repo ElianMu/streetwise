@@ -512,7 +512,7 @@ body.nav-mode .selected-route-summary,body.nav-mode #urbanInspector,body.nav-mod
  .m-composer-slot #intentText{display:block;width:100%;height:48px;min-height:48px;margin:0;resize:none;background:var(--g11);border:1px solid var(--g38);border-radius:12px;color:var(--gf5);
   font-size:16px;line-height:1.35;padding:12px;transition:height .18s ease;overflow-y:auto}
  .m-composer-slot #intentText::placeholder{color:var(--g8c)}
- body[data-mview="typing"] .m-composer-slot #intentText{height:min(128px,26vh)}
+ body[data-mview="typing"] .m-composer-slot #intentText{height:min(112px,20vh)}
  .m-composer-row{display:flex;align-items:center;gap:8px;margin-top:8px}
  .m-mic-slot{display:flex;flex:none}
  .m-mic-slot .mic-btn{width:44px;height:44px;border-radius:12px;font-size:17px;margin:0}
@@ -937,7 +937,9 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
 .m-ft-v{font-size:14px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .m-route-ends .m-context-edit{flex:none;font-size:12px;font-weight:600;color:var(--muted);text-decoration:none}
 .m-swap{flex:none;width:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:var(--r-md);background:transparent;color:var(--text)}
-body[data-mview="typing"] .m-route-ends{display:none}
+/* while typing, From / To stay visible under the field: they follow the request as it is typed (journey.js applyLiveEnds) */
+body[data-mview="typing"] .m-route-ends{display:flex}
+body[data-mview="typing"] .m-route-ends .m-context{display:flex}
 .swap-inline{display:inline-flex;align-items:center;gap:6px;margin:2px 0 8px;padding:6px 10px;border:1px solid var(--line-strong);border-radius:var(--r-sm);background:transparent;color:var(--text);font-size:12px;font-weight:600}
 .swap-inline .ui-icon{width:16px;height:16px}
 @media(max-width:740px){.swap-inline{display:none}}
@@ -1004,3 +1006,15 @@ body[data-mview="typing"] .m-route-ends{display:none}
 .readd-tip{position:fixed;left:max(10px,var(--sal));right:max(10px,var(--sar));top:calc(var(--hdr,0px) + 6px);z-index:40;display:flex;flex-direction:column;gap:6px;padding:12px 14px;background:var(--bg-panel);color:var(--text-primary);border:1px solid var(--border-primary);border-radius:var(--r-md);box-shadow:0 8px 24px color-mix(in srgb,var(--shadow) 35%,transparent);font-size:13px;line-height:1.4}
 .readd-tip p{margin:0}.readd-tip p[lang="en"]{color:var(--text-secondary);font-size:12px}
 .readd-tip-close{align-self:flex-end;min-height:44px;padding:0 16px;border:0;border-radius:var(--r-sm);background:var(--accent);color:var(--accent-ink);font-weight:600}
+/* Phones: one "01 / Refine your walk" section under the routes — quick options first, then the conversation. It is
+   always available once there are routes (the desktop shows the conversation only after the first message). */
+@media(max-width:740px){
+ #mRefineSlot #conversationSection.hidden{display:block!important}
+ #mRefineSlot #conversationCount{display:none}
+ #mRefineQuickSlot #refineQuick>.section-overline{display:none}
+ #mRefineQuickSlot .refine-actions{margin-top:8px}
+ #mRefineQuickSlot #refineQuick>.field-description{margin:6px 0 10px}
+ /* the sheet label ("Your routes") stays inside its handle instead of overlapping the first line of the sheet */
+ .left-panel .sheet-handle,.right-panel .sheet-handle{min-height:32px}
+ .left-panel .sheet-toggle,.right-panel .sheet-toggle{top:3px;padding:6px 8px}
+}

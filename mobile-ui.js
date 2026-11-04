@@ -231,6 +231,11 @@
     moveNode(document.querySelector('[data-mic="intentText"]'), $('mMicSlot'));
     // Follow-up conversation belongs with the results on phones (§12.3).
     moveNode('conversationSection', $('mRefineSlot'));
+    // …together with the quick refine options, as ONE section right under the routes: "01 / Refine your walk" =
+    // one-tap options (More Nature, Quieter Streets, …) + the follow-up conversation. On the desktop they stay apart
+    // (the conversation is step 05 of the left panel, the options sit in the right panel).
+    moveNode('refineQuick', $('mRefineQuickSlot'));
+    if ($('conversationLabel')) { $('conversationLabel').dataset.desktopLabel = $('conversationLabel').textContent; $('conversationLabel').textContent = '01 / REFINE YOUR WALK'; }
     if (ta) {
       ta.dataset.desktopPlaceholder = ta.getAttribute('placeholder') || '';
       ta.setAttribute('placeholder', PHONE_PLACEHOLDER);
@@ -239,6 +244,7 @@
   }
   function moveComposerOut() {
     if (!composerMoved) return; composerMoved = false;
+    const lbl = $('conversationLabel'); if (lbl && lbl.dataset.desktopLabel) lbl.textContent = lbl.dataset.desktopLabel;
     const ta = $('intentText');
     if (ta && ta.dataset.desktopPlaceholder != null) ta.setAttribute('placeholder', ta.dataset.desktopPlaceholder);
     restoreNodes();
@@ -267,6 +273,8 @@
     const to = mode === 'open' ? 'Discover for me' : mode === 'round' ? 'Back to start' : mode === 'hotel' ? 'Back to hotel' : (b?.name || 'choose destination');
     return { from: a?.name || 'choose start', to };
   }
+  // start / destination recognised while typing (journey.js applyLiveEnds) or a GPS start: refresh From / To at once
+  document.addEventListener('strollane:ends-changed', () => { renderComposer(); renderRouteFromTo?.(); });
   function renderComposer() {
     if (!mq.matches) return;
     const c = contextText();
@@ -352,8 +360,9 @@
     return true;
   }
   // Starting point (§4.4): 1) a start named in the request, 2) a start the user chose this session,
-  // 3) GPS only after the user taps it, 4) otherwise ask. The page ships with a preset start (Bryant Park)
-  // that the user never chose; it is never used silently — the user confirms it, picks GPS, or picks a place.
+  // 3) the user's own location — asked for once on load (app.js autoLocateStart), used when it is inside Manhattan,
+  // 4) otherwise ask. The page ships with a preset start (Bryant Park) that the user never chose; it is never used
+  // silently — the user confirms it, picks GPS, or picks a place.
   let startConfirmed = false;
   const REQUEST_NAMES_START = /\bstart(?:ing)?\s+(?:at|from|in|near)\b|\bbegin(?:ning)?\s+(?:at|from)\b|\bleav(?:e|ing)\s+from\b|\bfrom\s+(?:my\s+(?:hotel|location)|here|[A-Z0-9])|\bnear\s+me\b|从|出发|起点/;
   function confirmStart() { startConfirmed = true; }

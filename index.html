@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=55" />
+  <link rel="stylesheet" href="./styles.css?v=57" />
 </head>
 <body>
 <div class="site-shell">
@@ -117,7 +117,8 @@
 
         <section id="conversationSection" class="conversation-section hidden" aria-label="Strollane conversation">
           <div class="line-divider"></div>
-          <div class="section-row"><div class="section-overline">05 / REFINE YOUR WALK</div><span class="small-count">CONVERSATION</span></div>
+          <div class="section-row"><div class="section-overline" id="conversationLabel">05 / REFINE YOUR WALK</div><span class="small-count" id="conversationCount">CONVERSATION</span></div>
+          <div class="m-only" id="mRefineQuickSlot"></div>
           <p class="field-description">Ask for changes. New route results and the map are recomputed when possible.</p>
           <div id="chatHistory" class="chat-history" role="log" aria-live="polite"></div>
           <form id="chatForm" class="chat-form"><button type="button" class="mic-btn" data-mic="chatInput" aria-pressed="false" aria-label="Speak a follow-up"><svg class="mic-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg></button><textarea id="chatInput" rows="2" placeholder="Make it quieter, even if it takes five more minutes…" aria-label="Follow-up route instructions"></textarea><button id="chatSend" type="submit" aria-label="Send instruction">↗</button></form>
@@ -242,9 +243,11 @@
         <p class="soft-copy">Named OpenStreetMap POIs within 100 m of the selected real route. Live service may be unavailable.</p>
         <div id="poiList" class="poi-list"><p class="status-empty">Select a walking route to search nearby points of interest.</p></div>
         <div class="subtle-divider"></div>
+        <div id="refineQuick">
         <div class="section-overline">REFINE YOUR WALK</div>
         <div class="refine-actions"><button type="button" data-refine="nature">More Nature</button><button type="button" data-refine="quiet">Quieter Streets</button><button type="button" data-refine="architecture">More Architecture</button><button type="button" data-refine="shorter">Shorter Walk</button></div>
         <p class="field-description">Each action updates state and requests fresh pedestrian candidate routes. A preference without evidence will not be claimed as achieved.</p>
+        </div>
         <div class="subtle-divider"></div>
         <details class="research-details"><summary>RESEARCH / RAW STREET EVIDENCE</summary>
           <div id="segmentDetail" class="segment-detail"><p class="soft-copy">Click a street segment to inspect its recorded attributes.</p></div><button id="clearSelection" class="mini-text-button" type="button">Clear selected street</button>
@@ -267,10 +270,10 @@
 <script src="./weather.js?v=28"></script>
 <script src="./places.js?v=29"></script>
 <script src="./opening-hours.js?v=28"></script>
-<script src="./app.js?v=40"></script>
+<script src="./app.js?v=41"></script>
 <script src="./route-client.js?v=30"></script>
 <script src="./weather-ui.js?v=28"></script>
-<script src="./journey.js?v=30"></script>
+<script src="./journey.js?v=31"></script>
 <script src="./journey-ui.js?v=30"></script>
 <script src="./voice.js?v=28"></script>
 <script src="./nav-engine.js?v=30"></script>
@@ -282,8 +285,8 @@
 <script src="./urban-layers.js?v=33"></script>
 <script src="./explore-map.js?v=29"></script>
 <script src="./explore-analytics.js?v=29"></script>
-<script src="./center-map.js?v=30"></script>
-<script src="./mobile-ui.js?v=24"></script>
+<script src="./center-map.js?v=31"></script>
+<script src="./mobile-ui.js?v=25"></script>
 <script src="./pwa-register.js?v=2"></script>
 </body>
 </html>
