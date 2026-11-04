@@ -563,10 +563,10 @@ function extractEnds(q){
  if(!t)return out;
  let m;
  // Chinese: 从 A (出发) 到/去/走到 B
- if((m=t.match(/从\s*(.+?)\s*(?:出发|开始)?\s*[，,]?\s*(?:走到|走去|到|去|前往)\s*(.+?)(?=[，,。.;；！？!?]|走走|逛逛|散步|$)/))){out.from=m[1];out.to=m[2];}
+ if((m=t.match(/从\s*([^，,。.;；]+?)\s*(?:出发|开始)?\s*[，,]?\s*(?:走到|走去|到|去|前往)\s*(.+?)(?=[，,。.;；！？!?]|走走|逛逛|散步|$)/))){out.from=m[1];out.to=m[2];}
  else{
   if((m=t.match(/从\s*(.+?)\s*(?:出发|开始)/)))out.from=m[1];
-  if((m=t.match(/(?:最后(?:到|去)|终点(?:是|在)?|走到|前往)\s*(.+?)(?=[，,。.;；！？!?]|$)/)))out.to=m[1];
+  if((m=t.match(/(?:最后(?:到|去)|终点(?:是|在)?|走到|前往)\s*(.+?)(?=[，,。.;；！？!?]|$)/))||(out.from&&(m=t.match(/[，,]\s*(?:再|然后)?(?:到|去)\s*(.+?)(?=[，,。.;；！？!?]|$)/))))out.to=m[1];
  }
  // English ("form" = the common typo of "from")
  if(!out.from&&(m=t.match(new RegExp('\\b(?:from|form|start(?:ing)?\\s+(?:at|from|in)|begin(?:ning)?\\s+(?:at|from)|leaving\\s+from)\\s+(.+?)(?=\\s+(?:to|towards?|and\\s+(?:end|finish|go)|ending|via|through|then)\\b|[,，.;!?]|$)','i'))))out.from=m[1];
@@ -574,16 +574,53 @@ function extractEnds(q){
   const verbs='(?!(?:walk|go|see|visit|explore|be|have|get|find|eat|stop|spend|take|do|try|enjoy)\\b)';
   m=t.match(new RegExp('\\b(?:from|form)\\s+.+?\\s+to(?:wards?)?\\s+'+verbs+'(.+?)'+LIVE_STOP,'i'))
    ||t.match(new RegExp('\\b(?:walk|go|head|get|stroll|way)(?:\\s+(?:over|back|down|up))?\\s+to\\s+'+verbs+'(.+?)'+LIVE_STOP,'i'))
+   ||t.match(new RegExp('\\b(?:through|via|passing(?:\\s+by)?)\\s+.+?\\s+to(?:wards?)?\\s+'+verbs+'(.+?)'+LIVE_STOP,'i'))
    ||t.match(new RegExp('\\b(?:end|finish)(?:ing)?\\s+(?:at|in|by)\\s+(.+?)'+LIVE_STOP,'i'));
   if(m)out.to=m[1];
  }
  const clean=s=>s?s.replace(/^["“'‘]|["”'’]$/g,'').replace(/^the\s+/i,'').trim()||null:null;
+ // stops on the way, in the order typed: "via A, B and C", "stopping at A", "through A", "from A to B to C",
+ // "途经A、B和C", "经过A", "从A到B再到C"
+ const via=[];
+ if(out.to&&/\s+to\s+/i.test(out.to)){const parts=out.to.split(/\s+to\s+/i);out.to=parts.pop();via.push(...parts);}
+ if(out.to&&/再到|再去|然后到|然后去/.test(out.to)){const parts=out.to.split(/再到|再去|然后到|然后去/);out.to=parts.pop();via.push(...parts);}
+ const viaEn=t.match(new RegExp('\\b(?:via|through|passing(?:\\s+by)?|stopping\\s+(?:at|by)|stop\\s+(?:at|by)|with\\s+(?:a\\s+)?stops?\\s+at)\\s+(.+?)(?=\\s+(?:to|towards?|from|ending|end|finish|in\\s+(?:about\\s+|under\\s+)?\\d|for\\s+\\d|before|after)\\b|[.;!?。；！？]|$)','i'));
+ if(viaEn)via.push(...viaEn[1].split(/\s*[,，]\s*(?:and\s+|then\s+)?|\s+and\s+(?:then\s+)?|\s+then\s+/i));
+ const viaZh=t.match(/(?:途经|经过|路过|中间去|顺便去|顺路去)\s*(.+?)(?=[，,。.;；！？!?]|再到|再去|然后|最后|$)/);
+ if(viaZh)via.push(...viaZh[1].split(/[、，,]|和|及|与/));
  out.from=clean(out.from);out.to=clean(out.to);
+ const seen=new Set([normName(out.from||''),normName(out.to||'')]);
+ out.via=via.map(clean).filter(v=>v&&!seen.has(normName(v))&&seen.add(normName(v))).slice(0,8);
  return out;
 }
-const liveEnds={timer:0,seq:0,last:{start:'',end:''}};
+const liveEnds={timer:0,seq:0,last:{start:'',end:'',via:''},ordered:false};
+/** Stops recognised in the text replace the previous text stops; stops the user added by hand stay. Typed order is
+    the visiting order (only set when the text names two or more). */
+function setTextStops(places){
+ const keep=journey.named.filter(n=>n.src!=='text');
+ const added=places.filter(p=>!keep.some(n=>n.place.id===p.id)&&!journey.removed.has(p.id)&&(typeof inRoutingCoverage!=='function'||inRoutingCoverage(p)))
+  .map(p=>({place:p,required:true,order:null,visitMin:VISIT_MIN[p.cat]??20,visitEstimated:true,src:'text'}));
+ journey.named=[...keep,...added];
+ if(added.length>=2){journey.named.forEach((n,k)=>n.order=k+1);liveEnds.ordered=true;}
+ else if(liveEnds.ordered){journey.named.forEach(n=>n.order=null);liveEnds.ordered=false;}
+ if(journey.named.length){journey.active=true;if(journey.endMode==='fixed'&&!getPlace('end'))setEndMode('open');}
+ if(typeof renderJourneyPanel==='function')renderJourneyPanel();
+ syncMapData();
+ document.dispatchEvent(new CustomEvent('strollane:ends-changed',{detail:{kind:'stops',source:'text'}}));
+}
 async function applyLiveEnds(text){
- const seq=++liveEnds.seq,{from,to}=extractEnds(text);
+ const seq=++liveEnds.seq,{from,to,via}=extractEnds(text);
+ const viaKey=via.map(normName).join('|');
+ if(viaKey!==liveEnds.last.via){
+  const found=[];
+  for(const name of via){
+   const q=ZH_PLACES[name]||name,p=await findNamedPlace(q).catch(()=>null);
+   if(seq!==liveEnds.seq)return;
+   if(p&&(normName(p.name).includes(normName(q))||normName(q).includes(normName(p.name))))found.push(p);
+  }
+  liveEnds.last.via=viaKey;
+  if(found.length||journey.named.some(n=>n.src==='text'))setTextStops(found);
+ }
  for(const [kind,name] of [['start',from],['end',to]]){
   if(!name||normName(name)===normName(liveEnds.last[kind]))continue;
   if(kind==='start'&&LIVE_HERE.test(name)){
