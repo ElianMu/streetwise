@@ -4,7 +4,7 @@ the /api/places, /api/hotels and /api/recommend endpoints, and agent scenarios A
 Run: python3 -m unittest tests.test_tourism
 """
 import json, math, os, pathlib, sys, threading, unittest, urllib.error, urllib.request
-from datetime import datetime
+from datetime import date, datetime, timedelta
 from http.server import ThreadingHTTPServer
 from unittest import mock
 
@@ -25,6 +25,8 @@ BRYANT = {'lat': 40.7536, 'lon': -73.9832, 'name': 'Bryant Park'}
 MADISON_SQ = {'lat': 40.7420, 'lon': -73.9880, 'name': 'Madison Square Park'}
 MET = {'lat': 40.7794, 'lon': -73.9632, 'name': 'The Met'}
 WED_NOON = '2026-10-21T12:00:00-04:00'
+# hotel stays must start in the future (providers.validate_stay rejects past check-ins), so keep them relative to today
+STAY_IN, STAY_OUT = (date.today() + timedelta(days=30)).isoformat(), (date.today() + timedelta(days=32)).isoformat()
 
 
 def fake_menu(status):
@@ -154,7 +156,7 @@ class D_Providers(unittest.TestCase):
     def test_without_keys_everything_is_blocked(self):
         with mock.patch.dict(os.environ, NO_KEYS), mock.patch.object(providers, '_http', side_effect=AssertionError('no call without a key')):
             r = providers.ratings(self.PLACE)
-            rooms = providers.hotel_rooms(self.PLACE, '2026-11-01', '2026-11-03', 2)
+            rooms = providers.hotel_rooms(self.PLACE, STAY_IN, STAY_OUT, 2)
         self.assertEqual(r['status'], 'blocked_by_provider_access'); self.assertEqual(r['ratings'], [])
         self.assertEqual(rooms['status'], 'blocked_by_provider_access'); self.assertEqual(rooms['rooms'], [])
 
@@ -222,7 +224,7 @@ class E_Scenarios(unittest.TestCase):
     def test_D_hotel_rooms_and_budget_are_blocked_not_invented(self):
         h = next(x for x in S.search(BRYANT, ['hotels'], radius_m=800, limit=20))
         with mock.patch.dict(os.environ, NO_KEYS):
-            r = providers.hotel_rooms(h, '2026-11-01', '2026-11-03', 2)
+            r = providers.hotel_rooms(h, STAY_IN, STAY_OUT, 2)
         self.assertEqual((r['status'], r['rooms']), ('blocked_by_provider_access', []))
         self.assertNotRegex(json.dumps(r), r'\$\d')
 
@@ -294,7 +296,7 @@ class G_Endpoints(unittest.TestCase):
         hid = d['results'][0]['index_id']
         code, h = self.get('/api/places/' + hid)
         self.assertEqual((code, h['category']), (200, 'hotels'))
-        self.assertEqual(self.get(f'/api/hotels/{hid}/rooms?checkin=2026-11-01&checkout=2026-11-03&guests=2')[1]['status'], 'blocked_by_provider_access')
+        self.assertEqual(self.get(f'/api/hotels/{hid}/rooms?checkin={STAY_IN}&checkout={STAY_OUT}&guests=2')[1]['status'], 'blocked_by_provider_access')
         self.assertEqual(self.get(f'/api/places/{hid}/ratings')[1]['status'], 'blocked_by_provider_access')
 
     def test_slash_ids_and_bad_input(self):

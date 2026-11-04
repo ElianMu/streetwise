@@ -872,7 +872,7 @@ button:focus-visible,select:focus-visible,textarea:focus-visible,input:focus-vis
 .install-banner-btn{border-radius:var(--r-sm)}
 /* Navigation: the active step is the one place the signal colour leads */
 .nav-top,.nav-bottom{background:rgba(17,17,17,.96);border:1px solid var(--line)}
-.nav-arrow{background:var(--signal);color:var(--accent-ink);border-radius:var(--r-md)}
+.nav-arrow{background:var(--accent);color:var(--accent-ink);border-radius:var(--r-md)}
 .nav-dist,.nav-stats strong{font-family:var(--font-sans);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
 /* AR guidance stays in the signal colour (visibility on a camera image), with a restrained glow */
 .ar-chevrons i{background:var(--signal);filter:drop-shadow(0 0 6px rgba(216,243,101,.45))}

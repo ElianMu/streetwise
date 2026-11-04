@@ -486,8 +486,7 @@ function applyMapTheme(m,theme){
   const A=(window.UrbanStyle&&UrbanStyle.T.area)||null;
   if(A){set('udg-green-fill','fill-color',theme==='light'?'#CFDCC6':A.park.fill);set('udg-green-line','line-color',theme==='light'?'#93AE88':A.park.line);}
   set('udg-buildings-line','line-color',theme==='light'?'#C9C8C0':'#2C2C2A');
-  document.documentElement.dataset.mapTheme=theme;
-  document.querySelectorAll('button[data-map-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mapTheme===theme)));
+  applyUiTheme(theme);
   if(typeof applyBuildingTheme==='function')try{applyBuildingTheme();}catch(e){}
 }
 document.addEventListener('click',e=>{
@@ -497,8 +496,15 @@ document.addEventListener('click',e=>{
 });
 function setMapTheme(theme){
   state.mapTheme=theme==='light'?'light':'dark';try{localStorage.setItem('strollane.mapTheme',state.mapTheme);}catch(e){}
+  applyUiTheme(state.mapTheme); // the interface follows at once, even before the map has loaded
   if(state.map&&state.mapReady)applyMapTheme(state.map,state.mapTheme);
-  document.querySelectorAll('button[data-map-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mapTheme===state.mapTheme)));
+}
+/** The interface follows the map theme: light-theme.css restyles everything under html[data-map-theme="light"];
+    the browser chrome (Safari's bar / Android's status bar) takes the page colour too. */
+function applyUiTheme(theme){
+  const root=document.documentElement;root.dataset.mapTheme=theme==='light'?'light':'dark';
+  const meta=document.querySelector('meta[name="theme-color"]');if(meta)meta.setAttribute('content',theme==='light'?'#FFFFFF':'#0B0B0B');
+  document.querySelectorAll('button[data-map-theme]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.mapTheme===root.dataset.mapTheme)));
 }
 /** Map padding for "show the whole route": on phones the request card covers the top and the results sheet the
  * bottom, so the route is framed in the band of map that is actually visible (Google/Apple Maps behaviour);
