@@ -1,5 +1,32 @@
 # Mobile Implementation Report
 
+## Round 18: multi-stop walks — From → Stops → To
+
+The planner already supported stops (`journey.named` → `planJourney` → `/api/itinerary`), but the interface hid them:
+From / To showed only two ends, the stop search sat below the Plan button, and typed stops were not recognised.
+
+- **Requests with stops are recognised while typing** (`journey.js` `extractEnds().via`, `setTextStops()`), in the
+  order typed:
+  - English: "from A to B via C and D", "stopping at C, D then E", "walk through C to B", "from A to B to C to D";
+  - Chinese: "从A出发，途经B和C，到D", "从A到B再到C".
+- Each stop is resolved with `findNamedPlace()`; a name that does not resolve is not added.
+- Editing the text replaces the stops it named. Stops added by hand stay.
+- Two or more typed stops are visited in the typed order ("Keep this order").
+- **Phone home block:** From, Stop 1, Stop 2, …, To. Up to three rows are shown, then "+N more stops". A "＋ Add
+  stop" button opens the Plan view straight at the stop search.
+- **Plan view (all screens):** FROM → **STOPS** (list with order ↑, remove ×, required/optional, visit minutes, and
+  the add-stop search) → TO. The section further down is now "Discovery": interests and found places.
+- Removing or reordering a stop updates the home block and the map at once.
+
+**Tests:** new `tests/mobile-v2/multi-stop.js` 10/10, covering:
+- typed English and Chinese stops in order, and text edits replacing them;
+- "+ Add stop" opening the stop search;
+- the From → Stops → To order in the Plan view;
+- stops added and removed by hand, and "+N more";
+- a real routed plan visiting the stops in order.
+
+`live-ends.js` 13/13.
+
 ## Round 17: start = your location; From/To follow the request as you type; one "01 / Refine your walk"
 
 **1. Default start = the user's location.**

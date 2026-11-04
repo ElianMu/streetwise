@@ -35,7 +35,7 @@ function addNamedStop(p,required=true){
  if(!inRoutingCoverage(p))return toast(`${p.name} is outside walking-route coverage (Manhattan); it cannot be routed.`);
  journey.removed.delete(p.id);journey.named.push({place:p,required,order:null,visitMin:VISIT_MIN[p.cat]??20,visitEstimated:true});journey.active=true;
  if(journey.endMode==='fixed'&&!getPlace('end'))setEndMode('open');
- renderJourneyPanel();syncMapData();toast(`Added ${p.name}. Plan My Walk to route it.`);
+ renderJourneyPanel();syncMapData();document.dispatchEvent(new CustomEvent('strollane:ends-changed',{detail:{kind:'stops'}}));toast(`Added ${p.name}. Plan My Walk to route it.`);
 }
 function renderJourneyPanel(){
  const root=$('journeyStops');if(!root)return;
@@ -43,21 +43,27 @@ function renderJourneyPanel(){
  const end={fixed:getPlace('end')?.name||'destination not set',open:'flexible end',round:'back to start',hotel:journey.hotel?`back to ${journey.hotel.name}`:'back to hotel (not set)'}[journey.endMode];
  const planned=journey.plan?.stops.filter(s=>s.role!=='end')||[];
  root.innerHTML=`<div class="js-summary">${chips.length?chips.map(c=>`<span class="intent-tag">${esc(c)}</span>`).join(''):'<span class="soft-copy">No discovery request yet. Describe what you want, or add stops.</span>'}</div>
-  <p class="js-end">From <strong>${esc(getPlace('start')?.name||'start not set')}</strong> · to <strong>${esc(end)}</strong></p>
-  ${journey.named.length?`<ol class="js-list">${journey.named.map((n,i)=>`<li><span class="js-name">${esc(n.place.name)}<small>${esc(n.place.category||'')}${n.place.borough&&n.place.borough!=='Manhattan'?' · outside route coverage':''}</small></span>
-   <span class="js-ctl"><button type="button" data-js-req="${i}" title="Required or optional" aria-pressed="${n.required}">${n.required?'Required':'Optional'}</button>
-   <label title="Visit minutes (estimate, editable)"><input type="number" min="0" step="5" value="${n.visitMin}" data-js-visit="${i}" aria-label="Visit minutes for ${esc(n.place.name)}">min</label>
-   <button type="button" data-js-up="${i}" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" data-js-x="${i}" aria-label="Remove">×</button></span></li>`).join('')}</ol>
-   <label class="constraint-check"><input type="checkbox" id="jsKeepOrder" ${journey.named.some(n=>n.order!=null)?'checked':''}> Keep this order</label>`:''}
+  ${$('stopList')?'':`<p class="js-end">From <strong>${esc(getPlace('start')?.name||'start not set')}</strong> · to <strong>${esc(end)}</strong></p>`}
   ${planned.length&&!journey.named.length?`<p class="soft-copy">Planned stops are listed under “Your city walk” on the right.</p>`:''}
   ${journey.lastFound?foundListHtml():''}`;
- root.querySelectorAll('[data-js-req]').forEach(b=>b.addEventListener('click',()=>{const n=journey.named[+b.dataset.jsReq];n.required=!n.required;renderJourneyPanel();}));
- root.querySelectorAll('[data-js-visit]').forEach(inp=>inp.addEventListener('change',()=>{const n=journey.named[+inp.dataset.jsVisit],v=Number(inp.value);if(Number.isFinite(v)&&v>=0&&v<=600){n.visitMin=v;n.visitEstimated=false;}else inp.value=n.visitMin;}));
- root.querySelectorAll('[data-js-up]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.jsUp;[journey.named[i-1],journey.named[i]]=[journey.named[i],journey.named[i-1]];if(journey.named.some(n=>n.order!=null))journey.named.forEach((n,k)=>n.order=k+1);renderJourneyPanel();}));
- root.querySelectorAll('[data-js-x]').forEach(b=>b.addEventListener('click',()=>{const n=journey.named.splice(+b.dataset.jsX,1)[0];journey.removed.add(n.place.id);renderJourneyPanel();syncMapData();}));
+ // the stops themselves sit between From and To in the Plan view (#stopList), in visiting order
+ const list=$('stopList')||root;
+ const listHtml=`${journey.named.length?`<ol class="js-list">${journey.named.map((n,i)=>`<li><span class="js-name">${esc(n.place.name)}<small>${esc(n.place.category||'')}${n.place.borough&&n.place.borough!=='Manhattan'?' · outside route coverage':''}</small></span>
+    <span class="js-ctl"><button type="button" data-js-req="${i}" title="Required or optional" aria-pressed="${n.required}">${n.required?'Required':'Optional'}</button>
+    <label title="Visit minutes (estimate, editable)"><input type="number" min="0" step="5" value="${n.visitMin}" data-js-visit="${i}" aria-label="Visit minutes for ${esc(n.place.name)}">min</label>
+    <button type="button" data-js-up="${i}" aria-label="Move up" ${i?'':'disabled'}>↑</button><button type="button" data-js-x="${i}" aria-label="Remove">×</button></span></li>`).join('')}</ol>
+    <label class="constraint-check"><input type="checkbox" id="jsKeepOrder" ${journey.named.some(n=>n.order!=null)?'checked':''}> Keep this order</label>`:''}`;
+ if(list===root)root.insertAdjacentHTML('beforeend',listHtml);else list.innerHTML=listHtml;
+ if($('stopsCount'))$('stopsCount').textContent=journey.named.length?`${journey.named.length} STOP${journey.named.length===1?'':'S'}`:'';
+ const ctl=list===root?root:list.parentNode;
+ ctl.querySelectorAll('[data-js-req]').forEach(b=>b.addEventListener('click',()=>{const n=journey.named[+b.dataset.jsReq];n.required=!n.required;renderJourneyPanel();}));
+ ctl.querySelectorAll('[data-js-visit]').forEach(inp=>inp.addEventListener('change',()=>{const n=journey.named[+inp.dataset.jsVisit],v=Number(inp.value);if(Number.isFinite(v)&&v>=0&&v<=600){n.visitMin=v;n.visitEstimated=false;}else inp.value=n.visitMin;}));
+ ctl.querySelectorAll('[data-js-up]').forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.jsUp;[journey.named[i-1],journey.named[i]]=[journey.named[i],journey.named[i-1]];if(journey.named.some(n=>n.order!=null))journey.named.forEach((n,k)=>n.order=k+1);renderJourneyPanel();document.dispatchEvent(new CustomEvent('strollane:ends-changed',{detail:{kind:'stops'}}));}));
+ ctl.querySelectorAll('[data-js-x]').forEach(b=>b.addEventListener('click',()=>{const n=journey.named.splice(+b.dataset.jsX,1)[0];journey.removed.add(n.place.id);renderJourneyPanel();syncMapData();document.dispatchEvent(new CustomEvent('strollane:ends-changed',{detail:{kind:'stops'}}));}));
  $('jsKeepOrder')?.addEventListener('change',e=>{journey.named.forEach((n,k)=>n.order=e.target.checked?k+1:null);});
  bindFoundList(root);
- $('journeyCount').textContent=journey.named.length||planned.length?`${journey.named.length||planned.length} STOP${(journey.named.length||planned.length)===1?'':'S'}`:'';
+ // the stop count now sits on the Stops field (between From and To); this section only counts planned stops
+ $('journeyCount').textContent=$('stopList')?(planned.length&&!journey.named.length?`${planned.length} PLANNED`:''):(journey.named.length||planned.length?`${journey.named.length||planned.length} STOP${(journey.named.length||planned.length)===1?'':'S'}`:'');
 }
 function foundListHtml(){
  const f=journey.lastFound;

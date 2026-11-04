@@ -1018,3 +1018,19 @@ body[data-mview="typing"] .m-route-ends .m-context{display:flex}
  .left-panel .sheet-handle,.right-panel .sheet-handle{min-height:32px}
  .left-panel .sheet-toggle,.right-panel .sheet-toggle{top:3px;padding:6px 8px}
 }
+/* Stops between From and To — Plan view (all screens) and the phone home block */
+.stops-box{margin:10px 0 6px}
+.stops-box .field-top label small{font-weight:500;letter-spacing:0;text-transform:none;color:var(--text-tertiary);margin-left:6px}
+.stops-box .stop-list:empty{display:none}
+.stops-box .stop-list .js-list{margin:6px 0}
+.m-ft-stops{display:contents}
+.m-ft-stop .m-ft-v{color:var(--text-primary)}
+.m-ft-more .m-ft-v{color:var(--text-secondary);font-size:12px}
+/* key column wide enough for "Stop 1" on one line */
+.m-route-ends .m-ft-row{grid-template-columns:12px 44px 1fr}
+.m-ft-stop .m-ft-k{white-space:nowrap}
+.m-add-stop{display:none}
+@media(max-width:740px){
+ .m-add-stop{display:inline-flex;align-items:center;gap:6px;min-height:36px;margin:4px 0 0;padding:0 10px;border:1px dashed var(--border-strong);border-radius:var(--r-md);background:var(--bg-card);color:var(--text-primary);font-size:13px;font-weight:600}
+ body[data-mview="typing"] .m-add-stop,body[data-mview="results"] .m-add-stop{display:none}
+}
