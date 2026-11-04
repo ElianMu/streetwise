@@ -1,5 +1,26 @@
 # Mobile Implementation Report
 
+## Round 15: crisp top on iPhone, clearer wordmark, lighter card
+
+**Feedback:** the STROLLANE · NYC wordmark was not clear enough, the top of the screen looked blurred when the app was
+opened on a phone, and the card should be more transparent (still with no blur).
+
+**Root cause of the blurred top:** Safari 26 / iOS colour the status-bar area from a `position: fixed` or `sticky`
+element with an opaque background touching the top edge. The phone header was `position: absolute`, and absolutely
+positioned elements are never sampled. iOS therefore fell back to the page content under the status bar, which looks
+blurred.
+
+**Fix (phones):**
+- The header is `position: fixed`: the same box as before, solid `#FFFFFF` / `#0B0B0B`, with no blur and no shadow.
+  It now matches html and body, so iOS tints the status bar with it.
+- Wordmark: 16 px, weight 700, full-contrast text (was 14 px / 600); the separator is clearer.
+- Request card: 72 % opaque (was 86 %), with no blur. Fields, From/To, mic and swap stay opaque.
+
+**Tests:** `design-system.js` 38/38 (fixed header, 16px/700 wordmark, card 65–80 % opaque with opaque fields).
+
+**REAL DEVICE / IPHONE VERIFICATION REQUIRED:** the status-bar tint comes from iOS. In the Home Screen app, use an icon
+re-added after round 12.
+
 ## Round 14: solid header again; translucent but readable request card
 
 **Feedback:** the STROLLANE · NYC header should be solid, as it was originally. The transparency belongs to the request
