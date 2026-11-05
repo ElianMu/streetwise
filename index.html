@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=58" />
+  <link rel="stylesheet" href="./styles.css?v=59" />
 </head>
 <body>
 <div class="site-shell">
@@ -142,7 +142,6 @@
           <div id="mComposerSlot" class="m-composer-slot"></div>
           <div class="m-composer-row"><span id="mMicSlot" class="m-mic-slot"></span><button type="button" id="mCreate" class="m-create">Create My Walk <span aria-hidden="true">→</span></button></div>
           <div class="m-route-ends"><button type="button" id="mContext" class="m-context" aria-label="Start and destination — open Plan walk"><span class="m-ft"><span class="m-ft-row"><span class="place-dot start" aria-hidden="true"></span><span class="m-ft-k">From</span><span id="mContextFrom" class="m-ft-v">…</span></span><span id="mContextStops" class="m-ft-stops"></span><span class="m-ft-row"><span class="place-dot end" aria-hidden="true"></span><span class="m-ft-k">To</span><span id="mContextTo" class="m-ft-v">…</span></span></span><span id="mContextText" class="sr-only">From …</span><span class="m-context-edit" aria-hidden="true">Edit</span></button><button type="button" class="m-swap swap-ends" aria-label="Swap start and destination"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 4v15m0 0-3.5-3.5M8 19l3.5-3.5M16 20V5m0 0-3.5 3.5M16 5l3.5 3.5"/></svg></button></div>
-          <button type="button" id="mAddStop" class="m-add-stop"><span aria-hidden="true">＋</span> Add stop</button>
           <div id="mStatus" class="m-status hidden" role="status" aria-live="polite"></div>
         </div>
         <div class="m-composer-compact"><button type="button" id="mCompactEdit" class="m-compact-edit" aria-label="Edit your walk request"><span class="m-compact-spark">✦</span><span id="mCompactText">Your walk</span></button><button type="button" id="mNewWalk" class="m-compact-new" aria-label="Start a new walk">New</button></div>
@@ -292,7 +291,7 @@
 <script src="./explore-map.js?v=29"></script>
 <script src="./explore-analytics.js?v=29"></script>
 <script src="./center-map.js?v=31"></script>
-<script src="./mobile-ui.js?v=26"></script>
+<script src="./mobile-ui.js?v=27"></script>
 <script src="./pwa-register.js?v=2"></script>
 </body>
 </html>

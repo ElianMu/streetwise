@@ -1,5 +1,20 @@
 # Mobile Implementation Report
 
+## Round 20: stops are added in Edit, not on the control panel
+
+- The "＋ Add stop" button under From / To on the phone control panel is gone. Stops are added, reordered and removed
+  in **Edit** (the Plan walk view), whose STOPS section sits between FROM and TO.
+- The control panel shows the stops as **one compact "Via" line** between From and To, for any number of stops:
+  - one stop: "Via · Times Square";
+  - two or more: "Via · 3 stops · Times Square, Grand Central…", truncated with an ellipsis.
+  - With no stops, the panel shows only From and To.
+- Screen readers still get the whole path ("Bryant Park → Times Square → … → Columbia University").
+- No change to how stops are recognised from the request or planned.
+
+**Tests:** `multi-stop.js` 11/11 checks the panel has no Add-stop button, the single Via line (1, 2 and 4 stops),
+and that Edit shows the stop search between From and To. flows 94/94, design-system 38, live-ends 13,
+iphone-shell 127, ios-standalone-gap 103, input-keyboard 61.
+
 ## Round 19: default destination Columbia University (W 116th St)
 
 - The preset destination is now **Columbia University**: the main gate at Broadway & W 116th St (College Walk),
