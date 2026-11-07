@@ -438,7 +438,7 @@ function updateLegend(){ renderExperienceLegend(); }
  * void; the road hierarchy gets more contrast; CARTO's own flat building fill is hidden because
  * udg-buildings-fill (real PLUTO footprints, see urban-layers.js) draws richer 3D buildings on top. */
 function tuneBasemap(m){
-  applyMapTheme(m,state.mapTheme||'dark');
+  applyMapTheme(m,state.mapTheme||'light');
   for(const id of ['building','building-top'])if(m.getLayer(id))m.setLayoutProperty(id,'visibility','none');
 }
 /** Editorial dark cartography (round 9) and a daylight variant over the SAME CARTO tiles and the same data — only
@@ -492,8 +492,10 @@ function applyMapTheme(m,theme){
 document.addEventListener('click',e=>{
   // buttons only: <html> also carries data-map-theme (the active theme), and must not turn every click into a switch
   const b=e.target.closest?.('button[data-map-theme],button[data-map-theme-toggle]');if(!b)return;
-  setMapTheme(b.hasAttribute('data-map-theme-toggle')?(state.mapTheme==='light'?'dark':'light'):b.dataset.mapTheme);
+  setMapTheme(b.hasAttribute('data-map-theme-toggle')?(currentMapTheme()==='light'?'dark':'light'):b.dataset.mapTheme);
 });
+/** Light is the default; dark only when the visitor chose it (saved in localStorage). */
+function currentMapTheme(){return state.mapTheme||(document.documentElement.dataset.mapTheme==='dark'?'dark':'light');}
 function setMapTheme(theme){
   state.mapTheme=theme==='light'?'light':'dark';try{localStorage.setItem('strollane.mapTheme',state.mapTheme);}catch(e){}
   applyUiTheme(state.mapTheme); // the interface follows at once, even before the map has loaded
@@ -535,7 +537,7 @@ function setupMap(){
     m.addControl(new maplibregl.NavigationControl({showCompass:true,visualizePitch:true}), 'bottom-right');
     m.on('load',()=>{
       state.mapReady=true;$('mapFallback').classList.add('hidden');m.fitBounds(MANHATTAN_BOUNDS,{padding:24,duration:0,maxZoom:11.1});
-      try{state.mapTheme=localStorage.getItem('strollane.mapTheme')==='light'?'light':'dark';}catch(e){state.mapTheme='dark';}
+      try{state.mapTheme=localStorage.getItem('strollane.mapTheme')==='dark'?'dark':'light';}catch(e){state.mapTheme='light';}
       tuneBasemap(m);
       for(const id of ['nyc-roads','nyc-trees','nyc-landmarks','candidate-routes','selected-route','points','route-pois'])m.addSource(id,{type:'geojson',data:emptyFC()});
       m.addLayer({id:'road-underlay',type:'line',source:'nyc-roads',paint:{'line-color':'#0B0B0B','line-width':5.3,'line-opacity':.85}});
