@@ -1077,3 +1077,14 @@ body[data-mview="typing"] .m-route-ends .m-context{display:flex}
 .walk-options-toggle[aria-expanded="true"] .walk-options-chev{transform:rotate(180deg)}
 @media(min-width:741px){.walk-options:not(.open){display:none}.walk-options.open{margin-top:8px}}
 @media(max-width:740px){.route-pick{padding:13px 13px 10px}.rc-name{font-size:15.5px}.rc-row{grid-template-columns:1fr 68px}.rs-map{width:68px;height:68px}.route-more{margin-top:4px}}
+/* Route photos (route-photos.js): real place photos from Wikimedia Commons, each with author and licence */
+.rc-photos{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;padding:0 14px 12px}
+.rp-photo{margin:0;min-width:0}
+.rp-photo img{display:block;width:100%;height:64px;object-fit:cover;border-radius:var(--r-sm);background:var(--bg-input)}
+.rp-photo figcaption{display:flex;flex-direction:column;gap:1px;margin-top:4px;font-size:10px;line-height:1.3;min-width:0}
+.rp-photo figcaption strong{font-weight:600;color:var(--text-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rp-photo figcaption a{color:var(--text-tertiary);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rp-photo figcaption a:hover{color:var(--text-secondary);text-decoration:underline}
+.along-photos{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:4px;scroll-snap-type:x mandatory}
+.along-photos .rp-photo{flex:0 0 132px;scroll-snap-align:start}
+.along-photos .rp-photo img{height:92px}

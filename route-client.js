@@ -127,19 +127,27 @@ function renderRouteCards(){
   x.label=st.name||r.route_name; // the map label, navigation and summary use the same name as the card
   const chips=(st.highlights||[]).map(h=>`<span>${esc(h)}</span>`).join('');
   const heat=weatherActive&&r.weather?`<span class="rc-note">Weather: ${Math.round(r.weather.heat_exposure_share*100)}% of this walk in the sun (tree-cover proxy)</span>`:'';
-  return `<article class="route-card${selected?' selected':''}${!feasible?' over-budget':''}${extra?' extra':''}${extra&&!routeStory.showAll&&!selected?' hidden':''}" data-route="${esc(x.id)}"><button type="button" class="route-pick" data-pick="${esc(x.id)}" aria-pressed="${selected}">${st.tag?`<span class="rc-tag">${esc(st.tag)}</span>`:''}<strong class="rc-name">${esc(st.name||r.route_name)}</strong>${st.sentence?`<span class="rc-sentence">${esc(st.sentence)}</span>`:''}<span class="rc-row"><span class="rc-col"><span class="rc-meta"><strong>${(r.distance_m/1000).toFixed(1)} km</strong><span>${Math.ceil(r.estimated_duration_min)} min</span></span>${chips?`<span class="rc-chips">${chips}</span>`:''}</span>${extra?'':storyPreviewSvg(r,shownRaw)}</span>${st.why?`<span class="rc-why">${esc(st.why)}</span>`:''}${st.note?`<span class="rc-note warn">${esc(st.note)}</span>`:''}${heat}</button>${routeCardDetails(r)}</article>`;
+  return `<article class="route-card${selected?' selected':''}${!feasible?' over-budget':''}${extra?' extra':''}${extra&&!routeStory.showAll&&!selected?' hidden':''}" data-route="${esc(x.id)}"><button type="button" class="route-pick" data-pick="${esc(x.id)}" aria-pressed="${selected}">${st.tag?`<span class="rc-tag">${esc(st.tag)}</span>`:''}<strong class="rc-name">${esc(st.name||r.route_name)}</strong>${st.sentence?`<span class="rc-sentence">${esc(st.sentence)}</span>`:''}<span class="rc-row"><span class="rc-col"><span class="rc-meta"><strong>${(r.distance_m/1000).toFixed(1)} km</strong><span>${Math.ceil(r.estimated_duration_min)} min</span></span>${chips?`<span class="rc-chips">${chips}</span>`:''}</span>${extra?'':storyPreviewSvg(r,shownRaw)}</span>${st.why?`<span class="rc-why">${esc(st.why)}</span>`:''}${st.note?`<span class="rc-note warn">${esc(st.note)}</span>`:''}${heat}</button>${extra?'':cardPhotos(r,st)}${routeCardDetails(r)}</article>`;
  }).join('');
  root.querySelectorAll('[data-pick]').forEach(el=>el.addEventListener('click',()=>selectRoute(el.dataset.pick)));
  if(more){const n=story.extra.length;more.classList.toggle('hidden',!n);more.textContent=routeStory.showAll?'Fewer routes':`More routes (${n})`;more.setAttribute('aria-expanded',String(routeStory.showAll));}
  const tech=$('routeTechNote');if(tech)tech.textContent=`Routes are computed on the OSM pedestrian graph (${planner.routeResponse?.network_version||''}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${planner.routeResponse?.score_version||''}), shared with Explore Urban Data. ${constraintSummary()}`;
  renderAlongWalk();
+ if(typeof photosLoad==='function'){const sel=routes.find(x=>x.id===state.activeRoute);const want=[...shownRaw,...(sel?[sel.raw]:[])].flatMap(r=>(storyPlacesNear(r)||[]).slice(0,10));photosLoad(want,()=>renderRouteCards());}
  if(typeof renderNavStart==='function')renderNavStart();
+}
+/** Up to 3 photos of real places this walk passes (its "via" place first), each with author and licence. */
+function cardPhotos(r,st){
+ if(typeof photosFor!=='function')return'';
+ const places=(storyPlacesNear(r)||[]).slice(0,10),first=places.filter(p=>p.name===st.via),rest=places.filter(p=>p.name!==st.via);
+ return photoFigures(photosFor([...first,...rest]).slice(0,3),'rc-photos');
 }
 /** "Along this walk": how the selected route feels, stretch by stretch (from its own edge scores). */
 function renderAlongWalk(){
  const box=$('alongWalk');if(!box)return;
  const x=state.routes.find(r=>r.id===state.activeRoute),lines=x&&typeof storyStretches==='function'?storyStretches(x.raw):[];
- box.innerHTML=lines.map(l=>`<p>${esc(l)}</p>`).join('');box.classList.toggle('hidden',!lines.length);
+ const photos=x&&typeof photosFor==='function'?photosFor((storyPlacesNear(x.raw)||[]).slice(0,10)).slice(0,6):[];
+ box.innerHTML=lines.map(l=>`<p>${esc(l)}</p>`).join('')+(photos.length?photoFigures(photos,'along-photos'):'');box.classList.toggle('hidden',!lines.length&&!photos.length);
 }
 function profileRows(r){
  return DIMENSIONS.map((d,i)=>{const v=r.dimension_scores[d.name],c=r.data_coverage.by_dimension[d.name],pref=planner.origins[d.name]!=='default';
