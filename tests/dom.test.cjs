@@ -4,7 +4,7 @@ const root=path.join(__dirname,'..'),html=fs.readFileSync(path.join(root,'index.
 const dom=new JSDOM(html,{runScripts:'outside-only',url:'http://localhost:8080'}),w=dom.window;
 w.fetch=async()=>{throw new Error('Network intentionally blocked in DOM test')};w.HTMLElement.prototype.scrollIntoView=function(){};w.AbortSignal.timeout=()=>new w.AbortController().signal;
 const vm=require('vm'),context=dom.getInternalVMContext();
-for(const file of ['experience-core.js','api-config.js','weather.js','places.js','opening-hours.js','app.js','route-client.js','weather-ui.js','journey.js','journey-ui.js','voice.js','nav-engine.js','nav-ui.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','explore-analytics.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
+for(const file of ['experience-core.js','api-config.js','weather.js','places.js','opening-hours.js','app.js','route-story.js','route-client.js','weather-ui.js','journey.js','journey-ui.js','voice.js','nav-engine.js','nav-ui.js','urban-geo.js','urban-style.js','urban-layers.js','explore-map.js','explore-analytics.js','center-map.js'])vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),context);
 const run=s=>vm.runInContext(s,context);
 (async()=>{
  // flatMapBounds: a pitch-independent query box, checked against a real map.getBounds() reading captured live

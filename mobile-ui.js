@@ -442,7 +442,9 @@
   // (the chip, the Agent's parse of the request, or a dimension slider).
   function renderQuickPrefs() {
     if (typeof planner === 'undefined') return;
-    for (const root of [$('quickPrefs')]) {
+    // one chip row at a time: Customize on the phone, under the sentence box on the desktop
+    const other = mq.matches ? $('deskChips') : $('quickPrefs'); if (other) other.innerHTML = '';
+    for (const root of [mq.matches ? $('quickPrefs') : $('deskChips')]) {
       if (!root) continue;
       root.innerHTML = '';
       for (const q of QUICK_DIMS) {
@@ -453,6 +455,10 @@
       if (typeof applyJourney === 'function') root.appendChild(chip('Coffee stop', coffeeOn(), 'Adds a café stop through the journey planner (real NYC place data)', toggleCoffee));
     }
   }
+  // the same chips under the desktop sentence box (the phone shows them in Customize)
+  window.strollaneRenderChips = renderQuickPrefs;
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', renderQuickPrefs); else setTimeout(renderQuickPrefs, 0);
+  mq.addEventListener('change', () => renderQuickPrefs());
   function chip(label, on, title, onClick) {
     const b = document.createElement('button'); b.type = 'button'; b.className = 'quick-pref'; b.textContent = label;
     b.title = title; b.setAttribute('aria-pressed', String(on));
@@ -557,7 +563,7 @@
   let routeSwipeWired = false;
   let routeScrollTimer = null;
   function renderRouteDots() {
-    const cards = $('routeCards').querySelectorAll('.route-card');
+    const cards = $('routeCards').querySelectorAll('.route-card:not(.hidden)'); // "More routes" extras count only once shown
     const dots = $('routeDots');
     if (!dots) return;
     dots.classList.toggle('hidden', !mq.matches || cards.length < 2);
@@ -570,7 +576,7 @@
       const root = $('routeCards'); if (!mq.matches || !root) return;
       const mid = root.scrollLeft + root.clientWidth / 2;
       let closest = null, closestDist = Infinity;
-      root.querySelectorAll('.route-card').forEach((c) => {
+      root.querySelectorAll('.route-card:not(.hidden)').forEach((c) => {
         const d = Math.abs((c.offsetLeft + c.offsetWidth / 2) - mid);
         if (d < closestDist) { closestDist = d; closest = c; }
       });

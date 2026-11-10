@@ -226,10 +226,12 @@ function localJourney(q){
  if(/from (my |the )?hotel|start (at|from) (my |the )?hotel|从(我的)?酒店出发/i.test(q))j.origin='hotel';
  else if(/from (here|my location|where i am)|从这里|从我(现在)?的位置/i.test(q))j.origin='gps';
  const endAt=q.match(/(?:end (?:at|in)|finish (?:at|in)|最后(?:到|去|在))\s*([^,，。.;]+)/i);
+ // "from A to B" / "walk to B" / "从A到B": the same reading the live From / To fields use, so B is the destination, not a stop
+ const ends=extractEnds(q),sameAs=(a,b)=>Boolean(a&&b&&(normName(a).includes(normName(b))||normName(b).includes(normName(a))));
  for(const n of named){
   const before=q.slice(Math.max(0,n.at-14),n.at);
-  if(endAt&&endAt[1].includes(n.name.split(' ')[0])||/最后(到|去|在)\s*$|end (at|in)\s*$|finish (at|in)\s*$/i.test(before)){j.destination=n.name;j.end_mode='fixed';continue;}
-  if(/(from|start (at|from)|从)\s*$/i.test(before)){j.origin=n.name;continue;}
+  if(endAt&&endAt[1].includes(n.name.split(' ')[0])||/最后(到|去|在)\s*$|end (at|in)\s*$|finish (at|in)\s*$/i.test(before)||sameAs(ZH_PLACES[ends.to]||ends.to,n.name)){j.destination=n.name;j.end_mode='fixed';continue;}
+  if(/(from|start (at|from)|从)\s*$/i.test(before)||sameAs(ZH_PLACES[ends.from]||ends.from,n.name)){j.origin=n.name;continue;}
   j.named_stops.push({name:n.name,required:true,order:seqWords?j.named_stops.length+1:null});
  }
  const outing=/(i have|i've got|we have|total|altogether|我有|总共|一共|有)\s*.{0,10}?(hours?|hrs?|minutes?|小时|分钟)/i.test(q)||/(two|three|two and a half)\s+hours to/i.test(q);
@@ -250,7 +252,7 @@ async function warmNameIndex(){
  // notable names only (Wikidata), long enough not to match common words
  localJourney.names=[...new Set(lists.flat().filter(r=>r.wd&&r.name.length>=8).map(r=>r.name))].concat(Object.values(PLACES).map(p=>p.name));
 }
-function journeyIntentPresent(j){return Boolean(j&&(j.interests.length||j.named_stops.length||j.food.length||j.services.length||j.hotel||j.end_mode||j.origin==='hotel'||Object.keys(j.more||{}).length||j.remove.length||(j.outing_minutes!=null)));}
+function journeyIntentPresent(j){return Boolean(j&&(j.interests.length||j.named_stops.length||j.food.length||j.services.length||j.hotel||(j.end_mode&&j.end_mode!=='fixed')||j.origin==='hotel'||Object.keys(j.more||{}).length||j.remove.length||(j.outing_minutes!=null)));}
 
 /* ---------- state updates (multi-turn: merge, never wipe what is already settled) ---------- */
 async function applyJourney(j){
@@ -275,10 +277,14 @@ async function applyJourney(j){
  for(const f of j.food){const same=journey.food.findIndex(x=>x.category===f.category);if(same>=0)journey.food[same]=f;else journey.food.push(f);
   changes.push(f.item?`${f.item} (${f.category})`:f.cuisine?`${f.cuisine} ${f.category}`:f.category);}
  for(const s of j.services){if(!journey.services.some(x=>x.type===s)){journey.services.push({type:s,scope:j.service_scope||'near_start',addAsStop:Boolean(j.service_stop)});changes.push(SERVICE_LABEL[s]+(j.service_stop?' (stop)':''));}}
+ // a stop is a place between the ends: the start or the destination is never also added as a stop
+ const endNames=[j.origin,j.destination,getPlace('start')?.name,journey.endMode==='fixed'?getPlace('end')?.name:null].filter(x=>x&&!['gps','hotel'].includes(x)).map(normName);
  for(const n of j.named_stops){
   if(journey.named.some(x=>normName(x.place.name)===normName(n.name)))continue;
+  if(endNames.includes(normName(n.name)))continue;
   const p=await findNamedPlace(n.name);
   if(!p){if(n.required!==false&&!journey.unresolved.includes(n.name))journey.unresolved.push(n.name);changes.push(`“${n.name}” not found in NYC place data`);continue;}
+  if(journey.named.some(x=>x.place.id===p.id)||endNames.includes(normName(p.name)))continue; // two names for one place ("The Met" / "Metropolitan Museum of Art")
   journey.unresolved=journey.unresolved.filter(name=>normName(name)!==normName(n.name));
   journey.named.push({place:p,required:n.required!==false,order:n.order,visitMin:VISIT_MIN[p.cat]??20,visitEstimated:true});changes.push(`stop: ${p.name}`);
  }
@@ -424,7 +430,10 @@ function journeyTheme(){
  const parts=[...journey.interests.map(i=>INTEREST_LABEL[i]+'s'),...journey.food.map(foodLabel),...journey.named.map(n=>n.place.name)];
  return parts.length?`City walk: ${parts.slice(0,4).join(' · ')}`:'Your City Walk';
 }
-function journeyMode(){return journey.active||journey.named.length>0||journey.endMode!=='fixed';}
+// The itinerary planner is for walks with places in them: stops, places to discover (interests, food, services) or an
+// open / round / hotel end. A plain A→B walk goes to /api/routes, which offers several different routes to choose from.
+// Decided by what the walk holds now (not by an earlier request), so removing the last stop gives the A→B choice back.
+function journeyMode(){return journey.named.some(n=>!journey.removed.has(n.place.id))||journey.endMode!=='fixed'||journey.interests.length>0||journey.food.length>0||journey.services.some(s=>s.addAsStop)||Object.values(journey.extra).some(v=>v>0);}
 
 /* ---------- planning ---------- */
 async function planJourney(isFollowUp=false){

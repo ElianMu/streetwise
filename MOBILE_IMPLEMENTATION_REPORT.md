@@ -1,5 +1,91 @@
 # Mobile Implementation Report
 
+## Round 21: Experience-first results — choose a walk by how it feels
+
+Goal (professor's feedback): people choose a walk by how they want to experience the city, not by reading
+12-dimensional data. The engine, the ranking, the 12 dimension definitions, GIS data and the AI interpretation are
+unchanged; only how results are presented changed, plus one routing fix.
+
+**Step 0: an A→B sentence gets 2–3 routes again.**
+- Before, "Walk from Bryant Park to Union Square" added the destination as a *stop*. The request went to
+  `/api/itinerary`, which returns one route.
+- `journey.js` now reads "from A to B" / "walk to B" / "从A到B" the same way the live From / To fields do
+  (`extractEnds`), so B is the destination.
+- A stop that equals the start or destination is never added; this also covers the AI interpreter.
+- A place listed under two names ("The Met") is added once.
+- `journeyMode()` now looks at what the walk holds right now: stops, places to discover, or an open / round / hotel
+  end. It no longer uses a flag left over from an earlier request. A plain A→B walk goes to `/api/routes`; a walk with
+  stops still goes to `/api/itinerary`.
+
+**Step 1: results told in words** (`route-story.js`, new; reads only engine output and the place index).
+- **2–3 cards:** best match, fastest, and the most different remaining route.
+  - Two routes sharing ≥ 85 % of their length count as one option.
+  - The rest sit under "More routes (n)"; nothing is dropped.
+- **Each card shows:**
+  - **Name:** plain, e.g. "Greenest · via 5th Avenue" or "Fastest · via Broadway".
+  - **One sentence:** compared with the fastest way, e.g. "Greener and closer to cultural venues than the fastest
+    way; about 1 min longer."
+  - a small route-shape preview;
+  - km and minutes;
+  - 2–3 highlights;
+  - **Why it fits you:** e.g. "You asked for nature and quiet: the greenest of the 3 and similar quiet to the
+    fastest."
+  - **Details:** the old numbers (personalized / overall score, coverage, detour, OSM edges, hard limits).
+- **Wording rules:**
+  - Words follow each dimension's sub-indicators (Architecture = landmark proximity, so "closer to landmark
+    buildings").
+  - Comparisons only: ≥ 15 points "much", 5–15 plain, under 5 "similar".
+  - A name superlative needs a lead of ≥ 3 over every other shown route.
+  - A dimension measured on less than 60 % of a route is never claimed.
+  - Access & Safety, Environment and Transit are never used as names, to avoid overclaiming.
+- **"Via" names** use Wikidata-listed parks, museums, historic sites, landmarks or cultural venues within 50 m of the
+  route, from `data/places`. If none fits the name, the route's own main street is used. Street names are written
+  out: "E 17 ST" becomes "East 17th Street".
+- **The map label** of the selected route uses the card's name.
+- **"Along this walk":** 2–3 stretch-by-stretch sentences from the route's own edge scores, e.g. "First 10 min, along
+  5th Avenue: quieter than the rest of the walk."
+- **Technical details:** one folded area that keeps everything else unchanged:
+  - weather and GPS tiles;
+  - ranking text and footnote;
+  - route check;
+  - Why this route, with weights and formula;
+  - weather;
+  - route urban data;
+  - OSM edges;
+  - 12-dimension profile and compare table;
+  - raw street evidence;
+  - methodology.
+- **Desktop left panel:**
+  - The sentence box comes first ("01 / How do you want to walk?").
+  - The phone's quick chips (Architecture, Quiet, Nature, Scenic, Culture, Coffee stop) sit under it.
+  - From / To is step 02.
+  - The walk limits fold into one line, "Up to 100 min · stairs allowed".
+  - "Fine-tune (12 dimensions)" replaces "View all 12 dimensions".
+- **Phone:** the same cards in the swipe row (dots count only the visible cards), then Start Navigation, Refine, Along
+  this walk and Technical details.
+
+**Not changed:** routing engine and ranking, 12 dimensions, interpretation contract, Explore Urban Data, Kepler
+export, navigation and AR (labels unchanged in this step), URLs, brand.
+
+**Tests:**
+- New `tests/mobile-v2/route-cards.js`, 23/23 on desktop and phone:
+  - an A→B sentence calls `/api/routes` and gives 2–3 cards;
+  - every card has a name, a sentence, km and minutes;
+  - no score, coverage or edge count is in the main view;
+  - all of them are still under Details and Technical details;
+  - there is no photo without a credit;
+  - every name and sentence is re-checked against the engine scores;
+  - the map label matches the card;
+  - "More routes" shows every engine route;
+  - "Along this walk" is present;
+  - there are no page errors;
+  - a stop still goes to the itinerary;
+  - removing the stop gives the A→B choice back;
+  - the Chinese "从A到B" works.
+- Other suites: flows 94/94, live-ends 13/13, multi-stop 11/11, iphone-shell 127/127.
+- `tests/dom.test.cjs` now loads `route-story.js`.
+- `test_theme_tokens.py` was updated for the light-by-default head script from PR #63.
+
 ## Round 20: stops are added in Edit, not on the control panel
 
 - The "＋ Add stop" button under From / To on the phone control panel is gone. Stops are added, reordered and removed

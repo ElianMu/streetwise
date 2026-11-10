@@ -157,6 +157,9 @@ function renderPreferenceSummary(){
   ['avoidDetours','stepFree','avoidStairs'].forEach(id=>$(id).checked=planner.constraints[id]);
   $('constraintWarning').classList.toggle('hidden',!planner.constraints.stepFree);
   renderDimensions();
+  // the desktop chip row and the folded walk-options line show the same live state
+  if(typeof window.strollaneRenderChips==='function')window.strollaneRenderChips();
+  if(typeof window.strollaneWalkSummary==='function')window.strollaneWalkSummary();
 }
 // Clearly labelled LIMITED offline preview; an actual LLM is used only through server.py when configured.
 /** Weather intent: 'ask' (a question about comfort, answered without re-routing), 'cooler' (heat term weighted up),
@@ -259,9 +262,14 @@ async function checkInterpreter(){
   }catch(_) {planner.llmConnected=false;planner.llmConfigured=null;}
   $('interpretMode').textContent=planner.llmConnected?'✦ AI CONFIGURED · Connection verified when you plan':planner.llmConfigured===false?'◇ LOCAL PREVIEW · AI backend key is missing or invalid':'◇ AI STATUS UNAVAILABLE · Planning will retry the AI service';
 }
+// Messages written in research notation (scores, formulas, interpreted weights) go to the full log under Technical
+// details; the conversation under the routes keeps the user's words and plain replies (questions, errors, results).
+const TECH_CHAT=/Personalized score|weighted experience|Route scores:|interpretation:|data coverage|OSM edges?|detour penalty|Hard limits used/i;
 function appendChat(role,message){
-  planner.conversations.push({role,content:message});$('conversationSection').classList.remove('hidden');
-  $('chatHistory').innerHTML=planner.conversations.map(m=>`<div class="chat-message ${m.role==='user'?'user-message':'assistant-message'}"><div class="chat-name">${m.role==='user'?'YOU':'✦ STROLLANE'}</div><div class="chat-copy">${esc(m.content)}</div></div>`).join('');
+  planner.conversations.push({role,content:message,tech:role==='assistant'&&TECH_CHAT.test(message)});$('conversationSection').classList.remove('hidden');
+  const row=m=>`<div class="chat-message ${m.role==='user'?'user-message':'assistant-message'}"><div class="chat-name">${m.role==='user'?'YOU':'✦ STROLLANE'}</div><div class="chat-copy">${esc(m.content)}</div></div>`;
+  $('chatHistory').innerHTML=planner.conversations.filter(m=>!m.tech).map(row).join('');
+  if($('chatLog'))$('chatLog').innerHTML=planner.conversations.map(row).join('');
   $('chatHistory').scrollTop=$('chatHistory').scrollHeight;
   if(role==='assistant' && /Selected |No route meets|Pedestrian service unavailable|Route planning failed/.test(message)){
     $('conversationSection').scrollIntoView({block:'end',behavior:'smooth'});
@@ -806,6 +814,12 @@ function setupControls(){
   $('customTime').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitCustomTime();}});
   $('maxDetourPct').addEventListener('change',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=0&&v<=100){planner.maxDetourPct=v;updateRoutesUI()}else{toast('Choose a detour limit from 0 to 100%.');renderPreferenceSummary()}});
   $('generateRoutes').addEventListener('click',()=>handlePlan($('intentText').value,false));
+  // Desktop: the walk limits fold into one line ("Up to 100 min · stairs allowed"); the controls are unchanged inside.
+  const walkSummary=()=>{const el=$('walkOptionsSummary');if(!el)return;const unit=state.distUnit==='mi'?'mi':'km',km=state.maxKm;
+    el.textContent=[`Up to ${state.budget} min`,km!=null?`${unit==='mi'?Math.round(km/1.609344*10)/10:km} ${unit}`:null,planner.constraints.avoidStairs?'avoiding stairs':'stairs allowed',planner.constraints.stepFree?'step-free':null].filter(Boolean).join(' · ');};
+  $('walkOptionsToggle')?.addEventListener('click',()=>{const open=$('walkOptions').classList.toggle('open');$('walkOptionsToggle').setAttribute('aria-expanded',String(open));});
+  for(const id of ['timeValue','distValue'])if($(id))new MutationObserver(walkSummary).observe($(id),{childList:true,characterData:true,subtree:true});
+  $('walkOptions')?.addEventListener('change',walkSummary);window.strollaneWalkSummary=walkSummary;walkSummary();
   $('expandDimensions').addEventListener('click',()=>{
     const open=$('dimensionsPanel').classList.toggle('hidden')===false;$('expandDimensions').setAttribute('aria-expanded',String(open));$('dimensionChevron').textContent=open?'⌃':'⌄';
   });
