@@ -99,7 +99,9 @@ class ThemeTokens(unittest.TestCase):
         app = (CSS.parent / 'app.js').read_text(encoding='utf-8')
         head = (CSS.parent / 'index.html').read_text(encoding='utf-8')
         self.assertIn('root.dataset.mapTheme=', app)
-        self.assertIn("dataset.mapTheme='light'", head)  # applied before first paint
+        # applied before first paint: light by default, dark only when the visitor chose it (PR #63)
+        self.assertIn("var t='light'", head)
+        self.assertIn('document.documentElement.dataset.mapTheme=t', head)
         self.assertNotIn('light-theme.css', head)  # one theme system, no second stylesheet
 
 

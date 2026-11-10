@@ -87,8 +87,8 @@ async function arStart(opts={}){
  try{
   ar.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});
  }catch(e){
-  if(opts.auto){ar.raiseArmed=false;return toast('Raise to view paused — tap AR view to turn the camera back on.');}
-  return toast(e.name==='NotAllowedError'?'Camera access was denied. Allow the camera for this site to use AR view.':`Camera unavailable (${e.name||e.message}).`);
+  if(opts.auto){ar.raiseArmed=false;return toast('Raise to view paused — tap AR · compass to turn the camera back on.');}
+  return toast(e.name==='NotAllowedError'?'Camera access was denied. Allow the camera for this site to use AR · compass.':`Camera unavailable (${e.name||e.message}).`);
  }
  els.video.srcObject=ar.stream;
  ar.heading=null;ar.compassAcc=null;ar.raiseArmed=true;
@@ -112,7 +112,7 @@ function arPark(){
  ar.on=false;cancelAnimationFrame(ar.raf);
  try{ar.els.video.pause();}catch(e){}
  ar.els.root.classList.add('hidden');document.body.classList.remove('ar-mode');
- $('navAr')?.setAttribute('aria-pressed','false');if($('navAr'))$('navAr').textContent='AR view';
+ $('navAr')?.setAttribute('aria-pressed','false');if($('navAr'))$('navAr').textContent='AR · compass';
  clearTimeout(ar.parkTimer);ar.parkTimer=setTimeout(arStop,AR_PARK_MS);
 }
 function arFlash(text,ms){const el=ar.els?.flash;if(!el)return;el.textContent=text;el.classList.add('show');clearTimeout(arFlash.t);arFlash.t=setTimeout(()=>el.classList.remove('show'),ms||3500);}
@@ -125,7 +125,7 @@ function arStop(){
  ar.stream?.getTracks().forEach(t=>t.stop());ar.stream=null;
  if(ar.els){ar.els.video.srcObject=null;ar.els.root.classList.add('hidden');}
  document.body.classList.remove('ar-mode');
- $('navAr')?.setAttribute('aria-pressed','false');if($('navAr'))$('navAr').textContent='AR view';
+ $('navAr')?.setAttribute('aria-pressed','false');if($('navAr'))$('navAr').textContent='AR · compass';
 }
 // A manual "Map view" while the phone is still upright must not bounce straight back into AR: wait for one lower.
 function arToggle(){if(ar.on){ar.suppressRaise=true;arStop();}else arStart();}

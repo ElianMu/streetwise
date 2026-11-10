@@ -1,5 +1,156 @@
 # Mobile Implementation Report
 
+## Round 22: Experience-first steps 2–3 — photos, "Next" place in navigation, honest AR / 3D labels
+
+**Photos along the walk** (`route-photos.js`, new).
+- Each photo is the real Wikidata image (P18) of a listed place on the route, hosted on Wikimedia Commons.
+- Which places: Wikidata-listed parks, museums, historic sites, landmarks and cultural venues within 50 m of the
+  route, the same set the route names use.
+- Requests go from the visitor's browser to wikidata.org and commons.wikimedia.org:
+  - anonymous CORS (`origin=*`), no key, no cost;
+  - batched up to 50 ids per call;
+  - cached for the session;
+  - 320 px thumbnails.
+- Turn off with `window.STROLLANE_PHOTOS = false`.
+- **Safeguards:**
+  - The Wikidata entry's own coordinates (P625) must be within 300 m of the place, so a wrong ID never shows a
+    photo of something else.
+  - Only free licences (CC BY / BY-SA, CC0, public domain) are shown.
+  - A named author is required unless the photo is public domain or CC0. Two CC BY files near Madison Square Park
+    have no author, so they are not shown.
+  - The author is cleaned from Commons' Artist HTML: the first linked name, without notes such as "panoramic image…"
+    or "No machine-readable author provided … assumed".
+  - If Wikimedia can't be reached, there are no photos and no errors.
+- **Where photos appear:**
+  - up to 3 per route card (the "via" place first);
+  - up to 6 in "Along this walk";
+  - each with the place name and "author · licence", linked to its Commons page.
+- **Verified on the live origin** (https://elianmu.github.io, built-in browser, 2026-11-10):
+  - 37 of 40 listed places between Bryant Park and Union Square returned a credited photo, in 0.48 s;
+  - the photo strip rendered with real thumbnails.
+- **Tests** use those responses, recorded and trimmed to the fields used, in `tests/mobile-v2/fixture-wikimedia.json`.
+  Thumbnail bytes are a test-only placeholder, because the sandbox cannot reach Wikimedia.
+- **Mapillary street-level photos are not added.** They need a client token (free, but a decision and an account),
+  and the sandbox cannot reach graph.mapillary.com.
+
+**Navigation.**
+- The top card gains "Next: Madison Square Park · 200 m":
+  - It names the next listed place ahead on the route, from the same place set.
+  - The distance is measured along the route.
+  - It shows the place's photo with author and licence when one exists.
+  - It is hidden while navigating to the start of the walk.
+- "AR view" is now **"AR · compass"**. Its tooltip says directions are placed by the phone compass (error 10–20°).
+- "Preview walk in 3D" is now **"3D map preview"**: it is a map fly-through, not street imagery.
+- The direction note ("Direction: compass") now shows only when direction is missing.
+- Fixed: an empty status pill showed over the turn instruction while navigating. The state class overwrote `hidden`.
+
+**Map.** Each listed walk carries its card name on its map line ("Greenest", "Fastest"):
+- symbol layer `route-names`, line-centre;
+- theme colours;
+- hidden during navigation;
+- routes under "More routes" stay unnamed.
+
+**Tests:**
+- `route-cards.js` 28/28. New checks:
+  - card photos are real places on that route, credited and linked to Commons;
+  - there is no uncredited author;
+  - map names match the card names;
+  - Wikimedia down → no photos, no errors.
+- New `nav-next.js` 8/8: walks a real route at 1.33 m/s (a fix every 20 m) and checks:
+  - the labels;
+  - "Next" names a listed place ahead;
+  - the distance is right within 30 m;
+  - the place changes as you pass it;
+  - the photo credit;
+  - the direction note.
+- `dom.test.cjs` waits for the debounced re-plan instead of a fixed 800 ms. That check had been timing-dependent.
+
+## Round 21: Experience-first results — choose a walk by how it feels
+
+Goal (professor's feedback): people choose a walk by how they want to experience the city, not by reading
+12-dimensional data. The engine, the ranking, the 12 dimension definitions, GIS data and the AI interpretation are
+unchanged; only how results are presented changed, plus one routing fix.
+
+**Step 0: an A→B sentence gets 2–3 routes again.**
+- Before, "Walk from Bryant Park to Union Square" added the destination as a *stop*. The request went to
+  `/api/itinerary`, which returns one route.
+- `journey.js` now reads "from A to B" / "walk to B" / "从A到B" the same way the live From / To fields do
+  (`extractEnds`), so B is the destination.
+- A stop that equals the start or destination is never added; this also covers the AI interpreter.
+- A place listed under two names ("The Met") is added once.
+- `journeyMode()` now looks at what the walk holds right now: stops, places to discover, or an open / round / hotel
+  end. It no longer uses a flag left over from an earlier request. A plain A→B walk goes to `/api/routes`; a walk with
+  stops still goes to `/api/itinerary`.
+
+**Step 1: results told in words** (`route-story.js`, new; reads only engine output and the place index).
+- **2–3 cards:** best match, fastest, and the most different remaining route.
+  - Two routes sharing ≥ 85 % of their length count as one option.
+  - The rest sit under "More routes (n)"; nothing is dropped.
+- **Each card shows:**
+  - **Name:** plain, e.g. "Greenest · via 5th Avenue" or "Fastest · via Broadway".
+  - **One sentence:** compared with the fastest way, e.g. "Greener and closer to cultural venues than the fastest
+    way; about 1 min longer."
+  - a small route-shape preview;
+  - km and minutes;
+  - 2–3 highlights;
+  - **Why it fits you:** e.g. "You asked for nature and quiet: the greenest of the 3 and similar quiet to the
+    fastest."
+  - **Details:** the old numbers (personalized / overall score, coverage, detour, OSM edges, hard limits).
+- **Wording rules:**
+  - Words follow each dimension's sub-indicators (Architecture = landmark proximity, so "closer to landmark
+    buildings").
+  - Comparisons only: ≥ 15 points "much", 5–15 plain, under 5 "similar".
+  - A name superlative needs a lead of ≥ 3 over every other shown route.
+  - A dimension measured on less than 60 % of a route is never claimed.
+  - Access & Safety, Environment and Transit are never used as names, to avoid overclaiming.
+- **"Via" names** use Wikidata-listed parks, museums, historic sites, landmarks or cultural venues within 50 m of the
+  route, from `data/places`. If none fits the name, the route's own main street is used. Street names are written
+  out: "E 17 ST" becomes "East 17th Street".
+- **The map label** of the selected route uses the card's name.
+- **"Along this walk":** 2–3 stretch-by-stretch sentences from the route's own edge scores, e.g. "First 10 min, along
+  5th Avenue: quieter than the rest of the walk."
+- **Technical details:** one folded area that keeps everything else unchanged:
+  - weather and GPS tiles;
+  - ranking text and footnote;
+  - route check;
+  - Why this route, with weights and formula;
+  - weather;
+  - route urban data;
+  - OSM edges;
+  - 12-dimension profile and compare table;
+  - raw street evidence;
+  - methodology.
+- **Desktop left panel:**
+  - The sentence box comes first ("01 / How do you want to walk?").
+  - The phone's quick chips (Architecture, Quiet, Nature, Scenic, Culture, Coffee stop) sit under it.
+  - From / To is step 02.
+  - The walk limits fold into one line, "Up to 100 min · stairs allowed".
+  - "Fine-tune (12 dimensions)" replaces "View all 12 dimensions".
+- **Phone:** the same cards in the swipe row (dots count only the visible cards), then Start Navigation, Refine, Along
+  this walk and Technical details.
+
+**Not changed:** routing engine and ranking, 12 dimensions, interpretation contract, Explore Urban Data, Kepler
+export, navigation and AR (labels unchanged in this step), URLs, brand.
+
+**Tests:**
+- New `tests/mobile-v2/route-cards.js`, 23/23 on desktop and phone:
+  - an A→B sentence calls `/api/routes` and gives 2–3 cards;
+  - every card has a name, a sentence, km and minutes;
+  - no score, coverage or edge count is in the main view;
+  - all of them are still under Details and Technical details;
+  - there is no photo without a credit;
+  - every name and sentence is re-checked against the engine scores;
+  - the map label matches the card;
+  - "More routes" shows every engine route;
+  - "Along this walk" is present;
+  - there are no page errors;
+  - a stop still goes to the itinerary;
+  - removing the stop gives the A→B choice back;
+  - the Chinese "从A到B" works.
+- Other suites: flows 94/94, live-ends 13/13, multi-stop 11/11, iphone-shell 127/127.
+- `tests/dom.test.cjs` now loads `route-story.js`.
+- `test_theme_tokens.py` was updated for the light-by-default head script from PR #63.
+
 ## Round 20: stops are added in Edit, not on the control panel
 
 - The "＋ Add stop" button under From / To on the phone control panel is gone. Stops are added, reordered and removed

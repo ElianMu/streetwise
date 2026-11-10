@@ -79,6 +79,8 @@ async function generateRoutes(userText=null,isFollowUp=false){
   $('rankingStatus').textContent=planner.lastExplanation;
   renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
   appendChat('assistant',planner.lastExplanation);
+  // the same result in plain words (the walk names on the cards)
+  const told=routeStory.last;if(told?.shown.length){const names=told.shown.map(id=>{const t=told.stories[id];return t.short+(t.tag?' (best match)':'');});appendChat('assistant',`${names.length} walk${names.length>1?'s':''} to choose from: ${names.join(', ')}.${told.extra.length?` ${told.extra.length} more under “More routes”.`:''}`);}
   if(state.mapReady&&!isFollowUp){const bx=routeBounds(state.routes,80);if(bx)state.map.fitBounds([[bx[0],bx[1]],[bx[2],bx[3]]],{padding:routeFitPadding(65),maxZoom:15.5,duration:700});}
   await loadRoutePOIs(run);
  }catch(err){
@@ -103,17 +105,50 @@ function constraintSummary(){
  const c=planner.routeResponse?.constraints_used;if(!c)return '';
  return `Hard limits used: max ${c.max_minutes==null?'—':Math.round(c.max_minutes)} min walking · ${c.max_km!=null?`max ${c.max_km} km · `:""}${c.avoid_detours&&c.max_detour_pct!=null?`max ${c.max_detour_pct}% detour`:'detour limit off'}${c.avoid_stairs?' · avoiding stairs':''} · ${planner.routeResponse.feasible_count} of ${planner.routeResponse.routes.length} routes feasible`;
 }
+/** The numbers a card used to show (scores, coverage, edges, limits): kept, one tap away under "Details". */
+function routeCardDetails(r){
+ const heat=r.weather&&planner.routeResponse?.weather_routing?.routing?.active?`<dt>Heat exposure</dt><dd>${Math.round(r.weather.heat_exposure_share*100)}% heat-exposed (tree proxy)</dd>`:'';
+ return `<details class="route-numbers"><summary>Details</summary><dl><dt>Engine route</dt><dd>${esc(r.route_name)} · rank ${r.rank}</dd><dt>Personalized score</dt><dd>${r.personalized_score.utility}</dd><dt>Overall score</dt><dd>${scoreText(r.overall_score)}</dd><dt>Data coverage</dt><dd>${Math.round(r.data_coverage.mean*100)}%</dd><dt>Detour</dt><dd>${r.detour_percentage>0?`+${r.detour_percentage}% vs shortest`:'Shortest distance'}</dd><dt>OSM edges</dt><dd>${r.ordered_edge_ids.length}</dd>${heat}${!r.constraints.feasible?`<dt>Limits</dt><dd>${esc(r.constraints.violations.join('; '))}</dd>`:''}</dl><p class="route-constraints">${esc(constraintSummary())}</p></details>`;
+}
+/** Route cards: 2–3 walks that feel different (best match, fastest, most different), each told in words.
+    Names, sentences and highlights come from route-story.js, which only reads the engine's scores. */
 function renderRouteCards(){
- const root=$('routeCards'),routes=state.routes;
- $('routeCount').textContent=`${routes.length} OSM ROUTE${routes.length===1?'':'S'}`;
- if(!routes.length){root.innerHTML=`<div class="empty-route"><strong>${state.routingBusy?'Computing pedestrian routes…':'No routes generated yet'}</strong><p>${state.routingBusy?'Searching the Manhattan OSM pedestrian graph.':'Start with a journey and walking preferences.'}</p></div>`;if(typeof renderNavStart==='function')renderNavStart();return}
- root.innerHTML=routes.map(x=>{
-  const r=x.raw,selected=x.id===state.activeRoute,feasible=r.constraints.feasible;
-  const tag=r.recommended?'BEST MATCH':r.objective==='shortest'?'SHORTEST':'ALTERNATIVE';
-  return `<button class="route-card ${selected?'selected':''} ${!feasible?'over-budget':''}" type="button" data-route="${esc(x.id)}" aria-pressed="${selected}"><span class="route-icon">${selected?'✓':r.rank}</span><span class="route-names"><span class="route-category">${tag}${!feasible?' · NOT FEASIBLE':''}</span><strong>${esc(r.route_name)}</strong><small>Personalized ${r.personalized_score.utility} · Overall ${scoreText(r.overall_score)} · ${Math.round(r.data_coverage.mean*100)}% data coverage</small><small class="evidence-line">${r.detour_percentage>0?`+${r.detour_percentage}% vs shortest`:'Shortest distance'} · ${r.ordered_edge_ids.length} OSM edges${r.weather&&planner.routeResponse?.weather_routing?.routing?.active?` · ${Math.round(r.weather.heat_exposure_share*100)}% heat-exposed (tree proxy)`:''}</small>${!feasible?`<small>${esc(r.constraints.violations.join('; '))}</small>`:''}</span><span class="route-metrics"><strong>${(r.distance_m/1000).toFixed(2)} km</strong><small>${Math.ceil(r.estimated_duration_min)} min</small></span></button>`;
- }).join('')+`<p class="route-constraints">${esc(constraintSummary())}</p><p class="route-footnote">Routes are computed on the OSM pedestrian graph (${esc(planner.routeResponse?.network_version||'')}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${esc(planner.routeResponse?.score_version||'')}), shared with Explore Urban Data.</p>`;
- root.querySelectorAll('[data-route]').forEach(el=>el.addEventListener('click',()=>selectRoute(el.dataset.route)));
+ const root=$('routeCards'),routes=state.routes,more=$('routeMore');
+ if(!routes.length){routeStory.showAll=false;$('routeCount').textContent='';if(more)more.classList.add('hidden');renderAlongWalk();
+  root.innerHTML=`<div class="empty-route"><strong>${state.routingBusy?'Finding walks…':'No walks yet'}</strong><p>${state.routingBusy?'Searching the Manhattan walking network.':'Describe how you want to walk, or tap a few chips.'}</p></div>`;if(typeof renderNavStart==='function')renderNavStart();return}
+ if(typeof storyEnsurePlaces==='function')storyEnsurePlaces();
+ const story=storyBuild(routes.map(x=>x.raw)),shownSet=new Set(story.shown);
+ const shownRaw=routes.filter(x=>shownSet.has(x.id)).map(x=>x.raw);
+ const order=[...story.shown,...story.extra].map(id=>routes.find(x=>x.id===id)).filter(Boolean);
+ $('routeCount').textContent=`${story.shown.length} WALK${story.shown.length===1?'':'S'}`;
+ const weatherActive=planner.routeResponse?.weather_routing?.routing?.active;
+ root.innerHTML=order.map(x=>{
+  const r=x.raw,st=story.stories[x.id]||{},selected=x.id===state.activeRoute,feasible=r.constraints.feasible,extra=!shownSet.has(x.id);
+  x.label=st.name||r.route_name; // the map label, navigation and summary use the same name as the card
+  x.shortLabel=extra?'':(st.short||'');
+  const chips=(st.highlights||[]).map(h=>`<span>${esc(h)}</span>`).join('');
+  const heat=weatherActive&&r.weather?`<span class="rc-note">Weather: ${Math.round(r.weather.heat_exposure_share*100)}% of this walk in the sun (tree-cover proxy)</span>`:'';
+  return `<article class="route-card${selected?' selected':''}${!feasible?' over-budget':''}${extra?' extra':''}${extra&&!routeStory.showAll&&!selected?' hidden':''}" data-route="${esc(x.id)}"><button type="button" class="route-pick" data-pick="${esc(x.id)}" aria-pressed="${selected}">${st.tag?`<span class="rc-tag">${esc(st.tag)}</span>`:''}<strong class="rc-name">${esc(st.name||r.route_name)}</strong>${st.sentence?`<span class="rc-sentence">${esc(st.sentence)}</span>`:''}<span class="rc-row"><span class="rc-col"><span class="rc-meta"><strong>${(r.distance_m/1000).toFixed(1)} km</strong><span>${Math.ceil(r.estimated_duration_min)} min</span></span>${chips?`<span class="rc-chips">${chips}</span>`:''}</span>${extra?'':storyPreviewSvg(r,shownRaw)}</span>${st.why?`<span class="rc-why">${esc(st.why)}</span>`:''}${st.note?`<span class="rc-note warn">${esc(st.note)}</span>`:''}${heat}</button>${extra?'':cardPhotos(r,st)}${routeCardDetails(r)}</article>`;
+ }).join('');
+ root.querySelectorAll('[data-pick]').forEach(el=>el.addEventListener('click',()=>selectRoute(el.dataset.pick)));
+ if(more){const n=story.extra.length;more.classList.toggle('hidden',!n);more.textContent=routeStory.showAll?'Fewer routes':`More routes (${n})`;more.setAttribute('aria-expanded',String(routeStory.showAll));}
+ const tech=$('routeTechNote');if(tech)tech.textContent=`Routes are computed on the OSM pedestrian graph (${planner.routeResponse?.network_version||''}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${planner.routeResponse?.score_version||''}), shared with Explore Urban Data. ${constraintSummary()}`;
+ renderAlongWalk();
+ if(typeof photosLoad==='function'){const sel=routes.find(x=>x.id===state.activeRoute);const want=[...shownRaw,...(sel?[sel.raw]:[])].flatMap(r=>(storyPlacesNear(r)||[]).slice(0,10));photosLoad(want,()=>renderRouteCards());}
  if(typeof renderNavStart==='function')renderNavStart();
+}
+/** Up to 3 photos of real places this walk passes (its "via" place first), each with author and licence. */
+function cardPhotos(r,st){
+ if(typeof photosFor!=='function')return'';
+ const places=(storyPlacesNear(r)||[]).slice(0,10),first=places.filter(p=>p.name===st.via),rest=places.filter(p=>p.name!==st.via);
+ return photoFigures(photosFor([...first,...rest]).slice(0,3),'rc-photos');
+}
+/** "Along this walk": how the selected route feels, stretch by stretch (from its own edge scores). */
+function renderAlongWalk(){
+ const box=$('alongWalk');if(!box)return;
+ const x=state.routes.find(r=>r.id===state.activeRoute),lines=x&&typeof storyStretches==='function'?storyStretches(x.raw):[];
+ const photos=x&&typeof photosFor==='function'?photosFor((storyPlacesNear(x.raw)||[]).slice(0,10)).slice(0,6):[];
+ box.innerHTML=lines.map(l=>`<p>${esc(l)}</p>`).join('')+(photos.length?photoFigures(photos,'along-photos'):'');box.classList.toggle('hidden',!lines.length&&!photos.length);
 }
 function profileRows(r){
  return DIMENSIONS.map((d,i)=>{const v=r.dimension_scores[d.name],c=r.data_coverage.by_dimension[d.name],pref=planner.origins[d.name]!=='default';
@@ -209,3 +244,5 @@ async function updateRouteProgress(accuracy){
  }catch(err){routeNav.last=null;}
  finally{routeNav.pending=false;}
 }
+// "More routes (n)": the engine's other candidates, shown on request (nothing is dropped)
+$('routeMore')?.addEventListener('click',()=>{routeStory.showAll=!routeStory.showAll;renderRouteCards();});

@@ -123,7 +123,7 @@ function beginNavigation(route,opts={}){
  * trick needed. Buildings are dimmed (not hidden) in nav mode purely so they read as context, not foreground. */
 function setDataLayersForNav(on){
  if(!state.mapLayersReady)return;
- for(const id of ['journey-found','route-alts'])if(state.map.getLayer(id))state.map.setLayoutProperty(id,'visibility',on?'none':'visible');
+ for(const id of ['journey-found','route-alts','route-names'])if(state.map.getLayer(id))state.map.setLayoutProperty(id,'visibility',on?'none':'visible');
  if(state.map.getLayer('udg-buildings-fill')&&typeof UrbanStyle!=='undefined'){
   const base=UrbanStyle.T.building.extrusionOpacity;
   state.map.setPaintProperty('udg-buildings-fill','fill-extrusion-opacity',on?base*0.8:base); // context, but still clearly 3D
@@ -333,6 +333,31 @@ function updateCamera(force=false){
 }
 
 /* ---------- panels ---------- */
+/** Listed places along the route being walked (the same Wikidata-listed places the route cards name), ordered by
+    distance along the route: the source of the "Next: Madison Square Park · 200 m" line. */
+function navPlacesAlong(route){
+ if(!route?.geometry?.coordinates?.length||typeof storyPlacesNear!=='function')return[];
+ if(nav.placesFor===route&&nav.places)return nav.places;
+ const near=storyPlacesNear(route);if(!near)return[]; // place index still loading: try again on the next fix
+ const c=route.geometry.coordinates,lat0=c[0][1],kx=111320*Math.cos(lat0*Math.PI/180),ky=110540,cum=[0];
+ for(let i=1;i<c.length;i++)cum.push(cum[i-1]+Math.hypot((c[i][0]-c[i-1][0])*kx,(c[i][1]-c[i-1][1])*ky));
+ nav.places=near.map(p=>{let best={d:Infinity,along:0};
+  for(let i=1;i<c.length;i++){const ax=(c[i-1][0]-p.lon)*kx,ay=(c[i-1][1]-p.lat)*ky,dx=(c[i][0]-c[i-1][0])*kx,dy=(c[i][1]-c[i-1][1])*ky,L=dx*dx+dy*dy,t=L?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/L)):0,d=Math.hypot(ax+t*dx,ay+t*dy);
+   if(d<best.d)best={d,along:cum[i-1]+t*Math.sqrt(L)};}
+  return{...p,along:best.along};}).sort((a,b)=>a.along-b.along);
+ nav.placesFor=route;
+ if(typeof photosLoad==='function')photosLoad(nav.places.slice(0,12),()=>{if(nav.engine)renderNav();});
+ return nav.places;
+}
+function renderNavPlace(out){
+ const box=$('navPlace');if(!box)return;
+ const prog=out?.progress_m??nav.engine?.progress??0,places=nav.temporary?[]:navPlacesAlong(nav.route);
+ const next=places.find(p=>p.along>prog+15&&p.along<(nav.engine?.netLen??Infinity)+30);
+ if(!next){box.classList.add('hidden');box.innerHTML='';return;}
+ const ph=typeof photosFor==='function'?photosFor([next])[0]:null,credit=ph?[ph.author,ph.license].filter(Boolean).join(' · '):'';
+ box.innerHTML=`${ph?`<img src="${esc(ph.thumb)}" alt="${esc(next.name)}" referrerpolicy="no-referrer" width="40" height="40">`:''}<span><span class="np-line"><b>Next:</b> ${esc(next.name)} · ${formatNavDistance(next.along-prog,nav.units)}</span>${ph?`<a href="${esc(ph.page)}" target="_blank" rel="noopener">${esc(credit)}</a>`:''}</span>`;
+ box.classList.remove('hidden');
+}
 function showNavCard(o){$('navOverlay').classList.remove('hidden');if(o.status!=null){$('navStatus').textContent=o.status;$('navStatus').classList.remove('hidden');}$('navRetry').classList.toggle('hidden',!o.retry);}
 function hideNav(){$('navOverlay').classList.add('hidden');document.body.classList.remove('nav-mode');}
 function renderNav(out=nav.engine?.lastOutput){
@@ -344,10 +369,11 @@ function renderNav(out=nav.engine?.lastOutput){
  $('navInstr').textContent=nm?(nav.voiceLang==='zh'?nm.instruction_zh:nm.instruction_text):'Follow the route';
  const after=out?.after_next;$('navThen').textContent=after?`Then: ${nav.voiceLang==='zh'?after.instruction_zh:after.instruction_text}`:'';
  $('navConf').textContent=nm?.confidence==='low'?'Low-confidence instruction — check the map':'';
+ renderNavPlace(out);
  // After a failed recalculation the reason must stay on screen (the 3 s tick re-renders), not collapse to "Off route".
  const msg=st==='OFF_ROUTE'&&nav.rerouteFails?'Could not recalculate — your last route is still shown. Tap Retry.':STATE_TEXT[st]||(st==='STARTING'?'Waiting for GPS…':'');
- $('navStatus').textContent=msg+(out?.accuracy_m&&['GPS_WEAK'].includes(st)?` (±${Math.round(out.accuracy_m)} m)`:'');$('navStatus').classList.toggle('hidden',!msg);
- $('navStatus').className='nav-status '+st.toLowerCase();
+ $('navStatus').textContent=msg+(out?.accuracy_m&&['GPS_WEAK'].includes(st)?` (±${Math.round(out.accuracy_m)} m)`:'');
+ $('navStatus').className='nav-status '+st.toLowerCase();$('navStatus').classList.toggle('hidden',!msg); // the state class must not wipe 'hidden' (an empty pill showed while navigating)
  $('navRemain').textContent=out?formatNavDistance(out.remaining_m,nav.units):formatNavDistance(eng.netLen,nav.units);
  $('navTime').textContent=out?`${Math.max(1,Math.round(out.remaining_min))} min`:`${Math.round(eng.netLen/80)} min`;
  const stops=out?.remaining_stops||[];$('navStop').textContent=nav.temporary?'To the start of your walk':stops.length?`Next stop: ${stops[0]}${stops.length>1?` · +${stops.length-1}`:''}`:'Destination';
@@ -359,7 +385,7 @@ function renderNav(out=nav.engine?.lastOutput){
  $('navMode').textContent=modeLabel; // the honest "falling back to route bearing" detail lives in navHeadingNote below, not a long button label
  $('navHeadingNote').textContent=nav.heading==null
   ?(nav.viewMode==='heading'?'No device direction — map follows the route instead; arrow hidden':'No direction data — heading arrow hidden')
-  :`Direction: ${nav.headingSrc}`;
+  :'';
  $('navArrived').classList.toggle('hidden',st!=='ARRIVED');
  drawNavPosition(out);if(st!=='ARRIVED')saveNavSession();
 }

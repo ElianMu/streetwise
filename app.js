@@ -157,6 +157,9 @@ function renderPreferenceSummary(){
   ['avoidDetours','stepFree','avoidStairs'].forEach(id=>$(id).checked=planner.constraints[id]);
   $('constraintWarning').classList.toggle('hidden',!planner.constraints.stepFree);
   renderDimensions();
+  // the desktop chip row and the folded walk-options line show the same live state
+  if(typeof window.strollaneRenderChips==='function')window.strollaneRenderChips();
+  if(typeof window.strollaneWalkSummary==='function')window.strollaneWalkSummary();
 }
 // Clearly labelled LIMITED offline preview; an actual LLM is used only through server.py when configured.
 /** Weather intent: 'ask' (a question about comfort, answered without re-routing), 'cooler' (heat term weighted up),
@@ -259,9 +262,14 @@ async function checkInterpreter(){
   }catch(_) {planner.llmConnected=false;planner.llmConfigured=null;}
   $('interpretMode').textContent=planner.llmConnected?'✦ AI CONFIGURED · Connection verified when you plan':planner.llmConfigured===false?'◇ LOCAL PREVIEW · AI backend key is missing or invalid':'◇ AI STATUS UNAVAILABLE · Planning will retry the AI service';
 }
+// Messages written in research notation (scores, formulas, interpreted weights) go to the full log under Technical
+// details; the conversation under the routes keeps the user's words and plain replies (questions, errors, results).
+const TECH_CHAT=/Personalized score|weighted experience|Route scores:|interpretation:|data coverage|OSM edges?|detour penalty|Hard limits used/i;
 function appendChat(role,message){
-  planner.conversations.push({role,content:message});$('conversationSection').classList.remove('hidden');
-  $('chatHistory').innerHTML=planner.conversations.map(m=>`<div class="chat-message ${m.role==='user'?'user-message':'assistant-message'}"><div class="chat-name">${m.role==='user'?'YOU':'✦ STROLLANE'}</div><div class="chat-copy">${esc(m.content)}</div></div>`).join('');
+  planner.conversations.push({role,content:message,tech:role==='assistant'&&TECH_CHAT.test(message)});$('conversationSection').classList.remove('hidden');
+  const row=m=>`<div class="chat-message ${m.role==='user'?'user-message':'assistant-message'}"><div class="chat-name">${m.role==='user'?'YOU':'✦ STROLLANE'}</div><div class="chat-copy">${esc(m.content)}</div></div>`;
+  $('chatHistory').innerHTML=planner.conversations.filter(m=>!m.tech).map(row).join('');
+  if($('chatLog'))$('chatLog').innerHTML=planner.conversations.map(row).join('');
   $('chatHistory').scrollTop=$('chatHistory').scrollHeight;
   if(role==='assistant' && /Selected |No route meets|Pedestrian service unavailable|Route planning failed/.test(message)){
     $('conversationSection').scrollIntoView({block:'end',behavior:'smooth'});
@@ -396,7 +404,7 @@ async function loadViewportEvidence(kind){
 }
 function setMapLayerVisible(id,yes){if(state.mapReady&&state.map.getLayer(id))state.map.setLayoutProperty(id,'visibility',yes?'visible':'none')}
 function getEmptyLine(){return {type:'FeatureCollection',features:[]}}
-function currentRoutesGeojson(){return {type:'FeatureCollection',features:state.routes.map(r=>({type:'Feature',properties:{id:r.id,name:r.label,distance_km:r.km,time_min:r.min,network_version:r.raw.network_version,method:'Strollane pedestrian routing engine on the OSM pedestrian graph'},geometry:{type:'LineString',coordinates:r.coords}}))}}
+function currentRoutesGeojson(){return {type:'FeatureCollection',features:state.routes.map(r=>({type:'Feature',properties:{id:r.id,name:r.label,short:r.shortLabel||'',distance_km:r.km,time_min:r.min,network_version:r.raw.network_version,method:'Strollane pedestrian routing engine on the OSM pedestrian graph'},geometry:{type:'LineString',coordinates:r.coords}}))}}
 function activeRouteGeojson(){const r=state.routes.find(x=>x.id===state.activeRoute);return r?{type:'FeatureCollection',features:[{type:'Feature',properties:{name:r.label},geometry:{type:'LineString',coordinates:r.coords}}]}:emptyFC()}
 function pointGeojson(){const fs=[];for(const type of ['start','end']){const p=getPlace(type);if(p)fs.push({type:'Feature',properties:{role:type,name:p.name||type},geometry:{type:'Point',coordinates:[p.lon,p.lat]}})}if(state.gps)fs.push({type:'Feature',properties:{role:'gps',name:'Device location'},geometry:{type:'Point',coordinates:[state.gps.lon,state.gps.lat]}});return {type:'FeatureCollection',features:fs}}
 function syncMapData(){
@@ -425,6 +433,7 @@ function updateMapStyles(){
   setMapLayerVisible('landmark-outline',state.display.lpc);
   // The selected route is always visible; the toggle controls alternative routes only.
   setMapLayerVisible('route-alts',state.display.routes);
+  setMapLayerVisible('route-names',state.display.routes&&!document.body.classList.contains('nav-mode'));
   setMapLayerVisible('route-glow',true);
   setMapLayerVisible('route-shadow',true);
   setMapLayerVisible('route-selected',true);
@@ -475,6 +484,7 @@ function applyMapTheme(m,theme){
   // overlays that sit on the basemap
   const R=theme==='light'?{route:'#141413',casing:'#FFFFFF',alt:'#7A7A74',ink:'#FFFFFF',start:'#141413',ring:'#FFFFFF'}:{route:'#F3EFE4',casing:'#0B0B0B',alt:'#8C8C86',ink:'#0B0B0B',start:'#0B0B0B',ring:'#F5F5F2'};
   set('route-selected','line-color',R.route);set('route-shadow','line-color',R.casing);set('route-alts','line-color',R.alt);
+  set('route-names','text-color',R.route);set('route-names','text-halo-color',R.casing);
   set('point-starts','circle-color',R.start);set('point-starts','circle-stroke-color',R.ring);
   set('point-ends','circle-color',R.route);set('point-ends','circle-stroke-color',R.casing);set('point-ends-core','circle-color',R.casing);
   if(m.getLayer('route-arrows'))try{m.setLayoutProperty('route-arrows','icon-image',theme==='light'?'route-arrow-light':'route-arrow-dark');}catch(e){}
@@ -552,6 +562,8 @@ function setupMap(){
       m.addLayer({id:'route-shadow',type:'line',source:'selected-route',paint:{'line-color':'#0B0B0B','line-width':['interpolate',['linear'],['zoom'],12,6.5,16,10.5,19,15],'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
       m.addLayer({id:'route-selected',type:'line',source:'selected-route',paint:{'line-color':'#F3EFE4','line-width':['interpolate',['linear'],['zoom'],12,3,16,6,19,9],'line-opacity':1},layout:{'line-cap':'round','line-join':'round'}});
       addRouteArrowImages(m);
+      // each listed walk carries its card name on the map ("Greenest", "Fastest"); routes under "More routes" stay unnamed
+      m.addLayer({id:'route-names',type:'symbol',source:'candidate-routes',minzoom:12,filter:['!=',['get','short'],''],layout:{'symbol-placement':'line-center','text-field':['get','short'],'text-font':['Montserrat Medium','Open Sans Regular'],'text-size':12,'text-padding':6,'text-letter-spacing':.02},paint:{'text-color':'#141413','text-halo-color':'#FFFFFF','text-halo-width':1.8}});
       m.addLayer({id:'route-arrows',type:'symbol',source:'selected-route',minzoom:13.5,layout:{'symbol-placement':'line','symbol-spacing':['interpolate',['linear'],['zoom'],14,70,18,120],'icon-image':'route-arrow-dark','icon-size':['interpolate',['linear'],['zoom'],14,.55,17,.8,19,1],'icon-allow-overlap':true,'icon-ignore-placement':true,'icon-rotation-alignment':'map'}});
       m.addLayer({id:'poi-points-glow',type:'circle',source:'route-pois',paint:{'circle-color':'#e6dcc2','circle-radius':13,'circle-opacity':0,'circle-blur':1}});
       m.addLayer({id:'poi-points',type:'circle',source:'route-pois',paint:{'circle-color':'#e6dcc2','circle-radius':5,'circle-stroke-color':'#111215','circle-stroke-width':2}});
@@ -806,6 +818,12 @@ function setupControls(){
   $('customTime').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitCustomTime();}});
   $('maxDetourPct').addEventListener('change',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=0&&v<=100){planner.maxDetourPct=v;updateRoutesUI()}else{toast('Choose a detour limit from 0 to 100%.');renderPreferenceSummary()}});
   $('generateRoutes').addEventListener('click',()=>handlePlan($('intentText').value,false));
+  // Desktop: the walk limits fold into one line ("Up to 100 min · stairs allowed"); the controls are unchanged inside.
+  const walkSummary=()=>{const el=$('walkOptionsSummary');if(!el)return;const unit=state.distUnit==='mi'?'mi':'km',km=state.maxKm;
+    el.textContent=[`Up to ${state.budget} min`,km!=null?`${unit==='mi'?Math.round(km/1.609344*10)/10:km} ${unit}`:null,planner.constraints.avoidStairs?'avoiding stairs':'stairs allowed',planner.constraints.stepFree?'step-free':null].filter(Boolean).join(' · ');};
+  $('walkOptionsToggle')?.addEventListener('click',()=>{const open=$('walkOptions').classList.toggle('open');$('walkOptionsToggle').setAttribute('aria-expanded',String(open));});
+  for(const id of ['timeValue','distValue'])if($(id))new MutationObserver(walkSummary).observe($(id),{childList:true,characterData:true,subtree:true});
+  $('walkOptions')?.addEventListener('change',walkSummary);window.strollaneWalkSummary=walkSummary;walkSummary();
   $('expandDimensions').addEventListener('click',()=>{
     const open=$('dimensionsPanel').classList.toggle('hidden')===false;$('expandDimensions').setAttribute('aria-expanded',String(open));$('dimensionChevron').textContent=open?'⌃':'⌄';
   });
