@@ -30,29 +30,40 @@ const run=s=>vm.runInContext(s,context);
  assert.equal(run("localJourney('Find a hotel with two beds and a budget of $250 per night').requirements.hotel_budget_per_night_usd"),250);
  assert.equal(run("localJourney('Visit two landmarks').counts.famous"),2);
 
+ // Map Mode reads the GIS pipeline output (data/dimensions/manhattan); route-edge inspectors keep the legacy street file.
+ const dimDir=path.join(root,'data/dimensions/manhattan'),rd=f=>JSON.parse(fs.readFileSync(path.join(dimDir,f)));
  w.STREETWISE_STREETS=JSON.parse(fs.readFileSync(path.join(root,'data/manhattan-streets.json')));
+ w.STREETWISE_DIMENSIONS={manifest:rd('manifest.json'),segments:rd('segments.geojson'),indicators:rd('indicators.json'),no2:rd('context_no2.geojson')};
+ const tick=()=>new Promise(r=>setTimeout(r,0)),pad=i=>String(i).padStart(2,'0');
  w.document.querySelector('#modeExplore').click();assert.equal(run('mapExperience.mode'),'explore');
  await run('loadExploreStreets()');assert(!w.document.querySelector('#explorePanel').classList.contains('hidden'));
  assert.equal(w.document.querySelectorAll('#exploreChips [data-view]').length,13);assert.equal(w.document.querySelectorAll('#exploreGrid .explore-dim').length,13);
- assert.equal(w.document.querySelector('#exploreTitle').textContent,'Overall Experience');
- // Click-through: a real segment opens the Inspector; single-dimension view shows only that dimension's sub-indicators.
- const seg=run('exploreMap.data.features.find(f=>f.properties.d4===null&&f.properties.width_ft===null).properties');
- run(`selectExploreSegment(${JSON.stringify(seg.id)})`);const insp=()=>w.document.querySelector('#exploreInspector');
- assert(!insp().classList.contains('hidden'));assert(insp().textContent.includes(seg.id));assert(insp().textContent.includes('Segment Length'));
- assert(insp().textContent.includes('Overall Experience Score'));assert.equal(insp().querySelectorAll('.explore-row').length,12);assert(insp().textContent.includes('Comfort: N/A')||insp().textContent.includes('Comfort'));assert(insp().textContent.includes(`${seg.coverage} of 12 dimensions`));
- // Every view must bind the intended real-data score property and update the inspector.
+ assert.equal(w.document.querySelector('#exploreTitle').textContent,'02 Nature');
+ assert.equal(w.document.querySelector('#exploreScope').textContent,'ALL MANHATTAN · STREET SEGMENTS');
+ assert(w.document.querySelector('#exploreMetric').textContent.includes('canopy_pct'));assert(w.document.querySelector('#exploreMetric').textContent.includes('2/3 scored indicators available'));
+ // A real segment whose LION record has no roadway width: that indicator is N/A, never 0.
+ const D=w.STREETWISE_DIMENSIONS.indicators,k=D.raw.width_ft.findIndex(v=>v===null),seg=w.STREETWISE_DIMENSIONS.segments.features[k].properties;
+ assert.equal(D.ids[k],seg.id);
+ run('selectExploreView(0)');run(`selectExploreSegment(${JSON.stringify(seg.id)})`);await tick();await tick();const insp=()=>w.document.querySelector('#exploreInspector');
+ assert(!insp().classList.contains('hidden'));assert(insp().textContent.includes(seg.id));assert(insp().textContent.includes('Length'));
+ assert(insp().textContent.includes('Overall (available dimensions) · Dimension Score'));assert.equal(insp().querySelectorAll('.explore-row').length,12);assert(insp().textContent.includes(`${seg.coverage} of 12 dimensions`));
+ // Every view binds the intended score property and updates the inspector.
  for(let i=0;i<13;i++){
-  run(`selectExploreView(${i})`);
+  run(`selectExploreView(${i})`);await tick();
   const view=run('exploreView()');
   assert.equal(view.prop,i===0?'overall':`d${i-1}`);
-  assert.equal(w.document.querySelector('#exploreTitle').textContent,view.label);
+  assert.equal(w.document.querySelector('#exploreTitle').textContent,i===0?view.label:`${pad(i)} ${view.label}`);
   assert(insp().textContent.includes(seg.id));
  }
- w.document.querySelector('#exploreChips [data-view="2"]').click();assert.equal(w.document.querySelector('#exploreTitle').textContent,'Nature');
- assert(insp().textContent.includes('Full-structure inventory trees per km'));assert(insp().textContent.includes('NYC Parks Forestry Tree Points'));assert.equal(insp().querySelectorAll('.explore-row').length,0);assert(!insp().textContent.includes('Walkability'));
- w.document.querySelector('#exploreChips [data-view="5"]').click();assert(insp().textContent.includes('Comfort · Experience Score'));assert(insp().querySelector('.inspector-score strong').textContent==='N/A');assert(insp().textContent.includes('N/A'));
- w.document.querySelector('#exploreChips [data-view="4"]').click();assert(insp().textContent.includes('Roadway width'));assert(/Roadway width\s*N\/A/.test(insp().textContent));
- assert.equal(insp().querySelector('.inspector-score strong').textContent,String(seg.d3));
+ w.document.querySelector('#exploreChips [data-view="2"]').click();await tick();await tick();assert.equal(w.document.querySelector('#exploreTitle').textContent,'02 Nature');
+ assert(insp().textContent.includes('Recorded trees'));assert(insp().textContent.includes('NYC Parks Forestry Tree Points'));assert.equal(insp().querySelectorAll('.explore-row').length,0);assert(!insp().textContent.includes('Walkability'));
+ assert(insp().querySelector('.indicator.unavailable[data-key="canopy_pct"]'));assert.equal(insp().querySelector('[data-key="canopy_pct"] [data-k=raw]').textContent,'N/A');
+ assert.equal(insp().querySelector('[data-k=dimension-score]').textContent,String(Math.round(seg.d1)));
+ w.document.querySelector('#exploreChips [data-view="4"]').click();await tick();await tick();
+ assert.equal(insp().querySelector('[data-key="width_ft"] [data-k=raw]').textContent,'N/A');assert.equal(seg.n3,1);
+ assert.equal(insp().querySelector('[data-k=dimension-score]').textContent,String(Math.round(seg.d3)));
+ w.document.querySelector('#exploreChips [data-view="11"]').click();await tick();await tick();
+ assert(/Community District \d+/.test(insp().querySelector('[data-key="no2_area_context"]').textContent));assert(insp().querySelector('[data-key="no2_area_context"]').textContent.includes('ppb'));
  run("selectExploreSegment(null)");assert(insp().classList.contains('hidden'));
  assert(run('exploreMap.data.features.length>10000&&exploreMap.data.features.every(f=>f.geometry.type==="LineString"&&ExperienceCore.keys.every((k,i)=>f.properties["d"+i]===null||(f.properties["d"+i]>=0&&f.properties["d"+i]<=100)))'));
  w.document.querySelector('#modeNavigate').click();assert.equal(run('mapExperience.mode'),'navigate');assert(w.document.querySelector('#explorePanel').classList.contains('hidden'));assert(!w.document.querySelector('#layerRoutes').disabled,'routes toggle controls alternatives only; the selected route is always drawn');
@@ -338,5 +349,5 @@ const run=s=>vm.runInContext(s,context);
  // Drain route-summary and menu continuations before destroying their document.
  await run('renderRouteUrbanData()');
  await new Promise(resolve=>setImmediate(resolve));
- console.log('DOM PASS: navigation gate (route check + maneuvers), AI Discover My Walk (multi-turn state kept, real POI index, itinerary request + rendering, menu status honest, find vs add, hotel confirmation), weather offline → weather:null + honest status, weather intents, engine weather record shown as computed, walking-time default/sync/validation/API, urban data catalog (10 dataset categories, statuses, search), along-route counts = brute-force reference, route switch keeps layers, route urban data summary, feature inspector, segment evidence (matched/unmatched), static JSON errors, mode, 13 explore views, segment inspector (single + overall, N/A), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
+ console.log('DOM PASS: navigation gate (route check + maneuvers), AI Discover My Walk (multi-turn state kept, real POI index, itinerary request + rendering, menu status honest, find vs add, hotel confirmation), weather offline → weather:null + honest status, weather intents, engine weather record shown as computed, walking-time default/sync/validation/API, urban data catalog (10 dataset categories, statuses, search), along-route counts = brute-force reference, route switch keeps layers, route urban data summary, feature inspector, segment evidence (matched/unmatched), static JSON errors, mode, 13 Map Mode views on computed GIS data, segment inspector (single + overall, indicator N/A, NO₂ context), 12 names, real pilot, routing-engine request/response adapter, 12 route scores, ordered continuous edges, route-edge inspector, route switching/compare, infeasible + step-free blocking, GPS progress + off-route replan, GPS error states, slider replanning. No browser/WebGL claims.');dom.window.close();
 })().catch(e=>{console.error(e);dom.window.close();process.exitCode=1});

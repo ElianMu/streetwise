@@ -498,6 +498,7 @@ function applyMapTheme(m,theme){
   set('udg-buildings-line','line-color',theme==='light'?'#C9C8C0':'#2C2C2A');
   applyUiTheme(theme);
   if(typeof applyBuildingTheme==='function')try{applyBuildingTheme();}catch(e){}
+  if(typeof applyExploreTheme==='function')try{applyExploreTheme();}catch(e){}
 }
 document.addEventListener('click',e=>{
   // buttons only: <html> also carries data-map-theme (the active theme), and must not turn every click into a switch

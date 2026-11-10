@@ -34,7 +34,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=60" />
+  <link rel="stylesheet" href="./styles.css?v=61" />
 </head>
 <body>
 <div class="site-shell">
@@ -156,7 +156,7 @@
       <details class="experience-controls"><summary>Street evidence ▾</summary><label for="experienceDimension">Dimension</label><select id="experienceDimension"></select><label for="experienceView">Display</label><select id="experienceView"><option value="evidence">Street evidence · raw units</option><option value="raw">Original points / polygons</option><option value="score">Validated score · 0–100</option></select><div class="experience-checks"><label><input id="layerExperience" type="checkbox" checked> Experience</label><label><input id="layerCoverage" type="checkbox" checked> Coverage</label></div><button id="analyzeView">Analyze current view</button><button id="exportExperience">Export sections to Kepler.gl</button><p id="experienceStatus" role="status">Scores require calibration. Unknown ≠ zero.</p></details>
       <details class="wx-panel" id="wxPanel"><summary id="wxPill" class="wx-pill" aria-label="Weather status"><span class="wx-ico">·</span><span>Weather…</span></summary><div id="wxBody" class="wx-body"></div></details>
       <section id="explorePanel" class="explore-panel hidden" aria-label="Manhattan street experience map">
-        <div class="explore-head"><div class="explore-heading"><div class="explore-eyebrow">ALL MANHATTAN · STREET SEGMENTS</div><strong id="exploreTitle">Nature</strong></div><button id="exploreThumbsToggle" class="explore-collapse" aria-pressed="false" title="Show all 13 maps side by side" aria-label="Show all 13 small maps">▦</button><button id="exploreCollapse" class="explore-collapse" aria-expanded="true" title="Collapse panel" aria-label="Collapse panel">–</button></div>
+        <div class="explore-head"><div class="explore-heading"><div class="explore-eyebrow" id="exploreScope">STREET SEGMENTS · LOADING</div><strong id="exploreTitle">Nature</strong></div><button id="exploreThumbsToggle" class="explore-collapse" aria-pressed="false" title="Show all 13 maps side by side" aria-label="Show all 13 small maps">▦</button><button id="exploreCollapse" class="explore-collapse" aria-expanded="true" title="Collapse panel" aria-label="Collapse panel">–</button></div>
         <div class="explore-ramp"><span id="exploreRampLow">0</span><i></i><span id="exploreRampHigh">100</span><span class="ramp-na"><s></s>N/A</span></div>
         <div id="exploreBody" class="explore-body">
           <div class="explore-tools"><input id="exploreSearch" type="search" placeholder="Search dimensions…" aria-label="Search dimensions"><button type="button" id="exploreReset" class="mini-outline">Reset view</button></div>
@@ -165,7 +165,7 @@
           <p id="exploreMetric" class="explore-metric"></p>
           <div id="exploreAnalytics" class="explore-analytics"></div>
           <label class="explore-opacity">Line opacity <input id="exploreOpacity" type="range" min="20" max="100" value="90" aria-label="Street line opacity"></label>
-          <p id="exploreStatus" class="explore-note" role="status">Loading 12-dimension street data…</p>
+          <p id="exploreStatus" class="explore-note" role="status">Loading computed 12-dimension street data…</p>
         </div>
       </section>
       <div id="exploreTooltip" class="explore-tooltip hidden" role="tooltip"></div>
@@ -286,7 +286,7 @@
 <script src="./weather.js?v=28"></script>
 <script src="./places.js?v=29"></script>
 <script src="./opening-hours.js?v=28"></script>
-<script src="./app.js?v=43"></script>
+<script src="./app.js?v=44"></script>
 <script src="./route-story.js?v=2"></script>
 <script src="./route-photos.js?v=2"></script>
 <script src="./route-client.js?v=33"></script>
@@ -300,9 +300,9 @@
 <script src="./route-preview.js?v=4"></script>
 <script src="./urban-geo.js?v=28"></script>
 <script src="./urban-style.js?v=33"></script>
-<script src="./urban-layers.js?v=33"></script>
-<script src="./explore-map.js?v=29"></script>
-<script src="./explore-analytics.js?v=29"></script>
+<script src="./urban-layers.js?v=34"></script>
+<script src="./explore-map.js?v=30"></script>
+<script src="./explore-analytics.js?v=30"></script>
 <script src="./center-map.js?v=31"></script>
 <script src="./mobile-ui.js?v=28"></script>
 <script src="./pwa-register.js?v=2"></script>

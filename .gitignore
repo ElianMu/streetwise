@@ -10,3 +10,6 @@ screenshots/mobile-e2e/
 test-results/
 tests/.tmp-verified-items.json
 screenshots/mobile-v2/
+
+# Dimension pipeline intermediate stages (rebuildable)
+data/dimensions/work/

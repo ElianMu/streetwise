@@ -1,5 +1,5 @@
 'use strict';
-/* Explore Urban Data analytics, computed from the same street segments the map draws (data/manhattan-streets.json):
+/* Explore Urban Data analytics, computed from the same street segments the map draws (data/dimensions/<area>/segments.geojson):
    distribution of the active view, comparison of two views, and dataset details for the active dimension.
    Only measured values are counted; N/A segments are reported as missing, never as 0. Scores are relative ranks among
    Manhattan segments (0–100), not calibrated experience measurements. */
@@ -49,7 +49,7 @@ async function renderExploreAnalytics(){
   ${histSvg(histogram(viewValues(other)),'#4aa3ff')}
   <p class="ea-note">${esc(other.label)}: ${d2.n.toLocaleString()} segments, median ${f1(d2.median)}. Spearman ρ = ${cor.rho==null?'N/A':cor.rho.toFixed(2)} over ${cor.n.toLocaleString()} segments where both are measured.</p>
   ${datasets?`<h4>Datasets behind ${esc(v.label)}</h4><ul class="ea-sources">${datasets}</ul>`:`<p class="ea-note">Overall = mean of the measured dimensions of each segment (N/A dimensions excluded).</p>`}
-  <p class="ea-note">Scores rank segments within Manhattan (0–100 percentiles of measured indicators); they are not calibrated experience measurements. Data ${esc(meta.data_version)} · ${esc(meta.score_version)}.</p></details>`;
+  <p class="ea-note">Scores rank segments within ${esc(exploreMap.manifest?.area_label||"Manhattan")} (0–100 percentiles of measured indicators); they are not calibrated experience measurements. Sources retrieved ${esc(meta.data_version)} · calc ${esc(meta.score_version)}.</p></details>`;
  $('eaDetails').addEventListener('toggle',e=>{exploreStats.open=e.target.open;});
  $('eaCompare').addEventListener('change',e=>{exploreStats.compare=+e.target.value;renderExploreAnalytics();});
 }
