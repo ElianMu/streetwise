@@ -4,32 +4,7 @@
 // still one tap away (card "Details" and "Technical details"). Every word on a card must match the engine's scores.
 // Runs against the real server.py (real routing engine, real place index); nothing is mocked.
 const { launch, newPage, openApp, shot } = require('./harness');
-const path = require('path');
-// Wikimedia answers from real recorded responses (fixture-wikimedia.json); the sandbox cannot reach Wikimedia.
-const WM = require(path.join(__dirname, 'fixture-wikimedia.json'));
-const PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', 'base64');
-async function wikimedia(page, mode) {
-  const seen = { wd: 0, cm: 0, thumbs: 0 };
-  await page.route(/wikidata\.org\/w\/api\.php|commons\.wikimedia\.org\/w\/api\.php|thumb\.wikimedia\.org/, (route) => {
-    const u = new URL(route.request().url());
-    if (mode === 'down') return route.abort('internetdisconnected');
-    if (u.hostname === 'thumb.wikimedia.org') { seen.thumbs++; return route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL }); } // test-only image bytes
-    if (u.hostname.endsWith('wikidata.org')) {
-      seen.wd++;
-      const entities = {};
-      for (const id of (u.searchParams.get('ids') || '').split('|')) {
-        const e = WM.entities[id];
-        entities[id] = e ? { id, claims: { ...(e.P18 ? { P18: [{ mainsnak: { datavalue: { value: e.P18 } } }] } : {}), ...(e.P625 ? { P625: [{ mainsnak: { datavalue: { value: e.P625 } } }] } : {}) } } : { id, missing: '' };
-      }
-      return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ entities }) });
-    }
-    seen.cm++;
-    const pages = {}; let i = -1;
-    for (const t of (u.searchParams.get('titles') || '').split('|')) pages[WM.pages[t] ? String(1000 + (++i)) : String(-1 - (++i))] = WM.pages[t] || { title: t, missing: '' };
-    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ query: { pages } }) });
-  });
-  return seen;
-}
+const { wikimedia } = require('./wikimedia-fixture');
 let failed = 0, total = 0; const check = (n, ok, d) => { total++; if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'} ${n}${ok ? '' : ' — ' + JSON.stringify(d)}`); };
 
 async function plan(page, text, phone) {
@@ -109,6 +84,8 @@ const mainView = (page) => page.evaluate(() => [...document.querySelectorAll('#r
     // map summary and card share the same name
     const same = await page.evaluate(() => { const x = state.routes.find((r) => r.id === state.activeRoute); return { label: x.label, card: document.querySelector('#routeCards .route-card.selected .rc-name')?.textContent }; });
     check(`${label}: the selected walk has the same name on the card and on the map`, same.label === same.card, same);
+    const mapNames = await page.evaluate(() => ({ layer: Boolean(state.map.getLayer('route-names')), feats: currentRoutesGeojson().features.filter((f) => f.properties.short).map((f) => [f.properties.id, f.properties.short]).sort(), cards: [...document.querySelectorAll('#routeCards .route-card:not(.extra)')].map((c) => [c.dataset.route, routeStory.last.stories[c.dataset.route].short]).sort() }));
+    check(`${label}: each listed walk is named on the map line with its card name (extra routes unnamed)`, mapNames.layer && JSON.stringify(mapNames.feats) === JSON.stringify(mapNames.cards), mapNames);
     // "More routes (n)" shows the engine's other candidates, nothing dropped
     const more = await page.evaluate(() => ({ n: state.routes.length, all: document.querySelectorAll('#routeCards .route-card').length, hidden: $('routeMore').classList.contains('hidden'), text: $('routeMore').textContent }));
     if (more.n > 3 || !more.hidden) {

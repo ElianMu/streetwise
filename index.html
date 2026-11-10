@@ -189,7 +189,7 @@
       <section id="navOverlay" class="nav-overlay hidden" aria-label="Live navigation" aria-live="polite">
         <div class="nav-top">
           <div class="nav-arrow" id="navArrow"></div>
-          <div class="nav-main"><div class="nav-dist" id="navDist"></div><div class="nav-instr" id="navInstr">Starting…</div><div class="nav-then" id="navThen"></div><div class="nav-conf" id="navConf"></div></div>
+          <div class="nav-main"><div class="nav-dist" id="navDist"></div><div class="nav-instr" id="navInstr">Starting…</div><div class="nav-then" id="navThen"></div><div class="nav-place hidden" id="navPlace" aria-live="polite"></div><div class="nav-conf" id="navConf"></div></div>
         </div>
         <div id="navStatus" class="nav-status hidden"></div>
         <button type="button" id="navRetry" class="nav-pill hidden">Retry</button>
@@ -199,7 +199,7 @@
         <button type="button" id="navRecenter" class="nav-recenter">◎ Recenter</button>
         <div class="nav-bottom">
           <div class="nav-stats"><strong id="navRemain">—</strong><span id="navTime">—</span><small id="navStop"></small></div>
-          <div class="nav-buttons"><button type="button" class="nav-pill nav-ar" id="navAr" aria-pressed="false">AR view</button><button type="button" class="nav-pill" id="navVoice" aria-pressed="true">Voice on</button><button type="button" class="nav-pill" id="navPause">Pause</button>
+          <div class="nav-buttons"><button type="button" class="nav-pill nav-ar" id="navAr" aria-pressed="false" title="Camera view with directions placed by the phone compass (error 10–20°)">AR · compass</button><button type="button" class="nav-pill" id="navVoice" aria-pressed="true">Voice on</button><button type="button" class="nav-pill" id="navPause">Pause</button>
             <details class="nav-more"><summary class="nav-pill">More</summary><div class="nav-more-body"><button type="button" class="nav-pill" id="navRepeat">Repeat</button>
             <select id="navLang" aria-label="Voice language"><option value="en">EN</option><option value="zh">中文</option></select><button type="button" class="nav-pill" id="navUnits">m</button>
             <button type="button" class="nav-pill" id="navMode">North up</button></div></details><button type="button" class="nav-pill danger" id="navExit">Exit</button></div>
@@ -223,7 +223,7 @@
         <button type="button" id="routeMore" class="route-more hidden" aria-expanded="false">More routes</button>
         <div class="route-dots hidden" id="routeDots" aria-hidden="true"></div>
         <button type="button" id="navStart" class="primary-cta nav-start hidden"><span>➤ Start Navigation</span><span class="cta-arrow">↗</span></button>
-        <button type="button" id="routePreviewBtn" class="route-preview-btn hidden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18l6-12 4 7 3-4 5 9z"/></svg><span>Preview walk in 3D</span></button>
+        <button type="button" id="routePreviewBtn" class="route-preview-btn hidden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 18l6-12 4 7 3-4 5 9z"/></svg><span>3D map preview</span></button>
         <div class="m-only m-route-fromto" id="mRouteFromTo"></div>
         <div class="m-only" id="mRefineSlot"></div>
         <div class="subtle-divider"></div>
@@ -295,9 +295,9 @@
 <script src="./journey-ui.js?v=31"></script>
 <script src="./voice.js?v=28"></script>
 <script src="./nav-engine.js?v=30"></script>
-<script src="./nav-ui.js?v=34"></script>
-<script src="./ar-nav.js?v=2"></script>
-<script src="./route-preview.js?v=3"></script>
+<script src="./nav-ui.js?v=35"></script>
+<script src="./ar-nav.js?v=3"></script>
+<script src="./route-preview.js?v=4"></script>
 <script src="./urban-geo.js?v=28"></script>
 <script src="./urban-style.js?v=33"></script>
 <script src="./urban-layers.js?v=33"></script>

@@ -1,5 +1,70 @@
 # Mobile Implementation Report
 
+## Round 22: Experience-first steps 2–3 — photos, "Next" place in navigation, honest AR / 3D labels
+
+**Photos along the walk** (`route-photos.js`, new).
+- Each photo is the real Wikidata image (P18) of a listed place on the route, hosted on Wikimedia Commons.
+- Which places: Wikidata-listed parks, museums, historic sites, landmarks and cultural venues within 50 m of the
+  route, the same set the route names use.
+- Requests go from the visitor's browser to wikidata.org and commons.wikimedia.org:
+  - anonymous CORS (`origin=*`), no key, no cost;
+  - batched up to 50 ids per call;
+  - cached for the session;
+  - 320 px thumbnails.
+- Turn off with `window.STROLLANE_PHOTOS = false`.
+- **Safeguards:**
+  - The Wikidata entry's own coordinates (P625) must be within 300 m of the place, so a wrong ID never shows a
+    photo of something else.
+  - Only free licences (CC BY / BY-SA, CC0, public domain) are shown.
+  - A named author is required unless the photo is public domain or CC0. Two CC BY files near Madison Square Park
+    have no author, so they are not shown.
+  - The author is cleaned from Commons' Artist HTML: the first linked name, without notes such as "panoramic image…"
+    or "No machine-readable author provided … assumed".
+  - If Wikimedia can't be reached, there are no photos and no errors.
+- **Where photos appear:**
+  - up to 3 per route card (the "via" place first);
+  - up to 6 in "Along this walk";
+  - each with the place name and "author · licence", linked to its Commons page.
+- **Verified on the live origin** (https://elianmu.github.io, built-in browser, 2026-11-10):
+  - 37 of 40 listed places between Bryant Park and Union Square returned a credited photo, in 0.48 s;
+  - the photo strip rendered with real thumbnails.
+- **Tests** use those responses, recorded and trimmed to the fields used, in `tests/mobile-v2/fixture-wikimedia.json`.
+  Thumbnail bytes are a test-only placeholder, because the sandbox cannot reach Wikimedia.
+- **Mapillary street-level photos are not added.** They need a client token (free, but a decision and an account),
+  and the sandbox cannot reach graph.mapillary.com.
+
+**Navigation.**
+- The top card gains "Next: Madison Square Park · 200 m":
+  - It names the next listed place ahead on the route, from the same place set.
+  - The distance is measured along the route.
+  - It shows the place's photo with author and licence when one exists.
+  - It is hidden while navigating to the start of the walk.
+- "AR view" is now **"AR · compass"**. Its tooltip says directions are placed by the phone compass (error 10–20°).
+- "Preview walk in 3D" is now **"3D map preview"**: it is a map fly-through, not street imagery.
+- The direction note ("Direction: compass") now shows only when direction is missing.
+- Fixed: an empty status pill showed over the turn instruction while navigating. The state class overwrote `hidden`.
+
+**Map.** Each listed walk carries its card name on its map line ("Greenest", "Fastest"):
+- symbol layer `route-names`, line-centre;
+- theme colours;
+- hidden during navigation;
+- routes under "More routes" stay unnamed.
+
+**Tests:**
+- `route-cards.js` 28/28. New checks:
+  - card photos are real places on that route, credited and linked to Commons;
+  - there is no uncredited author;
+  - map names match the card names;
+  - Wikimedia down → no photos, no errors.
+- New `nav-next.js` 8/8: walks a real route at 1.33 m/s (a fix every 20 m) and checks:
+  - the labels;
+  - "Next" names a listed place ahead;
+  - the distance is right within 30 m;
+  - the place changes as you pass it;
+  - the photo credit;
+  - the direction note.
+- `dom.test.cjs` waits for the debounced re-plan instead of a fixed 800 ms. That check had been timing-dependent.
+
 ## Round 21: Experience-first results — choose a walk by how it feels
 
 Goal (professor's feedback): people choose a walk by how they want to experience the city, not by reading

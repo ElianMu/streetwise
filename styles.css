@@ -1088,3 +1088,9 @@ body[data-mview="typing"] .m-route-ends .m-context{display:flex}
 .along-photos{display:flex;gap:8px;overflow-x:auto;margin-top:10px;padding-bottom:4px;scroll-snap-type:x mandatory}
 .along-photos .rp-photo{flex:0 0 132px;scroll-snap-align:start}
 .along-photos .rp-photo img{height:92px}
+/* Navigation: the next listed place ahead ("Next: Madison Square Park · 200 m"), with its photo when one exists */
+.nav-place{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:12px;line-height:1.35;color:var(--text-secondary)}
+.nav-place b{font-weight:700;color:var(--text-primary)}
+.nav-place img{flex:0 0 40px;width:40px;height:40px;object-fit:cover;border-radius:var(--r-sm);background:var(--bg-input)}
+.nav-place>span{display:flex;flex-direction:column;min-width:0}.nav-place .np-line{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-place a{font-size:10px;color:var(--text-tertiary);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

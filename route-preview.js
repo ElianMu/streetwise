@@ -10,7 +10,7 @@ function previewBuild(){
  if(preview.els)return preview.els;
  const root=document.createElement('section');root.id='routePreview';root.className='route-preview hidden';root.setAttribute('aria-label','3D route preview');
  root.innerHTML=`<div class="rp-top"><div class="rp-now"><small id="rpWhere">Start</small><strong id="rpInstr">Preview of your walk</strong></div>
-   <button type="button" class="rp-close" id="rpClose" aria-label="Close 3D preview"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+   <button type="button" class="rp-close" id="rpClose" aria-label="Close 3D map preview"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="rp-stop hidden" id="rpStop"></div>
   <div class="rp-bar">
    <button type="button" class="rp-play" id="rpPlay" aria-label="Pause"><svg viewBox="0 0 24 24" id="rpPlayIcon"></svg></button>

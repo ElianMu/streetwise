@@ -125,6 +125,7 @@ function renderRouteCards(){
  root.innerHTML=order.map(x=>{
   const r=x.raw,st=story.stories[x.id]||{},selected=x.id===state.activeRoute,feasible=r.constraints.feasible,extra=!shownSet.has(x.id);
   x.label=st.name||r.route_name; // the map label, navigation and summary use the same name as the card
+  x.shortLabel=extra?'':(st.short||'');
   const chips=(st.highlights||[]).map(h=>`<span>${esc(h)}</span>`).join('');
   const heat=weatherActive&&r.weather?`<span class="rc-note">Weather: ${Math.round(r.weather.heat_exposure_share*100)}% of this walk in the sun (tree-cover proxy)</span>`:'';
   return `<article class="route-card${selected?' selected':''}${!feasible?' over-budget':''}${extra?' extra':''}${extra&&!routeStory.showAll&&!selected?' hidden':''}" data-route="${esc(x.id)}"><button type="button" class="route-pick" data-pick="${esc(x.id)}" aria-pressed="${selected}">${st.tag?`<span class="rc-tag">${esc(st.tag)}</span>`:''}<strong class="rc-name">${esc(st.name||r.route_name)}</strong>${st.sentence?`<span class="rc-sentence">${esc(st.sentence)}</span>`:''}<span class="rc-row"><span class="rc-col"><span class="rc-meta"><strong>${(r.distance_m/1000).toFixed(1)} km</strong><span>${Math.ceil(r.estimated_duration_min)} min</span></span>${chips?`<span class="rc-chips">${chips}</span>`:''}</span>${extra?'':storyPreviewSvg(r,shownRaw)}</span>${st.why?`<span class="rc-why">${esc(st.why)}</span>`:''}${st.note?`<span class="rc-note warn">${esc(st.note)}</span>`:''}${heat}</button>${extra?'':cardPhotos(r,st)}${routeCardDetails(r)}</article>`;
