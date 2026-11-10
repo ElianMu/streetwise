@@ -4,6 +4,32 @@
 // still one tap away (card "Details" and "Technical details"). Every word on a card must match the engine's scores.
 // Runs against the real server.py (real routing engine, real place index); nothing is mocked.
 const { launch, newPage, openApp, shot } = require('./harness');
+const path = require('path');
+// Wikimedia answers from real recorded responses (fixture-wikimedia.json); the sandbox cannot reach Wikimedia.
+const WM = require(path.join(__dirname, 'fixture-wikimedia.json'));
+const PIXEL = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==', 'base64');
+async function wikimedia(page, mode) {
+  const seen = { wd: 0, cm: 0, thumbs: 0 };
+  await page.route(/wikidata\.org\/w\/api\.php|commons\.wikimedia\.org\/w\/api\.php|thumb\.wikimedia\.org/, (route) => {
+    const u = new URL(route.request().url());
+    if (mode === 'down') return route.abort('internetdisconnected');
+    if (u.hostname === 'thumb.wikimedia.org') { seen.thumbs++; return route.fulfill({ status: 200, contentType: 'image/png', body: PIXEL }); } // test-only image bytes
+    if (u.hostname.endsWith('wikidata.org')) {
+      seen.wd++;
+      const entities = {};
+      for (const id of (u.searchParams.get('ids') || '').split('|')) {
+        const e = WM.entities[id];
+        entities[id] = e ? { id, claims: { ...(e.P18 ? { P18: [{ mainsnak: { datavalue: { value: e.P18 } } }] } : {}), ...(e.P625 ? { P625: [{ mainsnak: { datavalue: { value: e.P625 } } }] } : {}) } } : { id, missing: '' };
+      }
+      return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ entities }) });
+    }
+    seen.cm++;
+    const pages = {}; let i = -1;
+    for (const t of (u.searchParams.get('titles') || '').split('|')) pages[WM.pages[t] ? String(1000 + (++i)) : String(-1 - (++i))] = WM.pages[t] || { title: t, missing: '' };
+    return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ query: { pages } }) });
+  });
+  return seen;
+}
 let failed = 0, total = 0; const check = (n, ok, d) => { total++; if (!ok) failed++; console.log(`${ok ? 'PASS' : 'FAIL'} ${n}${ok ? '' : ' — ' + JSON.stringify(d)}`); };
 
 async function plan(page, text, phone) {
@@ -27,6 +53,7 @@ const mainView = (page) => page.evaluate(() => [...document.querySelectorAll('#r
   const b = await launch();
   for (const [label, vp, phone] of [['desktop', { width: 1440, height: 900 }, false], ['phone', { width: 402, height: 874 }, true]]) {
     const { page, log, context } = await newPage(b, vp);
+    const wm = await wikimedia(page, 'up');
     await openApp(page, 2500);
     // 1) an A→B sentence asks the routing engine for alternatives and shows 2–3 cards
     const calls = await plan(page, 'A quiet, green walk from Bryant Park to Union Square.', phone);
@@ -45,9 +72,16 @@ const mainView = (page) => page.evaluate(() => [...document.querySelectorAll('#r
       edges: document.querySelectorAll('#routeEdgeList .edge-row').length === state.routes.find((r) => r.id === state.activeRoute).raw.ordered_edge_ids.length,
       techClosed: !$('techDetails').open }));
     check(`${label}: scores, formula, 12-dimension profile and edges kept (card Details + Technical details)`, kept.details && kept.inTech && kept.why && kept.profile === 12 && kept.edges && kept.techClosed, kept);
-    // 5) photos only with a credit (none are added in this step: no photo source is connected yet)
+    // 5) photos: real places this walk passes, each with author, licence and its Commons page
+    await page.waitForFunction(() => document.querySelectorAll('#routeCards .rp-photo').length > 0, null, { timeout: 15000 }).catch(() => {});
+    const ph = await page.evaluate(() => [...document.querySelectorAll('#routeCards .route-card:not(.hidden)')].map((c) => {
+      const raw = state.routes.find((r) => r.id === c.dataset.route).raw, near = (storyPlacesNear(raw) || []).map((p) => p.name);
+      return [...c.querySelectorAll('.rp-photo')].map((f) => ({ alt: f.querySelector('img').alt, src: f.querySelector('img').src, credit: f.querySelector('figcaption a')?.textContent || '', href: f.querySelector('figcaption a')?.href || '', near: near.includes(f.querySelector('img').alt) }));
+    }).flat());
+    const credited = ph.every((x) => x.alt && /·/.test(x.credit) && /(CC|Public domain)/.test(x.credit) && /^https:\/\/commons\.wikimedia\.org\/wiki\/File:/.test(x.href) && /^https:\/\/thumb\.wikimedia\.org\//.test(x.src));
+    check(`${label}: card photos are real places on that route, each credited (author · licence → Commons page) (${ph.length} photos)`, ph.length > 0 && credited && ph.every((x) => x.near), { n: ph.length, bad: ph.filter((x) => !x.near || !/·/.test(x.credit)), calls: wm });
+    check(`${label}: no photo without a named author unless public domain (Farragut / Conkling files have none)`, ph.every((x) => !/Farragut|Conkling/.test(x.alt)) && ph.every((x) => !/machine-readable|panoramic|\(talk\)/i.test(x.credit)), ph.map((x) => x.credit));
     const imgs = cards.flatMap((c) => c.imgs);
-    check(`${label}: no photo without a credit (${imgs.length} photos)`, imgs.every((i) => i.credit.trim().length > 0), imgs);
     // 6) every word on a card matches the engine's scores for the routes shown
     const audit = await page.evaluate(() => {
       const W = routeStory.WORDS, L = routeStory.LIMITS, last = routeStory.last, raw = (id) => state.routes.find((r) => r.id === id).raw;
@@ -90,8 +124,14 @@ const mainView = (page) => page.evaluate(() => [...document.querySelectorAll('#r
     check(`${label}: no page errors`, log.errors.length === 0, log.errors.slice(0, 3));
     await context.close();
   }
+  // Wikimedia unreachable: the cards show without photos, nothing breaks
+  { const { page, log, context } = await newPage(b, { width: 1440, height: 900 }); await wikimedia(page, 'down'); await openApp(page, 2500);
+    await plan(page, 'A quiet, green walk from Bryant Park to Union Square.', false); await page.waitForTimeout(1500);
+    const r = await page.evaluate(() => ({ cards: document.querySelectorAll('#routeCards .route-card:not(.hidden)').length, photos: document.querySelectorAll('.rp-photo').length, names: [...document.querySelectorAll('.rc-name')].map((n) => n.textContent) }));
+    check('Wikimedia unreachable → cards without photos, no errors', r.cards >= 2 && r.photos === 0 && log.errors.length === 0, { r, errors: log.errors.slice(0, 2) });
+    await context.close(); }
   // a walk with a stop still goes to the itinerary planner (one city-walk route)
-  { const { page, context } = await newPage(b, { width: 1440, height: 900 }); await openApp(page, 2500);
+  { const { page, context } = await newPage(b, { width: 1440, height: 900 }); await wikimedia(page, 'up'); await openApp(page, 2500);
     const calls = await plan(page, 'Walk from Bryant Park to Union Square via the Empire State Building.', false);
     const r = await page.evaluate(() => ({ n: state.routes.length, stops: journey.named.map((n) => n.place.name), name: document.querySelector('#routeCards .rc-name')?.textContent }));
     check('a sentence with a stop still plans a city walk with that stop (itinerary)', calls.includes('/api/itinerary') && r.n === 1 && r.stops.includes('Empire State Building'), { calls, r });

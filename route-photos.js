@@ -21,6 +21,16 @@ const PHOTO = {MAX_KM: 0.3, WIDTH: 320, BATCH: 50, FREE: /^(CC[ -]?BY|CC0|CC-BY|
 const routePhotos = {cache: new Map(), inflight: null, queue: new Set(), failed: false};
 
 function photoStrip(html) { const d = document.createElement('div'); d.innerHTML = html || ''; return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
+/** The author's name from Commons' Artist HTML: the first linked name, without notes such as "This panoramic image
+    was created with…", "(talk)" or "No machine-readable author provided … assumed". */
+function photoAuthor(html) {
+ if (!html) return '';
+ const d = document.createElement('div'); d.innerHTML = html;
+ d.querySelectorAll('div, small, .signature-talk').forEach((n) => n.remove());
+ const named = d.querySelector('bdi, a');
+ const text = (named ? named.textContent : d.textContent || '').replace(/No machine-readable author provided\.?/i, '').replace(/\s*assumed \(based on copyright claims\)\.?/i, '');
+ return text.replace(/\s+/g, ' ').trim();
+}
 function photoKm(a, b) { const k = Math.PI / 180, x = (b.lon - a.lon) * Math.cos((a.lat + b.lat) / 2 * k), y = b.lat - a.lat; return Math.hypot(x, y) * k * 6371; }
 function photosEnabled() { return typeof window !== 'undefined' && window.STROLLANE_PHOTOS !== false && typeof fetch === 'function'; }
 
@@ -59,7 +69,7 @@ async function photosFetch(places) {
  for (const page of Object.values(cm.query?.pages || {})) {
   const id = want[alias[page.title] || page.title]; if (!id) continue;
   const info = page.imageinfo?.[0], m = info?.extmetadata || {};
-  const license = photoStrip(m.LicenseShortName?.value), author = photoStrip(m.Artist?.value) || (/public domain|^PD/i.test(license) ? '' : null);
+  const license = photoStrip(m.LicenseShortName?.value), author = photoAuthor(m.Artist?.value) || (/public domain|^PD|^CC0/i.test(license) ? '' : null); // no author → only public domain / CC0 can be shown
   if (!info?.thumburl || !PHOTO.FREE.test(license) || author == null) { routePhotos.cache.set(id, {none: true}); continue; }
   routePhotos.cache.set(id, {wd: id, thumb: info.thumburl, w: info.thumbwidth, h: info.thumbheight, page: info.descriptionurl, author: author.slice(0, 80), license, licenseUrl: m.LicenseUrl?.value || null});
   found = true;
