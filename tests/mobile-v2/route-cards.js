@@ -56,6 +56,9 @@ const mainView = (page) => page.evaluate(() => [...document.querySelectorAll('#r
     const credited = ph.every((x) => x.alt && /·/.test(x.credit) && /(CC|Public domain)/.test(x.credit) && /^https:\/\/commons\.wikimedia\.org\/wiki\/File:/.test(x.href) && /^https:\/\/thumb\.wikimedia\.org\//.test(x.src));
     check(`${label}: card photos are real places on that route, each credited (author · licence → Commons page) (${ph.length} photos)`, ph.length > 0 && credited && ph.every((x) => x.near), { n: ph.length, bad: ph.filter((x) => !x.near || !/·/.test(x.credit)), calls: wm });
     check(`${label}: no photo without a named author unless public domain (Farragut / Conkling files have none)`, ph.every((x) => !/Farragut|Conkling/.test(x.alt)) && ph.every((x) => !/machine-readable|panoramic|\(talk\)/i.test(x.credit)), ph.map((x) => x.credit));
+    const perCard = await page.evaluate(() => [...document.querySelectorAll('#routeCards .route-card:not(.hidden)')].map((c) => [...c.querySelectorAll('.rp-photo img')].map((i) => ({ alt: i.alt, lazy: i.loading === 'lazy' }))));
+    const flat = perCard.flat().map((x) => x.alt);
+    check(`${label}: each photo appears on one card only (cards show their own places), and loads without lazy-loading`, flat.length === new Set(flat).size && perCard.flat().every((x) => !x.lazy), perCard);
     const imgs = cards.flatMap((c) => c.imgs);
     // 6) every word on a card matches the engine's scores for the routes shown
     const audit = await page.evaluate(() => {

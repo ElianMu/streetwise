@@ -83,7 +83,7 @@ function photoFigures(photos, cls) {
  if (!photos.length) return '';
  return `<div class="${cls}">${photos.map((x) => {
   const credit = [x.author, x.license].filter(Boolean).join(' · ');
-  return `<figure class="rp-photo"><img src="${photoEsc(x.thumb)}" alt="${photoEsc(x.name)}" loading="lazy" decoding="async" referrerpolicy="no-referrer" width="${x.w || 320}" height="${x.h || 213}"><figcaption><strong>${photoEsc(x.name)}</strong><a href="${photoEsc(x.page)}" target="_blank" rel="noopener" title="${photoEsc(credit)} — Wikimedia Commons">${photoEsc(credit)}</a></figcaption></figure>`;
+  return `<figure class="rp-photo"><img src="${photoEsc(x.thumb)}" alt="${photoEsc(x.name)}" decoding="async" referrerpolicy="no-referrer" width="${x.w || 320}" height="${x.h || 213}"><figcaption><strong>${photoEsc(x.name)}</strong><a href="${photoEsc(x.page)}" target="_blank" rel="noopener" title="${photoEsc(credit)} — Wikimedia Commons">${photoEsc(credit)}</a></figcaption></figure>`;
  }).join('')}</div>`;
 }
 

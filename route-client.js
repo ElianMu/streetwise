@@ -122,13 +122,14 @@ function renderRouteCards(){
  const order=[...story.shown,...story.extra].map(id=>routes.find(x=>x.id===id)).filter(Boolean);
  $('routeCount').textContent=`${story.shown.length} WALK${story.shown.length===1?'':'S'}`;
  const weatherActive=planner.routeResponse?.weather_routing?.routing?.active;
+ const usedPhotos=new Set();
  root.innerHTML=order.map(x=>{
   const r=x.raw,st=story.stories[x.id]||{},selected=x.id===state.activeRoute,feasible=r.constraints.feasible,extra=!shownSet.has(x.id);
   x.label=st.name||r.route_name; // the map label, navigation and summary use the same name as the card
   x.shortLabel=extra?'':(st.short||'');
   const chips=(st.highlights||[]).map(h=>`<span>${esc(h)}</span>`).join('');
   const heat=weatherActive&&r.weather?`<span class="rc-note">Weather: ${Math.round(r.weather.heat_exposure_share*100)}% of this walk in the sun (tree-cover proxy)</span>`:'';
-  return `<article class="route-card${selected?' selected':''}${!feasible?' over-budget':''}${extra?' extra':''}${extra&&!routeStory.showAll&&!selected?' hidden':''}" data-route="${esc(x.id)}"><button type="button" class="route-pick" data-pick="${esc(x.id)}" aria-pressed="${selected}">${st.tag?`<span class="rc-tag">${esc(st.tag)}</span>`:''}<strong class="rc-name">${esc(st.name||r.route_name)}</strong>${st.sentence?`<span class="rc-sentence">${esc(st.sentence)}</span>`:''}<span class="rc-row"><span class="rc-col"><span class="rc-meta"><strong>${(r.distance_m/1000).toFixed(1)} km</strong><span>${Math.ceil(r.estimated_duration_min)} min</span></span>${chips?`<span class="rc-chips">${chips}</span>`:''}</span>${extra?'':storyPreviewSvg(r,shownRaw)}</span>${st.why?`<span class="rc-why">${esc(st.why)}</span>`:''}${st.note?`<span class="rc-note warn">${esc(st.note)}</span>`:''}${heat}</button>${extra?'':cardPhotos(r,st)}${routeCardDetails(r)}</article>`;
+  return `<article class="route-card${selected?' selected':''}${!feasible?' over-budget':''}${extra?' extra':''}${extra&&!routeStory.showAll&&!selected?' hidden':''}" data-route="${esc(x.id)}"><button type="button" class="route-pick" data-pick="${esc(x.id)}" aria-pressed="${selected}">${st.tag?`<span class="rc-tag">${esc(st.tag)}</span>`:''}<strong class="rc-name">${esc(st.name||r.route_name)}</strong>${st.sentence?`<span class="rc-sentence">${esc(st.sentence)}</span>`:''}<span class="rc-row"><span class="rc-col"><span class="rc-meta"><strong>${(r.distance_m/1000).toFixed(1)} km</strong><span>${Math.ceil(r.estimated_duration_min)} min</span></span>${chips?`<span class="rc-chips">${chips}</span>`:''}</span>${extra?'':storyPreviewSvg(r,shownRaw)}</span>${st.why?`<span class="rc-why">${esc(st.why)}</span>`:''}${st.note?`<span class="rc-note warn">${esc(st.note)}</span>`:''}${heat}</button>${extra?'':cardPhotos(r,st,shownRaw,usedPhotos)}${routeCardDetails(r)}</article>`;
  }).join('');
  root.querySelectorAll('[data-pick]').forEach(el=>el.addEventListener('click',()=>selectRoute(el.dataset.pick)));
  if(more){const n=story.extra.length;more.classList.toggle('hidden',!n);more.textContent=routeStory.showAll?'Fewer routes':`More routes (${n})`;more.setAttribute('aria-expanded',String(routeStory.showAll));}
@@ -138,10 +139,15 @@ function renderRouteCards(){
  if(typeof renderNavStart==='function')renderNavStart();
 }
 /** Up to 3 photos of real places this walk passes (its "via" place first), each with author and licence. */
-function cardPhotos(r,st){
+/** Up to 3 photos of real places this walk passes: its "via" place, then places only this walk passes, then shared ones;
+    a photo already on an earlier card is used again only when nothing else is left (so the cards look different). */
+function cardPhotos(r,st,shown=[],used=new Set()){
  if(typeof photosFor!=='function')return'';
- const places=(storyPlacesNear(r)||[]).slice(0,10),first=places.filter(p=>p.name===st.via),rest=places.filter(p=>p.name!==st.via);
- return photoFigures(photosFor([...first,...rest]).slice(0,3),'rc-photos');
+ const places=(storyPlacesNear(r)||[]).slice(0,10),others=new Set(shown.filter(o=>o!==r).flatMap(o=>(storyPlacesNear(o)||[]).map(p=>p.wd)));
+ const ranked=[...places.filter(p=>p.name===st.via),...places.filter(p=>p.name!==st.via&&!others.has(p.wd)),...places.filter(p=>p.name!==st.via&&others.has(p.wd))];
+ const photos=photosFor(ranked),fresh=photos.filter(x=>!used.has(x.wd)),pick=(fresh.length?fresh:photos).slice(0,3);
+ pick.forEach(x=>used.add(x.wd));
+ return photoFigures(pick,'rc-photos');
 }
 /** "Along this walk": how the selected route feels, stretch by stretch (from its own edge scores). */
 function renderAlongWalk(){
