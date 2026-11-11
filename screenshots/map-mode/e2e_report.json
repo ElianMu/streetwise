@@ -1,0 +1,60 @@
+{
+ "checks": [
+  {
+   "name": "map mode loads computed data",
+   "ok": true,
+   "detail": "area=manhattan, segments=10533, calc=strollane-12x24-v1+bb10da45e2"
+  },
+  {
+   "name": "front end reads the same build as the GIS output",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "all 12 \u00d7 N dimension scores on the map equal the pipeline output",
+   "ok": true,
+   "detail": "10533 segments \u00d7 12, mismatches=0"
+  },
+  {
+   "name": "rendered line colour = ramp colour of the segment score (Nature)",
+   "ok": true,
+   "detail": "{\"n\": 300, \"bad\": 0}"
+  },
+  {
+   "name": "Street Details panel = GIS output (nature)",
+   "ok": true,
+   "detail": "10 segments, mismatches=0"
+  },
+  {
+   "name": "Street Details panel = GIS output (architecture)",
+   "ok": true,
+   "detail": "10 segments, mismatches=0"
+  },
+  {
+   "name": "Street Details panel = GIS output (access_safety)",
+   "ok": true,
+   "detail": "10 segments, mismatches=0"
+  },
+  {
+   "name": "Street Details panel = GIS output (spatial_comfort)",
+   "ok": true,
+   "detail": "10 segments, mismatches=0"
+  },
+  {
+   "name": "Street Details panel = GIS output (environment)",
+   "ok": true,
+   "detail": "10 segments, mismatches=0"
+  },
+  {
+   "name": "Street Details panel = GIS output (overall)",
+   "ok": true,
+   "detail": "10 segments, mismatches=0"
+  },
+  {
+   "name": "no JavaScript errors",
+   "ok": true,
+   "detail": ""
+  }
+ ],
+ "failures": []
+}

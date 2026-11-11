@@ -185,7 +185,7 @@ button.place-option:hover{background:var(--g33);color:var(--gd0)}
 .explore-dim canvas{width:100%;height:auto;aspect-ratio:90/300;display:block}.explore-dim:hover{border-color:var(--g7d)}
 .explore-dim[aria-checked=true]{border-color:var(--accent);background:var(--g28);color:var(--gda)}
 .explore-metric{font-size:10.5px;line-height:1.5;color:var(--gc6);margin:10px 0 8px}
-.explore-ramp{display:flex;align-items:center;gap:7px;font-size:9px;color:var(--g9d)}.explore-ramp i{flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,#1d5b8e 0%,#2389cc 35%,#3fc7e8 60%,#f0d23e 78%,#ffe04a 100%)}
+.explore-ramp{display:flex;align-items:center;gap:7px;font-size:9px;color:var(--g9d)}.explore-ramp i{flex:1;height:8px;border-radius:4px;background:linear-gradient(90deg,#163b2c 0%,#1e6140 35%,#2f8f4f 60%,#73c463 78%,#cdf58f 100%)}
 .explore-opacity{display:flex;align-items:center;gap:8px;font-size:9.5px;color:var(--ga8);margin-top:8px}.explore-opacity input{margin:0;flex:1}
 .explore-note{font-size:9.5px;line-height:1.5;color:var(--g8c);margin:8px 0 0}
 .explore-rows{margin:8px 0;display:grid;gap:3px}.explore-row{display:grid;grid-template-columns:104px 1fr 22px;align-items:center;gap:6px;font-size:10px;color:var(--gb2)}.explore-row.current{color:var(--gda);font-weight:700}
@@ -213,7 +213,7 @@ button.place-option:hover{background:var(--g33);color:var(--gd0)}
 
 /* Explore v0.7: 13 views, hover read-out, Street Segment Inspector. */
 .explore-chip.overall{grid-column:1/-1;justify-content:center;color:var(--accent);font-weight:700}
-.ramp-na{display:flex;align-items:center;gap:4px;margin-left:4px}.ramp-na s{width:12px;height:8px;border-radius:2px;background:#56585A}
+.ramp-na{display:flex;align-items:center;gap:4px;margin-left:4px}.ramp-na s{width:14px;height:0;border-top:2px dashed #56585a;background:none}
 .explore-tooltip{position:absolute;z-index:7;pointer-events:none;display:flex;flex-direction:column;gap:2px;max-width:220px;padding:7px 10px;border:1px solid var(--g3d);border-radius:8px;background:color-mix(in srgb,var(--g0e) 94.9%,transparent);color:var(--gee);font-size:11px;box-shadow:0 4px 16px color-mix(in srgb,var(--shadow) 40%,transparent)}
 .explore-tooltip span{color:var(--gb2);font-size:10px}.explore-tooltip b{font-family:var(--font-sans);font-size:13px}
 .explore-inspector{position:absolute;z-index:6;top:16px;right:64px;width:300px;max-height:calc(100% - 60px);overflow:auto;padding:13px 14px;border:1px solid var(--g42);border-radius:13px;background:color-mix(in srgb,var(--g11) 96.1%,transparent);box-shadow:0 8px 30px color-mix(in srgb,var(--shadow) 40%,transparent);color:var(--gda);font-size:11px;scrollbar-width:thin;scrollbar-color:#383838 transparent}
@@ -1094,3 +1094,17 @@ body[data-mview="typing"] .m-route-ends .m-context{display:flex}
 .nav-place img{flex:0 0 40px;width:40px;height:40px;object-fit:cover;border-radius:var(--r-sm);background:var(--bg-input)}
 .nav-place>span{display:flex;flex-direction:column;min-width:0}.nav-place .np-line{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .nav-place a{font-size:10px;color:var(--text-tertiary);text-decoration:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Map Mode — computed 12-dimension data (data/dimensions/*); theme-aware via the variables above */
+html[data-map-theme="light"] .explore-ramp i{background:linear-gradient(90deg,#dcefcf 0%,#a3d48c 35%,#5fa862 60%,#2b7a44 78%,#0f4a2b 100%)}
+.explore-cov{display:inline-block;margin:0 4px 3px 0;padding:1px 7px;border-radius:9px;font-size:10px;font-weight:600;background:var(--ok-surface);color:var(--ok-text)}
+.explore-cov.partial{background:var(--warn-surface);color:var(--warn-text)}.explore-cov.unavailable{background:var(--danger-surface);color:var(--danger-text)}
+.explore-ind{display:block;white-space:normal;line-height:1.45}.explore-ind code,.indicator code{font-size:10px;color:var(--gc6);background:var(--g21);padding:0 4px;border-radius:4px}
+.explore-ind.unavailable,.explore-ind.validation-only,.explore-ind.context-only{opacity:.62}
+.explore-version{display:block;margin-top:4px;font-size:9.5px;color:var(--g8c)}
+.indicator.unavailable{opacity:.75;border-left:2px dashed var(--g8c);padding-left:8px}
+.indicator.validation-only,.indicator.context-only{border-left:2px solid var(--warn);padding-left:8px}
+.indicator-role b{color:var(--text)}.indicator-note{display:block;margin:3px 0;color:var(--g9d)}
+.explore-tooltip small{margin-left:4px;color:var(--g9d)}
+.score-with-swatch{display:flex;align-items:center;gap:8px;color:var(--text)}.score-with-swatch b{font:inherit;color:var(--text)}
+.score-swatch{display:inline-block;width:14px;height:28px;border-radius:4px;box-shadow:0 0 0 1px var(--line-strong)}.score-swatch.na{background:repeating-linear-gradient(45deg,#56585a 0 4px,transparent 4px 8px)!important}

@@ -443,10 +443,10 @@ async function segmentEvidence(edge){
 }
 /** Existing scoring indicators of the matched LION segment(s) (static Explore data) — the only "Used in scoring" values. */
 async function scoringIndicators(edge,dims){
- if(edge.score_source==='direct_osm'&&edge.direct_sub_indicators){const cat=await loadExploreStreets(),inds=cat.metadata.indicators;
+ if(edge.score_source==='direct_osm'&&edge.direct_sub_indicators){const cat=await loadLegacyStreets(),inds=cat.metadata.indicators;
   return dims.map(k=>({dim:k,source:'measured directly on this OSM edge',rows:inds[k].filter(x=>x.role!=='context').map(x=>({label:x.label,value:edge.direct_sub_indicators[x.key],unit:x.unit}))}));}
  if(!edge.matched_segment_ids.length)return [];
- const data=await loadExploreStreets(),inds=data.metadata.indicators,seg=data.features.find(f=>f.properties.id===edge.matched_segment_ids[0])?.properties;
+ const data=await loadLegacyStreets(),inds=data.metadata.indicators,seg=data.features.find(f=>f.properties.id===edge.matched_segment_ids[0])?.properties;
  if(!seg)return [];
  return dims.map(k=>({dim:k,source:`LION segment ${seg.id} (${seg.name})`,rows:inds[k].filter(x=>x.role!=='context').map(x=>({label:x.label,value:seg[x.key],unit:x.unit}))}));
 }

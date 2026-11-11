@@ -1,0 +1,1428 @@
+{
+ "title": "STROLLANE · NYC — street-level 12 Experience Dimensions",
+ "area": "midtown",
+ "area_label": "Midtown pilot (34th–59th St, river to river)",
+ "area_polygon": [
+  [
+   -74.004,
+   40.757
+  ],
+  [
+   -73.972,
+   40.7432
+  ],
+  [
+   -73.9575,
+   40.7595
+  ],
+  [
+   -73.9935,
+   40.7738
+  ],
+  [
+   -74.004,
+   40.757
+  ]
+ ],
+ "segments": 1208,
+ "spec_version": "strollane-12x24-v1",
+ "calculation_version": "strollane-12x24-v1+bb10da45e2",
+ "built_at": "2026-11-10T17:55:18+00:00",
+ "crs_processing": "EPSG:32618",
+ "crs_output": "EPSG:4326",
+ "comparison_scope": "Percentiles are ranked among the 1,208 segments of this area (Midtown pilot (34th–59th St, river to river)).",
+ "score_method": "Each scored indicator → percentile rank 0–100 among segments of the comparison area that have a value (ties take the lowest rank; \"lower is better\" indicators reversed as 100 − rank). Dimension score = equal-weight mean of the indicator percentiles available on that segment. N/A when none is available; missing values are never 0. Validation/context indicators never enter a score.",
+ "dimensions": [
+  {
+   "key": "architecture",
+   "num": "01",
+   "label": "Architecture",
+   "prop": "d0",
+   "count_prop": "n0",
+   "indicators": [
+    "lpc_k"
+   ],
+   "scored_indicators": [
+    "lpc_k"
+   ],
+   "available_indicators": [
+    "lpc_k"
+   ],
+   "model_coverage": "1/1",
+   "status": "computed",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "nature",
+   "num": "02",
+   "label": "Nature",
+   "prop": "d1",
+   "count_prop": "n1",
+   "indicators": [
+    "tree_km",
+    "park_pct",
+    "canopy_pct"
+   ],
+   "scored_indicators": [
+    "tree_km",
+    "park_pct",
+    "canopy_pct"
+   ],
+   "available_indicators": [
+    "tree_km",
+    "park_pct"
+   ],
+   "model_coverage": "2/3",
+   "status": "partial",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "culture",
+   "num": "03",
+   "label": "Culture",
+   "prop": "d2",
+   "count_prop": "n2",
+   "indicators": [
+    "cult_k"
+   ],
+   "scored_indicators": [
+    "cult_k"
+   ],
+   "available_indicators": [
+    "cult_k"
+   ],
+   "model_coverage": "1/1",
+   "status": "computed",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "quiet",
+   "num": "04",
+   "label": "Quiet & Relax",
+   "prop": "d3",
+   "count_prop": "n3",
+   "indicators": [
+    "noise_k",
+    "width_ft"
+   ],
+   "scored_indicators": [
+    "noise_k",
+    "width_ft"
+   ],
+   "available_indicators": [
+    "noise_k",
+    "width_ft"
+   ],
+   "model_coverage": "2/2",
+   "status": "computed",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "spatial_comfort",
+   "num": "05",
+   "label": "Spatial Comfort",
+   "prop": "d4",
+   "count_prop": "n4",
+   "indicators": [
+    "sidewalk_pct",
+    "seat_access_m",
+    "ramp_coverage"
+   ],
+   "scored_indicators": [
+    "sidewalk_pct",
+    "seat_access_m",
+    "ramp_coverage"
+   ],
+   "available_indicators": [
+    "sidewalk_pct",
+    "seat_access_m",
+    "ramp_coverage"
+   ],
+   "model_coverage": "3/3",
+   "status": "computed",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "urban_vibrancy",
+   "num": "06",
+   "label": "Urban Vibrancy",
+   "prop": "d5",
+   "count_prop": "n5",
+   "indicators": [
+    "vibr_idx",
+    "ped_flow_observed"
+   ],
+   "scored_indicators": [
+    "vibr_idx"
+   ],
+   "available_indicators": [
+    "vibr_idx"
+   ],
+   "model_coverage": "1/1",
+   "status": "computed",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "food_retail",
+   "num": "07",
+   "label": "Food & Retail",
+   "prop": "d6",
+   "count_prop": "n6",
+   "indicators": [
+    "food_k"
+   ],
+   "scored_indicators": [
+    "food_k"
+   ],
+   "available_indicators": [
+    "food_k"
+   ],
+   "model_coverage": "1/1",
+   "status": "computed",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "scenic_visual",
+   "num": "08",
+   "label": "Scenic & Visual",
+   "prop": "d7",
+   "count_prop": "n7",
+   "indicators": [
+    "scenic_k",
+    "waterfront_access_m"
+   ],
+   "scored_indicators": [
+    "scenic_k",
+    "waterfront_access_m"
+   ],
+   "available_indicators": [
+    "scenic_k",
+    "waterfront_access_m"
+   ],
+   "model_coverage": "2/2",
+   "status": "computed",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "walkability",
+   "num": "09",
+   "label": "Walkability",
+   "prop": "d8",
+   "count_prop": "n8",
+   "indicators": [
+    "inter_n",
+    "route_directness"
+   ],
+   "scored_indicators": [
+    "inter_n",
+    "route_directness"
+   ],
+   "available_indicators": [
+    "inter_n",
+    "route_directness"
+   ],
+   "model_coverage": "2/2",
+   "status": "computed",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "access_safety",
+   "num": "10",
+   "label": "Access & Safety",
+   "prop": "d9",
+   "count_prop": "n9",
+   "indicators": [
+    "crash_k",
+    "crime_k"
+   ],
+   "scored_indicators": [
+    "crash_k",
+    "crime_k"
+   ],
+   "available_indicators": [
+    "crash_k",
+    "crime_k"
+   ],
+   "model_coverage": "2/2",
+   "status": "computed",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "environment",
+   "num": "11",
+   "label": "Environment",
+   "prop": "d10",
+   "count_prop": "n10",
+   "indicators": [
+    "hwy_m",
+    "impervious_pct",
+    "no2_area_context"
+   ],
+   "scored_indicators": [
+    "hwy_m",
+    "impervious_pct"
+   ],
+   "available_indicators": [
+    "hwy_m"
+   ],
+   "model_coverage": "1/2",
+   "status": "partial",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  },
+  {
+   "key": "transit_connectivity",
+   "num": "12",
+   "label": "Transit Connectivity",
+   "prop": "d11",
+   "count_prop": "n11",
+   "indicators": [
+    "sub_n",
+    "sub_m"
+   ],
+   "scored_indicators": [
+    "sub_n",
+    "sub_m"
+   ],
+   "available_indicators": [
+    "sub_n",
+    "sub_m"
+   ],
+   "model_coverage": "2/2",
+   "status": "computed",
+   "segments_with_score": 1208,
+   "segment_coverage": 1.0
+  }
+ ],
+ "indicators": [
+  {
+   "key": "lpc_k",
+   "dimension": "architecture",
+   "label": "Weighted landmark proximity",
+   "unit": "index",
+   "role": "up",
+   "method": "Sample the street centerline every 40 m. For LPC landmark lots within 300 m, apply Gaussian distance weights (σ = 100 m) and average all samples. Higher values indicate stronger exposure to recognized landmarks.",
+   "db": [
+    "lpc"
+   ],
+   "params": {
+    "step_m": 40,
+    "cutoff_m": 300,
+    "sigma_m": 100
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "Distance is to the landmark lot polygon (0 inside the lot); each lot (incl. multi-part lots) counted once per sample."
+   ],
+   "computed_at": "2026-11-10T17:54:14+00:00",
+   "seconds": 0.1,
+   "stats": {
+    "min": 0.0,
+    "p50": 1.411,
+    "max": 15.253,
+    "mean": 2.396
+   },
+   "sources": [
+    "LPC Individual Landmark Lots"
+   ]
+  },
+  {
+   "key": "tree_km",
+   "dimension": "nature",
+   "label": "Recorded trees",
+   "unit": "trees/km",
+   "role": "up",
+   "method": "Count mapped tree points within 30 m of each street segment. Divide by segment length in kilometres, using a minimum length of 80 m to avoid inflated short-segment values. Higher values mean denser recorded tree presence.",
+   "db": [
+    "trees"
+   ],
+   "params": {
+    "radius_m": 30,
+    "min_length_m": 80
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "Each tree is assigned to its single nearest walkable segment within 30 m so trees at corners are not double-counted."
+   ],
+   "computed_at": "2026-11-10T17:30:42+00:00",
+   "seconds": 0.6,
+   "stats": {
+    "min": 0.0,
+    "p50": 25.0,
+    "max": 550.0,
+    "mean": 48.357
+   },
+   "sources": [
+    "NYC Parks Forestry Tree Points (structure = Full)"
+   ]
+  },
+  {
+   "key": "park_pct",
+   "dimension": "nature",
+   "label": "Park adjacency",
+   "unit": "share 0–1",
+   "role": "up",
+   "method": "Sample points along the street centerline and side offsets at 20 m and 40 m. Divide points inside official park polygons by all valid sample points. Higher values indicate stronger spatial adjacency to park land.",
+   "db": [
+    "parks"
+   ],
+   "params": {
+    "step_m": 20,
+    "offsets_m": [
+     0,
+     -20,
+     20,
+     -40,
+     40
+    ]
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "Samples every 20 m at offsets 0, ±20, ±40 m."
+   ],
+   "computed_at": "2026-11-10T17:30:46+00:00",
+   "seconds": 0.1,
+   "stats": {
+    "min": 0.0,
+    "p50": 0.0,
+    "max": 1.0,
+    "mean": 0.034
+   },
+   "sources": [
+    "NYC Parks Properties"
+   ]
+  },
+  {
+   "key": "canopy_pct",
+   "dimension": "nature",
+   "label": "Tree-canopy cover",
+   "unit": "%",
+   "role": "up",
+   "method": "Create a 20 m buffer on both sides of the street and intersect it with the 2021 land-cover raster. Divide canopy-class pixel area by total valid classified area × 100. Higher values indicate more overhead tree cover.",
+   "db": [
+    "tnc_landcover"
+   ],
+   "params": {
+    "buffer_m": 20
+   },
+   "status": "unavailable",
+   "valid_segments": 0,
+   "coverage": 0.0,
+   "notes": [
+    "Spec requires the TNC / UVM 2021 land-cover raster. It is not in the repo, and NYC Open Data only publishes the 2017 edition (he6d-2qns, 6-in, 1.33 GB zip). The 2017 raster is not substituted for the 2021 one. N/A until the 2021 raster is supplied."
+   ],
+   "sources": [
+    "NYC Land Cover 2021 (6 in) — TNC / UVM Spatial Analysis Lab"
+   ]
+  },
+  {
+   "key": "cult_k",
+   "dimension": "culture",
+   "label": "Cultural POI proximity",
+   "unit": "index",
+   "role": "up",
+   "method": "Map museums, galleries, theatres, libraries, and similar cultural destinations. For locations within 450 m, sum Gaussian distance-decay weights (σ = 150 m) along the street. Higher values indicate stronger nearby cultural access.",
+   "db": [
+    "osm"
+   ],
+   "params": {
+    "step_m": 40,
+    "cutoff_m": 450,
+    "sigma_m": 150
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "818 cultural POIs (museum, gallery, theatre, arts centre, cinema, library, music venue, concert hall)."
+   ],
+   "computed_at": "2026-11-10T17:30:46+00:00",
+   "seconds": 0.2,
+   "stats": {
+    "min": 0.0,
+    "p50": 1.264,
+    "max": 21.612,
+    "mean": 2.23
+   },
+   "sources": [
+    "OpenStreetMap POIs via Overpass API"
+   ]
+  },
+  {
+   "key": "noise_k",
+   "dimension": "quiet",
+   "label": "Noise-complaint intensity",
+   "unit": "index",
+   "role": "down",
+   "method": "Filter geolocated NYC 311 noise complaints to the latest 12 months. Sum Gaussian distance weights for reports within 150 m (σ = 50 m), then reverse the percentile. Fewer nearby complaints rank higher.",
+   "db": [
+    "noise"
+   ],
+   "params": {
+    "step_m": 40,
+    "cutoff_m": 150,
+    "sigma_m": 50
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "177034 geolocated noise complaints in the 12-month window."
+   ],
+   "computed_at": "2026-11-10T17:30:46+00:00",
+   "seconds": 0.3,
+   "stats": {
+    "min": 0.061,
+    "p50": 22.41,
+    "max": 222.097,
+    "mean": 31.583
+   },
+   "sources": [
+    "NYC 311 Service Requests — Noise*"
+   ]
+  },
+  {
+   "key": "width_ft",
+   "dimension": "quiet",
+   "label": "Roadway width",
+   "unit": "ft",
+   "role": "down",
+   "method": "Read roadway width in feet from NYC LION for each street segment. Convert values to Manhattan-relative percentiles and reverse them so narrower streets rank higher. This is a quietness proxy, not a measured sound level.",
+   "db": [
+    "lion"
+   ],
+   "params": {},
+   "status": "computed",
+   "valid_segments": 1156,
+   "coverage": 0.957,
+   "notes": [
+    "N/A where LION records no roadway width (common on park paths and step streets)."
+   ],
+   "computed_at": "2026-11-10T17:30:42+00:00",
+   "seconds": 0.0,
+   "stats": {
+    "min": 10.0,
+    "p50": 35.0,
+    "max": 85.0,
+    "mean": 43.555
+   },
+   "sources": [
+    "NYC Street Centerline (LION) — NYC DCP"
+   ]
+  },
+  {
+   "key": "sidewalk_pct",
+   "dimension": "spatial_comfort",
+   "label": "Mapped sidewalk coverage",
+   "unit": "share 0–1",
+   "role": "up",
+   "method": "Sample roughly every 20 m along the street and add left/right offsets at 5, 8, 11, and 14 m. Divide points inside mapped sidewalk polygons by all valid points. Higher values indicate wider or more continuous sidewalk coverage.",
+   "db": [
+    "sidewalks"
+   ],
+   "params": {
+    "step_m": 20,
+    "offsets_m": [
+     -5,
+     5,
+     -8,
+     8,
+     -11,
+     11,
+     -14,
+     14
+    ]
+   },
+   "status": "computed",
+   "valid_segments": 1162,
+   "coverage": 0.9619,
+   "notes": [
+    "N/A on park paths and step streets (LION types 6, 7): they have no curbside sidewalk to measure."
+   ],
+   "computed_at": "2026-11-10T17:30:56+00:00",
+   "seconds": 3.6,
+   "stats": {
+    "min": 0.0,
+    "p50": 0.344,
+    "max": 1.0,
+    "mean": 0.32
+   },
+   "sources": [
+    "NYC Planimetric Database: Sidewalk"
+   ]
+  },
+  {
+   "key": "seat_access_m",
+   "dimension": "spatial_comfort",
+   "label": "Walking distance to seating",
+   "unit": "m",
+   "role": "down",
+   "method": "Locate public seating points on the walkable network. From each street midpoint, calculate the shortest walking distance to the nearest seat, capped at 500 m. Shorter distances indicate easier access to rest.",
+   "db": [
+    "seating",
+    "osm_walk"
+   ],
+   "params": {
+    "cap_m": 500
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "1191 of 1194 Manhattan seats linked to the OSM pedestrian network (≤100 m snap).",
+    "Midpoint joins the network at its nearest walk-graph node; values ≥ 500 m are capped at 500."
+   ],
+   "computed_at": "2026-11-10T17:55:14+00:00",
+   "seconds": 0.7,
+   "stats": {
+    "min": 16.075,
+    "p50": 199.383,
+    "max": 500.0,
+    "mean": 213.84
+   },
+   "sources": [
+    "NYC DOT Seating Locations",
+    "OpenStreetMap pedestrian network (OSMnx walk graph)"
+   ]
+  },
+  {
+   "key": "ramp_coverage",
+   "dimension": "spatial_comfort",
+   "label": "Pedestrian-ramp coverage",
+   "unit": "share 0–1",
+   "role": "up",
+   "method": "Identify evaluable pedestrian crossing nodes along the street. Check whether at least one recorded curb ramp lies within 20 m of each node, then divide covered nodes by all eligible nodes. Higher values mean more documented ramp provision.",
+   "db": [
+    "ramps",
+    "lion"
+   ],
+   "params": {
+    "radius_m": 20
+   },
+   "status": "computed",
+   "valid_segments": 1111,
+   "coverage": 0.9197,
+   "notes": [
+    "Eligible nodes = segment end nodes joining ≥3 walkable segments, at least one a roadway (a crossing). N/A when a segment has no eligible crossing node."
+   ],
+   "computed_at": "2026-11-10T17:30:47+00:00",
+   "seconds": 0.2,
+   "stats": {
+    "min": 0.0,
+    "p50": 1.0,
+    "max": 1.0,
+    "mean": 0.913
+   },
+   "sources": [
+    "NYC DOT Pedestrian Ramp Locations",
+    "NYC Street Centerline (LION) — NYC DCP"
+   ]
+  },
+  {
+   "key": "vibr_idx",
+   "dimension": "urban_vibrancy",
+   "label": "POI diversity × quantity",
+   "unit": "index",
+   "role": "up",
+   "method": "Collect OSM places within 150 m of the street midpoint and group them by activity type. Compute normalized Shannon diversity H and multiply it by ln(1 + POI count). Higher values indicate both more places and greater use diversity.",
+   "db": [
+    "osm"
+   ],
+   "params": {
+    "radius_m": 150
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "H = Shannon entropy of activity types ÷ ln(number of types present) (0–1)."
+   ],
+   "computed_at": "2026-11-10T17:30:46+00:00",
+   "seconds": 0.0,
+   "stats": {
+    "min": 1.159,
+    "p50": 3.32,
+    "max": 4.229,
+    "mean": 3.304
+   },
+   "sources": [
+    "OpenStreetMap POIs via Overpass API"
+   ]
+  },
+  {
+   "key": "ped_flow_observed",
+   "dimension": "urban_vibrancy",
+   "label": "Observed pedestrian flow",
+   "unit": "people/h",
+   "role": "validation",
+   "method": "Standardize pedestrian-sensor observations by hour and period to make locations comparable. Use the median valid hourly pedestrian count and compare it with the POI-based vibrancy model. This is validation evidence, not a full-street score.",
+   "db": [
+    "ped_counts"
+   ],
+   "params": {},
+   "status": "validation-only",
+   "valid_segments": 17,
+   "coverage": 0.0141,
+   "notes": [
+    "17 segments carry one of 36 Manhattan DOT count locations (snapped ≤ 30 m). Rate = period total ÷ hours (weekday 7–9 AM, 4–7 PM; Saturday 12–2 PM), median of valid periods in the 4 most recent rounds (Oct 2024 – May 2026). Validation evidence only — never part of a street score."
+   ],
+   "computed_at": "2026-11-10T17:38:36+00:00",
+   "seconds": 0.1,
+   "stats": {
+    "min": 340.75,
+    "p50": 2517.917,
+    "max": 5464.0,
+    "mean": 2751.142
+   },
+   "sources": [
+    "NYC DOT Bi-Annual Pedestrian Counts"
+   ]
+  },
+  {
+   "key": "food_k",
+   "dimension": "food_retail",
+   "label": "Food and retail proximity",
+   "unit": "index",
+   "role": "up",
+   "method": "Extract mapped restaurants, cafés, bars, shops, and other retail POIs. At street samples, sum Gaussian proximity values for locations within 150 m (σ = 50 m). Higher values indicate stronger nearby food and retail availability.",
+   "db": [
+    "osm"
+   ],
+   "params": {
+    "step_m": 40,
+    "cutoff_m": 150,
+    "sigma_m": 50
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "20934 food, drink and shop POIs."
+   ],
+   "computed_at": "2026-11-10T17:30:46+00:00",
+   "seconds": 0.0,
+   "stats": {
+    "min": 0.0,
+    "p50": 4.89,
+    "max": 29.326,
+    "mean": 5.945
+   },
+   "sources": [
+    "OpenStreetMap POIs via Overpass API"
+   ]
+  },
+  {
+   "key": "scenic_k",
+   "dimension": "scenic_visual",
+   "label": "Scenic POI proximity",
+   "unit": "index",
+   "role": "up",
+   "method": "Select OSM viewpoints, public art, fountains, memorials, and monuments. Compute Gaussian distance weights within 300 m (σ = 100 m) along street samples. Higher values indicate greater proximity to scenic features.",
+   "db": [
+    "osm"
+   ],
+   "params": {
+    "step_m": 40,
+    "cutoff_m": 300,
+    "sigma_m": 100
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "1432 viewpoints, artworks, fountains, memorials and monuments."
+   ],
+   "computed_at": "2026-11-10T17:30:46+00:00",
+   "seconds": 0.0,
+   "stats": {
+    "min": 0.0,
+    "p50": 0.954,
+    "max": 20.836,
+    "mean": 2.09
+   },
+   "sources": [
+    "OpenStreetMap POIs via Overpass API"
+   ]
+  },
+  {
+   "key": "waterfront_access_m",
+   "dimension": "scenic_visual",
+   "label": "Walking distance to waterfront",
+   "unit": "m",
+   "role": "down",
+   "method": "Verify public waterfront entries and their links to walkable paths. Calculate the shortest pedestrian-network route from each street midpoint to the nearest valid entrance. Shorter distances indicate easier public access to waterfront views.",
+   "db": [
+    "waterfront_access",
+    "parks",
+    "hydrography",
+    "osm_walk"
+   ],
+   "params": {
+    "cap_m": 3000,
+    "entrance_water_m": 60
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "672 valid entrances: connected walk-graph nodes inside public waterfront space (open WPAA or a park within 30 m of river/bay) and within 60 m of open water. Capped at 3000 m."
+   ],
+   "computed_at": "2026-11-10T17:55:17+00:00",
+   "seconds": 3.2,
+   "stats": {
+    "min": 26.33,
+    "p50": 1131.091,
+    "max": 2228.572,
+    "mean": 1129.91
+   },
+   "sources": [
+    "Waterfront Public Access Areas (WPAA)",
+    "NYC Parks Properties",
+    "NYC Planimetric Database: Hydrography",
+    "OpenStreetMap pedestrian network (OSMnx walk graph)"
+   ]
+  },
+  {
+   "key": "inter_n",
+   "dimension": "walkability",
+   "label": "Connected junctions",
+   "unit": "count",
+   "role": "up",
+   "method": "Construct the walkable-road topology from NYC LION segments. Identify junctions meeting at least three segments and count those within 250 m of each street midpoint. Higher counts indicate more route choices and connections.",
+   "db": [
+    "lion"
+   ],
+   "params": {
+    "radius_m": 250
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "5041 LION junctions (≥3 walkable segments)."
+   ],
+   "computed_at": "2026-11-10T17:30:42+00:00",
+   "seconds": 0.0,
+   "stats": {
+    "min": 4.0,
+    "p50": 16.0,
+    "max": 40.0,
+    "mean": 17.503
+   },
+   "sources": [
+    "NYC Street Centerline (LION) — NYC DCP"
+   ]
+  },
+  {
+   "key": "route_directness",
+   "dimension": "walkability",
+   "label": "Walking-network detour",
+   "unit": "ratio ≥1",
+   "role": "down",
+   "method": "Sample feasible nearby origin–destination pairs around each street. Divide the shortest pedestrian-network distance by straight-line distance and take the median. Ratios closer to 1 indicate less detour and more direct walking.",
+   "db": [
+    "osm_walk"
+   ],
+   "params": {
+    "ring_m": [
+     250,
+     500
+    ],
+    "sectors": 8,
+    "min_pairs": 3
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "Origin = walk-graph node nearest the midpoint; destinations = node closest to 375 m in each 45° sector of the 250–500 m ring; pairs unreachable within 1.5 km excluded; N/A with fewer than 3 feasible pairs."
+   ],
+   "computed_at": "2026-11-10T17:31:00+00:00",
+   "seconds": 0.4,
+   "stats": {
+    "min": 1.134,
+    "p50": 1.336,
+    "max": 2.733,
+    "mean": 1.347
+   },
+   "sources": [
+    "OpenStreetMap pedestrian network (OSMnx walk graph)"
+   ]
+  },
+  {
+   "key": "crash_k",
+   "dimension": "access_safety",
+   "label": "Pedestrian-injury crash intensity",
+   "unit": "index",
+   "role": "down",
+   "method": "Filter three years of reported collisions involving pedestrian injury or death. Sum Gaussian proximity weights for crash points within 120 m (σ = 40 m) and reverse the percentile. Fewer nearby crashes rank higher.",
+   "db": [
+    "collisions"
+   ],
+   "params": {
+    "step_m": 40,
+    "cutoff_m": 120,
+    "sigma_m": 40
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "4204 pedestrian-injury/fatal crashes in the 3-year window. Not adjusted for pedestrian volume."
+   ],
+   "computed_at": "2026-11-10T17:30:46+00:00",
+   "seconds": 0.1,
+   "stats": {
+    "min": 0.0,
+    "p50": 1.543,
+    "max": 10.122,
+    "mean": 1.95
+   },
+   "sources": [
+    "NYPD Motor Vehicle Collisions — Crashes"
+   ]
+  },
+  {
+   "key": "crime_k",
+   "dimension": "access_safety",
+   "label": "Crime-report proximity",
+   "unit": "index",
+   "role": "down",
+   "method": "Combine NYPD historic and current-YTD complaint records, deduplicate incident IDs, and retain felony and misdemeanor cases. Sum Gaussian weights for reports within 300 m (σ = 100 m). Fewer reports rank higher, but this remains a proxy rather than personal risk.",
+   "db": [
+    "nypd_complaints"
+   ],
+   "params": {
+    "step_m": 40,
+    "cutoff_m": 300,
+    "sigma_m": 100
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "171188 felony + misdemeanor complaint reports. Report density is a proxy, not personal risk."
+   ],
+   "computed_at": "2026-11-10T17:30:47+00:00",
+   "seconds": 0.5,
+   "stats": {
+    "min": 9.895,
+    "p50": 157.451,
+    "max": 2142.538,
+    "mean": 265.742
+   },
+   "sources": [
+    "NYPD Complaint Data Historic (qgea-i56i) + Current YTD (5uac-w243)"
+   ]
+  },
+  {
+   "key": "hwy_m",
+   "dimension": "environment",
+   "label": "Distance to highways/ramps",
+   "unit": "m",
+   "role": "up",
+   "method": "Measure straight-line distance from each street midpoint to the nearest mapped highway or access ramp. Cap distances at 1,500 m and rank farther distances higher. This acts as a proximity-based environmental exposure proxy.",
+   "db": [
+    "lion"
+   ],
+   "params": {
+    "cap_m": 1500
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "1414 LION expressway / ramp centerlines (types 2, 9)."
+   ],
+   "computed_at": "2026-11-10T17:30:42+00:00",
+   "seconds": 0.0,
+   "stats": {
+    "min": 0.831,
+    "p50": 327.875,
+    "max": 1366.085,
+    "mean": 405.851
+   },
+   "sources": [
+    "NYC Street Centerline (LION) — NYC DCP"
+   ]
+  },
+  {
+   "key": "impervious_pct",
+   "dimension": "environment",
+   "label": "Impervious surface cover",
+   "unit": "%",
+   "role": "down",
+   "method": "Buffer each street by 20 m on both sides and overlay the 2021 classified land-cover raster. Divide impervious-surface area by total valid raster area × 100. Lower values indicate less nearby hard-surface cover.",
+   "db": [
+    "tnc_landcover"
+   ],
+   "params": {
+    "buffer_m": 20
+   },
+   "status": "unavailable",
+   "valid_segments": 0,
+   "coverage": 0.0,
+   "notes": [
+    "Same TNC / UVM 2021 land-cover raster as canopy_pct; not acquired, not substituted. N/A."
+   ],
+   "sources": [
+    "NYC Land Cover 2021 (6 in) — TNC / UVM Spatial Analysis Lab"
+   ]
+  },
+  {
+   "key": "no2_area_context",
+   "dimension": "environment",
+   "label": "Annual NO₂ area context",
+   "unit": "source units",
+   "role": "context",
+   "method": "Read annual NO₂ concentration using the official DOHMH geography, period, and source units. Use this only as neighbourhood-scale environmental context; do not assign the value directly to individual street segments.",
+   "db": [
+    "dohmh_no2"
+   ],
+   "params": {},
+   "status": "context-only",
+   "valid_segments": 0,
+   "coverage": 0.0,
+   "notes": [
+    "Annual mean NO₂ 2024 (ppb) by Community District, DOHMH NYCCAS. Shown as a neighbourhood-scale context layer; the value is deliberately NOT assigned to street segments and never scored."
+   ],
+   "computed_at": "2026-11-10T17:38:37+00:00",
+   "seconds": 0.1,
+   "stats": null,
+   "sources": [
+    "NYC DOHMH Air Quality (NYCCAS annual NO₂)"
+   ]
+  },
+  {
+   "key": "sub_n",
+   "dimension": "transit_connectivity",
+   "label": "Entry-permitted subway entrances",
+   "unit": "count",
+   "role": "up",
+   "method": "Keep only MTA entrances that allow passengers to enter. Count qualifying entrances within 400 m of each street midpoint. Higher values indicate more nearby access points, not higher service frequency.",
+   "db": [
+    "subway"
+   ],
+   "params": {
+    "radius_m": 400
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [
+    "840 entry-permitted entrances."
+   ],
+   "computed_at": "2026-11-10T17:30:42+00:00",
+   "seconds": 0.1,
+   "stats": {
+    "min": 0.0,
+    "p50": 11.0,
+    "max": 52.0,
+    "mean": 13.526
+   },
+   "sources": [
+    "MTA Subway Entrances and Exits: 2024 (entry allowed)"
+   ]
+  },
+  {
+   "key": "sub_m",
+   "dimension": "transit_connectivity",
+   "label": "Distance to subway entrance",
+   "unit": "m",
+   "role": "down",
+   "method": "From each street midpoint, find the nearest MTA entrance that permits boarding access. Measure distance, cap it at 1,500 m, and reverse the Manhattan percentile. Shorter distances indicate stronger subway proximity.",
+   "db": [
+    "subway"
+   ],
+   "params": {
+    "cap_m": 1500
+   },
+   "status": "computed",
+   "valid_segments": 1208,
+   "coverage": 1.0,
+   "notes": [],
+   "computed_at": "2026-11-10T17:30:42+00:00",
+   "seconds": 0.0,
+   "stats": {
+    "min": 5.453,
+    "p50": 253.915,
+    "max": 1061.68,
+    "mean": 318.988
+   },
+   "sources": [
+    "MTA Subway Entrances and Exits: 2024 (entry allowed)"
+   ]
+  }
+ ],
+ "sources": {
+  "lion": {
+   "label": "NYC Street Centerline (LION) — NYC DCP",
+   "url": "https://data.cityofnewyork.us/d/inkn-q76z",
+   "api": "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/ArcGIS/rest/services/NYC_Street_Centerline/FeatureServer/0",
+   "file": "data/cache/sources/streets_v4.json",
+   "qa": {
+    "source": "lion",
+    "file": "data/cache/sources/streets_v4.json",
+    "file_retrieved_at": "2026-10-23T04:54:54+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 13306,
+    "records_kept": 10533,
+    "excluded_types": "2 highway, 3 bridge, 4 tunnel, 9 ramp, 13/14 ferry & other non-walkable",
+    "misplaced_outside_manhattan": 1,
+    "width_missing": 1158,
+    "expressway_ramp_lines": 1414,
+    "duplicate_ids": 0
+   },
+   "status": "loaded"
+  },
+  "lpc": {
+   "label": "LPC Individual Landmark Lots",
+   "url": "https://services5.arcgis.com/Oos4pNA2538iVFA1/ArcGIS/rest/services/Ind_Landmark_Lots_POLY/FeatureServer/0",
+   "file": "data/cache/sources/lpc.json",
+   "qa": {
+    "source": "lpc",
+    "file": "data/cache/sources/lpc.json",
+    "file_retrieved_at": "2026-10-23T04:54:54+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 995,
+    "records_kept": 995,
+    "invalid_repaired": 0,
+    "scope": "BORO='Manhattan' landmark lots"
+   },
+   "status": "loaded"
+  },
+  "trees": {
+   "label": "NYC Parks Forestry Tree Points (structure = Full)",
+   "url": "https://data.cityofnewyork.us/d/hn5i-inap",
+   "file": "data/cache/sources/forestry_trees.json",
+   "qa": {
+    "source": "trees",
+    "file": "data/cache/sources/forestry_trees.json",
+    "file_retrieved_at": "2026-10-23T04:54:54+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 174207,
+    "records_kept": 174207,
+    "dropped_invalid_or_outside": 0,
+    "duplicate_coordinates": 6,
+    "filter": "tpstructure = 'Full'"
+   },
+   "status": "loaded"
+  },
+  "parks": {
+   "label": "NYC Parks Properties",
+   "url": "https://data.cityofnewyork.us/d/enfh-gkve",
+   "file": "data/cache/sources/parks.json",
+   "qa": {
+    "source": "parks",
+    "file": "data/cache/sources/parks.json",
+    "file_retrieved_at": "2026-10-23T04:54:54+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 396,
+    "records_kept": 396,
+    "invalid_repaired": 4,
+    "scope": "borough = 'M'"
+   },
+   "status": "loaded"
+  },
+  "tnc_landcover": {
+   "label": "NYC Land Cover 2021 (6 in) — TNC / UVM Spatial Analysis Lab",
+   "url": "https://data.cityofnewyork.us/d/he6d-2qns",
+   "file": null,
+   "qa": null,
+   "status": "not acquired"
+  },
+  "osm": {
+   "label": "OpenStreetMap POIs via Overpass API",
+   "url": "https://www.openstreetmap.org",
+   "file": "data/cache/sources/osm.json",
+   "qa": {
+    "source": "osm",
+    "file": "data/cache/sources/osm.json",
+    "file_retrieved_at": "2026-10-23T04:54:54+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 76714,
+    "records_kept": 76712,
+    "dropped_invalid_or_outside": 2,
+    "duplicate_coordinates": 29,
+    "query": "amenity|shop|tourism|leisure|historic, nodes/ways/relations (centres)"
+   },
+   "status": "loaded"
+  },
+  "osm_walk": {
+   "label": "OpenStreetMap pedestrian network (OSMnx walk graph)",
+   "url": "https://www.openstreetmap.org",
+   "file": "data/pedestrian/manhattan-walk-graph.json.gz",
+   "qa": {
+    "source": "osm_walk",
+    "file": "data/pedestrian/manhattan-walk-graph.json.gz",
+    "file_retrieved_at": "2026-10-23T04:53:43+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 122092,
+    "records_kept": 122092,
+    "nodes": 39957,
+    "network_version": "osm-walk-20261023-99602011",
+    "nodes_outside_largest_component": 3599
+   },
+   "status": "loaded"
+  },
+  "noise": {
+   "label": "NYC 311 Service Requests — Noise*",
+   "url": "https://data.cityofnewyork.us/d/erm2-nwe9",
+   "file": "data/cache/sources/noise.json",
+   "qa": {
+    "source": "noise",
+    "file": "data/cache/sources/noise.json",
+    "file_retrieved_at": "2026-10-23T04:54:54+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 177034,
+    "records_kept": 177034,
+    "dropped_invalid_or_outside": 0,
+    "duplicate_coordinates": 147337,
+    "time_window": "2025-10-23 → 2026-10-23 (12 months before retrieval)",
+    "filter": "complaint_type starts with 'Noise', borough = MANHATTAN"
+   },
+   "status": "loaded"
+  },
+  "sidewalks": {
+   "label": "NYC Planimetric Database: Sidewalk",
+   "url": "https://data.cityofnewyork.us/d/52n9-sdep",
+   "file": "data/cache/sources/sidewalks.json",
+   "qa": {
+    "source": "sidewalks",
+    "file": "data/cache/sources/sidewalks.json",
+    "file_retrieved_at": "2026-10-23T04:54:54+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 9730,
+    "records_kept": 9730,
+    "invalid_repaired": 9,
+    "scope": "Manhattan bounding box"
+   },
+   "status": "loaded"
+  },
+  "seating": {
+   "label": "NYC DOT Seating Locations",
+   "url": "https://data.cityofnewyork.us/d/esmy-s8q5",
+   "file": "data/urban/context/seating.geojson.gz",
+   "qa": {
+    "source": "seating",
+    "file": "data/urban/context/seating.geojson.gz",
+    "file_retrieved_at": "2026-10-24T23:14:13+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 1194,
+    "records_kept": 1194,
+    "dropped_invalid_or_outside": 0,
+    "duplicate_coordinates": 3,
+    "filter": "boroname = 'Manhattan'",
+    "citywide_records": 5702
+   },
+   "status": "loaded"
+  },
+  "ramps": {
+   "label": "NYC DOT Pedestrian Ramp Locations",
+   "url": "https://data.cityofnewyork.us/d/ufzp-rrqu",
+   "file": "data/layers/tiles/pedestrian_ramps/*.json",
+   "qa": {
+    "source": "ramps",
+    "file": "data/layers/tiles/pedestrian_ramps/*.json",
+    "file_retrieved_at": null,
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 23668,
+    "records_kept": 23668,
+    "dropped_invalid_or_outside": 0,
+    "duplicate_coordinates": 0,
+    "tiles_read": 23668,
+    "duplicate_ids_across_tiles": 0
+   },
+   "status": "loaded"
+  },
+  "ped_counts": {
+   "label": "NYC DOT Bi-Annual Pedestrian Counts",
+   "url": "https://data.cityofnewyork.us/d/cqsj-cfgu",
+   "file": "data/dimensions/sources/ped_counts.json",
+   "qa": {
+    "source": "ped_counts",
+    "file": "data/dimensions/sources/ped_counts.json",
+    "file_retrieved_at": "2026-11-10T17:37:23+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 36,
+    "records_kept": 36,
+    "rounds": [
+     "oct24_am",
+     "oct24_md",
+     "oct24_pm",
+     "may25_am",
+     "may25_md",
+     "may25_pm",
+     "oct25_am",
+     "oct25_md",
+     "oct25_pm",
+     "may26_am",
+     "may26_md",
+     "may26_pm"
+    ],
+    "publisher_rows_updated_at": "2026-07-21T20:58:46Z",
+    "retrieved_via": "Socrata API /resource/cqsj-cfgu.json?borough=Manhattan from the user's desktop browser (processing sandboxes cannot reach data.cityofnewyork.us)"
+   },
+   "status": "loaded"
+  },
+  "collisions": {
+   "label": "NYPD Motor Vehicle Collisions — Crashes",
+   "url": "https://data.cityofnewyork.us/d/h9gi-nx95",
+   "file": "data/cache/sources/collisions.json",
+   "qa": {
+    "source": "collisions",
+    "file": "data/cache/sources/collisions.json",
+    "file_retrieved_at": "2026-10-23T04:54:54+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 4204,
+    "records_kept": 4204,
+    "dropped_invalid_or_outside": 0,
+    "duplicate_coordinates": 1130,
+    "time_window": "2023-10-24 → 2026-10-23 (3 years before retrieval)",
+    "filter": "pedestrians injured > 0 OR pedestrians killed > 0, borough = MANHATTAN"
+   },
+   "status": "loaded"
+  },
+  "nypd_complaints": {
+   "label": "NYPD Complaint Data Historic (qgea-i56i) + Current YTD (5uac-w243)",
+   "url": "https://data.cityofnewyork.us/d/qgea-i56i",
+   "file": "data/urban/crime/complaints.sqlite.gz",
+   "qa": {
+    "source": "nypd_complaints",
+    "file": "data/urban/crime/complaints.sqlite.gz",
+    "file_retrieved_at": "2026-10-24T23:14:14+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 171198,
+    "records_kept": 171188,
+    "dropped_invalid_or_outside": 10,
+    "duplicate_coordinates": 161858,
+    "time_window": "2025-01-01 / 2026-06-30",
+    "manhattan_all_law_classes": 197804,
+    "filter": "borough = MANHATTAN, law IN (FELONY, MISDEMEANOR)",
+    "duplicate_source_ids": 0,
+    "dedup": "historic + YTD merged on complaint number (cmplnt_num) when the store was built"
+   },
+   "status": "loaded"
+  },
+  "waterfront_access": {
+   "label": "Waterfront Public Access Areas (WPAA)",
+   "url": "https://data.cityofnewyork.us/d/388s-pnvc",
+   "file": "data/urban/context/waterfront_access.geojson.gz",
+   "qa": {
+    "source": "waterfront_access",
+    "file": "data/urban/context/waterfront_access.geojson.gz",
+    "file_retrieved_at": "2026-10-24T23:14:13+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 78,
+    "records_kept": 42,
+    "filter": "status Open / Partially Open",
+    "invalid_repaired": 0
+   },
+   "status": "loaded"
+  },
+  "hydrography": {
+   "label": "NYC Planimetric Database: Hydrography",
+   "url": "https://data.cityofnewyork.us/d/pjs3-c3z5",
+   "file": "data/urban/context/hydrography.geojson.gz",
+   "qa": {
+    "source": "hydrography",
+    "file": "data/urban/context/hydrography.geojson.gz",
+    "file_retrieved_at": "2026-10-24T23:14:13+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 2206,
+    "records_kept": 86,
+    "filter": "feat_code 2620 (river) / 2660 (bay, channel); ponds and reservoirs excluded",
+    "invalid_repaired": 0
+   },
+   "status": "loaded"
+  },
+  "dohmh_no2": {
+   "label": "NYC DOHMH Air Quality (NYCCAS annual NO₂)",
+   "url": "https://data.cityofnewyork.us/d/c3uy-2p5r",
+   "file": "data/dimensions/sources/no2.json",
+   "qa": {
+    "source": "dohmh_no2",
+    "file": "data/dimensions/sources/no2.json",
+    "file_retrieved_at": "2026-11-10T17:37:23+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 12,
+    "records_kept": 12,
+    "geography": "CD (Community District)",
+    "time_period": "2024",
+    "units": "ppb",
+    "boundaries": "5crt-au7u"
+   },
+   "status": "loaded"
+  },
+  "subway": {
+   "label": "MTA Subway Entrances and Exits: 2024 (entry allowed)",
+   "url": "https://data.ny.gov/d/i9wp-a4ja",
+   "file": "data/cache/sources/subway.json",
+   "qa": {
+    "source": "subway",
+    "file": "data/cache/sources/subway.json",
+    "file_retrieved_at": "2026-10-23T04:54:54+00:00",
+    "crs_in": "EPSG:4326",
+    "crs_out": "EPSG:32618",
+    "records_read": 840,
+    "records_kept": 840,
+    "dropped_invalid_or_outside": 0,
+    "duplicate_coordinates": 10,
+    "filter": "entry_allowed = 'YES', borough = 'M'"
+   },
+   "status": "loaded"
+  }
+ },
+ "windows": {
+  "noise": "2025-10-23 → 2026-10-23 (12 months before retrieval)",
+  "collisions": "2023-10-24 → 2026-10-23 (3 years before retrieval)",
+  "retrieved_at": "2026-10-23T05:12:03+00:00"
+ },
+ "id_scheme": "segment_id = \"MN-\" + LION physicalid (+ \"-n\" when several LION records share one), identical to data/manhattan-streets.json.",
+ "files": {
+  "segments": "segments.geojson",
+  "indicators": "indicators.json",
+  "context_no2": "context_no2.geojson"
+ },
+ "validation": {
+  "urban_vibrancy_vs_ped_flow": {
+   "locations": 17,
+   "spearman_vibr_idx": 0.157,
+   "spearman_dimension_score": 0.157,
+   "note": "Rank correlation between DOT observed people/hour and the POI-based vibrancy model at count locations. DOT locations are mostly busy retail corridors, so the range is restricted."
+  }
+ },
+ "value_note": "Scores are relative ranks within the comparison area, not calibrated experience scores. N/A = not measurable, never 0."
+}
