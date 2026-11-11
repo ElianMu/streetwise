@@ -30,10 +30,15 @@ jobs:
         run: |
           python -m pip install pyproj==3.7.2
           python -m pip install -r requirements.txt
+          # GIS dimension pipeline (scripts/dimensions) — test-only here; server.py stays stdlib-only
+          python -m pip install numpy==2.5.3 scipy==1.18.1 shapely==2.2.0 pandas==3.0.5 geopandas==1.2.0 pytest==9.1.1
           npm install --prefix "$RUNNER_TEMP/streetwise-tests" --save-exact jsdom@27.4.0
 
       - name: Run full Python suite against shipped source snapshots
         run: python -m unittest discover -s tests -p 'test_*.py'
+
+      - name: Run 12-dimension GIS pipeline tests (units, buffers, scoring, exported data integrity)
+        run: python -m pytest tests/test_dimensions.py -q
 
       - name: Run every JavaScript and DOM script
         env:
