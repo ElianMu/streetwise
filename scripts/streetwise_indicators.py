@@ -16,7 +16,7 @@ BOX = (-74.030, 40.698, -73.905, 40.882)  # west, south, east, north
 BOROUGH_BOUNDS = (-74.0522, 40.6747, -73.9018, 40.8870)
 LAT0 = 40.78
 MX, MY = 111320 * math.cos(math.radians(LAT0)), 110540  # metres per degree
-UA = {'User-Agent': 'StreetwiseResearchPrototype/0.4'}
+UA = {'User-Agent': 'StrollaneResearchPrototype/0.4'}
 NOW = datetime.now(timezone.utc)
 
 SOCRATA = 'https://data.cityofnewyork.us/resource/'

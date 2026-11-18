@@ -98,12 +98,24 @@ def get_weather(lat: float, lon: float, minutes: int = 30) -> dict:
         return _err(ERR_INVALID_INPUT, e)
 
 
+ROUTE_SUMMARY_FIELDS = ('route_id', 'route_name', 'objective', 'rank', 'recommended', 'distance_m',
+                        'estimated_duration_min', 'detour_percentage', 'overall_score', 'dimension_scores', 'constraints')
+
+
+def route_summary(result):
+    """The planner's full response (~165 KB for a 1 km walk) reduced to what the agent reasons about."""
+    return {'shortest_distance_m': result.get('shortest_distance_m'), 'feasible_count': result.get('feasible_count'),
+            'constraints_used': result.get('constraints_used'), 'notes': result.get('notes'),
+            'routes': [{k: r[k] for k in ROUTE_SUMMARY_FIELDS if k in r} for r in result.get('routes') or []]}
+
+
 @tool
 def calculate_route(origin_lat: float, origin_lon: float, dest_lat: float, dest_lon: float,
                      max_minutes: float = 0) -> dict:
     """Plan a real walking route between two points using the OSM pedestrian graph (A*/Dijkstra).
-    max_minutes (optional): the caller's own hard time limit; 0 means no limit. Returns the ranked route(s)
-    with actual distance/time, never an estimate.
+    max_minutes (optional): the caller's own hard time limit; 0 means no limit. Returns a compact summary of the
+    ranked route(s) with actual distance/time, never an estimate (geometry, per-edge data and turn instructions are
+    left out: they are tens of thousands of tokens and the agent only needs the numbers).
     """
     from routing.engine import get_planner, RoutingError
     try:
@@ -114,7 +126,7 @@ def calculate_route(origin_lat: float, origin_lon: float, dest_lat: float, dest_
         result = planner.plan({'lat': float(origin_lat), 'lon': float(origin_lon)},
                                {'lat': float(dest_lat), 'lon': float(dest_lon)},
                                {'weights': {}, 'directions': {}}, constraints, None)
-        return _ok(result)
+        return _ok(route_summary(result))
     except RoutingError as e:
         return _err(ERR_INVALID_INPUT, e)
     except (ValueError, TypeError) as e:

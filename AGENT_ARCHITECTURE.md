@@ -47,7 +47,7 @@ What was built instead, scoped to this one real task:
 |---|---|---|
 | Phase 1: Agent Runtime, explicit states | Real: CREATED/RUNNING/WAITING_FOR_TOOL/RETRYING/COMPLETED/FAILED, all actually reached. `WAITING_FOR_USER`/`CANCELLED` are **not** reached by this slice (no human-in-the-loop step exists) — not claimed | `agent/runtime.py` |
 | Phase 2: Tool Registry | Real: 5 tools, uniform `{ok, data}` / `{ok: False, error}` envelope | `agent/tools.py` |
-| Phase 3: durable state | Real: LangGraph `SqliteSaver` checkpoints every step to `data/agent_checkpoints.db`, keyed by `run_id` | `agent/runtime.py` |
+| Phase 3: durable state | Real: LangGraph `SqliteSaver` checkpoints every step to `.agent-state/agent_checkpoints.db` (not statically served; `AGENT_CHECKPOINT_DB` overrides), keyed by `run_id` | `agent/runtime.py` |
 | Phase 4: observability | Real but minimal: structured JSON trace lines per step (tool/LLM turn/state transition), no new log destination | `agent/tracing.py` |
 | Phase 5: evaluation | Real but small: 12 hand-written scenarios, checked structurally (not LLM-judged) | `eval/` |
 | Phase 6: reliability | Real: bounded retries (upstream errors only), step budget, wall-clock timeout | `agent/runtime.py` |

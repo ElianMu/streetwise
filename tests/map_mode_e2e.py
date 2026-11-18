@@ -70,8 +70,8 @@ def main():
             dist = os.path.join(a.local_maplibre, 'node_modules', 'maplibre-gl', 'dist')
             # Playwright gives the most recently registered route priority: the catch-all goes first.
             page.route(re.compile(r'^https?://(?!localhost|127\.0\.0\.1).*'), lambda r: r.abort())
-            page.route('**/unpkg.com/maplibre-gl@*/dist/maplibre-gl.js', lambda r: r.fulfill(path=os.path.join(dist, 'maplibre-gl.js'), content_type='application/javascript'))
-            page.route('**/unpkg.com/maplibre-gl@*/dist/maplibre-gl.css', lambda r: r.fulfill(path=os.path.join(dist, 'maplibre-gl.css'), content_type='text/css'))
+            page.route('**/unpkg.com/maplibre-gl@*/dist/maplibre-gl.js', lambda r: r.fulfill(path=os.path.join(dist, 'maplibre-gl.js'), content_type='application/javascript', headers={'Access-Control-Allow-Origin': '*'}))
+            page.route('**/unpkg.com/maplibre-gl@*/dist/maplibre-gl.css', lambda r: r.fulfill(path=os.path.join(dist, 'maplibre-gl.css'), content_type='text/css', headers={'Access-Control-Allow-Origin': '*'}))
             blank = json.loads(json.dumps(BLANK_STYLE)); blank['layers'][0]['paint']['background-color'] = '#f2f2ee' if a.theme != 'dark' else '#0d1517'
             page.route('**/basemaps.cartocdn.com/**/style.json', lambda r: r.fulfill(body=json.dumps(blank), content_type='application/json'))
         if a.theme:

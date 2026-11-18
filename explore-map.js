@@ -3,7 +3,8 @@
    output in data/dimensions/<area>/ (scripts/dimensions/build.py): segments.geojson (geometry + dimension scores),
    indicators.json (raw + percentile values, fetched on the first click) and manifest.json (spec, sources, coverage).
    Scores are 0–100 ranks within the comparison area, not calibrated experience scores. Missing = N/A, never 0.
-   Independent from AI Journey: no route data is read or changed here (routes keep using data/manhattan-streets.json). */
+   Independent from AI Journey: no route data is read or changed here. Routes use these same street scores,
+   transferred to the routing edges by scripts/transfer_dimension_scores.py. */
 const DIM_LABELS=['Architecture','Nature','Culture','Quiet & Relax','Spatial Comfort','Urban Vibrancy','Food & Retail','Scenic & Visual','Walkability','Access & Safety','Environment','Transit Connectivity'];
 const EXPLORE_VIEWS=[
  {label:'Overall (available dimensions)',prop:'overall',dim:null},
@@ -12,9 +13,9 @@ const EXPLORE_VIEWS=[
 // Full Manhattan first; the Midtown pilot is used only if the Manhattan build is missing (and is labelled as such).
 const DIMENSION_AREAS=['manhattan','midtown'];
 const exploreMap={data:null,loading:null,active:false,view:2,opacity:.9,hover:null,selected:null,collapsed:false,thumbs:false,labels:[],stops:null,manifest:null,base:null,details:null,detailsLoading:null,no2:null};
-// Sequential green ramps that follow the map theme: lightness always runs toward the strongest contrast with the
-// basemap, so high scores stand out (light theme: light → dark green; dark theme: dark → bright green).
-const EXPLORE_RAMPS={light:['#dcefcf','#a3d48c','#5fa862','#2b7a44','#0f4a2b'],dark:['#163b2c','#1e6140','#2f8f4f','#73c463','#cdf58f']},EXPLORE_NA='#56585a';
+// Blue → cyan → yellow ramps (blue = low, yellow = high), one per map theme; the dark-theme ramp is brighter at
+// the low end so low scores stay visible on the dark basemap. Keep in sync with .explore-ramp i in styles.css.
+const EXPLORE_RAMPS={light:['#1f5c9e','#2b94d1','#54c3d0','#a9da84','#f5d64a'],dark:['#2a6fb3','#34a0de','#5cccd6','#b5e08a','#ffdf55']},EXPLORE_NA='#56585a';
 const exploreRampColors=()=>EXPLORE_RAMPS[document.documentElement.dataset.mapTheme==='dark'?'dark':'light'];
 const exploreView=()=>EXPLORE_VIEWS[exploreMap.view];
 // Dimension scores are already percentiles, so fixed stops; Overall is a mean that clusters near 50, so its stops follow its own quantiles.
@@ -169,25 +170,43 @@ function indicatorValue(v,unit){
 }
 const INSPECTOR_STATUS={computed:'Computed',unavailable:'N/A · source not acquired','validation-only':'Validation only · not scored','context-only':'Area context only · not scored'};
 let inspectorToken=0;
+/** Step the map dimension (Overall → 01 … 12 → Overall) while the selected segment stays selected. */
+function exploreStep(delta){const n=EXPLORE_VIEWS.length;selectExploreView(((exploreMap.view+delta)%n+n)%n);}
+/* Street segment inspector, in three levels so the first screen is short and nothing is lost:
+     Summary      — street, dimension, score, coverage, id and length (always visible);
+     Indicators   — one compact row per indicator: raw value, normalized value with a bar, status; the full method,
+                    notes and source of each indicator sit in its own closed "How it is measured";
+     Methodology  — score method, data and version, closed by default (the choice is remembered while exploring).
+   Every sentence the previous single-column inspector showed is still in the panel, word for word. */
 function renderExploreInspector(){
  const box=$('exploreInspector'),p=exploreMap.selected&&exploreSegment(exploreMap.selected);
  if(!exploreMap.active||!p){box.classList.add('hidden');return;}
  const mf=exploreMap.manifest,v=exploreView(),score=p[v.prop],token=++inspectorToken;
  const dimMeta=v.dim==null?null:mf.dimensions[v.dim];
  const cov=v.dim==null?`${p.coverage} of 12 dimensions available on this segment`:`${p['n'+v.dim]} of ${dimMeta.scored_indicators.length} scored indicators available on this segment · model ${dimMeta.model_coverage}`;
- const head=`<div class="inspector-head"><div><div class="explore-eyebrow">STREET SEGMENT INFORMATION</div><strong>${esc(p.name||'Unnamed street')}</strong></div><button type="button" id="inspectorClose" class="explore-collapse" aria-label="Close inspector">✕</button></div>
+ const head=`<div class="inspector-head"><div><div class="explore-eyebrow">STREET SEGMENT INFORMATION</div><strong>${esc(p.name||'Unnamed street')}</strong></div><div class="inspector-actions"><button type="button" id="inspectorPrev" class="explore-collapse" aria-label="Previous dimension" title="Previous dimension">‹</button><button type="button" id="inspectorNext" class="explore-collapse" aria-label="Next dimension" title="Next dimension">›</button><button type="button" id="inspectorClose" class="explore-collapse" aria-label="Close inspector" title="Close (Esc)">✕</button></div></div>
+  <section class="inspector-summary" aria-label="Summary">
+  <div class="inspector-score"><span>${esc(v.label)} · Dimension Score</span><strong class="score-with-swatch"><i class="score-swatch${score==null?' na':''}" style="background:${exploreColor(score)}"></i><b data-k="dimension-score">${fmtScore(score)}</b></strong><small>0–100 percentile within ${esc(mf.area_label)} · ${esc(cov)}</small></div>
   <dl class="inspector-ids"><dt>Segment ID</dt><dd data-k="segment-id">${esc(p.id)}</dd><dt>Street Name</dt><dd>${esc(p.name||'N/A')}</dd><dt>Length</dt><dd>${Number(p.length_m).toLocaleString(undefined,{maximumFractionDigits:1})} m</dd><dt>Dimension</dt><dd>${esc(v.dim==null?v.label:`${dimMeta.num} ${dimMeta.label}`)}</dd></dl>
-  <div class="inspector-score"><span>${esc(v.label)} · Dimension Score</span><strong class="score-with-swatch"><i class="score-swatch${score==null?' na':''}" style="background:${exploreColor(score)}"></i><b data-k="dimension-score">${fmtScore(score)}</b></strong><small>0–100 percentile within ${esc(mf.area_label)} · ${esc(cov)}</small></div>`;
+  </section>`;
  const prov=`<h4>Data &amp; version</h4><p>Segment ${esc(p.id)} = NYC LION physical ID. ${esc(mf.comparison_scope)} Calculation ${esc(mf.calculation_version)}, built ${esc(mf.built_at.slice(0,10))}. Values marked N/A were not measurable and are never counted as 0.</p>`;
- box.innerHTML=head+`<p class="explore-note" data-k="loading">Loading indicator values…</p>`+prov;box.classList.remove('hidden');
+ const methodology=(method)=>`<details class="inspector-method"${exploreMap.methodOpen?' open':''}><summary>Methodology</summary>${method}${prov}</details>`;
+ box.innerHTML=head+`<p class="explore-note" data-k="loading">Loading indicator values…</p>`+methodology('');box.classList.remove('hidden');
+ // header buttons exist from the first paint and are wired once; the body is wired each time it is (re)written
  $('inspectorClose').addEventListener('click',()=>selectExploreSegment(null));
+ $('inspectorPrev').addEventListener('click',()=>exploreStep(-1));$('inspectorNext').addEventListener('click',()=>exploreStep(1));
+ const wireBody=()=>{
+  box.querySelectorAll('.inspector-method').forEach(d=>d.addEventListener('toggle',()=>{exploreMap.methodOpen=d.open;}));
+  box.querySelectorAll('.explore-row[data-view]').forEach(b=>b.addEventListener('click',()=>selectExploreView(Number(b.dataset.view))));
+ };
+ wireBody();
  loadExploreDetails().then(D=>{
   if(token!==inspectorToken)return;
   const i=D.index.get(p.id);
-  let body;
+  let body,method;
   if(v.dim==null){
-   body=`<div class="explore-rows">${mf.dimensions.map((d,j)=>{const s=p['d'+j];return `<div class="explore-row"><span>${esc(d.num+' '+d.label)} <small>${p['n'+j]}/${d.scored_indicators.length}</small></span><i>${s==null?'':`<b style="width:${s}%;background:${exploreColor(s,EXPLORE_VIEWS[j+1])}"></b>`}</i><em>${fmtScore(s)}</em></div>`;}).join('')}</div>
-    <h4>Method</h4><p>${esc(mf.score_method)} Overall = mean of the available dimension scores.</p>`;
+   body=`<h4>Dimensions</h4><div class="explore-rows">${mf.dimensions.map((d,j)=>{const s=p['d'+j];return `<button type="button" class="explore-row" data-view="${j+1}" title="Show ${esc(d.label)} on the map"><span>${esc(d.num+' '+d.label)} <small>${p['n'+j]}/${d.scored_indicators.length}</small></span><i>${s==null?'':`<b style="width:${s}%;background:${exploreColor(s,EXPLORE_VIEWS[j+1])}"></b>`}</i><em>${fmtScore(s)}</em></button>`;}).join('')}</div>`;
+   method=`<h4>Method</h4><p>${esc(mf.score_method)} Overall = mean of the available dimension scores.</p>`;
   }else{
    const inds=mf.indicators.filter(x=>x.dimension===dimMeta.key);
    body=`<h4>Indicators</h4>${inds.map(x=>{
@@ -199,12 +218,15 @@ function renderExploreInspector(){
     if(x.key==='vibr_idx'&&D.extras.poi_n)extra=`<small>${D.extras.poi_n[i]} places within 150 m · diversity H = ${D.extras.diversity_h[i]}</small>`;
     if(x.key==='ped_flow_observed'&&raw==null&&x.status!=='unavailable')extra='<small>No DOT count location on this segment.</small>';
     const scored=x.role==='up'||x.role==='down';
+    const bar=scored&&x.status==='computed'&&pct!=null?`<i class="indicator-bar" aria-hidden="true"><b style="width:${Math.max(0,Math.min(100,Number(pct)))}%"></b></i>`:'';
     return `<div class="indicator ${esc(x.status)}" data-key="${esc(x.key)}"><div class="indicator-top"><span><code>${esc(x.key)}</code> ${esc(x.label)}</span><strong data-k="raw">${x.role==='context'?'—':esc(indicatorValue(raw,x.unit))}</strong></div>
      <div class="indicator-role">${esc(INSPECTOR_STATUS[x.status]||x.status)}${scored&&x.status==='computed'?` · normalized <b data-k="pct">${pct==null?'N/A':pct}</b>/100 · ${x.role==='down'?'lower raw value is better (percentile reversed)':'higher raw value is better'}`:''}</div>
-     ${extra}<p>${esc(x.method)}</p>${(x.notes||[]).map(n=>`<small class="indicator-note">${esc(n)}</small>`).join('')}<small>Source: ${esc(x.sources.join(' · '))}</small></div>`;}).join('')}
-    <h4>Score method</h4><p>${esc(mf.score_method)}${score==null?' No scored indicator is measurable on this segment, so the score is N/A.':''}</p>`;
+     ${bar}${extra}<details class="indicator-more"><summary>How it is measured</summary><p>${esc(x.method)}</p>${(x.notes||[]).map(n=>`<small class="indicator-note">${esc(n)}</small>`).join('')}<small>Source: ${esc(x.sources.join(' · '))}</small></details></div>`;}).join('')}`;
+   method=`<h4>Score method</h4><p>${esc(mf.score_method)}${score==null?' No scored indicator is measurable on this segment, so the score is N/A.':''}</p>`;
   }
   box.querySelector('[data-k="loading"]').outerHTML=body;
+  box.querySelector('.inspector-method').outerHTML=methodology(method);
+  wireBody();
  }).catch(e=>{if(token===inspectorToken){const l=box.querySelector('[data-k="loading"]');if(l)l.textContent='Indicator values unavailable: '+e.message;}});
 }
 function renderExploreChips(){
@@ -235,6 +257,7 @@ function setExploreMode(on){
  document.querySelectorAll('.maplibregl-popup').forEach(p=>p.remove());
  if(typeof closeUrbanInspector==='function')closeUrbanInspector();
  $('explorePanel').classList.toggle('hidden',!on);
+ if(typeof sidePanelsForExplore==='function')sidePanelsForExplore(on); // desktop: the planning and walk panels step aside for the map
  for(const sel of ['.experience-controls','.map-layer-switch','.wx-panel','.ud-legend'])document.querySelector(sel).classList.toggle('hidden',on);
  document.querySelector('.map-legend').classList.toggle('explore-hidden',on);
  $('selectedRouteSummary').classList.toggle('hidden',on);

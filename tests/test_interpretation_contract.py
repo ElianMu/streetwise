@@ -38,6 +38,29 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(result['directions']['Urban Vibrancy'], 'low')
         self.assertEqual(result['constraints'], {})
 
+    def test_unsupported_requests_are_named_not_turned_into_preferences(self):
+        """Additive field: parts of a request no dataset measures pass through; nothing else in the contract moves."""
+        doc = self.fixture()
+        self.assertIsNone(doc['unsupported'], 'the field exists on the wire and is null when nothing is unsupported')
+        self.assertEqual(server.validate_interpretation(normalize_wire(doc))['unsupported'], [])
+        doc['unsupported'] = [{'request': 'as much dog poop as possible', 'reason': 'No dataset measures dog waste.', 'nearest_dimension': None}]
+        out = server.validate_interpretation(normalize_wire(doc))
+        self.assertEqual(out['unsupported'], doc['unsupported'])
+        self.assertEqual(out['weights'], {'Nature': 90}, 'supported parts of the same message are kept; nothing is added for the unsupported part')
+        doc['unsupported'][0]['nearest_dimension'] = 'Nature'
+        self.assertEqual(server.validate_interpretation(normalize_wire(doc))['unsupported'][0]['nearest_dimension'], 'Nature')
+        for bad in ([{'request': 'x', 'reason': 'y', 'nearest_dimension': 'Smell'}],            # not one of the 12 dimensions
+                    [{'request': 'x', 'reason': 'y'}],                                          # missing field
+                    [{'request': 'x', 'reason': 'y', 'nearest_dimension': None, 'score': 80}],  # no invented data
+                    [{'request': ' ', 'reason': 'y', 'nearest_dimension': None}],               # must quote the request
+                    [{'request': 'x', 'reason': 'y', 'nearest_dimension': None}] * 4):          # at most three
+            doc['unsupported'] = bad
+            with self.assertRaises(ValueError):
+                server.validate_interpretation(normalize_wire(doc))
+        self.assertEqual(server.validate_interpretation({'weights': {'Nature': 80}})['unsupported'], [], 'public callers may omit it')
+        self.assertIn('"unsupported"', server.SYSTEM)
+        self.assertIn('Do NOT add a preference pair', server.SYSTEM)
+
     def test_invalid_shapes_are_rejected_without_repair(self):
         mutations = [lambda d: d['preferences'][0].update(dimension='Trees'),
                      lambda d: d['preferences'][0].pop('weight'),

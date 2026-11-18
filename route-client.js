@@ -37,6 +37,8 @@ function validateIndependentResponse(preferences,json){
  }
 }
 function applyRouteResponse(json){
+ // new walks are shown in the walk panel: if the visitor had hidden it (side-panels.js), bring it back once
+ if(typeof sidePanels!=='undefined'&&sidePanels.right&&!(typeof exploreMap!=='undefined'&&exploreMap.active))setSidePanel('right',false);
  planner.routeResponse=json;state.routes=json.routes.map(adaptRoute);
  planner.weatherSignature=typeof weatherWindow==='function'?WEATHER.signature(weatherWindow(state.budget)):undefined;
  const best=json.routes.find(r=>r.recommended);
@@ -67,6 +69,7 @@ async function generateRoutes(userText=null,isFollowUp=false){
   resetRoutes(true);renderRouteCards();
   if(location.protocol==='file:')throw new Error('The routing engine runs in server.py; start it and open http://127.0.0.1:8080.');
   const request=buildRouteRequest(a,b);
+  await streetwiseAwake(t=>{$('ctaLabel').textContent='Waking the route server…';$('rankingStatus').textContent=t;});if(run!==planner.runId)return;$('ctaLabel').textContent='Planning your walk…';
   const res=await streetwiseFetch('/api/routes',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(request),signal:AbortSignal.timeout(30000)});
   const json=await res.json().catch(()=>({}));
   if(run!==planner.runId)return;
@@ -75,6 +78,7 @@ async function generateRoutes(userText=null,isFollowUp=false){
   applyRouteResponse(json);
   const now=state.routes.find(r=>r.id===state.activeRoute)?.raw.ordered_edge_ids.join(',');
   if(previous&&now)planner.lastExplanation+=previous===now?' The recommended path is unchanged: it still ranks best under the updated preferences.':' The recommended path changed after recalculation.';
+  planner.lastExplanation+=shortTripNote(json);
   if(typeof weatherRouteSentence==='function'&&(json.weather_routing?.routing?.active||planner.weatherIntent))planner.lastExplanation+=weatherRouteSentence(json);
   $('rankingStatus').textContent=planner.lastExplanation;
   renderRouteCards();syncMapData();updateProfile();updateWhyRoute();renderRouteEdges();renderPOIs();
@@ -86,7 +90,7 @@ async function generateRoutes(userText=null,isFollowUp=false){
  }catch(err){
   if(run!==planner.runId)return;
   const restored=restoreRoutes(kept);
-  const failure=`No route: ${err.message} No route was fabricated.${restored?' Your previous route is still shown and unchanged.':''}`;
+  const failure=`No route: ${streetwiseErrorText(err)} No route was fabricated.${restored?' Your previous route is still shown and unchanged.':''}`;
   if(!restored)planner.lastExplanation=failure;
   $('rankingStatus').textContent=failure;appendChat('assistant',failure);toast(failure);
  }finally{state.routingBusy=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false;$('ctaLabel').textContent='Plan My Walk';renderRouteCards()}
@@ -129,12 +133,13 @@ function renderRouteCards(){
   x.shortLabel=extra?'':(st.short||'');
   const chips=(st.highlights||[]).map(h=>`<span>${esc(h)}</span>`).join('');
   const heat=weatherActive&&r.weather?`<span class="rc-note">Weather: ${Math.round(r.weather.heat_exposure_share*100)}% of this walk in the sun (tree-cover proxy)</span>`:'';
-  return `<article class="route-card${selected?' selected':''}${!feasible?' over-budget':''}${extra?' extra':''}${extra&&!routeStory.showAll&&!selected?' hidden':''}" data-route="${esc(x.id)}"><button type="button" class="route-pick" data-pick="${esc(x.id)}" aria-pressed="${selected}">${st.tag?`<span class="rc-tag">${esc(st.tag)}</span>`:''}<strong class="rc-name">${esc(st.name||r.route_name)}</strong>${st.sentence?`<span class="rc-sentence">${esc(st.sentence)}</span>`:''}<span class="rc-row"><span class="rc-col"><span class="rc-meta"><strong>${(r.distance_m/1000).toFixed(1)} km</strong><span>${Math.ceil(r.estimated_duration_min)} min</span></span>${chips?`<span class="rc-chips">${chips}</span>`:''}</span>${extra?'':storyPreviewSvg(r,shownRaw)}</span>${st.why?`<span class="rc-why">${esc(st.why)}</span>`:''}${st.note?`<span class="rc-note warn">${esc(st.note)}</span>`:''}${heat}</button>${extra?'':cardPhotos(r,st,shownRaw,usedPhotos)}${routeCardDetails(r)}</article>`;
+  return `<article class="route-card${selected?' selected':''}${!feasible?' over-budget':''}${extra?' extra':''}${extra&&!routeStory.showAll&&!selected?' hidden':''}" data-route="${esc(x.id)}"><button type="button" class="route-pick" data-pick="${esc(x.id)}" aria-pressed="${selected}">${st.tag?`<span class="rc-tag">${esc(st.tag)}</span>`:''}<strong class="rc-name">${esc(st.name||r.route_name)}</strong>${st.sentence?`<span class="rc-sentence">${esc(st.sentence)}</span>`:''}<span class="rc-row"><span class="rc-col"><span class="rc-meta"><strong>${(r.distance_m/1000).toFixed(1)} km</strong><span>${Math.ceil(r.estimated_duration_min)} min</span></span>${chips?`<span class="rc-chips">${chips}</span>`:''}</span>${extra?'':storyPreviewSvg(r,shownRaw)}</span>${st.why?`<span class="rc-why">${esc(st.why)}</span>`:''}${selected?cardBasis(r):''}${st.note?`<span class="rc-note warn">${esc(st.note)}</span>`:''}${heat}</button>${extra?'':cardPhotos(r,st,shownRaw,usedPhotos)}${routeCardDetails(r)}</article>`;
  }).join('');
  root.querySelectorAll('[data-pick]').forEach(el=>el.addEventListener('click',()=>selectRoute(el.dataset.pick)));
  if(more){const n=story.extra.length;more.classList.toggle('hidden',!n);more.textContent=routeStory.showAll?'Fewer routes':`More routes (${n})`;more.setAttribute('aria-expanded',String(routeStory.showAll));}
- const tech=$('routeTechNote');if(tech)tech.textContent=`Routes are computed on the OSM pedestrian graph (${planner.routeResponse?.network_version||''}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${planner.routeResponse?.score_version||''}), shared with Explore Urban Data. ${constraintSummary()}`;
+ const tech=$('routeTechNote');if(tech)tech.textContent=`Routes are computed on the OSM pedestrian graph (${planner.routeResponse?.network_version||''}) and ranked by personalized utility = weighted experience − detour penalty. Experience scores are relative ranks within Manhattan (${planner.routeResponse?.score_version||''}); the Explore Urban Data map uses a newer score build with more indicators (see METHODOLOGY.md). ${constraintSummary()}`;
  renderAlongWalk();
+ if(!scoreBasis.doc&&!scoreBasis.failed)loadScoreBasis().then(d=>{if(d&&state.routes.length)renderRouteCards();}); // then cardBasis() can name the indicators
  if(typeof photosLoad==='function'){const sel=routes.find(x=>x.id===state.activeRoute);const want=[...shownRaw,...(sel?[sel.raw]:[])].flatMap(r=>(storyPlacesNear(r)||[]).slice(0,10));photosLoad(want,()=>renderRouteCards());}
  if(typeof renderNavStart==='function')renderNavStart();
 }
@@ -154,7 +159,9 @@ function renderAlongWalk(){
  const box=$('alongWalk');if(!box)return;
  const x=state.routes.find(r=>r.id===state.activeRoute),lines=x&&typeof storyStretches==='function'?storyStretches(x.raw):[];
  const photos=x&&typeof photosFor==='function'?photosFor((storyPlacesNear(x.raw)||[]).slice(0,10)).slice(0,6):[];
- box.innerHTML=lines.map(l=>`<p>${esc(l)}</p>`).join('')+(photos.length?photoFigures(photos,'along-photos'):'');box.classList.toggle('hidden',!lines.length&&!photos.length);
+ const street=x&&typeof streetPhotoFigures==='function'?streetPhotoFigures(x.raw):'';
+ if(x&&typeof streetPhotosLoad==='function')streetPhotosLoad(x.raw,()=>{if(state.activeRoute===x.id)renderAlongWalk();}); // street-photos.js: asks once per route
+ box.innerHTML=lines.map(l=>`<p>${esc(l)}</p>`).join('')+street+(photos.length?photoFigures(photos,'along-photos'):'');box.classList.toggle('hidden',!lines.length&&!photos.length&&!street);
 }
 function profileRows(r){
  return DIMENSIONS.map((d,i)=>{const v=r.dimension_scores[d.name],c=r.data_coverage.by_dimension[d.name],pref=planner.origins[d.name]!=='default';
@@ -180,6 +187,69 @@ function independentComparisonRows(){
  }
  return rows.join('');
 }
+// --- What the scores measure: the router's real indicator definitions (data/pedestrian/score-indicators.json) ---
+/* A static copy of the indicator definitions behind the 12 route scores (scripts/build_score_indicators.py). Shown only
+   when its score_version equals the route's, so the words can never describe a different scoring build. Every number
+   in this block is a field of the /api/routes response; every label, method and source is copied from that file. */
+/* Short trips: in the route benchmark, 29 of 72 runs under 1.5 km returned the shortest route and the mean gain was 4.3
+   points (benchmarks/ROUTE_BENCHMARK.md). When that is what happened here, say it with this response's own numbers
+   rather than presenting a near-identical route as a better walk. Empty string when it does not apply. */
+const SHORT_TRIP_M=1500,SHORT_TRIP_GAIN=2;
+function shortTripNote(json){
+ const dims=DIMENSIONS.map(d=>d.name).filter(n=>planner.origins[n]!=='default');
+ const best=json.routes.find(r=>r.rank===1),shortest=json.routes.find(r=>r.objective==='shortest');
+ if(!dims.length||!best||!shortest||!(json.shortest_distance_m<SHORT_TRIP_M))return '';
+ const metres=Math.round(json.shortest_distance_m/10)*10;
+ if(best.route_id===shortest.route_id)return ` This is a short trip (${metres} m): the shortest route is also the best match for your priorities, so there is no better way to offer.`;
+ const gains=dims.map(n=>{const a=best.dimension_scores[n],b=shortest.dimension_scores[n];if(a==null||b==null)return null;return (planner.directions[n]==='low'?b-a:a-b);}).filter(v=>v!=null);
+ if(!gains.length||Math.max(...gains)>SHORT_TRIP_GAIN)return '';
+ return ` This is a short trip (${metres} m): the best match differs from the shortest route by ${Math.max(0,Math.max(...gains))} point${Math.max(...gains)===1?'':'s'} at most on your priorities, so there is little to gain by going another way.`;
+}
+const scoreBasis={doc:null,loading:null,failed:false};
+function loadScoreBasis(){
+ if(scoreBasis.doc||scoreBasis.failed)return Promise.resolve(scoreBasis.doc);
+ return scoreBasis.loading||(scoreBasis.loading=fetch('./data/pedestrian/score-indicators.json').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();}).then(d=>(scoreBasis.doc=d)).catch(()=>{scoreBasis.failed=true;return null;}));
+}
+const WHY_SIMILAR=5; // same threshold as route-story.js STORY.MORE: smaller differences are not described as better
+function whyWindow(doc,source){
+ const w=doc.windows||{};
+ for(const k of String(source).split('+'))if(typeof w[k]==='string')return` · records ${w[k]}`; // map build: {noise:'2025-10-23 → 2026-10-23 (…)', collisions:'…'}
+ return source==='noise'&&w.noise_from?` · records since ${w.noise_from}`:source==='collisions'&&w.collisions_from?` · records since ${w.collisions_from}`:source==='trees'&&w.trees_inventory_updated?` · inventory updated ${w.trees_inventory_updated}`:'';
+}
+/** The numbers behind the card's "why" sentence, on the SELECTED card: for the visitor's top priorities (two at most),
+    this route's score next to the shortest route's, and what that score is measured by. Same sources and the same
+    version check as whyMeasures(); '' when nothing was prioritised or the definitions file does not match this build. */
+function cardBasis(r){
+ const doc=scoreBasis.doc,ps=r.personalized_score;
+ if(!doc||doc.score_version!==r.score_version||!ps?.preferences_expressed)return'';
+ const dims=Object.entries(ps.components).filter(([d,c])=>doc.dimensions[d]&&c.weight>50&&r.dimension_scores[d]!=null).sort((a,b)=>b[1].weight-a[1].weight).slice(0,2);
+ if(!dims.length)return'';
+ const shortest=state.routes.map(y=>y.raw).find(y=>y.objective==='shortest');
+ const rows=dims.map(([d,c])=>{
+  const v=r.dimension_scores[d],sv=shortest&&shortest!==r?shortest.dimension_scores[d]:null;
+  const versus=shortest===r?' · shortest route':sv!=null?` · shortest route ${scoreText(sv)}`:'';
+  const by=doc.dimensions[d].filter(i=>i.role==='up'||i.role==='down').map(i=>i.label+(i.role==='down'?' (less is better)':'')).join(' · ');
+  return `<span class="rc-basis-row"><b>${esc(dimLabel(d))} ${scoreText(v)}</b>${esc(versus)}${c.direction==='low'?' · you asked for less':''}<i>Measured by: ${esc(by)}</i></span>`;
+ }).join('');
+ return `<span class="rc-basis" aria-label="What this is based on">${rows}</span>`;
+}
+/** For each of the user's priorities: this route vs the shortest route, and the indicators that score is made of. */
+function whyMeasures(r){
+ const doc=scoreBasis.doc;
+ if(!doc||doc.score_version!==r.score_version)return'';
+ const dims=Object.entries(r.personalized_score.components).filter(([d])=>r.personalized_score.preferences_expressed&&doc.dimensions[d]).sort((a,b)=>b[1].weight-a[1].weight).slice(0,4);
+ if(!dims.length)return'';
+ const shortest=state.routes.map(y=>y.raw).find(y=>y.objective==='shortest');
+ const blocks=dims.map(([d,c])=>{
+  const v=r.dimension_scores[d],cov=r.data_coverage.by_dimension[d],sv=shortest&&shortest!==r?shortest.dimension_scores[d]:null;
+  let versus='';
+  if(shortest===r)versus=' · this is the shortest route';
+  else if(v!=null&&sv!=null){const diff=Math.round(v-sv);versus=` · shortest route ${scoreText(sv)} (${diff>0?'+':''}${diff}${Math.abs(diff)<WHY_SIMILAR?', similar':''}) · ${r.detour_percentage}% longer`;}
+  const inds=doc.dimensions[d].filter(i=>i.role==='up'||i.role==='down').map(i=>`<li><b>${esc(i.label)}</b>${i.role==='down'?' (lower ranks higher)':''}: ${esc(i.method)}. <i>${esc(doc.source_labels[i.source]||i.source)}${esc(whyWindow(doc,i.source))}</i></li>`).join('');
+  return `<div class="why-dim"><div class="why-dim-head"><strong>${esc(dimLabel(d))}${c.direction==='low'?' · you asked for less':''}</strong><span>this route ${scoreText(v)}${esc(versus)}</span></div><small>${Math.round(cov*100)}% of this route's length has this score${cov<.6?' — low coverage, treated as close to neutral':''}. The score is the mean rank of:</small><ul>${inds}</ul></div>`;
+ }).join('');
+ return `<div class="why-measures"><div class="why-measures-title">What these scores measure</div>${blocks}<small>${esc(doc.value_note)} They are computed from the records listed above (retrieved ${esc(doc.data_version)}): proxies for how a street may feel, not observations of how this walk feels. Score build ${esc(doc.score_version)}.</small></div>`;
+}
 function updateWhyRoute(){
  const x=state.routes.find(r=>r.id===state.activeRoute),root=$('whyRoute');
  if(!x){root.textContent=planner.constraints.stepFree?'Step-free access cannot be verified, so no route is recommended.':planner.routeResponse?planner.lastExplanation:'No selected route yet.';if(typeof renderWeatherRoute==='function')renderWeatherRoute();return}
@@ -187,7 +257,8 @@ function updateWhyRoute(){
  const crimeMetric=x.raw.independent_metrics?.crime;
  const crimeInfo=crimeMetric?`<div class="data-pair"><span>Historical reported complaints</span><span>${crimeMetric.count} within ${crimeMetric.corridor_m} m</span></div><div class="data-pair"><span>Reports per route km</span><span>${crimeMetric.reported_incidents_per_route_km}</span></div><small>${esc(crimeMetric.from)} – ${esc(crimeMetric.to_exclusive)} (end exclusive). ${esc((crimeMetric.law_categories||[]).join(' + '))}. Approximate NYPD historical locations; no population denominator or present personal-risk prediction. <a href="${esc(crimeMetric.source_urls[0])}" target="_blank" rel="noopener">NYPD source</a></small>`:'';
  const parts=Object.entries(p.components).sort((a,b)=>b[1].weight-a[1].weight).slice(0,6).map(([d,c])=>`<div class="data-pair"><span>${esc(dimLabel(d))} · weight ${c.weight}${c.direction==='low'?' · less':''}</span><span>${scoreText(c.route_score)} → fit ${c.adjusted_fit}</span></div>`).join('');
- root.innerHTML=`<p>${esc(x.raw.ranking_explanation)}</p>${crimeInfo}${parts}${p.weather_adjustment!=null?`<div class="data-pair"><span>Weather (heat) adjustment</span><span>−${p.weather_adjustment}</span></div>`:''}<small>${esc(p.formula)}. ${p.preferences_expressed?'Weights come from your request.':'No preference expressed yet, so all 12 dimensions count equally.'}</small>`;
+ root.innerHTML=`<p>${esc(x.raw.ranking_explanation)}</p>${crimeInfo}${parts}${p.weather_adjustment!=null?`<div class="data-pair"><span>Weather (heat) adjustment</span><span>−${p.weather_adjustment}</span></div>`:''}<small>${esc(p.formula)}. ${p.preferences_expressed?'Weights come from your request.':'No preference expressed yet, so all 12 dimensions count equally.'}</small>${whyMeasures(x.raw)}`;
+ if(!scoreBasis.doc&&!scoreBasis.failed)loadScoreBasis().then(d=>{if(d&&state.activeRoute===x.id)updateWhyRoute();});
  if(typeof renderWeatherRoute==='function'){renderWeatherRoute();renderWeatherPanel();}
 }
 // --- Route edges: list in Route Intelligence and clickable on the map -------------------------------------

@@ -4,14 +4,30 @@
 
 Routes are computed by `routing/engine.py` on the Manhattan OSM pedestrian graph and scored with the same 12 experience scores Explore shows, transferred to OSM edges through a LION–OSM match table. Scores are relative ranks within Manhattan, not calibrated measurements.
 
+## Walk priorities, route explanation and benchmark / 步行偏好入口、路线解释与基准测试
+
+- **Walk priorities** (`walk-presets.js`): one row of the 12 experience dimensions on the first screen (a single sideways-scrolling row in the phone request card, about 42 px; a compact wrapped row in the desktop panel), led by three activity buttons for the use cases in `AUDIENCE.md` (*Know a neighbourhood*, *The nicer way*, *A walk with a point*), each a bundle of existing dimensions at the pills' weight; then Nature, Quiet & Relax and Architecture, then the other nine by mean gain in the route benchmark. A pill sets that existing dimension to 80, the same weight the quick-preference chips use, or back to not-expressed; several can be on. The request box shows the choice in words, and when it holds exactly that sentence, *Create My Walk* / *Plan My Walk* plans through the existing manual path with no AI call. No new dimension, score or weight; sliders, chips and the text box stay in sync. On desktop the five dimension chips under the box moved into this row (*Coffee stop* stays).
+- **Why this route → What these scores measure** (`route-client.js`): for each of the user's priorities, the selected route's score next to the shortest route's, the detour, the coverage, and the indicators that score is the mean of, with source and time window. Text comes from `data/pedestrian/score-indicators.json` (`python3 scripts/build_score_indicators.py`, a verbatim copy of the routes build's indicator definitions) and is shown only when its `score_version` equals the route's.
+- **Route benchmark**: `python3 benchmarks/route_benchmark.py` runs 19 fixed trips × 12 single-dimension preferences on the real engine and writes `benchmarks/route_benchmark.json` and `benchmarks/ROUTE_BENCHMARK.md` (shortest vs preference vs next candidate: distance, detour, score, coverage, overlap, QA status). It never assumes the preference route is better. Tests: `tests/test_route_benchmark.py`, `tests/test_score_indicators.py`.
+- **Map space and street details** (`side-panels.js`, `explore-map.js`): on desktop a tab on each edge of the map hides or shows the planning panel and the walk panel; Explore Urban Data hides both and leaving it restores the earlier state; a hidden walk panel returns when new walks arrive. The street segment inspector has three levels: Summary (score, coverage, id, length), Indicators (raw value, normalized value with a bar; each indicator's method, notes and source under *How it is measured*) and Methodology (score method, data and version, closed by default). No text was removed. Dimension rows in the Overall view and the ‹ › buttons switch the map dimension while the segment stays selected.
+- **Requests the data cannot answer** (`interpretation_contract.py` `unsupported`, `server.py` prompt, `app.js`): when part of a request needs a measurement STROLLANE does not have (dog waste, smells, lighting, live crowds…), the AI names it instead of bending it into a preference. The app says so in plain words, offers the nearest existing dimension when there is one, changes nothing for that part, and plans nothing if that was the whole request. The field is additive and optional for public callers; every other field of the contract is unchanged. The limited local parser (no AI key) cannot detect such requests.
+- **Street photos along the walk** (`street_photos.py`, `POST /api/street-photos`, `street-photos.js`): Mapillary street-level photos (CC BY-SA) for up to five points along the selected route, only when taken within 25 m of the point; each shows how far into the walk it is, the month it was taken, its author and a link. Nothing is substituted where no photo exists. The Mapillary **access token** is read from the `MAPILLARY_TOKEN` environment variable on the API host and is never sent to the browser or stored in this repository; without it the feature stays off. The app's **client secret** is not used and must not be put anywhere in this project.
+- **Who it is for** (`AUDIENCE.md`): the lead audience is people new to New York getting to know a Manhattan neighbourhood on walks of 20 minutes or more, with three use cases built around them. A design decision resting on a hypothesis: the benchmark supports the walk length, nothing yet confirms the group.
+- **Share this walk** (`share-link.js`): a link that carries the request (start, destination or loop, changed priorities, time limit) in the URL fragment, which is not sent to any server. No route or score is stored; opening the link plans the walk again.
+- **Chinese interface** (简体中文): the 中文 / EN switch in the top bar, or first in the phone menu. Fixed labels are translated by hand in `i18n.js`; sentences built from data (route explanations, AI replies) stay in English, and the 12 dimension names keep their English name beside a Chinese gloss.
+- **Comparison with similar products** (Google Maps, Citymapper, Komoot, Go Jauntly, Green Paths, Footways, Happy Maps), with sources and where STROLLANE is weaker: `BENCHMARKING.md`.
+- **One score build** for routes and the Explore map (unified 2026-11-14; what changed and the remaining limit on crossings and park paths) and proxy limits: `METHODOLOGY.md`. **User validation plan** (not yet run): `RESEARCH_PROTOCOL.md`.
+
+首屏一行列出全部 12 个维度（按基准测试效果排序），点选只是把该维度的偏好权重设为 80 并走原有的手动规划流程，不新增维度、不改评分；路线解释中的指标文字逐字取自路线评分所用的定义文件；基准测试不预设偏好路线更好；用户验证尚未开展。
+
 ## Run / 运行
 
-1. 解压，进入 `STREETWISE_NYC_v04` 文件夹。
-2. Terminal 运行 `python3 server.py`；Mac 也可运行 `bash START_HERE_MAC.command`。
-3. 打开 **http://127.0.0.1:8080**。保留终端窗口。
+1. 需要 **Python 3.11 或更高版本**（`routing/engine.py` 用到 `hashlib.file_digest`；CI 用 3.12）。macOS 自带的 `python3` 通常是 3.9，请先从 python.org 或 `brew install python@3.12` 安装新版本。`python3 --version` 可查看。
+2. 在项目文件夹（STROLLANE）中，Terminal 运行 `python3 server.py`（或 `python3.12 server.py`）；Mac 也可双击/运行 `bash START_HERE_MAC.command`，它会自动找 3.11+ 的 Python，找不到时给出提示。
+3. 打开 **http://127.0.0.1:8080**（端口可用环境变量 `PORT` 修改）。保留终端窗口。
 4. 真正的 LLM 自然语言解析需服务端配置 `OPENAI_API_KEY`，可选 `OPENAI_MODEL`。不要把 key 放进 JS。未配置时使用明确标注的有限 Local Preview。
 
-No Python packages are required to run the server; rebuilding the OSM graph needs OSMnx (`scripts/build_pedestrian_network.py`). The built routing data ships in `data/pedestrian/`. An internet connection is required for MapLibre/CARTO assets, Open-Meteo and OSM POIs. Public APIs can rate-limit or fail; no route is fabricated on failure.
+No Python packages are required to run the server (Python 3.11+ standard library only); rebuilding the OSM graph needs OSMnx (`scripts/build_pedestrian_network.py`). The built routing data ships in `data/pedestrian/`. An internet connection is required for MapLibre/CARTO assets, Open-Meteo and OSM POIs. Public APIs can rate-limit or fail; no route is fabricated on failure.
 
 `STREETWISE_single_file_demo.html` includes the real pilot snapshot and current application code. Opening it directly supports the pilot interface but does not provide the LLM or POI server endpoints; use `server.py` for the complete supported setup. It is not a fully offline map.
 
@@ -47,7 +63,7 @@ The tree census is from 2015, not a live vegetation inventory. LPC and centerlin
 
 全部数据同时开启时地图仍保持统一、清晰。规则写在 `urban-style.js`（设计 token），由 `urban-layers.js` 使用：
 
-- **唯一强调色**：所选路线是地图上唯一的青柠色（`#d8f365`，带深色描边光晕），位于所有数据之上；备选路线为低对比灰色虚线；起点/终点为精确的小圆点。`tests/urban-style.test.cjs` 检查没有任何数据颜色接近路线色。
+- **唯一强调色**：所选路线是地图上唯一的暖白色线（`#F3EFE4`，带深色描边光晕；`urban-style.js` 的 `route.selected`），位于所有数据之上；备选路线为低对比灰色虚线；起点/终点为精确的小圆点。`tests/urban-style.test.cjs` 检查没有任何数据颜色接近路线色。
 - **语义色系**（为深色底图调校、低饱和）：街道 蓝灰 · 建筑 深中性灰 · 公园/树木 柔和绿 · 历史文化 淡紫 · 餐饮商业 琥珀 · 公共设施 青绿 · 交通 冷蓝 · 安全 珊瑚 · 环境 连续色带。同类数据集在同一色相内微调明度（`shade()`）。
 - **按几何与层级组合，而不是每个数据集一套图层**：建筑、绿地、铺装、历史街区、地标、线、噪声、树木以及每个类别一个点图层（约 63 个固定图层，原先约 240 个）。图层按层级锚点排序：面 → 线 → 环境 → 树 → 点 → 标签 → 路线。同一建筑在多个建筑数据集中只画一次；通用的 Activity places 不再重复画出已由具体数据集画出的地点。
 - **建筑主题**（一次一个填充主题）：Neutral / Height / Age / Land use（PLUTO 地块）。**环境主题**（一次一个连续表面）：311 噪声投诉密度，带单位/年份/来源；空气质量、热岛、洪水风险列出但标为 not connected。
@@ -154,7 +170,13 @@ Provider keys (`GOOGLE_PLACES_API_KEY`, `YELP_API_KEY`, `FOURSQUARE_API_KEY`, `B
 
 ## Automated checks / 自动测试
 
+Python 3.11+ (CI uses 3.12). Test-only dependencies are pinned in `requirements-dev.txt`; jsdom is a dev dependency in `package.json`:
+
 ```bash
+python3.12 -m venv .venv && .venv/bin/pip install -r requirements.txt -r requirements-dev.txt
+npm install            # jsdom + Playwright (dev only; nothing here is served)
+.venv/bin/python -m pytest -q tests
+npm run test:dom       # DOM integration tests (dom, food-discovery, place-cards)
 node tests/spatial.test.cjs
 node tests/real-route.test.cjs
 node tests/urban-geo.test.cjs
@@ -165,9 +187,7 @@ node tests/opening-hours.test.cjs
 node tests/nav-gps.test.cjs          # 14 replayable GPS tracks on a real route
 python3 -m unittest discover -s tests -p 'test_*.py'   # includes the routing engine end-to-end tests
 python3 -m unittest tests.test_tourism   # datasets, places, hours, providers (stubbed), scenarios A–F, endpoints
-# Install jsdom separately for DOM integration tests:
-npm install --prefix /tmp/streetwise-test jsdom
-JSDOM_PATH=/tmp/streetwise-test/node_modules/jsdom node tests/dom.test.cjs
+# jsdom installed elsewhere also works: JSDOM_PATH=/path/to/node_modules/jsdom node tests/dom.test.cjs
 ```
 
 Browser scripts require Playwright and a supported Chromium installation. `CHROME_PATH` may specify its executable. The cartographic redesign was checked visually in a real browser (MapLibre/WebGL, 1440×900 and 375×812): route/street/city/detail zoom, height, age and land-use building themes, Current map view in dense Midtown, clicks on data points and route segments, Explore round trip. Real hardware GPS and touch gestures on a physical phone were not tested. DOM tests do not prove rendered map interactions.

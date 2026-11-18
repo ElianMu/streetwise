@@ -28,8 +28,9 @@ const PLACES = {
   apollo:{name:'Apollo Theater',lon:-73.9501,lat:40.8100},
   fort:{name:'Fort Tryon Park',lon:-73.9319,lat:40.8638}
 };
-// The 12 experience dimensions. Street scores live in data/manhattan-streets.json (Explore) and are transferred to OSM
-// pedestrian edges for routing (data/pedestrian/edge-scores.json.gz); both share one definition and score version.
+// The 12 experience dimensions. ROUTES and the EXPLORE map use one build of the street scores
+// (data/dimensions/<area>/, "strollane-12x24-v1", scripts/dimensions/), transferred to the OSM pedestrian edges by
+// scripts/transfer_dimension_scores.py (data/pedestrian/edge-scores.json.gz). See METHODOLOGY.md "One score build".
 const DIMENSIONS = [
   {name:'Architecture', icon:'▥', status:'measured', desc:'Street rank 0–100, shared with Explore'},
   {name:'Nature', icon:'❧', status:'measured', desc:'Street rank 0–100, shared with Explore'},
@@ -72,7 +73,7 @@ const DEFAULT_WALK_MINUTES = 100, MIN_WALK_MINUTES = 10, SLIDER_BASE_MAX = 150; 
 const WALK_QUICK_MINUTES = [60, 100, 120, 150], WALK_QUICK_KM = [2, 5, 8, 10], KM_PER_MILE = 1.609344;
 const state = {
   map: null, mapReady: false, mapLayersReady:false,
-  start:'bryant', end:'columbia', customStart:null, customEnd:null, gps:null, gpsWatch:null,
+  start:null, end:null, customStart:null, customEnd:null, gps:null, gpsWatch:null,
   pick:null, dimension:'Streets', budget:DEFAULT_WALK_MINUTES, maxKm:null, distUnit:'km', outingMin:null,
   datasets:{streets:null, trees:null, lpc:null}, dataComplete:{streets:false,trees:false,lpc:false},
   dataErrors:{}, loading:{}, routes:[], activeRoute:null, selectedStreet:null,
@@ -253,12 +254,40 @@ async function interpretIntent(q){
   // Tourist / multi-stop intent: the LLM's structured `journey`, or the labelled local parser when no LLM is configured.
   if(mode!=='llm'&&typeof localJourney==='function'){await warmNameIndex().catch(()=>{});data.journey=localJourney(input);}
   if(typeof data?.clarification==='string'&&data.clarification.trim())return {changes:[],clarification:data.clarification.trim()};
-  return {changes:applyInterpretation(data,mode),clarification:null,journey:data.journey||null};
+  // parts of the request no dataset measures (interpretation_contract.py "unsupported"): passed through, never applied
+  const unsupported=(Array.isArray(data.unsupported)?data.unsupported:[]).filter(u=>u&&typeof u.request==='string'&&u.request.trim()&&typeof u.reason==='string').slice(0,3);
+  return {changes:applyInterpretation(data,mode),clarification:null,journey:data.journey||null,unsupported};
+}
+/** Say plainly what cannot be planned for and why, with the nearest dimension that does exist (only a registered one). */
+function unsupportedText(list){
+  return list.map(u=>{
+    const known=u.nearest_dimension&&DIMENSIONS.some(d=>d.name===u.nearest_dimension),has=known&&planner.origins[u.nearest_dimension]!=='default';
+    const near=!known?'':has?` The closest thing I can plan for is ${dimLabel(u.nearest_dimension)}, which is already one of your priorities.`:` The closest thing I can plan for is ${dimLabel(u.nearest_dimension)}; pick it if that helps.`;
+    return `I can’t plan for “${u.request.trim()}”: ${u.reason.trim().replace(/[.。]?$/,'.')}${near}`;
+  }).join(' ');
+}
+/* The page (GitHub Pages) and the route server (a separate host) are deployed separately, and on 2026-11-15 the server
+   was found several versions behind with nothing on screen to show it. Each side now names its score build: the page's
+   copy is data/pedestrian/score-indicators.json, the server's is /api/status.score_version. If they differ (or an older
+   server sends none), say so once, in plain words. Nothing is hidden or changed because of it. */
+function versionMismatchText(pageVersion,serverVersion){
+  if(!pageVersion||pageVersion===serverVersion)return '';
+  return `This page and the route server are on different versions (page ${pageVersion}, server ${serverVersion||'older, version not reported'}). Routes still come from the server\u2019s real data, but newer features may be missing until the server is redeployed.`;
+}
+async function checkServerVersion(status){
+  if(typeof loadScoreBasis!=='function')return;
+  const doc=await loadScoreBasis(),text=versionMismatchText(doc&&doc.score_version,status&&status.score_version);
+  let box=document.getElementById('versionNotice');
+  if(!text){if(box)box.remove();return;}
+  if(!box){box=document.createElement('div');box.id='versionNotice';box.className='version-notice';box.setAttribute('role','status');document.body.appendChild(box);}
+  box.innerHTML=`<span>${esc(text)}</span><button type="button" aria-label="Dismiss">×</button>`;
+  box.querySelector('button').addEventListener('click',()=>box.remove());
 }
 async function checkInterpreter(){
   if(location.protocol==='file:'){$('interpretMode').textContent='LOCAL PREVIEW · Start server.py with an API key for genuine LLM understanding';return}
   try{
     const r=await streetwiseFetch('/api/status',{signal:AbortSignal.timeout(2500)});const d=await r.json();planner.llmConfigured=r.ok?Boolean(d.llm):null;planner.llmConnected=Boolean(r.ok&&d.llm);
+    if(r.ok)checkServerVersion(d);
   }catch(_) {planner.llmConnected=false;planner.llmConfigured=null;}
   $('interpretMode').textContent=planner.llmConnected?'✦ AI CONFIGURED · Connection verified when you plan':planner.llmConfigured===false?'◇ LOCAL PREVIEW · AI backend key is missing or invalid':'◇ AI STATUS UNAVAILABLE · Planning will retry the AI service';
 }
@@ -663,10 +692,18 @@ async function handlePlan(text,isFollowUp=false){
   const q=(text||'').trim();if(!q){toast('Describe the walk you want.');return}
   // the start / stops / destination the request names are settled BEFORE planning (not by the typing timer mid-plan)
   if(!isFollowUp&&typeof flushLiveEnds==='function'){planner.parsing=true;try{await flushLiveEnds(q);}finally{planner.parsing=false;}}
-  for(const kind of ['start','end']){if(kind==='end'&&typeof journey!=='undefined'&&journey.endMode!=='fixed')continue;const typed=$(kind==='start'?'searchStart':'searchEnd').value.trim(),chosen=getPlace(kind);if(typed!==chosen?.name){toast(`Search and choose a ${kind==='start'?'starting point':'destination'} result first, or use a preset.`);return}}
+  // a typed-but-unchosen search box is not a place; an empty box is fine (start = GPS, no destination = recommend)
+  for(const kind of ['start','end']){if(kind==='end'&&typeof journey!=='undefined'&&journey.endMode!=='fixed')continue;const typed=$(kind==='start'?'searchStart':'searchEnd').value.trim(),chosen=getPlace(kind);if(typed!==(chosen?.name||'')){toast(`Search and choose a ${kind==='start'?'starting point':'destination'} result first, or clear the box.`);return}}
   planner.parsing=true;$('generateRoutes').disabled=true;$('chatSend').disabled=true;
   appendChat('user',q);
   try{const result=await interpretIntent(q);if(result.clarification){$('rankingStatus').textContent='Clarification needed. The displayed previous route has not been recalculated.';appendChat('assistant',result.clarification+' The displayed previous route has not been recalculated.');return;}
+    if(result.unsupported?.length){
+      const said=unsupportedText(result.unsupported);
+      // nothing else was asked: do not plan a walk that would look like an answer to a request we cannot measure
+      if(!result.changes.length&&!(result.journey&&typeof journeyIntentPresent==='function'&&journeyIntentPresent(result.journey))){
+        $('rankingStatus').textContent=said+' Nothing was changed.';appendChat('assistant',said+' Nothing was changed. The displayed previous route has not been recalculated.');return;}
+      appendChat('assistant',said+' The rest of your request is planned as usual.');toast(said);
+    }
     if(planner.weatherIntent==='ask'&&state.routes.length){if(weatherContext.status!=='ok')await loadWeather();appendChat('assistant',weatherAnswer());return;}
     if(typeof applyJourney==='function'&&result.journey){
       const jc=await applyJourney(result.journey);
@@ -683,8 +720,32 @@ async function handlePlan(text,isFollowUp=false){
     else appendChat('assistant',`No explicit preference change recognized${planner.interpretation==='local'?' by limited local preview':''}. I’ll check route options using current settings.`);
   }catch(err){toast('Unable to interpret preferences: '+err.message);return;}
   finally{planner.parsing=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false}
+  // Start: what the request named, else where the user is (GPS). Never a preset place.
+  const startProblem=await ensurePlanStart();
+  if(startProblem){$('rankingStatus').textContent=startProblem;appendChat('assistant',startProblem+' The displayed previous route has not been recalculated.');return;}
+  // No destination: recommend a walk from the start instead of asking for one.
+  const rec=typeof prepareRecommendedWalk==='function'?prepareRecommendedWalk(q):null;
+  if(rec)appendChat('assistant',rec);
   if(typeof journeyMode==='function'&&journeyMode())await planJourney(isFollowUp);
   else await generateRoutes(q,isFollowUp);
+}
+/** One GPS fix as a promise (the browser's own permission prompt; nothing is assumed on refusal or timeout). */
+function locateOnce(timeoutMs=14000){
+  return new Promise(res=>{
+    if(!navigator.geolocation||(!window.isSecureContext&&!['localhost','127.0.0.1'].includes(location.hostname)))return res(null);
+    navigator.geolocation.getCurrentPosition(p=>{setGpsPosition(p.coords);loadWeather();res(state.gps);},()=>res(null),{enableHighAccuracy:true,maximumAge:60000,timeout:timeoutMs});
+  });
+}
+/** The walk starts where the request says, otherwise at the user's own location. Returns null when a start is set,
+    or the reason (shown to the user) when it cannot be: location refused / unavailable / outside Manhattan. */
+async function ensurePlanStart(){
+  if(getPlace('start'))return null;
+  const here=state.gps||await locateOnce();
+  if(!here)return 'Where should the walk start? Allow location access, or name a start ("from Union Square …").';
+  if(!latLonInsideManhattanEnvelope(here))return 'Your location is outside Manhattan, where walking routes are available. Name a start in Manhattan ("from Union Square …") or pick one.';
+  state.start='gps';$('startSelect').value='gps';$('searchStart').value=here.name;syncMapData();
+  document.dispatchEvent(new CustomEvent('strollane:ends-changed',{detail:{kind:'start',source:'gps'}}));
+  return null;
 }
 
 function poiDimension(tags){if(tags.tourism==='museum'||tags.tourism==='gallery'||tags.amenity==='theatre')return'Culture';if(tags.leisure==='park'||tags.leisure==='garden')return'Nature';if(tags.historic||tags.tourism==='attraction')return'Architecture';if(tags.amenity==='cafe'||tags.amenity==='restaurant')return'Food & Retail';if(tags.tourism==='viewpoint')return'Scenic & Visual';return null}
@@ -711,8 +772,9 @@ function activePOIs(){
 function polylinePointDistanceM(p,coords){let min=Infinity;for(let i=1;i<coords.length;i++)min=Math.min(min,segmentDistanceM(p,coords[i-1],coords[i]));return min}
 function poiGeojson(){return {type:'FeatureCollection',features:state.display.pois?activePOIs().map(p=>({type:'Feature',properties:{name:p.name,category:poiDimension(p.tags),distance_m:p.distance},geometry:{type:'Point',coordinates:[p.lon,p.lat]}})):[]}}
 function renderPOIs(){
-  const list=activePOIs();$('poiCount').textContent=`${list.length} NEAR ROUTE`;
-  if(!list.length){$('poiList').innerHTML=`<p class="status-empty">${esc(planner.poiStatus==='Not loaded'?'Generate or select a route to discover POIs.':planner.poiStatus||'No named OSM POIs confirmed near route.')}</p>`;return}
+  const list=activePOIs(),pending=planner.poiStatus==='Not loaded'||/^Fetching/.test(planner.poiStatus||'');
+  $('poiCount').textContent=pending?'':`${list.length} NEAR ROUTE`; // a count only once the lookup has answered: "0 near route" before that was not a finding
+  if(!list.length){$('poiList').innerHTML=`<p class="status-empty">${esc(planner.poiStatus==='Not loaded'?(state.routes.length?'Places near this walk have not been looked up yet.':'Generate or select a route to discover POIs.'):planner.poiStatus||'No named OSM POIs confirmed near route.')}</p>`;return}
   $('poiList').innerHTML=`<small>${esc(planner.poiStatus)}</small>`+list.map((p,i)=>`<button class="poi-item" type="button" data-poi="${i}"><span><strong>${esc(p.name)}</strong><small>${esc(poiDimension(p.tags))} · OpenStreetMap</small></span><span class="poi-distance">${p.distance} m ↗</span></button>`).join('');
   $('poiList').querySelectorAll('[data-poi]').forEach(el=>el.addEventListener('click',()=>{
     const p=list[+el.dataset.poi];if(state.mapReady)state.map.flyTo({center:[p.lon,p.lat],zoom:16.4,duration:500});toast(`${p.name} · ${p.distance} m from route geometry`);
@@ -760,7 +822,7 @@ async function autoLocateStart(){
   navigator.geolocation.getCurrentPosition(p=>{
     setGpsPosition(p.coords);loadWeather();
     if(state.start!==presetStart||state.start==='gps'||state.start==='custom')return; // the user already chose a start
-    if(!latLonInsideManhattanEnvelope(state.gps)){toast(`Your location is outside Manhattan, where walking routes are available — the start stays ${getPlace('start')?.name||'the preset'}.`);return;}
+    if(!latLonInsideManhattanEnvelope(state.gps)){toast('Your location is outside Manhattan, where walking routes are available — name a start in your request ("from Union Square …") or pick one.');return;}
     state.start='gps';$('startSelect').value='gps';$('searchStart').value=state.gps.name;
     syncMapData();
     if(state.mapReady)state.map.easeTo({center:[state.gps.lon,state.gps.lat],zoom:Math.max(state.map.getZoom(),14),duration:800});
@@ -792,10 +854,10 @@ function renderMethodology(){
 function closeModal(){modalOverlay.classList.add('hidden')}
 function setupControls(){
   renderPreferenceSummary();updateLegend();checkInterpreter();renderPOIs();updateWhyRoute();
-  $('searchStart').value='Bryant Park';$('searchEnd').value='Columbia University';
+  $('searchStart').value='';$('searchEnd').value='';
   for(const kind of ['start','end']){
     $(kind==='start'?'startSelect':'endSelect').addEventListener('change',e=>{
-      state[kind]=e.target.value;const p=getPlace(kind);$(kind==='start'?'searchStart':'searchEnd').value=p?.name||'';if(typeof placeInputs!=='undefined')placeInputs[kind]?.set(p);if(kind==='end'&&typeof setEndMode==='function'){journey.userSetDestination=true;setEndMode('fixed');}resetRoutes();syncMapData();
+      state[kind]=e.target.value||null;const p=getPlace(kind);$(kind==='start'?'searchStart':'searchEnd').value=p?.name||'';if(typeof placeInputs!=='undefined')placeInputs[kind]?.set(p);if(kind==='end'&&typeof setEndMode==='function'){journey.userSetDestination=true;setEndMode('fixed');}resetRoutes();syncMapData();
     });
   }
   $('timeRange').addEventListener('input',e=>{setBudget(Number(e.target.value));updateRoutesUI()});
@@ -818,7 +880,7 @@ function setupControls(){
   $('customTime').addEventListener('blur',commitCustomTime);
   $('customTime').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();commitCustomTime();}});
   $('maxDetourPct').addEventListener('change',e=>{const v=Number(e.target.value);if(Number.isFinite(v)&&v>=0&&v<=100){planner.maxDetourPct=v;updateRoutesUI()}else{toast('Choose a detour limit from 0 to 100%.');renderPreferenceSummary()}});
-  $('generateRoutes').addEventListener('click',()=>handlePlan($('intentText').value,false));
+  $('generateRoutes').addEventListener('click',()=>typeof isWalkPresetRequest==='function'&&isWalkPresetRequest($('intentText').value)?planFromWalkPresets():handlePlan($('intentText').value,false));
   // Desktop: the walk limits fold into one line ("Up to 100 min · stairs allowed"); the controls are unchanged inside.
   const walkSummary=()=>{const el=$('walkOptionsSummary');if(!el)return;const unit=state.distUnit==='mi'?'mi':'km',km=state.maxKm;
     el.textContent=[`Up to ${state.budget} min`,km!=null?`${unit==='mi'?Math.round(km/1.609344*10)/10:km} ${unit}`:null,planner.constraints.avoidStairs?'avoiding stairs':'stairs allowed',planner.constraints.stepFree?'step-free':null].filter(Boolean).join(' · ');};

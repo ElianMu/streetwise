@@ -6,6 +6,11 @@ Writes data/pedestrian/street_osm_edge_mapping.csv.gz  one row per (directed OSM
        data/pedestrian/edge-scores.json.gz             12 scores, coverage, source and match quality per edge geometry
 Standard library only. Explore's LION scores are read, never changed.
 
+The scores this script writes come from data/manhattan-streets.json (the earlier street snapshot). The router uses the
+Explore Urban Data map's street scores instead: run scripts/transfer_dimension_scores.py and then
+scripts/build_score_indicators.py after this script. The matching and the directly measured raw values written here
+are what that transfer reads.
+
 Matching is not nearest-neighbour: every 5 m sample of an OSM edge must find a LION segment that is close enough
 for the edge's type (centreline, sidewalk offset or path), runs in the same direction (<= 20 deg), does not carry a
 conflicting street name, and is on the same level (bridges, tunnels and layered edges never match ground streets).

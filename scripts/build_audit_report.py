@@ -91,7 +91,7 @@ def main():
             'duplicate_ids': len(recs)-len({r['id'] for r in recs})}
             for c in idx['categories'] for recs in [json.load(open(D('places',c['id']+'.json')))['records']]}}
     json.dump(summary, open(D('audit.json'), 'w'), indent=1)
-    md = [f"# STREETWISE · NYC — Data Audit Report\n\nGenerated {summary['built_at']} by `scripts/build_audit_report.py` from the shipped files (no estimates).\n",
+    md = [f"# STROLLANE · NYC — Data Audit Report\n\nGenerated {summary['built_at']} by `scripts/build_audit_report.py` from the shipped files (no estimates).\n",
           f"**{summary['datasets']} datasets** ({summary['connected']} connected), **{summary['records']:,} records** in the shipped files. A record count is not a count of places verified open today.\n",
           '## Datasets\n', '| Dataset | Provider | Class | Coverage | Records | Freshness (days) | Missing fields | Quality | Integration |', '|---|---|---|---|---|---|---|---|---|']
     for r in rows:

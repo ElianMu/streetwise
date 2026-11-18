@@ -1,7 +1,8 @@
 name: Production acceptance and memory monitor
+# Manual only in this repository: production (GitHub Pages + the Render API) is deployed from PROD_SOURCE_REPO
+# (repository variable, default ElianMu/streetwise). A schedule here would compare that deployment with this
+# repo's commits and fail every 6 hours. Run it by hand from the Actions tab to check production health.
 on:
-  schedule:
-    - cron: '17 */6 * * *'
   workflow_dispatch:
     inputs:
       live_ai:
@@ -29,11 +30,17 @@ jobs:
       - name: Check actual production and emit reviewable evidence
         env:
           LIVE_AI: ${{ github.event.inputs.live_ai || 'false' }}
-          EXPECTED_COMMIT: ${{ github.sha }}
+          PROD_SOURCE_REPO: ${{ vars.PROD_SOURCE_REPO || 'ElianMu/streetwise' }}
+          PROD_SITE: ${{ vars.PROD_SITE || 'https://elianmu.github.io/streetwise/' }}
+          PROD_API: ${{ vars.PROD_API || 'https://streetwise-api.onrender.com' }}
+          THIS_REPO: ${{ github.repository }}
+          THIS_COMMIT: ${{ github.sha }}
         run: |
           args=()
           if [ "$LIVE_AI" = "true" ]; then args+=(--live-ai); fi
-          python tests/production_e2e.py --expected-commit "$EXPECTED_COMMIT" --output "$RUNNER_TEMP/streetwise-production" "${args[@]}"
+          # The deployed commit can only be compared with this run's commit when production is built from this repo.
+          if [ "$PROD_SOURCE_REPO" = "$THIS_REPO" ]; then args+=(--expected-commit "$THIS_COMMIT"); else echo "::notice::Production is deployed from $PROD_SOURCE_REPO, not $THIS_REPO: checking its health without the commit match."; fi
+          python tests/production_e2e.py --output "$RUNNER_TEMP/streetwise-production" "${args[@]}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:

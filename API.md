@@ -1,4 +1,4 @@
-# STREETWISE · NYC — API and data contracts
+# STROLLANE · NYC — API and data contracts
 
 All endpoints are served by `server.py` (standard library). Field names below are the shared contract used by
 `routing/engine.py`, `route-client.js` (AI Journey, Route Intelligence) and `explore-map.js` (Explore Urban Data).

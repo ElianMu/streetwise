@@ -35,7 +35,7 @@ async function newPage(browser, { width, height, geo, mobile = width <= 740 }) {
     if (url.hostname === '127.0.0.1' || url.hostname === 'localhost') return route.continue();
     if (url.hostname === 'unpkg.com' && url.pathname.startsWith('/maplibre-gl@4.7.1/dist/')) {
       const f = path.join(ML, path.basename(url.pathname));
-      return route.fulfill({ path: f, contentType: f.endsWith('.css') ? 'text/css' : 'application/javascript' });
+      return route.fulfill({ path: f, contentType: f.endsWith('.css') ? 'text/css' : 'application/javascript', headers: { 'Access-Control-Allow-Origin': '*' } });
     }
     if (url.hostname === 'basemaps.cartocdn.com' && url.pathname.endsWith('style.json')) return route.fulfill({ json: OFFLINE_STYLE });
     if (url.hostname === 'glyphs.invalid') return route.fulfill({ status: 200, body: Buffer.alloc(0), contentType: 'application/x-protobuf' });

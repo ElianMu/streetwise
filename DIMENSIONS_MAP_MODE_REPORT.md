@@ -158,9 +158,8 @@ inspector reads the legacy file explicitly), `app.js` (one theme hook), `index.h
 
 * 12-dimension selector (+ Overall). Partial dimensions show their `x/y` coverage badge and list their indicators,
   including N/A, validation-only and context-only ones.
-* Street segments as one MapLibre line layer (no per-segment DOM). Continuous green ramp that follows the map theme:
-  light → dark green on the light basemap (default), dark → bright green on the dark one, so high scores always have
-  the most contrast. N/A segments get a separate dashed grey style. `applyMapTheme()` repaints Map Mode on a theme switch.
+* Street segments as one MapLibre line layer (no per-segment DOM). Continuous blue → cyan → yellow ramp (blue = low,
+  yellow = high), with a brighter variant on the dark basemap so low scores stay visible (`EXPLORE_RAMPS`). N/A segments get a separate dashed grey style. `applyMapTheme()` repaints Map Mode on a theme switch.
 * Hover highlight + tooltip (score, indicators used). Click → Street Segment Information: ID, name, length, dimension,
   score, raw value and percentile of every indicator, direction, status, method (table text), notes, source, version.
 * Environment view adds the NO₂ Community District layer as faint area context.

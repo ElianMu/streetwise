@@ -15,8 +15,11 @@ import time
 import urllib.request
 from playwright.async_api import async_playwright
 
-SITE='https://elianmu.github.io/streetwise/'
-API='https://streetwise-api.onrender.com'
+# Which production this checks. Production (GitHub Pages + Render) was deployed from ElianMu/streetwise; a copy of
+# this repo elsewhere checks that deployment's health but must not compare it with its own commits.
+SITE=os.environ.get('PROD_SITE','https://elianmu.github.io/streetwise/')
+API=os.environ.get('PROD_API','https://streetwise-api.onrender.com')
+SOURCE_REPO=os.environ.get('PROD_SOURCE_REPO','ElianMu/streetwise')
 
 
 def http_json(url, body=None):
@@ -138,7 +141,7 @@ async def main(args):
             hashes={}
             for filename in ('app.js','journey.js','journey-ui.js'):
                 bodies=[]
-                for url in (SITE+filename+'?acceptance='+args.expected_commit, 'https://raw.githubusercontent.com/ElianMu/streetwise/'+args.expected_commit+'/'+filename):
+                for url in (SITE+filename+'?acceptance='+args.expected_commit, 'https://raw.githubusercontent.com/'+SOURCE_REPO+'/'+args.expected_commit+'/'+filename):
                     r=subprocess.run(['curl','-fsS','--max-time','45',url],capture_output=True,timeout=50);assert r.returncode==0,'Frontend version download failed';bodies.append(r.stdout)
                 assert bodies[0]==bodies[1],'GitHub Pages version mismatch: '+filename
                 hashes[filename]=hashlib.sha256(bodies[0]).hexdigest()
