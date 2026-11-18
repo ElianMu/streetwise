@@ -2,7 +2,7 @@
 
 This documents the actual rules implemented in `mobile-ui.js` + `styles.css`, not a
 proposal. It covers only what changed; the existing color tokens, type scale and
-`urban-style.js` cartographic system (route = the only lime accent on the map, etc.)
+`urban-style.js` cartographic system (route = the only warm-white `#F3EFE4` line on the map, etc.)
 are unchanged and documented in `README.md`'s "Cartographic design system" section.
 
 ## Breakpoints (unchanged, just clarified)

@@ -5,9 +5,11 @@
   "description": "STROLLANE · NYC — dev-only Node tooling. The app itself ships zero-build vanilla JS/CSS/HTML; nothing here is served to users. Python backend deps are in requirements.txt.",
   "scripts": {
     "test:e2e": "playwright test tests/mobile-e2e.spec.js",
-    "test:e2e:install": "playwright install chromium"
+    "test:e2e:install": "playwright install chromium",
+    "test:dom": "node tests/dom.test.cjs && node tests/food-discovery.test.cjs && node tests/place-cards.test.cjs"
   },
   "devDependencies": {
-    "@playwright/test": "1.48.0"
+    "@playwright/test": "1.48.0",
+    "jsdom": "24.1.3"
   }
 }

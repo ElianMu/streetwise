@@ -1,0 +1,309 @@
+{
+ "score_version": "strollane-12x24-v1+bb10da45e2",
+ "data_version": "2026-10-23",
+ "retrieved_at": "2026-10-23T05:12:03+00:00",
+ "value_note": "Scores are relative ranks within the comparison area, not calibrated experience scores. N/A = not measurable, never 0. On crossings, park paths, bridges and streets with a missing record, a score rests on fewer indicators than listed, because the others were not measured there (share of routable length: Quiet & Relax 30%, Spatial Comfort 31%).",
+ "score_method": "Each scored indicator → percentile rank 0–100 among segments of the comparison area that have a value (ties take the lowest rank; \"lower is better\" indicators reversed as 100 − rank). Dimension score = equal-weight mean of the indicator percentiles available on that segment. N/A when none is available; missing values are never 0. Validation/context indicators never enter a score.",
+ "windows": {
+  "noise": "2025-10-23 → 2026-10-23 (12 months before retrieval)",
+  "collisions": "2023-10-24 → 2026-10-23 (3 years before retrieval)"
+ },
+ "source_labels": {
+  "lion": "NYC Street Centerline (LION) — NYC DCP",
+  "lpc": "LPC Individual Landmark Lots",
+  "trees": "NYC Parks Forestry Tree Points (structure = Full)",
+  "parks": "NYC Parks Properties",
+  "tnc_landcover": "NYC Land Cover 2021 (6 in) — TNC / UVM Spatial Analysis Lab",
+  "osm": "OpenStreetMap POIs via Overpass API",
+  "osm_walk": "OpenStreetMap pedestrian network (OSMnx walk graph)",
+  "noise": "NYC 311 Service Requests — Noise*",
+  "sidewalks": "NYC Planimetric Database: Sidewalk",
+  "seating": "NYC DOT Seating Locations",
+  "ramps": "NYC DOT Pedestrian Ramp Locations",
+  "ped_counts": "NYC DOT Bi-Annual Pedestrian Counts",
+  "collisions": "NYPD Motor Vehicle Collisions — Crashes",
+  "nypd_complaints": "NYPD Complaint Data Historic (qgea-i56i) + Current YTD (5uac-w243)",
+  "waterfront_access": "Waterfront Public Access Areas (WPAA)",
+  "hydrography": "NYC Planimetric Database: Hydrography",
+  "dohmh_no2": "NYC DOHMH Air Quality (NYCCAS annual NO₂)",
+  "subway": "MTA Subway Entrances and Exits: 2024 (entry allowed)",
+  "seating+osm_walk": "NYC DOT Seating Locations · OpenStreetMap pedestrian network (OSMnx walk graph)",
+  "ramps+lion": "NYC DOT Pedestrian Ramp Locations · NYC Street Centerline (LION) — NYC DCP",
+  "waterfront_access+parks+hydrography+osm_walk": "Waterfront Public Access Areas (WPAA) · NYC Parks Properties · NYC Planimetric Database: Hydrography · OpenStreetMap pedestrian network (OSMnx walk graph)"
+ },
+ "record_counts": {
+  "lion": 10533,
+  "lpc": 995,
+  "trees": 174207,
+  "parks": 396,
+  "osm": 76712,
+  "osm_walk": 122092,
+  "noise": 177034,
+  "sidewalks": 9730,
+  "seating": 1194,
+  "ramps": 23668,
+  "ped_counts": 36,
+  "collisions": 4204,
+  "nypd_complaints": 171188,
+  "waterfront_access": 42,
+  "hydrography": 86,
+  "dohmh_no2": 12,
+  "subway": 840
+ },
+ "fewer_indicators_share_of_routable_length": {
+  "Architecture": 0.0,
+  "Nature": 0.0,
+  "Culture": 0.0,
+  "Quiet & Relax": 0.3,
+  "Spatial Comfort": 0.31,
+  "Urban Vibrancy": 0.0,
+  "Food & Retail": 0.0,
+  "Scenic & Visual": 0.0,
+  "Walkability": 0.001,
+  "Access & Safety": 0.0,
+  "Environment": 0.0,
+  "Transit Connectivity": 0.0
+ },
+ "dimensions": {
+  "Architecture": [
+   {
+    "key": "lpc_k",
+    "label": "Weighted landmark proximity",
+    "unit": "index",
+    "method": "Sample the street centerline every 40 m. For LPC landmark lots within 300 m, apply Gaussian distance weights (σ = 100 m) and average all samples. Higher values indicate stronger exposure to recognized landmarks",
+    "source": "lpc",
+    "role": "up",
+    "status": "computed"
+   }
+  ],
+  "Nature": [
+   {
+    "key": "tree_km",
+    "label": "Recorded trees",
+    "unit": "trees/km",
+    "method": "Count mapped tree points within 30 m of each street segment. Divide by segment length in kilometres, using a minimum length of 80 m to avoid inflated short-segment values. Higher values mean denser recorded tree presence",
+    "source": "trees",
+    "role": "up",
+    "status": "computed"
+   },
+   {
+    "key": "park_pct",
+    "label": "Park adjacency",
+    "unit": "share 0–1",
+    "method": "Sample points along the street centerline and side offsets at 20 m and 40 m. Divide points inside official park polygons by all valid sample points. Higher values indicate stronger spatial adjacency to park land",
+    "source": "parks",
+    "role": "up",
+    "status": "computed"
+   },
+   {
+    "key": "canopy_pct",
+    "label": "Tree-canopy cover",
+    "unit": "%",
+    "method": "Create a 20 m buffer on both sides of the street and intersect it with the 2021 land-cover raster. Divide canopy-class pixel area by total valid classified area × 100. Higher values indicate more overhead tree cover",
+    "source": "tnc_landcover",
+    "role": "context",
+    "status": "unavailable"
+   }
+  ],
+  "Culture": [
+   {
+    "key": "cult_k",
+    "label": "Cultural POI proximity",
+    "unit": "index",
+    "method": "Map museums, galleries, theatres, libraries, and similar cultural destinations. For locations within 450 m, sum Gaussian distance-decay weights (σ = 150 m) along the street. Higher values indicate stronger nearby cultural access",
+    "source": "osm",
+    "role": "up",
+    "status": "computed"
+   }
+  ],
+  "Quiet & Relax": [
+   {
+    "key": "noise_k",
+    "label": "Noise-complaint intensity",
+    "unit": "index",
+    "method": "Filter geolocated NYC 311 noise complaints to the latest 12 months. Sum Gaussian distance weights for reports within 150 m (σ = 50 m), then reverse the percentile. Fewer nearby complaints rank higher",
+    "source": "noise",
+    "role": "down",
+    "status": "computed"
+   },
+   {
+    "key": "width_ft",
+    "label": "Roadway width",
+    "unit": "ft",
+    "method": "Read roadway width in feet from NYC LION for each street segment. Convert values to Manhattan-relative percentiles and reverse them so narrower streets rank higher. This is a quietness proxy, not a measured sound level",
+    "source": "lion",
+    "role": "down",
+    "status": "computed"
+   }
+  ],
+  "Spatial Comfort": [
+   {
+    "key": "sidewalk_pct",
+    "label": "Mapped sidewalk coverage",
+    "unit": "share 0–1",
+    "method": "Sample roughly every 20 m along the street and add left/right offsets at 5, 8, 11, and 14 m. Divide points inside mapped sidewalk polygons by all valid points. Higher values indicate wider or more continuous sidewalk coverage",
+    "source": "sidewalks",
+    "role": "up",
+    "status": "computed"
+   },
+   {
+    "key": "seat_access_m",
+    "label": "Walking distance to seating",
+    "unit": "m",
+    "method": "Locate public seating points on the walkable network. From each street midpoint, calculate the shortest walking distance to the nearest seat, capped at 500 m. Shorter distances indicate easier access to rest",
+    "source": "seating+osm_walk",
+    "role": "down",
+    "status": "computed"
+   },
+   {
+    "key": "ramp_coverage",
+    "label": "Pedestrian-ramp coverage",
+    "unit": "share 0–1",
+    "method": "Identify evaluable pedestrian crossing nodes along the street. Check whether at least one recorded curb ramp lies within 20 m of each node, then divide covered nodes by all eligible nodes. Higher values mean more documented ramp provision",
+    "source": "ramps+lion",
+    "role": "up",
+    "status": "computed"
+   }
+  ],
+  "Urban Vibrancy": [
+   {
+    "key": "vibr_idx",
+    "label": "POI diversity × quantity",
+    "unit": "index",
+    "method": "Collect OSM places within 150 m of the street midpoint and group them by activity type. Compute normalized Shannon diversity H and multiply it by ln(1 + POI count). Higher values indicate both more places and greater use diversity",
+    "source": "osm",
+    "role": "up",
+    "status": "computed"
+   },
+   {
+    "key": "ped_flow_observed",
+    "label": "Observed pedestrian flow",
+    "unit": "people/h",
+    "method": "Standardize pedestrian-sensor observations by hour and period to make locations comparable. Use the median valid hourly pedestrian count and compare it with the POI-based vibrancy model. This is validation evidence, not a full-street score",
+    "source": "ped_counts",
+    "role": "context",
+    "status": "validation-only"
+   }
+  ],
+  "Food & Retail": [
+   {
+    "key": "food_k",
+    "label": "Food and retail proximity",
+    "unit": "index",
+    "method": "Extract mapped restaurants, cafés, bars, shops, and other retail POIs. At street samples, sum Gaussian proximity values for locations within 150 m (σ = 50 m). Higher values indicate stronger nearby food and retail availability",
+    "source": "osm",
+    "role": "up",
+    "status": "computed"
+   }
+  ],
+  "Scenic & Visual": [
+   {
+    "key": "scenic_k",
+    "label": "Scenic POI proximity",
+    "unit": "index",
+    "method": "Select OSM viewpoints, public art, fountains, memorials, and monuments. Compute Gaussian distance weights within 300 m (σ = 100 m) along street samples. Higher values indicate greater proximity to scenic features",
+    "source": "osm",
+    "role": "up",
+    "status": "computed"
+   },
+   {
+    "key": "waterfront_access_m",
+    "label": "Walking distance to waterfront",
+    "unit": "m",
+    "method": "Verify public waterfront entries and their links to walkable paths. Calculate the shortest pedestrian-network route from each street midpoint to the nearest valid entrance. Shorter distances indicate easier public access to waterfront views",
+    "source": "waterfront_access+parks+hydrography+osm_walk",
+    "role": "down",
+    "status": "computed"
+   }
+  ],
+  "Walkability": [
+   {
+    "key": "inter_n",
+    "label": "Connected junctions",
+    "unit": "count",
+    "method": "Construct the walkable-road topology from NYC LION segments. Identify junctions meeting at least three segments and count those within 250 m of each street midpoint. Higher counts indicate more route choices and connections",
+    "source": "lion",
+    "role": "up",
+    "status": "computed"
+   },
+   {
+    "key": "route_directness",
+    "label": "Walking-network detour",
+    "unit": "ratio ≥1",
+    "method": "Sample feasible nearby origin–destination pairs around each street. Divide the shortest pedestrian-network distance by straight-line distance and take the median. Ratios closer to 1 indicate less detour and more direct walking",
+    "source": "osm_walk",
+    "role": "down",
+    "status": "computed"
+   }
+  ],
+  "Access & Safety": [
+   {
+    "key": "crash_k",
+    "label": "Pedestrian-injury crash intensity",
+    "unit": "index",
+    "method": "Filter three years of reported collisions involving pedestrian injury or death. Sum Gaussian proximity weights for crash points within 120 m (σ = 40 m) and reverse the percentile. Fewer nearby crashes rank higher",
+    "source": "collisions",
+    "role": "down",
+    "status": "computed"
+   },
+   {
+    "key": "crime_k",
+    "label": "Crime-report proximity",
+    "unit": "index",
+    "method": "Combine NYPD historic and current-YTD complaint records, deduplicate incident IDs, and retain felony and misdemeanor cases. Sum Gaussian weights for reports within 300 m (σ = 100 m). Fewer reports rank higher, but this remains a proxy rather than personal risk",
+    "source": "nypd_complaints",
+    "role": "down",
+    "status": "computed"
+   }
+  ],
+  "Environment": [
+   {
+    "key": "hwy_m",
+    "label": "Distance to highways/ramps",
+    "unit": "m",
+    "method": "Measure straight-line distance from each street midpoint to the nearest mapped highway or access ramp. Cap distances at 1,500 m and rank farther distances higher. This acts as a proximity-based environmental exposure proxy",
+    "source": "lion",
+    "role": "up",
+    "status": "computed"
+   },
+   {
+    "key": "impervious_pct",
+    "label": "Impervious surface cover",
+    "unit": "%",
+    "method": "Buffer each street by 20 m on both sides and overlay the 2021 classified land-cover raster. Divide impervious-surface area by total valid raster area × 100. Lower values indicate less nearby hard-surface cover",
+    "source": "tnc_landcover",
+    "role": "context",
+    "status": "unavailable"
+   },
+   {
+    "key": "no2_area_context",
+    "label": "Annual NO₂ area context",
+    "unit": "source units",
+    "method": "Read annual NO₂ concentration using the official DOHMH geography, period, and source units. Use this only as neighbourhood-scale environmental context; do not assign the value directly to individual street segments",
+    "source": "dohmh_no2",
+    "role": "context",
+    "status": "context-only"
+   }
+  ],
+  "Transit Connectivity": [
+   {
+    "key": "sub_n",
+    "label": "Entry-permitted subway entrances",
+    "unit": "count",
+    "method": "Keep only MTA entrances that allow passengers to enter. Count qualifying entrances within 400 m of each street midpoint. Higher values indicate more nearby access points, not higher service frequency",
+    "source": "subway",
+    "role": "up",
+    "status": "computed"
+   },
+   {
+    "key": "sub_m",
+    "label": "Distance to subway entrance",
+    "unit": "m",
+    "method": "From each street midpoint, find the nearest MTA entrance that permits boarding access. Measure distance, cap it at 1,500 m, and reverse the Manhattan percentile. Shorter distances indicate stronger subway proximity",
+    "source": "subway",
+    "role": "down",
+    "status": "computed"
+   }
+  ]
+ }
+}

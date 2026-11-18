@@ -12,7 +12,7 @@
 | `WAITING_FOR_TOOL` | `agent_node`, when the LLM's response includes tool calls | `runtime.py: agent_node` → `route_after_agent` |
 | `RETRYING` | `tools_node`, when a tool call fails with an `upstream_unavailable` error and retries remain | `runtime.py: tools_node` |
 | `COMPLETED` | `agent_node`, when the LLM responds with no further tool calls | `runtime.py: agent_node` |
-| `FAILED` | step budget (`MAX_STEPS=6`) or wall-clock deadline (`WALL_CLOCK_TIMEOUT_S=45`) exceeded, or a tool call exhausts its retries | `runtime.py: agent_node`, `tools_node` |
+| `FAILED` | step budget (`MAX_STEPS=6`) or wall-clock deadline (`WALL_CLOCK_TIMEOUT_S=45`) exceeded, or an unhandled exception such as a model call timing out (each call is capped at 30 s and by the remaining deadline). A tool that exhausts its retries does **not** fail the run — its error goes back to the model as the tool result. | `runtime.py: agent_node`, `run_food_stop_agent` |
 | `WAITING_FOR_USER`, `CANCELLED` | **not implemented.** This slice has no human-in-the-loop step and no cancellation endpoint. Claiming these would be fabricating states no code path reaches. | — |
 
 ## Bounded retries, timeouts, failure recovery
@@ -28,10 +28,12 @@
 
 ## Durable state / checkpointing
 
-`langgraph.checkpoint.sqlite.SqliteSaver` persists every graph step to `data/agent_checkpoints.db`
-(gitignored — it's runtime state, not source), keyed by `thread_id = run_id`. A process restart does not lose
-an in-progress run's history; re-invoking with the same `run_id` resumes from the last checkpoint. This is a
-real, tested mechanism (LangGraph's own), not something built from scratch.
+`langgraph.checkpoint.sqlite.SqliteSaver` persists every graph step to `.agent-state/agent_checkpoints.db` (outside the statically served tree; `AGENT_CHECKPOINT_DB` overrides)
+(gitignored — it's runtime state, not source), keyed by `thread_id = run_id`. The checkpoints survive a process
+restart, so each run's step history can be inspected afterwards. **Resuming an interrupted run is not
+implemented**: `run_food_stop_agent` always starts from a fresh initial state, and the server never passes a
+`run_id`. (Re-calling it with an old `run_id` would append a new user turn and reset the step budget, not continue
+the old run; a real resume would invoke the compiled graph with input `None` for that thread.)
 
 Note on scope: the server itself is still stateless per-request outside the agent path — only the agent graph
 checkpoints. Making the rest of the server durable was not asked for and isn't done.
@@ -53,6 +55,11 @@ have.
 back to the existing deterministic `recommend_food` pipeline and says so honestly in the response
 (`served_by: "deterministic_fallback"`, with a `reason`). This was verified with real requests against a
 running server — see `tests/test_agent.py`'s `FeatureFlagFallbackTests`.
+
+Request body: `{"request": "<free text>", "lat": <number>, "lon": <number>}`. On the agent path `lat`/`lon` are
+required (Manhattan routing area, else HTTP 400) and are passed to the agent as the caller's location — the agent
+has no geocoder, so without them it could only invent coordinates. `calculate_route` hands the agent a compact
+route summary (distance, time, detour, scores, constraint result), not the planner's full ~165 KB response.
 
 ## What was NOT verified in this environment
 

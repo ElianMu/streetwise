@@ -28,6 +28,8 @@ const journey={
  removed:new Set(),        // place ids the user removed
  replaced:{},              // slot id -> place chosen by the user
  plan:null,lastFound:null,menu:{},recs:{},pending:false,active:false,
+ autoInterests:[],         // interests WE recommended because no destination was given (dropped once one is)
+ autoOuting:null,          // the outing length WE chose for that recommendation (the user's own time always wins)
 };
 const POI_CACHE={};
 // Typical short-visit estimates (minutes); always shown as estimates and editable per stop.
@@ -368,7 +370,8 @@ async function itineraryRequest(){
  // array order exactly as before — only the waiting is concurrent, not the outcome.
  if(journey.requirements.restaurant_budget_usd!=null&&journey.food.some(f=>!f.item))throw new Error('Restaurant budget cannot be verified without a specific item and directly sourced price.');
  const [interestResults,foodResults]=await Promise.all([
-  Promise.all(journey.interests.map(i=>discoverPlaces(INTEREST_SOURCES[i],{near:searchAnchor,limit:10,filter:i==='famous'?(r=>(r.sl||0)>=8):null}))),
+  Promise.all(journey.interests.map(i=>discoverPlaces(INTEREST_SOURCES[i],{near:searchAnchor,limit:10,filter:i==='famous'?(r=>(r.sl||0)>=8):null,
+   radiusKm:journey.autoInterests.includes(i)&&typeof RECOMMEND_RADIUS_KM!=='undefined'?RECOMMEND_RADIUS_KM[journey.endMode]||2.5:2.5}))),
   Promise.all(journey.food.map(f=>{
    const cats=f.item==='cheesecake'?['bakeries','restaurants']:/^bagels?$/i.test(f.item||'')?['bakeries','cafes','restaurants']:[f.category];
    const filt=f.cuisine?(r=>new RegExp(`(^|;)${f.cuisine}(;|$)`,'i').test(r.cuisine||'')):f.category==='cafes'&&f.item?(r=>r.cat==='cafes'):null;
@@ -384,8 +387,8 @@ async function itineraryRequest(){
   if(fixed)stops.push({...pick(fixed),required:true,order:null,visit_min:VISIT_MIN[fixed.cat]??30});
   else if(!cands.length)throw new Error(`No verified discovery candidate for ${INTEREST_LABEL[i]}; this required interest is not fulfilled.`);
   else if(cands.length){const count=journey.counts[i]||1;if(cands.length<count)throw new Error(`Only ${cands.length} distinct candidates for ${count} required ${INTEREST_LABEL[i]}.`);
-   for(let k=0;k<count;k++)slots.push({slot_id:'interest:'+i+(count>1?':'+(k+1):''),label:INTEREST_LABEL[i]+(count>1?' '+(k+1):''),required:true,visit_min:INTEREST_VISIT[i],candidates:cands.slice(0,Math.max(4,count)).map(slotCand)});}
-  for(const c of cands.slice(4))poolCands.push({...slotCand(c),visit_min:INTEREST_VISIT[i],group:i});
+   for(let k=0;k<count;k++)slots.push({slot_id:'interest:'+i+(count>1?':'+(k+1):''),label:INTEREST_LABEL[i]+(count>1?' '+(k+1):''),required:true,visit_min:interestVisit(i),candidates:cands.slice(0,Math.max(4,count)).map(slotCand)});}
+  for(const c of cands.slice(4))poolCands.push({...slotCand(c),visit_min:interestVisit(i),group:i});
  });
  journey.food.forEach((f,idx)=>{
   const id='food:'+f.category+':'+(f.item||f.cuisine||'');const fixed=journey.replaced[id];
@@ -414,7 +417,9 @@ async function itineraryRequest(){
  const outing=state.outingMin;
  if(journey.requirements.ticket_budget_usd!=null||journey.requirements.total_budget_usd!=null)throw new Error('Ticket/total monetary budget cannot be verified: admission prices and all required costs are not connected. Walking time remains separate.');
  // extra discoveries scale with the time available (walking budget, or the total outing when set)
- const base=outing||state.budget,maxPool=Math.max(0,Object.values(journey.extra).reduce((a,b)=>a+b,0)+(journey.interests.length&&!Object.keys(journey.counts).length?Math.max(1,Math.min(4,Math.round((base-30)/40))):0));
+ const base=outing||state.budget,maxPool=Math.max(0,Object.values(journey.extra).reduce((a,b)=>a+b,0)+(journey.interests.length&&!Object.keys(journey.counts).length?
+  // a recommended walk (no destination): about one highlight per 20 minutes of the outing
+  (journey.autoInterests.length?Math.max(1,Math.min(4,Math.round(base/20)-journey.interests.length)):Math.max(1,Math.min(4,Math.round((base-30)/40)))):0));
  return {departure:new Date().toISOString(),origin:pick(start),end:{mode:journey.endMode,place:end?pick(end):null},stops,slots,pool:{label:'Discovered places',max_stops:maxPool,candidates:poolCands.slice(0,16)},
   constraints:{max_minutes:state.budget,max_km:state.maxKm,max_outing_minutes:outing,avoid_stairs:planner.constraints.avoidStairs,require_open:journey.requirements.must_be_open===true},
   preferences:buildRouteRequest(start,end||start).preferences,theme:journeyTheme()};
@@ -435,6 +440,53 @@ function journeyTheme(){
 // Decided by what the walk holds now (not by an earlier request), so removing the last stop gives the A→B choice back.
 function journeyMode(){return journey.named.some(n=>!journey.removed.has(n.place.id))||journey.endMode!=='fixed'||journey.interests.length>0||journey.food.length>0||journey.services.some(s=>s.addAsStop)||Object.values(journey.extra).some(v=>v>0);}
 
+/* ---------- no destination: recommend a walk ----------
+   A request without a destination ("a quiet walk with nice architecture", "推荐一条散步路线") is not a missing field: it
+   asks us to recommend a walk. The walk starts at the request's start (or the user's location) and visits real places
+   chosen from the user's own priorities — never a preset destination:
+     Nature / Quiet & Relax / Environment → parks · Architecture → historic buildings · Culture → culture venues /
+     museums · Scenic & Visual / Urban Vibrancy → famous sights · Food & Retail → shopping; nothing raised → famous sights.
+   "around here / a loop / 附近走走" comes back to the start; otherwise the walk ends at its last highlight. The
+   itinerary planner then picks the stops on the real walking network, within the walking-time limit, along streets
+   ranked by the same priorities. With no time given, the recommendation is sized as a ~75-minute outing (60 for a
+   loop around here), walking + visits, from places within ~1.8 km (1.2 km for a loop); a time the user states always
+   wins. Returns the line explaining what was done, or null when a destination exists. */
+const RECOMMEND_OUTING={open:75,round:60},RECOMMEND_RADIUS_KM={open:1.8,round:1.2};
+// A recommended walk is mostly walking: its highlights are short pass-by stops, not full visits.
+const RECOMMEND_VISIT={parks:10,historic:5,famous:10,culture:15,museums:20,shopping:10};
+const interestVisit=i=>journey.autoInterests.includes(i)?RECOMMEND_VISIT[i]??10:INTEREST_VISIT[i];
+const RECOMMEND_FROM=[['Nature','parks'],['Quiet & Relax','parks'],['Environment','parks'],['Architecture','historic'],['Culture','culture'],
+ ['Scenic & Visual','famous'],['Urban Vibrancy','famous'],['Food & Retail','shopping']];
+const ROUND_TRIP_RE=/around (here|my (place|area|neighbou?rhood)|the (block|neighbou?rhood))|\bloop\b|circle back|附近(走走|转转|逛逛|散步|溜达)|绕一圈|兜一圈|回来/i;
+function recommendedInterests(){
+ const raised=RECOMMEND_FROM.filter(([d])=>planner.origins[d]!=='default'&&planner.directions[d]!=='low'&&(planner.weights[d]??50)>55)
+  .sort((a,b)=>(planner.weights[b[0]]??50)-(planner.weights[a[0]]??50)).map(([,i])=>i);
+ const out=[...new Set(raised)].slice(0,2);
+ return out.length?out:['famous'];
+}
+function prepareRecommendedWalk(text){
+ if(typeof journey==='undefined')return null;
+ // a destination given now replaces our own recommendation
+ if(journey.endMode==='fixed'&&getPlace('end')){
+  if(journey.autoInterests.length){journey.interests=journey.interests.filter(i=>!journey.autoInterests.includes(i));journey.autoInterests=[];}
+  if(journey.autoOuting!=null&&state.outingMin===journey.autoOuting){state.outingMin=null;$('outingMin').value='';}
+  journey.autoOuting=null;
+  return null;
+ }
+ if(journey.endMode!=='fixed')return null; // open / round / hotel already chosen
+ setEndMode(ROUND_TRIP_RE.test(text||'')?'round':'open');
+ journey.active=true;
+ const visiting=journey.named.some(n=>!journey.removed.has(n.place.id))||journey.interests.length||journey.food.length||journey.services.some(s=>s.addAsStop);
+ let added=[];
+ if(!visiting){added=recommendedInterests().filter(i=>!journey.interests.includes(i));journey.interests.push(...added);journey.autoInterests=added;}
+ // no time stated (outing unset, walking limit untouched): size the recommendation as a short outing
+ if(state.outingMin==null&&state.budget===DEFAULT_WALK_MINUTES){journey.autoOuting=RECOMMEND_OUTING[journey.endMode]||75;state.outingMin=journey.autoOuting;$('outingMin').value=journey.autoOuting;}
+ if(typeof renderJourneyPanel==='function')renderJourneyPanel();
+ const from=getPlace('start')?.name||'your location';
+ const what=added.length?added.map(i=>INTEREST_LABEL[i].toLowerCase()+'s').join(' and '):'the places you asked for';
+ return `No destination given, so I recommend a walk from ${from === 'My current location' ? 'your location' : from}: ${what} chosen for your priorities, ${journey.endMode==='round'?'coming back to the start':'ending at the last highlight'}, ${journey.autoOuting?`about ${journey.autoOuting} minutes in all (say a time to change it)`:`within your ${state.outingMin?state.outingMin+'-minute outing':state.budget+'-minute walking limit'}`}. Name a destination any time to walk there instead.`;
+}
+
 /* ---------- planning ---------- */
 async function planJourney(isFollowUp=false){
  if(state.routingBusy)return;
@@ -443,6 +495,7 @@ async function planJourney(isFollowUp=false){
  try{
   var kept=isFollowUp?snapshotRoutes():null;
   resetRoutes(true);renderRouteCards();
+  await streetwiseAwake(t=>{$('ctaLabel').textContent='Waking the route server…';$('rankingStatus').textContent=t;});if(run!==planner.runId)return;$('ctaLabel').textContent='Finding places & routing…';
   const req=await itineraryRequest();
   const res=await streetwiseFetch('/api/itinerary',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(req),signal:AbortSignal.timeout(45000)});
   const json=await res.json().catch(()=>({}));if(run!==planner.runId)return;
@@ -455,16 +508,17 @@ async function planJourney(isFollowUp=false){
   appendChat('assistant',planner.lastExplanation);
   if(state.mapReady){const bx=routeBounds(state.routes,80);if(bx)state.map.fitBounds([[bx[0],bx[1]],[bx[2],bx[3]]],{padding:routeFitPadding(65),maxZoom:15.5,duration:700});}
   autoVerifyMenus();cacheStopPlaces();
+  loadRoutePOIs(run).catch(()=>{}); // the same nearby-places lookup an A→B plan runs; without it the panel kept saying "Generate or select a route"
  }catch(err){
   if(run!==planner.runId)return;resetRoutes(true);renderRouteCards();
   const restored=restoreRoutes(kept);
-  const msg=`Could not build the walk: ${err.message}${restored?' Your previous route is still shown and unchanged.':''}`;$('rankingStatus').textContent=msg;appendChat('assistant',msg);toast(msg);
+  const msg=`Could not build the walk: ${streetwiseErrorText(err)}${restored?' Your previous route is still shown and unchanged.':''}`;$('rankingStatus').textContent=msg;appendChat('assistant',msg);toast(msg);
  }finally{if(run===planner.runId){state.routingBusy=false;$('generateRoutes').disabled=false;$('chatSend').disabled=false;$('ctaLabel').textContent='Plan My Walk';}}
 }
 function itinerarySummaryText(it){
  const t=it.totals,c=it.constraints;
  const stops=it.stops.filter(s=>s.role!=='end').map(s=>s.name).join(' → ');
- const pool=it.pool&&it.pool.requested>it.pool.added?` ${it.pool.requested-it.pool.added} more discovered place(s) did not fit the ${c.max_outing_minutes?`${c.max_outing_minutes}-minute outing`:'budget'}; extend the time to add them.`:'';
+ const pool=it.pool&&it.pool.requested>it.pool.added&&!journey.autoInterests.length?` ${it.pool.requested-it.pool.added} more discovered place(s) did not fit the ${c.max_outing_minutes?`${c.max_outing_minutes}-minute outing`:'budget'}; extend the time to add them.`:'';
  return pool+`${c.feasible?'Planned':'Not feasible'}: ${t.stops} stop(s)${stops?` — ${stops}`:''}${it.end_mode==='round'?' → back to start':it.end_mode==='hotel'?' → back to my hotel':''}. `+
   `${(t.walk_m/1000).toFixed(2)} km, ${Math.round(t.walk_min)} min walking + ${Math.round(t.visit_min)} min visits (estimated) = ${Math.round(t.outing_min)} min.`+
   (c.violations.length?` ${c.violations.join('; ')}.`:'')+(it.skipped.length?` Skipped: ${it.skipped.map(s=>`${s.name} (${s.reason})`).join('; ')}.`:'')+

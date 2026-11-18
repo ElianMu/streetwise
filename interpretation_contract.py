@@ -69,6 +69,13 @@ COMMON = {
     'weather': nullable(enum(['ask', 'cooler', 'consider'])),
     'journey': nullable(JOURNEY),
     'clarification': nullable({'type': 'string', 'maxLength': 300}),
+    # Parts of a request that no STROLLANE dataset can measure. Additive: nothing else in the contract changes.
+    # The interpreter names them instead of bending them into a preference; the client says so and changes nothing for them.
+    'unsupported': nullable(array(obj({
+        'request': {'type': 'string', 'maxLength': 80},            # the user's own words for that part
+        'reason': {'type': 'string', 'maxLength': 200},             # what is missing, in one sentence
+        'nearest_dimension': nullable(enum(DIMENSIONS)),            # a partial proxy that does exist, or null
+    }), 3)),
 }
 WIRE_SCHEMA = obj({'preferences': array(obj({
     'dimension': enum(DIMENSIONS), 'weight': number(0, 100, True),

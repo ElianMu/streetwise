@@ -9,13 +9,18 @@ States (spec-required, all real — a state the graph never actually enters is n
   WAITING_FOR_TOOL -> the agent asked for tool call(s); the tools node is executing them
   RETRYING   -> a tool call failed with a transient (upstream) error and is being retried, bounded by MAX_RETRIES
   COMPLETED  -> the agent produced a final answer with no further tool calls
-  FAILED     -> step budget or wall-clock deadline exceeded, or a tool failed past its retry budget
-  CANCELLED  -> the caller cancelled the run_id before it finished (checkpoint still readable)
-  WAITING_FOR_USER is not implemented: this vertical slice has no human-in-the-loop step, so claiming it would
-  be fabricating a state no code path ever reaches.
+  FAILED     -> step budget or wall-clock deadline exceeded, or an unhandled exception (e.g. a model call timing
+                out). A tool that still fails after its retries does not fail the run: its error is handed back to
+                the model as the tool result.
+  WAITING_FOR_USER and CANCELLED are not implemented: this vertical slice has no human-in-the-loop step and no
+  cancellation endpoint, so claiming them would be fabricating states no code path ever reaches.
 
-Persistence: langgraph's SqliteSaver checkpoints every step to data/agent_checkpoints.db, keyed by thread_id
-(=run_id). A crashed or killed run can be resumed with the same run_id; state is not lost on process restart.
+Persistence: langgraph's SqliteSaver checkpoints every step to .agent-state/agent_checkpoints.db (outside the
+statically served tree; override with AGENT_CHECKPOINT_DB), keyed by thread_id
+(=run_id). The checkpoints are a durable record of each run's steps that survives a process restart. Resuming an
+interrupted run is NOT implemented: run_food_stop_agent always starts from a fresh initial state (passing an existing
+run_id would append a new user turn and reset the step budget, not continue the old run), and the server never
+passes a run_id. Resuming would mean invoking the compiled graph with input None for that thread_id.
 """
 import os
 import time
@@ -32,7 +37,8 @@ from . import tracing
 from .tools import TOOLS, ERR_UPSTREAM
 
 ROOT = Path(__file__).resolve().parent.parent
-CHECKPOINT_DB = ROOT / 'data' / 'agent_checkpoints.db'
+# Not under data/: everything there is served as a static file, and checkpoints hold user requests and model output.
+CHECKPOINT_DB = Path(os.environ.get('AGENT_CHECKPOINT_DB') or ROOT / '.agent-state' / 'agent_checkpoints.db')
 MAX_STEPS = 6          # agent-node turns; bounds runaway tool-call loops
 MAX_RETRIES = 2        # per tool call, only for upstream/transient errors
 WALL_CLOCK_TIMEOUT_S = 45
@@ -58,9 +64,15 @@ class AgentState(TypedDict):
     deadline: float
 
 
-def _llm():
+LLM_CALL_TIMEOUT_S = 30  # one model call; also capped by what is left of WALL_CLOCK_TIMEOUT_S
+
+
+def _llm(timeout=LLM_CALL_TIMEOUT_S):
     from langchain_openai import ChatOpenAI
-    return ChatOpenAI(model=MODEL_NAME, temperature=0).bind_tools(TOOLS)
+    # Without an explicit timeout the OpenAI client waits up to 10 minutes and retries twice, so one stuck call
+    # would outlive the run's wall-clock deadline and hold a server capacity slot. No client-side retries: the
+    # deadline, not the SDK, decides whether there is time for another attempt.
+    return ChatOpenAI(model=MODEL_NAME, temperature=0, timeout=timeout, max_retries=0).bind_tools(TOOLS)
 
 
 def agent_node(state: AgentState):
@@ -72,7 +84,8 @@ def agent_node(state: AgentState):
         tracing.record_step(trace, 'control', 'max_steps_exceeded', step_count=state['step_count'])
         return {'status': 'FAILED'}
     tracing.record_step(trace, 'state', 'RUNNING', step_count=state['step_count'])
-    response = _llm().invoke([SystemMessage(SYSTEM_PROMPT)] + state['messages'])
+    remaining = state['deadline'] - time.time()
+    response = _llm(timeout=max(1.0, min(LLM_CALL_TIMEOUT_S, remaining))).invoke([SystemMessage(SYSTEM_PROMPT)] + state['messages'])
     next_status = 'WAITING_FOR_TOOL' if getattr(response, 'tool_calls', None) else 'COMPLETED'
     tracing.record_step(trace, 'llm', 'agent_turn', tool_calls=len(getattr(response, 'tool_calls', None) or []),
                          output=getattr(response, 'content', ''))
@@ -99,7 +112,7 @@ def tools_node(state: AgentState):
             dur_ms = round((time.time() - t0) * 1000, 1)
             ok = isinstance(result, dict) and result.get('ok')
             transient = (not ok) and isinstance(result, dict) and result.get('error', {}).get('type') == ERR_UPSTREAM
-            if ok or not transient or attempt >= MAX_RETRIES:
+            if ok or not transient or attempt >= MAX_RETRIES or time.time() > state['deadline']:
                 tracing.record_step(trace, 'tool', call['name'], input=call['args'], ok=ok, duration_ms=dur_ms,
                                      attempt=attempt, output=result if ok else result.get('error'))
                 break
@@ -131,17 +144,29 @@ def build_graph():
 _GRAPH = build_graph()
 
 
-def run_food_stop_agent(user_request, run_id=None):
-    """Execute the agent for one request. Returns {run_id, status, final_answer, trace}.
-    status is one of COMPLETED / FAILED (CREATED/CANCELLED are checkpoint-only states this entry point
-    doesn't itself produce; see module docstring).
+def initial_message(user_request, origin=None):
+    """The user's turn. The agent has no geocoder, so the caller's real position is stated explicitly; without
+    one the agent is told not to invent coordinates."""
+    if origin:
+        return HumanMessage(f"{user_request}\n\n[Caller's current location from the device: lat={origin['lat']:.6f}, "
+                            f"lon={origin['lon']:.6f}. Use exactly these coordinates for search_places and as the route "
+                            "origin; do not substitute other coordinates.]")
+    return HumanMessage(f"{user_request}\n\n[No location was provided. Do not call tools with guessed coordinates; "
+                        "say that a location is needed.]")
+
+
+def run_food_stop_agent(user_request, run_id=None, origin=None):
+    """Execute the agent for one request. origin = {'lat', 'lon'} of the caller (validated by the server).
+    Returns {run_id, status, final_answer, trace}.
+    status is one of COMPLETED / FAILED. Always a new run: this does not resume an earlier run_id (see module
+    docstring).
     """
     run_id = run_id or str(uuid.uuid4())
     trace = tracing.new_trace(run_id)
     tracing.record_step(trace, 'state', 'CREATED')
     with SqliteSaver.from_conn_string(str(CHECKPOINT_DB)) as checkpointer:
         compiled = _GRAPH.compile(checkpointer=checkpointer)
-        initial = {'messages': [HumanMessage(user_request)], 'run_id': run_id, 'status': 'CREATED',
+        initial = {'messages': [initial_message(user_request, origin)], 'run_id': run_id, 'status': 'CREATED',
                    'step_count': 0, 'trace': trace, 'deadline': time.time() + WALL_CLOCK_TIMEOUT_S}
         try:
             final_state = compiled.invoke(initial, config={'configurable': {'thread_id': run_id}})

@@ -20,12 +20,15 @@
 const PHOTO = {MAX_KM: 0.3, WIDTH: 320, BATCH: 50, FREE: /^(CC[ -]?BY|CC0|CC-BY|Public domain|PD)/i};
 const routePhotos = {cache: new Map(), inflight: null, queue: new Set(), failed: false};
 
-function photoStrip(html) { const d = document.createElement('div'); d.innerHTML = html || ''; return (d.textContent || '').replace(/\s+/g, ' ').trim(); }
+/** Commons metadata is third-party HTML. Parse it in an inert document (DOMParser: no scripts, no image loads, no
+    event handlers) rather than through innerHTML on an element of the live page. */
+function photoHtml(html) { return new DOMParser().parseFromString(String(html || ''), 'text/html').body; }
+function photoStrip(html) { return (photoHtml(html).textContent || '').replace(/\s+/g, ' ').trim(); }
 /** The author's name from Commons' Artist HTML: the first linked name, without notes such as "This panoramic image
     was created with…", "(talk)" or "No machine-readable author provided … assumed". */
 function photoAuthor(html) {
  if (!html) return '';
- const d = document.createElement('div'); d.innerHTML = html;
+ const d = photoHtml(html);
  d.querySelectorAll('div, small, .signature-talk').forEach((n) => n.remove());
  const named = d.querySelector('bdi, a');
  const text = (named ? named.textContent : d.textContent || '').replace(/No machine-readable author provided\.?/i, '').replace(/\s*assumed \(based on copyright claims\)\.?/i, '');

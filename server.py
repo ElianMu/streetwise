@@ -1,4 +1,4 @@
-"""STREETWISE local development server.
+"""STROLLANE local development server.
 Run: OPENAI_API_KEY=... python3 server.py
 Keeps API keys on the server; never embeds credentials in client JavaScript.
 """
@@ -28,6 +28,8 @@ from interpretation_contract import RESPONSE_FORMAT, JOURNEY, validate as valida
 
 ROOT = Path(__file__).resolve().parent
 PORT = int(os.environ.get('PORT', '8080'))
+# 0.0.0.0 lets a phone on the same Wi-Fi open the app (MOBILE_DEPLOYMENT.md); HOST=127.0.0.1 keeps it on this computer.
+HOST = os.environ.get('HOST', '0.0.0.0')
 PROCESS_STARTED_AT=time.time()
 MODEL = os.environ.get('OPENAI_MODEL', 'gpt-4o-mini')
 def normalize_openai_api_key(raw):
@@ -54,11 +56,11 @@ GZIP_TYPES = ('.json', '.js', '.css', '.html')
 _gzip_cache = {}
 DIMENSIONS = list(ROUTE_DIMENSIONS)
 
-SYSTEM = f"""You are STREETWISE's structured walking-preference interpreter. Never invent route geometry, verified spatial indicators, observations, or street-level environmental evidence.
+SYSTEM = f"""You are STROLLANE's structured walking-preference interpreter. Never invent route geometry, verified spatial indicators, observations, or street-level environmental evidence.
 Waterfront/river proximity is an independent top-level waterfront preference backed by official hydrography. Use mode set,direction high for by/along the river or waterfront; direction low for avoid/away from the waterfront. A later avoidance request REPLACES that previous proximity preference, never adds an opposing second preference. Use mode clear only for explicit removal. Leave unmentioned fields null. Do not translate avoidance of water into avoidance of all Scenic & Visual features; the existing Scenic definition also includes public art and monuments. Hydrography proximity includes mapped lakes/coastal water; it does not guarantee a river promenade or views.
 Crime is an INDEPENDENT historical reported-complaint density preference, never Access & Safety (which measures pedestrian traffic injuries). The top-level crime field is null when unchanged; mode clear only when explicitly removed. For 'very high crime rate' use mode set, direction high, weight 90: respect the requested direction, do not ask whether the user meant avoidance. 'Avoid crime' or 'lower crime density' means direction low. Use dates only when requested (from inclusive, to exclusive); otherwise null uses the actual indexed default period supplied in Current state. Preserve exact offense names from the supplied source taxonomy when requested; otherwise offense_types=[]. Never invent incident counts or personal risk. Crime data is historical, approximate and has no population denominator, so call it reported complaint density, not a crime rate. Crime-only requests need no journey or experience weight.
 Return one JSON object matching the supplied strict schema. All schema properties must exist: use null for unspecified nullable values, empty arrays for no requests, and null in constraints/more entries to preserve unchanged state. Keys:
-"preferences": array of unique mentioned dimensions, each an object with "dimension" (exactly one of {json.dumps(DIMENSIONS)}), "weight" (integer 0..100), and "direction" (high or low). Weight is importance, not a street score. Clear preferences such as more trees, quieter or fewer busy streets should have high importance around 85–95, independently of direction. Fewer busy streets means Urban Vibrancy with high importance and direction low, not a small weight. For example less crowded means Urban Vibrancy with high importance and direction low; quieter means Quiet & Relax direction high. Omit unmentioned dimensions from the array. Never return separate weights/directions maps; the backend derives them from these pairs. Use full canonical names, not UI abbreviations.
+"preferences": array of unique mentioned dimensions, each an object with "dimension" (exactly one of {json.dumps(DIMENSIONS)}), "weight" (integer 0..100), and "direction" (high or low). Weight is importance, not a street score. Clear preferences such as more trees, quieter or fewer busy streets should have high importance around 85–95, independently of direction. Fewer busy streets means Urban Vibrancy with high importance and direction low, not a small weight. For example less crowded means Urban Vibrancy with high importance and direction low; quieter means Quiet & Relax direction high. A kind of place to walk past is not a wish for busier streets: never add Urban Vibrancy because of it. Bookshops, shops and markets mean Food & Retail; galleries, theatres and museums mean Culture. Add Urban Vibrancy direction high only when the user asks for lively, busy or crowded streets. Omit unmentioned dimensions from the array. Never return separate weights/directions maps; the backend derives them from these pairs. Use full canonical names, not UI abbreviations.
 "time_minutes": absolute walking hard cap in whole minutes (at least 10; no upper limit), if explicitly given; otherwise null.
 "time_delta_minutes": signed integer modification to existing walking cap, if user explicitly says 'five more minutes'; otherwise null. Never return both time_minutes and time_delta_minutes non-null.
 For an explicitly shortest route set constraints.avoidDetours=true and max_detour_percent=0. Historic landmarks map to Architecture and/or Culture; waterfront scenery maps to Scenic & Visual, not a new dimension.
@@ -80,7 +82,8 @@ For an explicitly shortest route set constraints.avoidDetours=true and max_detou
   - Start from my hotel, visit two landmarks and return to my hotel: interests=[famous], named_stops=[], origin=hotel, end_mode=hotel, counts.famous=2, all more entries null.
   - Find a hotel near Central Park with two beds and a budget of $250 per night: hotel=null, origin=null, interests=[], requirements search_anchor=Central Park,beds=2,hotel_budget_per_night_usd=250.
   - Recommend tiramisu with good reviews within my walking budget: interests=[], food=[category restaurants,item tiramisu,required true], requirements ratings_required=true, every monetary field null.
-  Never output coordinates, addresses, menus, fetched prices, ratings or opening hours. STREETWISE data tools provide those facts.
+  Never output coordinates, addresses, menus, fetched prices, ratings or opening hours. STROLLANE data tools provide those facts.
+"unsupported": null unless part of the request asks to route by something NO STROLLANE data measures. What exists: the 12 dimensions above (street trees and parks, 311 noise complaints and roadway width, landmarks, cultural venues, sidewalk area, places to eat and shop, mapped viewpoints and public art, intersections, pedestrian injury crashes, distance from highways, subway access), waterfront proximity, reported-complaint (crime) density, today's heat, and visits to real places in the journey categories. Anything else that would need its own measurement is unsupported: for example dog waste, litter or cleanliness, smells, street lighting, how crowded a street is right now, live events, Wi-Fi, celebrity sightings, a particular architectural style, the colour of buildings, sunset or skyline views from a specific street. For each such part (at most 3) return an object with "request" (the user's own words for that part, short), "reason" (one sentence saying which measurement is missing; never claim the data exists) and "nearest_dimension" (the canonical name of a dimension that is a genuine partial proxy, or null when none is). Do NOT add a preference pair, journey entry or any other change for an unsupported part, and do not put it in clarification: the app tells the user it cannot do that part and offers the nearest dimension. Supported parts of the same message are still interpreted normally. Ordinary subjective words that an existing dimension is built for (quieter, greener, more scenic, lively, safer crossings) are supported, not unsupported.
 "clarification": null unless user intent is materially ambiguous or contradictory (for example asks for both a strict 10-minute cap and a 30-minute minimum, or asks for inaccessible route when step-free is required). If ambiguous, write one short question here, do not infer changes.
 Food requests alone do not imply a Scenic, Architecture or Nature preference. An along-the-route food request is a POI requirement, not a request for scenic routing.
 Preserve current state: omit unmentioned dimensions from preferences; set unmentioned constraint values to null. Time and accessibility are hard constraints, not dimension scores. Do not claim quiet or step-free conditions are validated.
@@ -89,7 +92,7 @@ Preserve current state: omit unmentioned dimensions from preferences; set unment
 def validate_interpretation(doc):
     if not isinstance(doc, dict):
         raise ValueError('LLM must return a JSON object')
-    allowed = {'weights', 'directions', 'time_minutes', 'time_delta_minutes', 'max_detour_percent', 'constraints', 'clarification', 'weather', 'journey', 'crime', 'waterfront'}
+    allowed = {'weights', 'directions', 'time_minutes', 'time_delta_minutes', 'max_detour_percent', 'constraints', 'clarification', 'weather', 'journey', 'crime', 'waterfront', 'unsupported'}
     if set(doc) - allowed:
         raise ValueError('Unrecognized output keys')
     weights = doc.get('weights', {})
@@ -121,6 +124,12 @@ def validate_interpretation(doc):
     if doc.get('weather') not in (None, 'ask', 'cooler', 'consider'):
         raise ValueError('Invalid weather intent')
     journey = validate_journey(doc.get('journey'))
+    # Parts of the request no dataset measures: validated against the contract, passed through, never turned into weights.
+    unsupported = doc.get('unsupported') or []
+    from interpretation_contract import COMMON as _COMMON
+    validate_contract(unsupported, _COMMON['unsupported'], 'unsupported')
+    if any(not u['request'].strip() or not u['reason'].strip() for u in unsupported):
+        raise ValueError('Unsupported entries need the request and a reason')
     clarification = doc.get('clarification')
     if clarification is not None and (not isinstance(clarification, str) or len(clarification) > 300):
         raise ValueError('Invalid clarification')
@@ -143,7 +152,8 @@ def validate_interpretation(doc):
         water_value={'mode':'clear'} if water_value['mode']=='clear' else {'mode':'set',**waterfront.validate({k:v for k,v in water_value.items() if k!='mode'})}
     return {'weights':weights, 'directions':{k:dirs.get(k, 'high') for k in weights}, 'crime':crime_value, 'waterfront':water_value,
             'time_minutes':absolute,'time_delta_minutes':delta,'max_detour_percent':detour,
-            'constraints':constraints,'clarification':clarification,'weather':doc.get('weather'),'journey':journey}
+            'constraints':constraints,'clarification':clarification,'weather':doc.get('weather'),'journey':journey,
+            'unsupported':unsupported}
 
 JOURNEY_ENUMS = {'interests': {'famous', 'museums', 'historic', 'parks', 'shopping', 'culture'},
                  'services': {'pharmacies', 'groceries', 'health', 'banks', 'restrooms', 'luggage'}}
@@ -178,13 +188,23 @@ def validate_journey(j):
     return out
 
 # Per-client rate limits (requests per rolling minute). Render puts the client address in X-Forwarded-For.
-RATE_LIMITS = {'interpret': 12, 'menu': 10, 'itinerary': 30, 'routes': 60, 'recommend': 6, 'places': 60, 'ratings': 20, 'agent': 3}
+RATE_LIMITS = {'interpret': 12, 'menu': 10, 'itinerary': 30, 'routes': 60, 'recommend': 6, 'places': 60, 'ratings': 20, 'agent': 3, 'photos': 20}
+RATE_MAX_CLIENTS = 5000
 _rate, _rate_lock = {}, threading.Lock()
+# Reverse proxies in front of this server that append the caller's address to X-Forwarded-For.
+# 0 = ignore the header entirely (a local run has no proxy, so any value in it was written by the client).
+# On Render (RENDER is set) one hop is trusted by default; set TRUSTED_PROXY_HOPS if the deployment has more.
+TRUSTED_PROXY_HOPS = max(0, int(os.environ.get('TRUSTED_PROXY_HOPS', '1' if os.environ.get('RENDER') else '0')))
 
 
 def client_ip(handler):
-    fwd = handler.headers.get('X-Forwarded-For', '')
-    return (fwd.split(',')[0].strip() or handler.client_address[0])[:64]
+    """The caller's address as seen by the nearest trusted proxy. A client can put anything at the start of
+    X-Forwarded-For; only the last TRUSTED_PROXY_HOPS entries were appended by our own proxies."""
+    peer = handler.client_address[0]
+    if TRUSTED_PROXY_HOPS <= 0:
+        return peer[:64]
+    hops = [h.strip() for h in handler.headers.get('X-Forwarded-For', '').split(',') if h.strip()]
+    return (hops[-TRUSTED_PROXY_HOPS] if len(hops) >= TRUSTED_PROXY_HOPS else peer)[:64]
 
 
 def rate_ok(handler, bucket):
@@ -196,8 +216,14 @@ def rate_ok(handler, bucket):
             return False
         hits.append(now)
         _rate[key] = hits
-        if len(_rate) > 5000:
-            _rate.clear()
+        if len(_rate) > RATE_MAX_CLIENTS:
+            # Evict idle clients, then the least recently seen. Never clear everything: that would reset
+            # every active limit at once.
+            for k in [k for k, v in _rate.items() if now - v[-1] >= 60]:
+                del _rate[k]
+            if len(_rate) > RATE_MAX_CLIENTS:
+                for k in sorted(_rate, key=lambda k: _rate[k][-1])[:len(_rate) - int(RATE_MAX_CLIENTS * .9)]:
+                    del _rate[k]
     return True
 
 
@@ -205,7 +231,10 @@ def read_json(handler, limit):
     n = int(handler.headers.get('Content-Length', 0))
     if n <= 0 or n > limit:
         raise ValueError('Invalid request size')
-    return json.loads(handler.rfile.read(n))
+    doc = json.loads(handler.rfile.read(n))
+    if not isinstance(doc, dict):
+        raise ValueError('Expected a JSON object')
+    return doc
 
 
 def validate_point(p, label):
@@ -263,8 +292,36 @@ class IndexedSegments:
         return json.loads(row[0]) if row else None
 
 
+_served_score_version = None
+def served_score_version():
+    """Score build of the route data this server ships (data/pedestrian/score-indicators.json carries the same version as
+    the edge scores; tests/test_score_indicators.py keeps them equal). Read once; cheap enough for /api/status."""
+    global _served_score_version
+    if _served_score_version is None:
+        try:
+            _served_score_version = json.loads((ROOT / 'data' / 'pedestrian' / 'score-indicators.json').read_text(encoding='utf-8'))['score_version']
+        except (OSError, ValueError, KeyError):
+            _served_score_version = ''
+    return _served_score_version or None
+
+
+_map_build = None
+def map_build():
+    """Street scores of the Explore Urban Data map (data/dimensions/manhattan/), the build the router's edge scores are
+    transferred from (scripts/transfer_dimension_scores.py). Loaded once, on the first segment lookup."""
+    global _map_build
+    if _map_build is None:
+        base = ROOT / 'data' / 'dimensions' / 'manhattan'
+        manifest = json.loads((base / 'manifest.json').read_text(encoding='utf-8'))
+        ind = json.loads((base / 'indicators.json').read_text(encoding='utf-8'))
+        props = {f['properties']['id']: f['properties'] for f in json.loads((base / 'segments.geojson').read_text(encoding='utf-8'))['features']}
+        _map_build = (manifest, props, {sid: i for i, sid in enumerate(ind['ids'])}, ind['raw'])
+    return _map_build
+
+
 def street_segment(segment_id):
-    """Street Segment Object (shared data contract) from the Explore Urban Data layer."""
+    """Street Segment Object (shared data contract). Identity and geometry come from the LION street snapshot; scores and
+    sub-indicators come from the build the router is using, so a segment never reports a different score than its routes."""
     global _segments
     if _segments is None:
         from routing.urban_store import manifest
@@ -282,6 +339,22 @@ def street_segment(segment_id):
     if not f:
         return None
     p = f['properties']
+    manifest, props, row, raw = map_build()
+    if segment_id in props and get_planner().net.score_version == manifest['calculation_version']:
+        q, i = props[segment_id], row.get(segment_id)
+        by_key = {x['key']: x for x in manifest['indicators']}
+        return {
+            'segment_id': p['id'], 'source_segment_id': p.get('source_segment_id'), 'lion_part': p.get('lion_part'),
+            'street_name': p['name'], 'geometry': f['geometry'], 'length_m': p['length_m'],
+            'dimension_scores': {d['label']: q[d['prop']] for d in manifest['dimensions']}, 'overall_score': q['overall'],
+            'sub_indicators': {d['label']: [{k: by_key[key][k] for k in ('key', 'label', 'unit', 'method', 'role', 'status')}
+                                            | {'source': '+'.join(by_key[key]['db']), 'value': raw[key][i] if key in raw and i is not None else None}
+                                            for key in d['indicators']] for d in manifest['dimensions']},
+            'data_sources': {k: v['label'] for k, v in manifest['sources'].items()},
+            'data_coverage': {'dimensions_available': q['coverage'], 'of': 12},
+            'score_version': manifest['calculation_version'], 'data_version': get_planner().net.score_meta['data_version'],
+        }
+    # The edge scores were rebuilt from the earlier street snapshot (e.g. a refresh whose transfer step failed): quote that build.
     dims = {d: p[f'd{j}'] for j, d in enumerate(ROUTE_DIMENSIONS)}
     return {
         'segment_id': p['id'], 'source_segment_id': p.get('source_segment_id'), 'lion_part': p.get('lion_part'),
@@ -317,7 +390,7 @@ def fetch_pois(bounds):
              ');out body 450;')
     endpoint = os.environ.get('OVERPASS_URL', 'https://overpass-api.de/api/interpreter')
     payload = urlencode({'data':query}).encode('utf-8')
-    req = request.Request(endpoint, data=payload, method='POST', headers={'User-Agent':'StreetwiseResearchPrototype/0.4', 'Content-Type':'application/x-www-form-urlencoded'})
+    req = request.Request(endpoint, data=payload, method='POST', headers={'User-Agent':'StrollaneResearchPrototype/0.4', 'Content-Type':'application/x-www-form-urlencoded'})
     with request.urlopen(req, timeout=8) as resp:
         doc = json.load(resp)
     return [{'id':str(x['id']), 'lat':x['lat'], 'lon':x['lon'], 'name':x['tags']['name'], 'tags':x['tags']}
@@ -355,14 +428,28 @@ def load_pois(bounds):
     finally:
         with _poi_lock:_poi_state['inflight']=False
 
+# Server-side files that must never be served statically: source code and SQLite databases (the agent's
+# checkpoints hold user requests and model output; the indexed snapshots are read by the API, not the browser).
+PRIVATE_SUFFIXES = ('.py', '.pyc', '.db', '.sqlite', '.sqlite3', '.db-wal', '.db-shm', '.db-journal',
+                    '.sqlite-wal', '.sqlite-shm', '.sqlite-journal')
+
+
+def private_static_path(path):
+    """True when a translated request path must not be served: outside ROOT, a dot-file/dot-directory, or a
+    private file type."""
+    path = Path(path)
+    if not path.is_relative_to(ROOT):
+        return True
+    return any(part.startswith('.') for part in path.relative_to(ROOT).parts) or path.suffix.lower() in PRIVATE_SUFFIXES
+
+
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=str(ROOT), **kwargs)
 
     def send_head(self):
         path = Path(self.translate_path(self.path))
-        rel = path.relative_to(ROOT) if path.is_relative_to(ROOT) else None
-        if rel is None or any(part.startswith('.') for part in rel.parts) or path.suffix in ('.py', '.pyc') or path.is_dir() and not (path/'index.html').exists():
+        if private_static_path(path) or path.is_dir() and not (path/'index.html').exists():
             self.send_error(404, 'Not found'); return None
         return super().send_head()
 
@@ -454,6 +541,7 @@ class Handler(SimpleHTTPRequestHandler):
                                  'diagnostics':{'route_cache':cache,'crime_query_counters':dict(crime_module.STATS), 'capacity': HEAVY_REQUESTS.status(), 'menu_cache': menu_check.cache_status(),
                                                 'geometry': {'packed_bytes': loaded.net.geoms.packed_bytes, 'wgs_cache': loaded.net.geoms.cache_status(), 'xy_cache': loaded.net.gxy.cache_status()} if loaded else {}},
                                  'deployment_commit': os.environ.get('RENDER_GIT_COMMIT'),
+                                 'score_version': served_score_version(),
                                  'interpretation_contract': 'strict-paired-v3-independent',
                                  'features': {'itinerary': True, 'menu_verify': 'official website only (no menu API connected)',
                                               'routing_coverage': 'Manhattan OSM pedestrian graph',
@@ -554,7 +642,7 @@ class Handler(SimpleHTTPRequestHandler):
         path = Path(self.translate_path(self.path))
         if path.is_dir():
             path = path / 'index.html'
-        if any(p.startswith('.') for p in path.relative_to(ROOT).parts) or path.suffix not in GZIP_TYPES or not path.is_file():
+        if private_static_path(path) or path.suffix not in GZIP_TYPES or not path.is_file():
             return False
         stat = path.stat()
         key = (str(path), stat.st_mtime_ns, stat.st_size)
@@ -573,7 +661,7 @@ class Handler(SimpleHTTPRequestHandler):
         return True
 
     def do_POST(self):
-        bucket = {'/api/menu/verify': 'menu', '/api/itinerary': 'itinerary', '/api/routes': 'routes', '/api/detours': 'itinerary',
+        bucket = {'/api/menu/verify': 'menu', '/api/itinerary': 'itinerary', '/api/routes': 'routes', '/api/detours': 'itinerary', '/api/street-photos': 'photos',
                   '/api/interpret': 'interpret', '/api/recommend/food': 'recommend', '/api/agent/food-stop': 'agent'}.get(self.path)
         if bucket and not rate_ok(self, bucket):
             self.send_json(429, {'error': f'Too many requests; limit {RATE_LIMITS[bucket]} per minute.'})
@@ -591,6 +679,14 @@ class Handler(SimpleHTTPRequestHandler):
             if heavy: HEAVY_REQUESTS.release()
 
     def post_admitted(self):
+        if self.path == '/api/street-photos':
+            # Mapillary photos taken within 25 m of points along a route. The token stays on this host (MAPILLARY_TOKEN).
+            try:
+                import street_photos
+                self.send_json(200, street_photos.along_route(read_json(self, 400000).get('coordinates')))
+            except (ValueError, TypeError, AttributeError, json.JSONDecodeError) as e:
+                self.send_json(400, {'error': str(e)})
+            return
         if self.path == '/api/itinerary':
             try:
                 doc = read_json(self, 120000)
@@ -606,6 +702,8 @@ class Handler(SimpleHTTPRequestHandler):
                 self.send_json(200, detours(get_planner(), read_json(self, 30000)))
             except (ValueError, TypeError, json.JSONDecodeError) as e:
                 self.send_json(422 if isinstance(e, RoutingError) else 400, {'error': str(e)})
+            except RuntimeError as e:  # pedestrian network unavailable, like the other routing endpoints
+                self.send_json(503, {'error': str(e)})
             return
         if self.path == '/api/recommend/food':
             try:
@@ -631,8 +729,10 @@ class Handler(SimpleHTTPRequestHandler):
                                           'reason': 'AGENT_ENABLED is off' if not AGENT_ENABLED else f'llm_unavailable: {key_problem}',
                                           'result': result})
                     return
+                # The agent has no geocoder: without the caller's real position it could only guess coordinates.
+                origin = validate_point({'lat': doc.get('lat'), 'lon': doc.get('lon')}, 'location (lat/lon)')
                 from agent.runtime import run_food_stop_agent
-                agent_result = run_food_stop_agent(request_text)
+                agent_result = run_food_stop_agent(request_text, origin=origin)
                 self.send_json(200, {'served_by': 'agent', **agent_result})
             except (ValueError, TypeError, json.JSONDecodeError) as e:
                 self.send_json(400, {'error': str(e)})
@@ -886,8 +986,9 @@ def refresh_street_data_if_stale():
     print('Street data missing or stale; rebuilding street and edge scores from public sources in the background (about 4 minutes)…')
     def run():
         global _segments
-        # Street scores and OSM edge scores are rebuilt together from the same download, so their versions always agree.
-        for script, args in (('build_manhattan_streets.py', ['--refresh']), ('match_lion_osm.py', [])):
+        # The street snapshot and the edge matching are rebuilt together from the same download; the router's scores are then
+        # transferred again from the Explore map's street scores, so routes and the map keep reporting the same build.
+        for script, args in (('build_manhattan_streets.py', ['--refresh']), ('match_lion_osm.py', []), ('transfer_dimension_scores.py', []), ('build_score_indicators.py', [])):
             result = subprocess.run([sys.executable, str(ROOT / 'scripts' / script), *args], capture_output=True, text=True)
             if result.returncode != 0:
                 print(f'{script} failed; keeping the previous snapshot.\n' + result.stderr[-600:])
@@ -901,7 +1002,11 @@ def refresh_street_data_if_stale():
     threading.Thread(target=run, daemon=True).start()
 
 if __name__ == '__main__':
-    print(f'STREETWISE · http://localhost:{PORT}')
+    if sys.version_info < (3, 11):
+        sys.exit(f'STROLLANE needs Python 3.11 or newer (this is {sys.version.split()[0]}); routing/engine.py uses '
+                 'hashlib.file_digest. Install a newer Python (python.org or `brew install python@3.12`) and run it '
+                 'with that, e.g. `python3.12 server.py`.')
+    print(f'STROLLANE · http://localhost:{PORT}')
     print('LLM status:', f'ON ({MODEL})' if KEY else 'OFF (limited local preview)')
     menu_check.PERSIST_CONFIRMED = True  # only the actual running server persists confirmed menu evidence to disk
     refresh_street_data_if_stale()
@@ -916,4 +1021,4 @@ if __name__ == '__main__':
         print('Indexed snapshot ready:',dataset,round(time.monotonic()-started,2),'seconds',flush=True)
     crime.edge_field(network,crime.validate({'direction':'high'}))
     print('Default complaint-density field ready; accepting traffic.',flush=True)
-    ThreadingHTTPServer(('0.0.0.0', PORT), Handler).serve_forever()
+    ThreadingHTTPServer((HOST, PORT), Handler).serve_forever()

@@ -17,3 +17,18 @@ with the rest of this app's zero-framework deployment. Not adding CI/CD changes 
 GitHub Actions workflow was added, since the 4 existing ones (`production-acceptance.yml`,
 `indexed-urban-refresh.yml`, `tourism-data-audit.yml`, `urban-intelligence.yml`) don't exercise this new,
 flag-gated endpoint and nothing in the request asked for a new pipeline to be built for it.
+
+## Street photos (Mapillary)
+
+Optional. To show street-level photos along a walk, set one environment variable on the API host (Render → the
+service → Environment → Add Environment Variable), then redeploy:
+
+    MAPILLARY_TOKEN = <the "Access Token" shown for the app in the Mapillary developer dashboard, starting with MLY|>
+
+- Use the **Access Token**, not the **Client secret**. The client secret is only for OAuth sign-in, is not used by this
+  project, and should never be pasted into code, a commit, or the environment.
+- The token stays on the API host: the browser calls `POST /api/street-photos` and never sees it.
+- Check: `POST /api/street-photos` with a route's coordinates answers `"configured": true` once the variable is set.
+  `"failed_points"` above 0 means Mapillary did not answer (bad token, rate limit or outage).
+- Without the variable the endpoint answers `"configured": false` and the page shows no street photos.
+

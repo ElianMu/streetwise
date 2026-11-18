@@ -16,7 +16,10 @@ from match_lion_osm import name_tokens, names_compatible, any_compatible, layere
 P = get_planner()
 NET = P.net
 STREETS = json.loads((ROOT / 'data' / 'manhattan-streets.json').read_text())
-SEG = {f['properties']['id']: f['properties'] for f in STREETS['features']}
+# The router's scores are transferred from the Explore Urban Data map's street scores (scripts/transfer_dimension_scores.py).
+SEG = {f['properties']['id']: f['properties'] for f in STREETS['features']}  # identity (LION ids, names) of the analysis segments
+MAP_BUILD = json.loads((ROOT / 'data' / 'dimensions' / 'manhattan' / 'manifest.json').read_text())
+SCORE_SEG = {f['properties']['id']: f['properties'] for f in json.loads((ROOT / 'data' / 'dimensions' / 'manhattan' / 'segments.geojson').read_text())['features']}
 MAPPING = list(csv.DictReader(gzip.open(ROOT / 'data' / 'pedestrian' / 'street_osm_edge_mapping.csv.gz', 'rt')))
 PLACES = {'bryant': (-73.9832, 40.7536), 'rock': (-73.9787, 40.7587), 'met': (-73.9632, 40.7794), 'columbia': (-73.9636, 40.8075),
           'washington': (-73.9973, 40.7308), 'battery': (-74.0168, 40.7032), 'union': (-73.9903, 40.7359), 'columbus': (-73.9819, 40.7681)}
@@ -125,7 +128,7 @@ class B_LionOsmMatching(unittest.TestCase):
 
 class C_ExperienceScores(unittest.TestCase):
     def test_versions_consistent(self):
-        self.assertEqual(NET.score_version, STREETS['metadata']['score_version'])
+        self.assertEqual(NET.score_version, MAP_BUILD['calculation_version'], 'routes and the Explore map must use one score build')
         self.assertEqual({r['score_version'] for r in MAPPING}, {NET.score_version})
         self.assertEqual({r['network_version'] for r in MAPPING}, {NET.network_version})
 
@@ -137,7 +140,7 @@ class C_ExperienceScores(unittest.TestCase):
         for eid, rs in list(rows.items())[::40]:
             g = NET.gscores[NET.edges[NET.by_id[eid]][3]]
             for j in range(12):
-                pairs = [(float(r['overlap_length']), SEG[r['analysis_segment_id']][f'd{j}']) for r in rs if SEG[r['analysis_segment_id']][f'd{j}'] is not None]
+                pairs = [(float(r['overlap_length']), SCORE_SEG[r['analysis_segment_id']][f'd{j}']) for r in rs if SCORE_SEG[r['analysis_segment_id']][f'd{j}'] is not None]
                 w = sum(o for o, _ in pairs)
                 expect = sum(o * v for o, v in pairs) / w if w else None
                 if expect is None:
@@ -146,15 +149,42 @@ class C_ExperienceScores(unittest.TestCase):
                     self.assertLessEqual(abs(g['s'][j] - expect), 1, (eid, j))
 
     def test_missing_never_becomes_zero(self):
-        # Comfort is N/A on park paths: edges matched only to such segments must stay N/A, not 0.
+        # Matched edges: a dimension with no scored segment under the edge stays N/A, never 0.
         rows = {}
         for r in MAPPING:
             if r['used_for_scores'] == 'True':
-                rows.setdefault(r['osm_edge_id'], []).append(SEG[r['analysis_segment_id']]['d4'])
-        only_na = [eid for eid, vals in rows.items() if all(v is None for v in vals)]
-        self.assertTrue(only_na)
-        for eid in only_na[:200]:
-            self.assertIsNone(NET.gscores[NET.edges[NET.by_id[eid]][3]]['s'][4])
+                rows.setdefault(r['osm_edge_id'], []).append(SCORE_SEG[r['analysis_segment_id']])
+        for eid, segs in list(rows.items())[::25]:
+            g = NET.gscores[NET.edges[NET.by_id[eid]][3]]
+            for j in range(12):
+                if all(p[f'd{j}'] is None for p in segs):
+                    self.assertIsNone(g['s'][j])
+        # Directly measured edges: a dimension none of whose indicators was measured on the edge stays N/A, never 0 and
+        # never a borrowed value. Ramp coverage is never measured there (it is defined on LION end nodes).
+        direct = [g for g in NET.gscores if g['src'] == 'direct_osm']
+        self.assertTrue(direct)
+        self.assertFalse(any('ramp_coverage' in g['raw'] for g in direct))
+        by_dim = [[k for k in d['available_indicators']] for d in MAP_BUILD['dimensions']]
+        unscored = 0
+        for g in direct[::20]:
+            for j, keys in enumerate(by_dim):
+                if all(g['raw'].get(k) is None for k in keys):
+                    unscored += 1
+                    self.assertIsNone(g['s'][j]); self.assertEqual(g['c'][j], 0.0)
+                else:
+                    self.assertIsNotNone(g['s'][j])
+        self.assertGreaterEqual(unscored, 0)
+
+    def test_scores_are_the_explore_map_build(self):
+        """One score build: the edge scores name the Explore map's calculation version and say how many indicators back them."""
+        meta = NET.score_meta
+        self.assertEqual(meta['score_version'], MAP_BUILD['calculation_version'])
+        self.assertEqual(meta['keys'], [d['key'] for d in MAP_BUILD['dimensions']])
+        for d in MAP_BUILD['dimensions']:
+            basis = meta['indicator_basis'][d['key']]
+            self.assertEqual(basis['computed_indicators'], [k for k in d['available_indicators']])
+            self.assertAlmostEqual(basis['routable_length_with_all'] + basis['routable_length_with_fewer'],
+                                   meta['routable_length_coverage_by_dimension'][d['key']], delta=0.002)
 
     def test_route_scores_length_weighted_with_coverage(self):
         r = plan('met', 'columbia', {'Nature': 90})['routes'][0]
@@ -288,6 +318,8 @@ class HttpApi(unittest.TestCase):
     def test_existing_endpoint_unchanged(self):
         status, doc = self.call('/api/status')
         self.assertEqual(status, 200); self.assertLessEqual({'llm', 'model'}, set(doc))  # original contract kept; 'features' is additive
+        # additive: the page compares this with its own copy and says so when the server is on an older build
+        self.assertEqual(doc['score_version'], NET.score_version)
 
     def test_routes_edges_segments_progress(self):
         status, doc = self.call('/api/routes', {'origin': pt('bryant'), 'destination': pt('rock'), 'preferences': {'weights': {'Nature': 90}},

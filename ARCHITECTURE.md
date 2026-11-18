@@ -1,4 +1,4 @@
-# STREETWISE · NYC — Architecture (routing refactor)
+# STROLLANE · NYC — Architecture (routing refactor)
 
 ## Audit of the previous version
 
@@ -36,7 +36,7 @@ LION is the spatial reference for streets and experience; it is never routed on.
 ## Versions
 
 - `network_version` `osm-walk-YYYYMMDD-hash` — changes when the OSM graph is rebuilt.
-- `score_version` `sw-score-hash` — hash of the indicator definitions; the matcher refuses mismatched inputs.
+- `score_version` `strollane-12x24-v1+hash` — the Explore map's calculation version (`data/dimensions/manhattan/manifest.json`); `scripts/transfer_dimension_scores.py` writes it onto the routing edges, so routes and the map report the same build.
 - `data_version` — date the public sources were downloaded.
 
 ## Build pipeline

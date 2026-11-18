@@ -68,7 +68,7 @@ def bench_agent():
     latencies_ms, statuses = [], []
     for req in REQUESTS:
         t0 = time.monotonic()
-        result = run_food_stop_agent(req['request'])
+        result = run_food_stop_agent(req['request'], origin={'lat': req['lat'], 'lon': req['lon']})
         latencies_ms.append((time.monotonic() - t0) * 1000)
         statuses.append(result['status'])
     return {'n': len(REQUESTS), 'p50_ms': pctl(latencies_ms, 50), 'p95_ms': pctl(latencies_ms, 95),
